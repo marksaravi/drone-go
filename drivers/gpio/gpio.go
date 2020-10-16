@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+//Pins in J8
 const (
 	J8Pin27 = iota
 	J8Pin28
@@ -86,6 +87,7 @@ var (
 	memoryLock sync.Mutex
 	memory8bit []uint8
 	memory     []uint32
+	usedPins   [64]bool
 )
 
 //Level is High and Low
@@ -133,6 +135,7 @@ func Close() error {
 	return unix.Munmap(memory8bit)
 }
 
+//Pin is a J8 pin
 type Pin struct {
 	pin         int
 	fsel        int
@@ -156,6 +159,8 @@ func (pin *Pin) setMode(mode Mode) {
 }
 
 func (pin *Pin) write(level Level) {
+	memoryLock.Lock()
+	defer memoryLock.Unlock()
 	if level == Low {
 		memory[pin.clearReg] = pin.mask
 	} else {
@@ -164,23 +169,32 @@ func (pin *Pin) write(level Level) {
 	pin.shadow = level
 }
 
-func (pin *Pin) SetInput() {
+//SetAsInput sets pin as input
+func (pin *Pin) SetAsInput() {
 	pin.setMode(Input)
 }
 
-func (pin *Pin) SetOutput() {
+//SetAsOutput sets pin as output
+func (pin *Pin) SetAsOutput() {
 	pin.setMode(Output)
 }
 
+//SetHigh sets pin to High
 func (pin *Pin) SetHigh() {
 	pin.write(High)
 }
 
+//SetLow sets pin to Low
 func (pin *Pin) SetLow() {
 	pin.write(Low)
 }
 
+//NewPin creates new pin
 func NewPin(pin int) (*Pin, error) {
+	if usedPins[pin] {
+		return nil, errors.New("Pin is already taken")
+	}
+	usedPins[pin] = true
 	if pin < 0 || pin >= MaxGPIOPin {
 		return nil, errors.New("Invalid pin number")
 	}
