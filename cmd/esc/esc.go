@@ -6,6 +6,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/devices/pca9685"
 	"github.com/MarkSaravi/drone-go/drivers/i2c"
+	"github.com/MarkSaravi/drone-go/modules/esc"
 )
 
 func main() {
@@ -15,21 +16,14 @@ func main() {
 		return
 	}
 	pca9685, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
+	esc := esc.NewESC(pca9685)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = pca9685.Start(400)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer pca9685.Close()
-	pca9685.SetPulseWidth(0, 0.002)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Channel 0 PWM is set")
-	}
-	time.Sleep(1 * time.Second)
+
+	esc.Start(350)
+	defer esc.Close()
+	esc.SetPulseWidth(3, 0.002)
+	time.Sleep(5 * time.Second)
 }
