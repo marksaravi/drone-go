@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/pca9685"
 	"github.com/MarkSaravi/drone-go/drivers/i2c"
@@ -10,6 +10,11 @@ import (
 )
 
 func main() {
+	channel := flag.Int("ch", 0, "ESC channel")
+	frequency := flag.Float64("freq", 400, "Frequency")
+	pulseWidth := flag.Float64("pw", 0.001, "Pulse Width")
+	flag.Parse()
+	fmt.Println(*channel, *frequency, *pulseWidth)
 	i2cConnection, err := i2c.Open("/dev/i2c-1")
 	if err != nil {
 		fmt.Println(err)
@@ -22,8 +27,8 @@ func main() {
 		return
 	}
 
-	esc.Start(350)
+	esc.Start(float32(*frequency))
 	defer esc.Close()
-	esc.SetPulseWidth(3, 0.002)
-	time.Sleep(5 * time.Second)
+
+	esc.SetPulseWidth(*channel, float32(*pulseWidth))
 }
