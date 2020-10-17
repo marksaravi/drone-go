@@ -74,17 +74,17 @@ func (d *PCA9685) setPWM(channel int, on uint16, off uint16) (err error) {
 }
 
 // SetPWMFreq sets the PWM frequency in Hz
-func (d *PCA9685) setPWMFreq(freq float32) error {
+func (d *PCA9685) setFrequency(freq float32) error {
 	d.frequency = freq
 	// IC oscillator frequency is 25 MHz
-	var prescalevel float32 = 25000000
+	var prescalevel float32 = 24576000
 	// Find frequency of PWM waveform
 	prescalevel /= 4096
 	// Ratio between desired frequency and maximum
 	prescalevel /= freq
-	prescalevel--
+	// prescalevel
 	// Round value to nearest whole
-	prescale := byte(prescalevel + 0.5)
+	prescale := byte(prescalevel)
 
 	if err := d.writeAddress(byte(PCA9685Mode1)); err != nil {
 		return err
@@ -169,7 +169,7 @@ func (d *PCA9685) Start(frequency float32) error {
 	}
 
 	time.Sleep(5 * time.Millisecond)
-	d.setPWMFreq(frequency)
+	d.setFrequency(frequency)
 	return err
 }
 
