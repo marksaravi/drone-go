@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/pca9685"
 	"github.com/MarkSaravi/drone-go/drivers/i2c"
@@ -30,5 +31,15 @@ func main() {
 	esc.Start(float32(*frequency))
 	defer esc.Close()
 
-	esc.SetPulseWidth(*channel, float32(*pulseWidth))
+	loop := 20000
+	start := time.Now()
+	for i := 1; i < loop; i++ {
+		esc.SetPulseWidth(0, float32(*pulseWidth))
+		esc.SetPulseWidth(1, float32(*pulseWidth))
+		esc.SetPulseWidth(2, float32(*pulseWidth))
+		esc.SetPulseWidth(3, float32(*pulseWidth))
+	}
+	elapsed := time.Since(start)
+	fmt.Println(float64(loop) / elapsed.Seconds())
+
 }
