@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	driver, _ := icm20948.NewDriver()
+	driver, _ := icm20948.NewRaspberryPiDriver(0, 0)
 	fmt.Println(driver)
 }
