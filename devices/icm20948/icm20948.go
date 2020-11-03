@@ -24,5 +24,5 @@ func NewDriver(busNum int, chipNum int, mode xspi.Mode, maxSpeed int64, bits int
 
 // NewRaspberryPiDriver for raspberry pi
 func NewRaspberryPiDriver(busNum int, chipNum int) (*Driver, error) {
-	return NewDriver(busNum, chipNum, xspi.Mode3, 7000000, 128)
+	return NewDriver(busNum, chipNum, xspi.Mode3, 7000000, 8)
 }
