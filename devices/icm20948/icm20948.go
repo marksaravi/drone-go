@@ -7,6 +7,10 @@ import (
 	"periph.io/x/periph/host"
 )
 
+const (
+	WHO_AM_I = 0x0
+)
+
 // Driver for ICM20948
 type Driver struct {
 	name string

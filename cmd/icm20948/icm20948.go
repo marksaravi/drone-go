@@ -24,15 +24,15 @@ func main() {
 	// 	fmt.Println(err.Error())
 	// }
 	// fmt.Printf("%X\n", r)
-	icm20948, err := icm20948.NewRaspberryPiICM20948Driver("/dev/spidev0.0")
+	driver, err := icm20948.NewRaspberryPiICM20948Driver("/dev/spidev0.0")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	if data, err := icm20948.Read(0x0); err == nil {
-		fmt.Println(data)
+	if data, err := driver.Read(icm20948.WHO_AM_I); err == nil {
+		fmt.Printf("0x%X\n", data)
 	} else {
 		fmt.Println(err.Error())
 	}
-	defer icm20948.Close()
+	defer driver.Close()
 }
