@@ -44,9 +44,21 @@ func (d *Driver) Close() {
 	d.PortCloser.Close()
 }
 
-// Read reads a byte from address
-func (d *Driver) Read(address byte) (byte, error) {
+func (d *Driver) read(address byte) (byte, error) {
 	r := make([]byte, 2)
 	err := d.Conn.Tx([]byte{0b10000000 | address, 0x0}, r)
 	return r[1], err
+}
+
+// WhoAmI is reading the device
+func (d *Driver) WhoAmI() (byte, error) {
+	return d.read(WHO_AM_I)
+}
+
+// SetFullScaleRange to setup Gyroscope range
+func (d *Driver) SetFullScaleRange() {
+}
+
+// GetFullScaleRange to read Gyroscope range
+func (d *Driver) GetFullScaleRange() {
 }
