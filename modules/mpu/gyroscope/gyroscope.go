@@ -3,8 +3,8 @@ package gyroscope
 // Gyroscope is an interface to gyroscope mems operations
 type Gyroscope interface {
 	//SetFullScaleRange is to set gyroscope range
-	SetFullScaleRange()
+	SetFullScaleRange(byte) error
 
 	//GetFullScaleRange is to get gyroscope range
-	GetFullScaleRange()
+	GetFullScaleRange() (byte, error)
 }

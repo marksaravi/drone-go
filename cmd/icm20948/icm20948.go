@@ -18,4 +18,12 @@ func main() {
 	} else {
 		fmt.Printf("Who am I: 0x%X\n", whoami)
 	}
+	if err = mpu.SetFullScaleRange(0b00000000); err != nil {
+		fmt.Println(err.Error())
+	}
+	if fsr, err := mpu.GetFullScaleRange(); err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Printf("Gyro full scale: 0x%X\n", fsr)
+	}
 }
