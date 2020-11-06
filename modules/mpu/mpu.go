@@ -8,7 +8,6 @@ import (
 // MPU is interface to mpu mems
 type MPU interface {
 	Close()
-	WhoAmI() (byte, error)
 	gyroscope.Gyroscope
 }
 

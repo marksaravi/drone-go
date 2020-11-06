@@ -1,8 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
-
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/conn/spi/spireg"
@@ -17,9 +15,14 @@ const (
 )
 
 const (
-	WHO_AM_I      byte = 0x0
-	GYRO_CONFIG_1 byte = 0x1
-	REG_BANK_SEL  byte = 0x7F
+	// BANK0
+	WHO_AM_I     byte = 0x0
+	REG_BANK_SEL byte = 0x7F
+
+	// BANK2
+	GYRO_SMPLRT_DIV byte = 0x0
+	GYRO_CONFIG_1   byte = 0x1
+	MOD_CTRL_USR    byte = 0x54
 )
 
 // Driver for ICM20948
@@ -39,7 +42,7 @@ func NewRaspberryPiICM20948Driver(devname string) (*Driver, error) {
 	if err != nil {
 		return nil, err
 	}
-	connection, err := dev.Connect(7*physic.MegaHertz, spi.Mode3, 8)
+	connection, err := dev.Connect(7*physic.MegaHertz, spi.Mode0, 8)
 	if err != nil {
 		return nil, err
 	}
@@ -55,47 +58,46 @@ func (d *Driver) Close() {
 	d.PortCloser.Close()
 }
 
-func (d *Driver) read(address byte) (byte, error) {
-	r := make([]byte, 2)
-	err := d.Conn.Tx([]byte{0b10000000 | address, 0x0}, r)
-	fmt.Printf("raw data: %v\n", r)
-	return r[1], err
+func (d *Driver) write(address, data byte) error {
+	r := []byte{0, 0}
+	err := d.Conn.Tx([]byte{address, data}, r)
+	// fmt.Printf("write address: %d, data: 0x%0x\n", address, data)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+	return err
 }
 
-func (d *Driver) write(address byte, data byte) error {
-	r := make([]byte, 2)
-	return d.Conn.Tx([]byte{address, data}, r)
+func (d *Driver) read(address byte) ([]byte, error) {
+	r := []byte{0, 0}
+	err := d.Conn.Tx([]byte{0b10000000 | address, 0}, r)
+	// fmt.Printf("read  address: %d, b0: 0x%0x, b1: 0x%X\n", address, r[0], r[1])
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+	return r, err
 }
 
 func (d *Driver) selRegisterBank(bank byte) error {
-	return d.write(REG_BANK_SEL, bank)
+	return d.write(0x7F, bank)
 }
 
-func (d *Driver) writeRegister(address byte, bank byte, data byte) error {
-	if err := d.selRegisterBank(bank); err != nil {
+// SetRegister to setup Gyroscope range
+func (d *Driver) SetRegister(address, bank, data byte) error {
+	err := d.selRegisterBank(bank)
+	if err != nil {
 		return err
 	}
 	return d.write(address, data)
 }
 
-func (d *Driver) readRegister(address byte, bank byte) (byte, error) {
-	if err := d.selRegisterBank(bank); err != nil {
+// GetRegister to read Gyroscope range
+func (d *Driver) GetRegister(address, bank byte) (byte, error) {
+	r := []byte{0, 0}
+	err := d.selRegisterBank(bank)
+	if err != nil {
 		return 0, err
 	}
-	return d.read(address)
-}
-
-// WhoAmI is reading the device
-func (d *Driver) WhoAmI() (byte, error) {
-	return d.readRegister(WHO_AM_I, BANK0)
-}
-
-// SetFullScaleRange to setup Gyroscope range
-func (d *Driver) SetFullScaleRange(data byte) error {
-	return d.writeRegister(GYRO_CONFIG_1, BANK2, data)
-}
-
-// GetFullScaleRange to read Gyroscope range
-func (d *Driver) GetFullScaleRange() (byte, error) {
-	return d.readRegister(GYRO_CONFIG_1, BANK2)
+	r, err = d.read(address)
+	return r[1], err
 }
