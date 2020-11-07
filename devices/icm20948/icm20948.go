@@ -20,9 +20,14 @@ const (
 	ACCEL_ZOUT_L byte = 0x32
 	GYRO_ZOUT_L  byte = 0x38
 
+	// BANK1
+	XA_OFFS_H byte = 0x14
+
 	// BANK2
 	GYRO_SMPLRT_DIV byte = 0x0
 	GYRO_CONFIG_1   byte = 0x1
+	ZG_OFFS_USRL    byte = 0x8
+	ACCEL_CONFIG_2  byte = 0x15
 	MOD_CTRL_USR    byte = 0x54
 )
 
