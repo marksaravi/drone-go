@@ -35,6 +35,16 @@ func (dev *IMUDevice) ReadRegister(address byte) ([]byte, error) {
 	return r, err
 }
 
+func (dev *IMUDevice) WriteRegister(address byte, data ...byte) error {
+	// defer prn(fmt.Sprintf("ReadRegister (0x%X)", address), r)
+	if len(data) == 0 {
+		return nil
+	}
+	w := append([]byte{address & 0x7F}, data...)
+	err := dev.Conn.Tx(w, nil)
+	return err
+}
+
 func errCheck(step string, err error) {
 	if err != nil {
 		fmt.Printf("Error at %s: %s\n", step, err.Error())
@@ -84,6 +94,10 @@ func main() {
 
 	// read PWR_MGMT_1
 	errCheck("SelRegisterBank", dev.SelRegisterBank(0))
+	err = dev.WriteRegister(icm20948.PWR_MGMT_2, 0b00000111)
+	r, err = dev.ReadRegister(icm20948.PWR_MGMT_2)
+	prn("PWR_MGMT_2 bank0", r)
+	err = dev.WriteRegister(icm20948.PWR_MGMT_2, 0b00111000)
 	r, err = dev.ReadRegister(icm20948.PWR_MGMT_2)
 	prn("PWR_MGMT_2 bank0", r)
 }
