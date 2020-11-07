@@ -6,5 +6,5 @@ type Gyroscope interface {
 	SetRegister(address, bank, data byte) error
 
 	//GetRegister is to get gyroscope range
-	GetRegister(address, bank byte) (byte, error)
+	GetRegister(address, bank byte) ([]byte, error)
 }

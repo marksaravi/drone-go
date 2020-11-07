@@ -9,6 +9,7 @@ import (
 type MPU interface {
 	Close()
 	gyroscope.Gyroscope
+	GetRegisterBank() (byte, error)
 }
 
 //NewMPU creates an ampu device based on icm20948 mems

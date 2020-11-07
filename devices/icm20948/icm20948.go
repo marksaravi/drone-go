@@ -8,16 +8,17 @@ import (
 )
 
 const (
-	BANK0 byte = 0b00000000
-	BANK1 byte = 0b00010000
-	BANK2 byte = 0b00100000
-	BANK3 byte = 0b00110000
-)
+	REG_BANK_SEL byte = 0x7F
 
-const (
 	// BANK0
 	WHO_AM_I     byte = 0x0
-	REG_BANK_SEL byte = 0x7F
+	LP_CONFIG    byte = 0x5
+	PWR_MGMT_1   byte = 0x6
+	PWR_MGMT_2   byte = 0x7
+	INT_ENABLE_3 byte = 0x13
+	ACCEL_ZOUT_H byte = 0x31
+	ACCEL_ZOUT_L byte = 0x32
+	GYRO_ZOUT_L  byte = 0x38
 
 	// BANK2
 	GYRO_SMPLRT_DIV byte = 0x0
@@ -42,10 +43,11 @@ func NewRaspberryPiICM20948Driver(devname string) (*Driver, error) {
 	if err != nil {
 		return nil, err
 	}
-	connection, err := dev.Connect(7*physic.MegaHertz, spi.Mode0, 8)
+	connection, err := dev.Connect(7*physic.MegaHertz, spi.Mode3, 8)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Driver{
 		name:       "ICM-20948",
 		PortCloser: dev,
@@ -59,8 +61,7 @@ func (d *Driver) Close() {
 }
 
 func (d *Driver) write(address, data byte) error {
-	r := []byte{0, 0}
-	err := d.Conn.Tx([]byte{address, data}, r)
+	err := d.Conn.Tx([]byte{address, data}, nil)
 	// fmt.Printf("write address: %d, data: 0x%0x\n", address, data)
 	// if err != nil {
 	// 	fmt.Println(err.Error())
@@ -82,6 +83,12 @@ func (d *Driver) selRegisterBank(bank byte) error {
 	return d.write(0x7F, bank)
 }
 
+// GetRegisterBank reads current register bank
+func (d *Driver) GetRegisterBank() (byte, error) {
+	b, err := d.read(0x7F)
+	return b[1], err
+}
+
 // SetRegister to setup Gyroscope range
 func (d *Driver) SetRegister(address, bank, data byte) error {
 	err := d.selRegisterBank(bank)
@@ -92,12 +99,12 @@ func (d *Driver) SetRegister(address, bank, data byte) error {
 }
 
 // GetRegister to read Gyroscope range
-func (d *Driver) GetRegister(address, bank byte) (byte, error) {
+func (d *Driver) GetRegister(address, bank byte) ([]byte, error) {
 	r := []byte{0, 0}
 	err := d.selRegisterBank(bank)
 	if err != nil {
-		return 0, err
+		return []byte{0, 0}, err
 	}
 	r, err = d.read(address)
-	return r[1], err
+	return r, err
 }
