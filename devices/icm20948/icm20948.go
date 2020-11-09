@@ -2,6 +2,7 @@ package icm20948
 
 import (
 	"fmt"
+	"time"
 
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -122,13 +123,6 @@ func (dev *Device) writeRegister(register uint16, data ...byte) error {
 	return dev.writeReg(reg.address, data...)
 }
 
-// ResetToDefault resets all registers to default values
-func (dev *Device) ResetToDefault() error {
-	pm, err := dev.readRegister(PWR_MGMT_1, 1)
-	err = dev.writeRegister(PWR_MGMT_1, pm[0]|0b00000000)
-	return err
-}
-
 // WhoAmI return value for ICM-20948 is 0xEA
 func (dev *Device) WhoAmI() (name string, id byte, err error) {
 	name = "ICM-20948"
@@ -140,6 +134,9 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 
 // ConfigureDevice applies initial configurations for device
 func (dev *Device) ConfigureDevice() error {
+	// Reset settings to default
+	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
+	time.Sleep(10 * time.Millisecond)
 	data, err := dev.readRegister(PWR_MGMT_1, 1)
 	const nosleep byte = 0b10111111
 	config := byte(data[0] & nosleep)
