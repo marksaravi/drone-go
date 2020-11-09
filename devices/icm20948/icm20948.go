@@ -26,6 +26,7 @@ const (
 	// BANK2
 	GYRO_SMPLRT_DIV byte = 0x0
 	GYRO_CONFIG_1   byte = 0x1
+	GYRO_CONFIG_2   byte = 0x2
 	ZG_OFFS_USRL    byte = 0x8
 	ACCEL_CONFIG_2  byte = 0x15
 	MOD_CTRL_USR    byte = 0x54
