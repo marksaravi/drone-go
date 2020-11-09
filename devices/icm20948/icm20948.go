@@ -132,8 +132,14 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 	return
 }
 
-// ConfigureDevice applies initial configurations for device
-func (dev *Device) ConfigureDevice() error {
+// GetDeviceConfig reads device configurations
+func (dev *Device) GetDeviceConfig() ([]byte, error) {
+	data, err := dev.readRegister(PWR_MGMT_1, 2)
+	return data, err
+}
+
+// SetDeviceConfig applies initial configurations for device
+func (dev *Device) SetDeviceConfig() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(10 * time.Millisecond)
