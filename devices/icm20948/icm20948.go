@@ -1,10 +1,13 @@
 package icm20948
 
 import (
+	"fmt"
+	"os"
+
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/conn/spi/spireg"
 	"periph.io/x/periph/host"
+	"periph.io/x/periph/host/sysfs"
 )
 
 const (
@@ -32,11 +35,10 @@ const (
 	MOD_CTRL_USR    byte = 0x54
 )
 
-// Driver for ICM20948
-type Driver struct {
-	name string
-	spi.PortCloser
+type IMUDevice struct {
+	*sysfs.SPI
 	spi.Conn
+	regbank byte
 }
 
 func init() {
@@ -44,73 +46,64 @@ func init() {
 }
 
 // NewRaspberryPiICM20948Driver creates ICM20948 driver for raspberry pi
-func NewRaspberryPiICM20948Driver(devname string) (*Driver, error) {
-	dev, err := spireg.Open(devname)
+func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*IMUDevice, error) {
+	d, err := sysfs.NewSPI(busNumber, chipSelect)
 	if err != nil {
 		return nil, err
 	}
-	connection, err := dev.Connect(7*physic.MegaHertz, spi.Mode3, 8)
+	conn, err := d.Connect(7*physic.MegaHertz, spi.Mode3, 8)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Driver{
-		name:       "ICM-20948",
-		PortCloser: dev,
-		Conn:       connection,
-	}, nil
+	dev := IMUDevice{
+		SPI:     d,
+		Conn:    conn,
+		regbank: 0xFF,
+	}
+	return &dev, nil
 }
 
-//Close closes the device
-func (d *Driver) Close() {
-	d.PortCloser.Close()
+func (dev *IMUDevice) SelRegisterBank(regbank byte) error {
+	if regbank == dev.regbank {
+		return nil
+	}
+	dev.regbank = regbank
+
+	fmt.Printf("SelRegisterBank to %d\n", dev.regbank)
+	return dev.WriteRegister(REG_BANK_SEL, (regbank<<4)&0x30)
 }
 
-func (d *Driver) write(address, data byte) error {
-	err := d.Conn.Tx([]byte{address, data}, nil)
-	// fmt.Printf("write address: %d, data: 0x%0x\n", address, data)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
+func (dev *IMUDevice) ReadRegister(address byte, len int) ([]byte, error) {
+	w := make([]byte, len+1)
+	r := make([]byte, len+1)
+	w[0] = (address & 0x7F) | 0x80
+	// defer Prn(fmt.Sprintf("ReadRegister (0x%X)", address), r)
+	fmt.Println(r)
+	err := dev.Conn.Tx(w, r)
+	return r[1:], err
+}
+
+func (dev *IMUDevice) WriteRegister(address byte, data ...byte) error {
+	// defer Prn(fmt.Sprintf("ReadRegister (0x%X)", address), r)
+	if len(data) == 0 {
+		return nil
+	}
+	w := append([]byte{address & 0x7F}, data...)
+	err := dev.Conn.Tx(w, nil)
 	return err
 }
 
-func (d *Driver) read(address byte) ([]byte, error) {
-	r := []byte{0, 0}
-	err := d.Conn.Tx([]byte{0b10000000 | address, 0}, r)
-	// fmt.Printf("read  address: %d, b0: 0x%0x, b1: 0x%X\n", address, r[0], r[1])
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-	return r, err
-}
-
-func (d *Driver) selRegisterBank(bank byte) error {
-	return d.write(0x7F, bank)
-}
-
-// GetRegisterBank reads current register bank
-func (d *Driver) GetRegisterBank() (byte, error) {
-	b, err := d.read(0x7F)
-	return b[1], err
-}
-
-// SetRegister to setup Gyroscope range
-func (d *Driver) SetRegister(address, bank, data byte) error {
-	err := d.selRegisterBank(bank)
+func ErrCheck(step string, err error) {
 	if err != nil {
-		return err
+		fmt.Printf("Error at %s: %s\n", step, err.Error())
+		os.Exit(0)
 	}
-	return d.write(address, data)
 }
 
-// GetRegister to read Gyroscope range
-func (d *Driver) GetRegister(address, bank byte) ([]byte, error) {
-	r := []byte{0, 0}
-	err := d.selRegisterBank(bank)
-	if err != nil {
-		return []byte{0, 0}, err
+func Prn(msg string, bytes []byte) {
+	fmt.Printf("%s: ", msg)
+	for _, b := range bytes {
+		fmt.Printf("0x%X, ", b)
 	}
-	r, err = d.read(address)
-	return r, err
+	fmt.Printf("\n")
 }
