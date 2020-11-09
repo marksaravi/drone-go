@@ -2,7 +2,6 @@ package icm20948
 
 import (
 	"fmt"
-	"os"
 
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -11,31 +10,50 @@ import (
 )
 
 const (
+	BANK0 uint16 = 0 << 8
+	BANK1 uint16 = 1 << 8
+	BANK2 uint16 = 2 << 8
+	BANK3 uint16 = 3 << 8
+)
+
+const (
 	REG_BANK_SEL byte = 0x7F
 
 	// BANK0
-	WHO_AM_I     byte = 0x0
-	LP_CONFIG    byte = 0x5
-	PWR_MGMT_1   byte = 0x6
-	PWR_MGMT_2   byte = 0x7
-	INT_ENABLE_3 byte = 0x13
-	ACCEL_ZOUT_H byte = 0x31
-	ACCEL_ZOUT_L byte = 0x32
-	GYRO_ZOUT_L  byte = 0x38
+	WHO_AM_I     uint16 = BANK0 | 0x0
+	LP_CONFIG    uint16 = BANK0 | 0x5
+	PWR_MGMT_1   uint16 = BANK0 | 0x6
+	PWR_MGMT_2   uint16 = BANK0 | 0x7
+	INT_ENABLE_3 uint16 = BANK0 | 0x13
+	ACCEL_ZOUT_H uint16 = BANK0 | 0x31
+	ACCEL_ZOUT_L uint16 = BANK0 | 0x32
+	GYRO_ZOUT_L  uint16 = BANK0 | 0x38
 
 	// BANK1
-	XA_OFFS_H byte = 0x14
+	XA_OFFS_H uint16 = BANK1 | 0x14
 
 	// BANK2
-	GYRO_SMPLRT_DIV byte = 0x0
-	GYRO_CONFIG_1   byte = 0x1
-	GYRO_CONFIG_2   byte = 0x2
-	ZG_OFFS_USRL    byte = 0x8
-	ACCEL_CONFIG_2  byte = 0x15
-	MOD_CTRL_USR    byte = 0x54
+	GYRO_SMPLRT_DIV uint16 = BANK2 | 0x0
+	GYRO_CONFIG_1   uint16 = BANK2 | 0x1
+	GYRO_CONFIG_2   uint16 = BANK2 | 0x2
+	ZG_OFFS_USRL    uint16 = BANK2 | 0x8
+	ACCEL_CONFIG_2  uint16 = BANK2 | 0x15
+	MOD_CTRL_USR    uint16 = BANK2 | 0x54
 )
 
-type IMUDevice struct {
+func reg(reg uint16) *Register {
+	return &Register{
+		address: byte(reg),
+		bank:    byte(reg >> 8),
+	}
+}
+
+type Register struct {
+	address byte
+	bank    byte
+}
+
+type Device struct {
 	*sysfs.SPI
 	spi.Conn
 	regbank byte
@@ -46,7 +64,7 @@ func init() {
 }
 
 // NewRaspberryPiICM20948Driver creates ICM20948 driver for raspberry pi
-func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*IMUDevice, error) {
+func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*Device, error) {
 	d, err := sysfs.NewSPI(busNumber, chipSelect)
 	if err != nil {
 		return nil, err
@@ -55,7 +73,7 @@ func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*IMUDevice, er
 	if err != nil {
 		return nil, err
 	}
-	dev := IMUDevice{
+	dev := Device{
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
@@ -63,28 +81,15 @@ func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*IMUDevice, er
 	return &dev, nil
 }
 
-func (dev *IMUDevice) SelRegisterBank(regbank byte) error {
-	if regbank == dev.regbank {
-		return nil
-	}
-	dev.regbank = regbank
-
-	fmt.Printf("SelRegisterBank to %d\n", dev.regbank)
-	return dev.WriteRegister(REG_BANK_SEL, (regbank<<4)&0x30)
-}
-
-func (dev *IMUDevice) ReadRegister(address byte, len int) ([]byte, error) {
+func (dev *Device) readReg(address byte, len int) ([]byte, error) {
 	w := make([]byte, len+1)
 	r := make([]byte, len+1)
 	w[0] = (address & 0x7F) | 0x80
-	// defer Prn(fmt.Sprintf("ReadRegister (0x%X)", address), r)
-	fmt.Println(r)
 	err := dev.Conn.Tx(w, r)
 	return r[1:], err
 }
 
-func (dev *IMUDevice) WriteRegister(address byte, data ...byte) error {
-	// defer Prn(fmt.Sprintf("ReadRegister (0x%X)", address), r)
+func (dev *Device) writeReg(address byte, data ...byte) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -93,17 +98,26 @@ func (dev *IMUDevice) WriteRegister(address byte, data ...byte) error {
 	return err
 }
 
-func ErrCheck(step string, err error) {
-	if err != nil {
-		fmt.Printf("Error at %s: %s\n", step, err.Error())
-		os.Exit(0)
+func (dev *Device) selRegisterBank(regbank byte) error {
+	if regbank == dev.regbank {
+		return nil
 	}
+	dev.regbank = regbank
+	fmt.Println("Switch to bank", dev.regbank)
+	return dev.writeReg(REG_BANK_SEL, (regbank<<4)&0x30)
 }
 
-func Prn(msg string, bytes []byte) {
-	fmt.Printf("%s: ", msg)
-	for _, b := range bytes {
-		fmt.Printf("0x%X, ", b)
+func (dev *Device) ReadRegister(register uint16, len int) ([]byte, error) {
+	reg := reg(register)
+	dev.selRegisterBank(reg.bank)
+	return dev.readReg(reg.address, len)
+}
+
+func (dev *Device) WriteRegister(register uint16, data ...byte) error {
+	if len(data) == 0 {
+		return nil
 	}
-	fmt.Printf("\n")
+	reg := reg(register)
+	dev.selRegisterBank(reg.bank)
+	return dev.writeReg(reg.address, data...)
 }

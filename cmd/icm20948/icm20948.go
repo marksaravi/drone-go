@@ -2,9 +2,25 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 )
+
+func errCheck(step string, err error) {
+	if err != nil {
+		fmt.Printf("Error at %s: %s\n", step, err.Error())
+		os.Exit(0)
+	}
+}
+
+func prn(msg string, bytes []byte) {
+	fmt.Printf("%s: ", msg)
+	for _, b := range bytes {
+		fmt.Printf("0x%X, ", b)
+	}
+	fmt.Printf("\n")
+}
 
 func main() {
 	r := make([]byte, 2)
@@ -17,14 +33,12 @@ func main() {
 	fmt.Println("MOSI: ", dev.SPI.MOSI())
 	fmt.Println("CS:   ", dev.SPI.CS())
 
-	icm20948.ErrCheck("SelRegisterBank", dev.SelRegisterBank(0))
-
 	r, err = dev.ReadRegister(icm20948.WHO_AM_I, 1)
-	icm20948.Prn("Who am I", r)
+	prn("Who am I", r)
 
 	// set bank 2
 	// dev.Conn.Tx([]byte{icm20948.REG_BANK_SEL, icm20948.BANK2}, nil)
-	// ErrCheck("SelRegisterBank", dev.SelRegisterBank(2))
+	// ErrCheck("selRegisterBank", dev.selRegisterBank(2))
 
 	// // read MOD_CTRL_USR
 	// r, err = dev.ReadRegister(icm20948.MOD_CTRL_USR, 1)
@@ -34,20 +48,19 @@ func main() {
 	// Prn("Who am I", r)
 
 	// read PWR_MGMT_1
-	icm20948.ErrCheck("SelRegisterBank", dev.SelRegisterBank(0))
 	powermgm1, err := dev.ReadRegister(icm20948.PWR_MGMT_1, 1)
-	icm20948.Prn("PWR_MGMT_1 bank0", powermgm1)
+	prn("PWR_MGMT_1", powermgm1)
 	const powersettings byte = 0b10011111
 	err = dev.WriteRegister(icm20948.PWR_MGMT_1, powermgm1[0]&powersettings)
 	powermgm1, err = dev.ReadRegister(icm20948.PWR_MGMT_1, 1)
-	icm20948.ErrCheck("Write", err)
-	icm20948.Prn("PWR_MGMT_1 bank0", powermgm1)
+	errCheck("Write", err)
+	prn("PWR_MGMT_1", powermgm1)
 
 	// r, err = dev.WeiteRegister(icm20948.WHO_AM_I, 1)
 	// Prn("Who am I", r)
 
 	// // read PWR_MGMT_1
-	// ErrCheck("SelRegisterBank", dev.SelRegisterBank(0))
+	// ErrCheck("selRegisterBank", dev.selRegisterBank(0))
 	// err = dev.WriteRegister(icm20948.PWR_MGMT_2, 0b00000111)
 	// r, err = dev.ReadRegister(icm20948.PWR_MGMT_2, 1)
 	// Prn("PWR_MGMT_2 bank0", r)
@@ -55,10 +68,9 @@ func main() {
 	// r, err = dev.ReadRegister(icm20948.PWR_MGMT_2, 1)
 	// Prn("PWR_MGMT_2 bank0", r)
 
-	icm20948.ErrCheck("SelRegisterBank", dev.SelRegisterBank(2))
 	const gyroconfig2 byte = 0b00001010
 	err = dev.WriteRegister(icm20948.GYRO_SMPLRT_DIV, gyroconfig2)
-	icm20948.Prn("SET GYRO_CONFIG_2", []byte{gyroconfig2})
+	prn("SET GYRO_CONFIG_2", []byte{gyroconfig2})
 	r, err = dev.ReadRegister(icm20948.GYRO_SMPLRT_DIV, 1)
-	icm20948.Prn("GET GYRO_CONFIG_2", r)
+	prn("GET GYRO_CONFIG_2", r)
 }
