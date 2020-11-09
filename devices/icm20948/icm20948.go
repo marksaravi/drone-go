@@ -86,8 +86,7 @@ func (dev *Device) readReg(address byte, len int) ([]byte, error) {
 	r := make([]byte, len+1)
 	w[0] = (address & 0x7F) | 0x80
 	err := dev.Conn.Tx(w, r)
-	fmt.Println(r)
-	return r, err
+	return r[1:], err
 }
 
 func (dev *Device) writeReg(address byte, data ...byte) error {
@@ -126,7 +125,7 @@ func (dev *Device) writeRegister(register uint16, data ...byte) error {
 // ResetToDefault resets all registers to default values
 func (dev *Device) ResetToDefault() error {
 	pm, err := dev.readRegister(PWR_MGMT_1, 1)
-	err = dev.writeRegister(PWR_MGMT_1, pm[1]|0b00000000)
+	err = dev.writeRegister(PWR_MGMT_1, pm[0]|0b00000000)
 	return err
 }
 
@@ -135,6 +134,15 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	fmt.Println(data)
-	id = data[1]
+	id = data[0]
 	return
+}
+
+// ConfigureDevice applies initial configurations for device
+func (dev *Device) ConfigureDevice() error {
+	data, err := dev.readRegister(PWR_MGMT_1, 1)
+	const nosleep byte = 0b10111111
+	config := byte(data[0] & nosleep)
+	err = dev.writeRegister(PWR_MGMT_1, config)
+	return err
 }

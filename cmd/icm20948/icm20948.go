@@ -6,6 +6,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
+	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
 )
 
 func errCheck(step string, err error) {
@@ -24,14 +25,21 @@ func prn(msg string, bytes []byte) {
 }
 
 func main() {
+	gyroConfig := gyroscope.Config{
+		Scale: icm20948.DPS_1000,
+	}
 	var mpu mpu.MPU
 	// r := make([]byte, 2)
 	mpu, err := icm20948.NewRaspberryPiICM20948Driver(0, 0)
 	errCheck("Initializing MPU", err)
 	defer mpu.Close()
+	mpu.ConfigureDevice()
 	// mpu.ResetToDefault()
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
+	mpu.SetGyroConfig(&gyroConfig)
+	gc, err := mpu.GetGyroConfig()
+	fmt.Println(gc)
 
 	// fmt.Println(dev.Conn.String())
 	// fmt.Println("MaxTxSise: ", dev.SPI.MaxTxSize())
