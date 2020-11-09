@@ -86,7 +86,8 @@ func (dev *Device) readReg(address byte, len int) ([]byte, error) {
 	r := make([]byte, len+1)
 	w[0] = (address & 0x7F) | 0x80
 	err := dev.Conn.Tx(w, r)
-	return r[1:], err
+	fmt.Println(r)
+	return r, err
 }
 
 func (dev *Device) writeReg(address byte, data ...byte) error {
@@ -107,17 +108,33 @@ func (dev *Device) selRegisterBank(regbank byte) error {
 	return dev.writeReg(REG_BANK_SEL, (regbank<<4)&0x30)
 }
 
-func (dev *Device) ReadRegister(register uint16, len int) ([]byte, error) {
+func (dev *Device) readRegister(register uint16, len int) ([]byte, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *Device) WriteRegister(register uint16, data ...byte) error {
+func (dev *Device) writeRegister(register uint16, data ...byte) error {
 	if len(data) == 0 {
 		return nil
 	}
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.writeReg(reg.address, data...)
+}
+
+// ResetToDefault resets all registers to default values
+func (dev *Device) ResetToDefault() error {
+	pm, err := dev.readRegister(PWR_MGMT_1, 1)
+	err = dev.writeRegister(PWR_MGMT_1, pm[1]|0b00000000)
+	return err
+}
+
+// WhoAmI return value for ICM-20948 is 0xEA
+func (dev *Device) WhoAmI() (name string, id byte, err error) {
+	name = "ICM-20948"
+	data, err := dev.readRegister(WHO_AM_I, 1)
+	fmt.Println(data)
+	id = data[1]
+	return
 }
