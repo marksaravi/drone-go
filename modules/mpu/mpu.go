@@ -7,6 +7,7 @@ type MPU interface {
 	Close() error
 	SetDeviceConfig() error
 	GetDeviceConfig() ([]byte, error)
+	ReadData() ([]byte, error)
 	WhoAmI() (string, byte, error)
 	gyroscope.Gyroscope
 }

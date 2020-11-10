@@ -26,8 +26,17 @@ const (
 	PWR_MGMT_1   uint16 = BANK0 | 0x6
 	PWR_MGMT_2   uint16 = BANK0 | 0x7
 	INT_ENABLE_3 uint16 = BANK0 | 0x13
+	ACCEL_XOUT_H uint16 = BANK0 | 0x2D
+	ACCEL_XOUT_L uint16 = BANK0 | 0x2E
+	ACCEL_YOUT_H uint16 = BANK0 | 0x2F
+	ACCEL_YOUT_L uint16 = BANK0 | 0x30
 	ACCEL_ZOUT_H uint16 = BANK0 | 0x31
 	ACCEL_ZOUT_L uint16 = BANK0 | 0x32
+	GYRO_XOUT_H  uint16 = BANK0 | 0x33
+	GYRO_XOUT_L  uint16 = BANK0 | 0x34
+	GYRO_YOUT_H  uint16 = BANK0 | 0x35
+	GYRO_YOUT_L  uint16 = BANK0 | 0x36
+	GYRO_ZOUT_H  uint16 = BANK0 | 0x37
 	GYRO_ZOUT_L  uint16 = BANK0 | 0x38
 
 	// BANK1
@@ -134,7 +143,7 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 
 // GetDeviceConfig reads device configurations
 func (dev *Device) GetDeviceConfig() ([]byte, error) {
-	data, err := dev.readRegister(PWR_MGMT_1, 2)
+	data, err := dev.readRegister(LP_CONFIG, 3)
 	return data, err
 }
 
@@ -146,6 +155,12 @@ func (dev *Device) SetDeviceConfig() error {
 	data, err := dev.readRegister(PWR_MGMT_1, 1)
 	const nosleep byte = 0b10111111
 	config := byte(data[0] & nosleep)
-	err = dev.writeRegister(PWR_MGMT_1, config)
+	const accGyro byte = 0b00000000
+	err = dev.writeRegister(PWR_MGMT_1, config, accGyro)
 	return err
+}
+
+// ReadData reads all Accl and Gyro data
+func (dev *Device) ReadData() ([]byte, error) {
+	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
