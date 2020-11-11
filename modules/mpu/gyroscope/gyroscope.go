@@ -2,7 +2,7 @@ package gyroscope
 
 // Config is the configuration for Gyroscope
 type Config struct {
-	Scale byte
+	FullScale int
 }
 
 // Gyroscope is an interface to gyroscope mems operations

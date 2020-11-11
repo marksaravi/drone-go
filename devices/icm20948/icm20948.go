@@ -3,6 +3,7 @@ package icm20948
 import (
 	"time"
 
+	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -69,17 +70,24 @@ type Register struct {
 type Device struct {
 	*sysfs.SPI
 	spi.Conn
-	regbank                  byte
-	accelerometerSensitivity int
+	regbank             byte
+	accelerometerConfig accelerometer.Config
 }
 
 var accelerometerSensitivity = make(map[int]float64)
+var gyroFullScale = make(map[int]float64)
 
 func init() {
 	accelerometerSensitivity[0] = 16384
 	accelerometerSensitivity[1] = 8192
 	accelerometerSensitivity[2] = 4096
 	accelerometerSensitivity[3] = 2048
+
+	gyroFullScale[0] = 250
+	gyroFullScale[1] = 500
+	gyroFullScale[2] = 1000
+	gyroFullScale[3] = 2000
+
 	host.Init()
 }
 
@@ -177,7 +185,7 @@ func (dev *Device) ReadRawData() ([]byte, error) {
 // ReadData reads Accelerometer and Gyro data
 func (dev *Device) ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error) {
 	data, err := dev.ReadRawData()
-	accSens := accelerometerSensitivity[dev.accelerometerSensitivity]
+	accSens := accelerometerSensitivity[dev.accelerometerConfig.Sensitivity]
 	accX = float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
 	accY = float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
 	accZ = float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
