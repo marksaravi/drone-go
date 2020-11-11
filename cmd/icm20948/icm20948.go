@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func errCheck(step string, err error) {
@@ -24,14 +24,6 @@ func prn(msg string, bytes []byte) {
 	fmt.Printf("\n")
 }
 
-func toUint16(h, l byte) uint16 {
-	fmt.Println(h, ", ", l)
-	var i uint16 = uint16(h)
-	i = (i << 8) & 0xFF00
-	i = i | uint16(l)
-	return i
-}
-
 func main() {
 	// gyroConfig := gyroscope.Config{
 	// 	Scale: icm20948.DPS_1000,
@@ -46,17 +38,21 @@ func main() {
 	prn("Device Config", config)
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
-	time.Sleep(100 * time.Millisecond)
+	// time.Sleep(100 * time.Millisecond)
 	data, err := mpu.ReadData()
-	accX := toUint16(data[0], data[1])
-	accY := toUint16(data[2], data[3])
-	accZ := toUint16(data[4], data[5])
-	gyroX := toUint16(data[6], data[7])
-	gyroY := toUint16(data[8], data[9])
-	gyroZ := toUint16(data[10], data[11])
+	fmt.Println(data)
+	accX := utils.TowsComplementBytesToInt(data[0], data[1])
+	accY := utils.TowsComplementBytesToInt(data[2], data[3])
+	accZ := utils.TowsComplementBytesToInt(data[4], data[5])
+	gyroX := utils.TowsComplementBytesToInt(data[6], data[7])
+	gyroY := utils.TowsComplementBytesToInt(data[8], data[9])
+	gyroZ := utils.TowsComplementBytesToInt(data[10], data[11])
 
 	fmt.Printf("accX: %d, accY: %d, accZ: %d\n", accX, accY, accZ)
 	fmt.Printf("gyroX: %d, gyroY: %d, gyroZ: %d\n", gyroX, gyroY, gyroZ)
+	fmt.Println(utils.IntToTowsComplementBytes(accX))
+	fmt.Println(utils.IntToTowsComplementBytes(accY))
+	fmt.Println(utils.IntToTowsComplementBytes(accZ))
 
 	// mpu.ResetToDefault()
 	// name, id, err := mpu.WhoAmI()
