@@ -1,6 +1,9 @@
 package icm20948
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // GetAccelerometerConfig reads Accelerometer's settings
 func (dev *Device) GetAccelerometerConfig() ([]byte, error) {
@@ -18,5 +21,6 @@ func (dev *Device) SetAccelerometerConfig(accelerometerSensitivity int) error {
 	config[0] = config[0] & 0b11111001
 	config[0] = config[0] | accsen
 	err = dev.writeRegister(ACCEL_CONFIG, config[0], config[1])
+	time.Sleep(time.Millisecond * 100)
 	return err
 }

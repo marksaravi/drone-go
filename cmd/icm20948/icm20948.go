@@ -34,7 +34,7 @@ func main() {
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
 
-	_ = mpu.SetAccelerometerConfig(0)
+	_ = mpu.SetAccelerometerConfig(2)
 
 	accConfig, err := mpu.GetAccelerometerConfig()
 	fmt.Println(accConfig)
