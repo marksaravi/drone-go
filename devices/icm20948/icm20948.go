@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -47,6 +48,7 @@ const (
 	GYRO_CONFIG_1   uint16 = BANK2 | 0x1
 	GYRO_CONFIG_2   uint16 = BANK2 | 0x2
 	ZG_OFFS_USRL    uint16 = BANK2 | 0x8
+	ACCEL_CONFIG    uint16 = BANK2 | 0x14
 	ACCEL_CONFIG_2  uint16 = BANK2 | 0x15
 	MOD_CTRL_USR    uint16 = BANK2 | 0x54
 )
@@ -58,18 +60,27 @@ func reg(reg uint16) *Register {
 	}
 }
 
+// Register is the address and bank of the register
 type Register struct {
 	address byte
 	bank    byte
 }
 
+// Device is icm20948 mems
 type Device struct {
 	*sysfs.SPI
 	spi.Conn
-	regbank byte
+	regbank                  byte
+	accelerometerSensitivity int
 }
 
+var accelerometerSensitivity = make(map[int]float64)
+
 func init() {
+	accelerometerSensitivity[0] = 16384
+	accelerometerSensitivity[1] = 8192
+	accelerometerSensitivity[2] = 4096
+	accelerometerSensitivity[3] = 2048
 	host.Init()
 }
 
@@ -161,7 +172,21 @@ func (dev *Device) SetDeviceConfig() error {
 	return err
 }
 
-// ReadData reads all Accl and Gyro data
-func (dev *Device) ReadData() ([]byte, error) {
+// ReadRawData reads all Accl and Gyro data
+func (dev *Device) ReadRawData() ([]byte, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
+}
+
+// ReadData reads Accelerometer and Gyro data
+func (dev *Device) ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error) {
+	data, err := dev.ReadRawData()
+	accSens := accelerometerSensitivity[dev.accelerometerSensitivity]
+	fmt.Println(accSens)
+	accX = float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
+	accY = float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
+	accZ = float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
+	gyroX = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / accSens
+	gyroY = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / accSens
+	gyroZ = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / accSens
+	return
 }
