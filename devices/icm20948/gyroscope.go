@@ -5,7 +5,7 @@ import (
 )
 
 // SetGyroConfig initialize the Gyroscope
-func (dev *Device) SetGyroConfig(config *gyroscope.Config) error {
+func (dev *Device) SetGyroConfig(config gyroscope.Config) error {
 	var config1 byte = 0
 	config1 = (byte(config.FullScale) << 1) | (config1 & 0b11111001)
 	err := dev.writeRegister(GYRO_CONFIG_1, config1)
@@ -13,9 +13,8 @@ func (dev *Device) SetGyroConfig(config *gyroscope.Config) error {
 }
 
 // GetGyroConfig initialize the Gyroscope
-func (dev *Device) GetGyroConfig() (*gyroscope.Config, error) {
+func (dev *Device) GetGyroConfig() (gyroscope.Config, error) {
 	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
-	return &gyroscope.Config{
-		FullScale: int((data[0] >> 1) & 0b00000011),
-	}, err
+	dev.gyroConfig.FullScale = int((data[0] >> 1) & 0b00000011)
+	return dev.gyroConfig, err
 }

@@ -8,10 +8,10 @@ import (
 )
 
 // GetAccelerometerConfig reads Accelerometer's settings
-func (dev *Device) GetAccelerometerConfig() ([]byte, error) {
+func (dev *Device) GetAccelerometerConfig() (accelerometer.Config, error) {
 	config, err := dev.readRegister(ACCEL_CONFIG, 2)
 	dev.accelerometerConfig.Sensitivity = int((config[0] >> 1) & 0b00000011)
-	return config, err
+	return dev.accelerometerConfig, err
 }
 
 // SetAccelerometerConfig reads Accelerometer's settings

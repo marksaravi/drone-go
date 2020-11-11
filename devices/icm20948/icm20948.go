@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
+	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -72,6 +73,7 @@ type Device struct {
 	spi.Conn
 	regbank             byte
 	accelerometerConfig accelerometer.Config
+	gyroConfig          gyroscope.Config
 }
 
 var accelerometerSensitivity = make(map[int]float64)

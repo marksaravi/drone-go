@@ -9,6 +9,7 @@ import (
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
 	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
+	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
 )
 
 func errCheck(step string, err error) {
@@ -51,10 +52,15 @@ func main() {
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
 
 	_ = mpu.SetAccelerometerConfig(accelerometer.Config{Sensitivity: 3})
+	_ = mpu.SetGyroConfig(gyroscope.Config{FullScale: 2})
+
+	time.Sleep(1 * time.Second)
 
 	accConfig, err := mpu.GetAccelerometerConfig()
+	gyroConfig, err := mpu.GetGyroConfig()
 	fmt.Println(accConfig)
+	fmt.Println(gyroConfig)
 
 	go acc(mpu)
-	time.Sleep(20 * time.Second)
+	time.Sleep(1 * time.Second)
 }

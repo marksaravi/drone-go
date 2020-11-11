@@ -7,6 +7,6 @@ type Config struct {
 
 // Accelerometer is interface to Accelerometer methods
 type Accelerometer interface {
-	GetAccelerometerConfig() ([]byte, error)
+	GetAccelerometerConfig() (Config, error)
 	SetAccelerometerConfig(config Config) error
 }

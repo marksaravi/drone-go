@@ -7,6 +7,6 @@ type Config struct {
 
 // Gyroscope is an interface to gyroscope mems operations
 type Gyroscope interface {
-	SetGyroConfig(*Config) error
-	GetGyroConfig() (*Config, error)
+	SetGyroConfig(Config) error
+	GetGyroConfig() (Config, error)
 }
