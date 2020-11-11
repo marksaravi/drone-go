@@ -29,6 +29,7 @@ func prn(msg string, bytes []byte) {
 
 func acc(mpu mpu.MPU) {
 	var accX, accY, accZ, lastvector, newvector, diff float64 = 0, 0, 0, 0, 0, 0
+	mpu.Start()
 	for {
 		accX, accY, accZ, _, _, _, _ = mpu.ReadData()
 		newvector = math.Sqrt(accX*accX + accY*accY + accZ*accZ)
@@ -62,5 +63,5 @@ func main() {
 	fmt.Println(gyroConfig)
 
 	go acc(mpu)
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 }

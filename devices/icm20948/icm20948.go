@@ -74,6 +74,8 @@ type Device struct {
 	regbank             byte
 	accelerometerConfig accelerometer.Config
 	gyroConfig          gyroscope.Config
+	lastReading         int64
+	duration            int64
 }
 
 var accelerometerSensitivity = make(map[int]float64)
@@ -184,15 +186,24 @@ func (dev *Device) ReadRawData() ([]byte, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
+// Start starts device
+func (dev *Device) Start() {
+	dev.lastReading = time.Now().UnixNano()
+}
+
 // ReadData reads Accelerometer and Gyro data
 func (dev *Device) ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error) {
 	data, err := dev.ReadRawData()
+	now := time.Now().UnixNano()
+	dev.duration = dev.lastReading - now
+	dev.lastReading = now
 	accSens := accelerometerSensitivity[dev.accelerometerConfig.Sensitivity]
+	gyroDegPerSec := gyroFullScale[dev.gyroConfig.FullScale]
 	accX = float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
 	accY = float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
 	accZ = float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
-	gyroX = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / accSens
-	gyroY = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / accSens
-	gyroZ = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / accSens
+	gyroX = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / gyroDegPerSec
+	gyroY = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / gyroDegPerSec
+	gyroZ = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / gyroDegPerSec
 	return
 }

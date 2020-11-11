@@ -9,6 +9,7 @@ import (
 type MPU interface {
 	Close() error
 	SetDeviceConfig() error
+	Start()
 	GetDeviceConfig() ([]byte, error)
 	ReadRawData() ([]byte, error)
 	ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error)
