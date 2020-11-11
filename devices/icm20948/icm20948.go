@@ -1,7 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/utils"
@@ -124,7 +123,6 @@ func (dev *Device) selRegisterBank(regbank byte) error {
 		return nil
 	}
 	dev.regbank = regbank
-	fmt.Println("Switch to bank", dev.regbank)
 	return dev.writeReg(REG_BANK_SEL, (regbank<<4)&0x30)
 }
 
@@ -147,7 +145,6 @@ func (dev *Device) writeRegister(register uint16, data ...byte) error {
 func (dev *Device) WhoAmI() (name string, id byte, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
-	fmt.Println(data)
 	id = data[0]
 	return
 }
@@ -181,7 +178,6 @@ func (dev *Device) ReadRawData() ([]byte, error) {
 func (dev *Device) ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error) {
 	data, err := dev.ReadRawData()
 	accSens := accelerometerSensitivity[dev.accelerometerSensitivity]
-	fmt.Println(accSens)
 	accX = float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
 	accY = float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
 	accZ = float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens

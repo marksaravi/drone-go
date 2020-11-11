@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
@@ -34,12 +35,19 @@ func main() {
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
 
-	_ = mpu.SetAccelerometerConfig(2)
+	_ = mpu.SetAccelerometerConfig(3)
 
 	accConfig, err := mpu.GetAccelerometerConfig()
 	fmt.Println(accConfig)
 
-	accX, accY, accZ, _, _, _, err := mpu.ReadData()
+	var accX, accY, accZ float64
+	tstart := time.Now()
+	const loops = 30000
+	for i := 0; i < loops; i++ {
+		accX, accY, accZ, _, _, _, err = mpu.ReadData()
+	}
+	elapsed := time.Since(tstart).Seconds()
+	fmt.Println(float64(loops) / elapsed)
 
 	fmt.Printf("accX: %f, accY: %f, accZ: %f\n", accX, accY, accZ)
 }
