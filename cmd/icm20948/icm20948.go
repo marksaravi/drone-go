@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 )
 
 func errCheck(step string, err error) {
@@ -18,26 +17,23 @@ func errCheck(step string, err error) {
 	}
 }
 
-func prn(msg string, bytes []byte) {
-	fmt.Printf("%s: ", msg)
-	for _, b := range bytes {
-		fmt.Printf("0x%X, ", b)
-	}
-	fmt.Printf("\n")
-}
-
-func acc(mpu mpu.MPU) {
-	var prevData, currData float64 = 0, 0
+func readtask(mpu mpu.MPU, data chan threeaxissensore.Data, stop chan bool, done chan bool) {
+	var gyro threeaxissensore.Data
+	ticker := time.NewTicker(time.Second)
 	mpu.Start()
-	for {
-		acc, _, _ := mpu.ReadData()
-		currData = utils.CalcVectorLen(acc)
-		if math.Abs(currData-prevData) > 0.05 {
-			fmt.Printf("accX: %f, accY: %f, accZ: %f\n", acc.X, acc.Y, acc.Z)
-			prevData = currData
-			// fmt.Printf("gyroX: %f, gyroY: %f, gyroZ: %f\n", gyro.X, gyro.Y, gyro.Z)
+	var finished bool = false
+	for !finished {
+		_, gyro, _ = mpu.ReadData()
+		select {
+		case finished = <-stop:
+			ticker.Stop()
+			fmt.Println("Stopping ticker")
+		case <-ticker.C:
+			data <- gyro
 		}
 	}
+	fmt.Println("Stopping data reader loop")
+	done <- true
 }
 
 func main() {
@@ -59,6 +55,25 @@ func main() {
 	fmt.Println(accConfig)
 	fmt.Println(gyroConfig)
 
-	go acc(mpu)
-	time.Sleep(100 * time.Second)
+	stop := make(chan bool)
+	done := make(chan bool)
+	data := make(chan threeaxissensore.Data)
+
+	go func() {
+		time.Sleep(10 * time.Second)
+		fmt.Println("Sending Stop Singnal")
+		stop <- true
+	}()
+
+	go readtask(mpu, data, stop, done)
+
+	var finished bool = false
+	for !finished {
+		select {
+		case finished = <-done:
+			fmt.Println("Stopping program")
+		case d := <-data:
+			fmt.Println(d)
+		}
+	}
 }
