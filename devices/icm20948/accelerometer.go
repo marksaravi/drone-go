@@ -2,24 +2,36 @@ package icm20948
 
 import (
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
+	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 )
 
-// GetAccelerometerConfig reads Accelerometer's settings
-func (dev *Device) GetAccelerometerConfig() (accelerometer.Config, error) {
-	config, err := dev.readRegister(ACCEL_CONFIG, 2)
-	dev.accelerometerConfig.Sensitivity = int((config[0] >> 1) & 0b00000011)
-	return dev.accelerometerConfig, err
+// GetAcc get accelerometer data
+func (dev *Device) GetAcc() threeaxissensore.ThreeAxisSensore {
+	return &(dev.acc)
 }
 
-// SetAccelerometerConfig reads Accelerometer's settings
-func (dev *Device) SetAccelerometerConfig(config accelerometer.Config) error {
-	fmt.Println("accelerometerSensitivity", accelerometerSensitivity)
-	dev.accelerometerConfig.Sensitivity = config.Sensitivity
+func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
 	data, err := dev.readRegister(ACCEL_CONFIG, 2)
-	var accsen byte = byte(dev.accelerometerConfig.Sensitivity) << 1
+	config := AccelerometerConfig{
+		Sensitivity: int((data[0] >> 1) & 0b00000011),
+	}
+	dev.GetAcc().SetConfig(config)
+	return config, err
+}
+
+// InitAccelerometer initialise the Accelerometer
+func (dev *Device) InitAccelerometer() error {
+	config, ok := dev.GetAcc().GetConfig().(AccelerometerConfig)
+	if !ok {
+		log.Fatal("Accelerometer config mismatch")
+	}
+
+	fmt.Println("Accelerometer Sensitivity", config.Sensitivity)
+	data, err := dev.readRegister(ACCEL_CONFIG, 2)
+	var accsen byte = byte(config.Sensitivity) << 1
 	data[0] = data[0] & 0b11111001
 	data[0] = data[0] | accsen
 	err = dev.writeRegister(ACCEL_CONFIG, data[0], data[1])

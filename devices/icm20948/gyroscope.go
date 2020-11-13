@@ -1,20 +1,33 @@
 package icm20948
 
 import (
-	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
+	"log"
+
+	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 )
 
-// SetGyroConfig initialize the Gyroscope
-func (dev *Device) SetGyroConfig(config gyroscope.Config) error {
+// GetGyro get accelerometer data
+func (dev *Device) GetGyro() threeaxissensore.ThreeAxisSensore {
+	return &(dev.gyro)
+}
+
+func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
+	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
+	config := GyroscopeConfig{
+		FullScale: int((data[0] >> 1) & 0b00000011),
+	}
+	dev.GetGyro().SetConfig(config)
+	return config, err
+}
+
+// InitGyroscope initialise the Gyroscope
+func (dev *Device) InitGyroscope() error {
+	config, ok := dev.GetGyro().GetConfig().(GyroscopeConfig)
+	if !ok {
+		log.Fatal("Gyro config mismatch")
+	}
 	var config1 byte = 0
 	config1 = (byte(config.FullScale) << 1) | (config1 & 0b11111001)
 	err := dev.writeRegister(GYRO_CONFIG_1, config1)
 	return err
-}
-
-// GetGyroConfig initialize the Gyroscope
-func (dev *Device) GetGyroConfig() (gyroscope.Config, error) {
-	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
-	dev.gyroConfig.FullScale = int((data[0] >> 1) & 0b00000011)
-	return dev.gyroConfig, err
 }

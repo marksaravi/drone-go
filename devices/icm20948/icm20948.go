@@ -3,8 +3,6 @@ package icm20948
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
-	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
 	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
@@ -75,17 +73,30 @@ type threeAxis struct {
 	config   threeaxissensore.Config
 }
 
+// DeviceConfig is the configuration for the device
+type DeviceConfig struct {
+}
+
+// AccelerometerConfig is the configurations for Accelerometer
+type AccelerometerConfig struct {
+	Sensitivity int
+}
+
+// GyroscopeConfig is the configuration for Gyroscope
+type GyroscopeConfig struct {
+	FullScale int
+}
+
 // Device is icm20948 mems
 type Device struct {
 	*sysfs.SPI
 	spi.Conn
-	regbank             byte
-	accelerometerConfig accelerometer.Config
-	gyroConfig          gyroscope.Config
-	lastReading         int64
-	duration            int64
-	acc                 threeAxis
-	gyro                threeAxis
+	regbank     byte
+	lastReading int64
+	duration    int64
+	config      DeviceConfig
+	acc         threeAxis
+	gyro        threeAxis
 }
 
 var accelerometerSensitivity = make(map[int]float64)
@@ -106,7 +117,14 @@ func init() {
 }
 
 // NewRaspberryPiICM20948Driver creates ICM20948 driver for raspberry pi
-func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*Device, error) {
+func NewRaspberryPiICM20948Driver(
+	busNumber int,
+	chipSelect int,
+	config DeviceConfig,
+	accConfig AccelerometerConfig,
+	gyroConfig GyroscopeConfig,
+
+) (*Device, error) {
 	d, err := sysfs.NewSPI(busNumber, chipSelect)
 	if err != nil {
 		return nil, err
@@ -123,13 +141,13 @@ func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*Device, error
 			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
 			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
-			config:   nil,
+			config:   accConfig,
 		},
 		gyro: threeAxis{
 			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
 			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
-			config:   nil,
+			config:   gyroConfig,
 		},
 	}
 	return &dev, nil
@@ -184,13 +202,20 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 }
 
 // GetDeviceConfig reads device configurations
-func (dev *Device) GetDeviceConfig() ([]byte, error) {
-	data, err := dev.readRegister(LP_CONFIG, 3)
-	return data, err
+func (dev *Device) GetDeviceConfig() (
+	config threeaxissensore.Config,
+	accConfig threeaxissensore.Config,
+	gyroConfig threeaxissensore.Config,
+	err error) {
+	// data, err := dev.readRegister(LP_CONFIG, 3)
+	config = DeviceConfig{}
+	accConfig, err = dev.getAccConfig()
+	gyroConfig, err = dev.getGyroConfig()
+	return
 }
 
-// SetDeviceConfig applies initial configurations for device
-func (dev *Device) SetDeviceConfig() error {
+// InitDevice applies initial configurations to device
+func (dev *Device) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -199,6 +224,10 @@ func (dev *Device) SetDeviceConfig() error {
 	config := byte(data[0] & nosleep)
 	const accGyro byte = 0b00000000
 	err = dev.writeRegister(PWR_MGMT_1, config, accGyro)
+	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	err = dev.InitAccelerometer()
+	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	err = dev.InitGyroscope()
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
 	return err
 }
@@ -219,8 +248,10 @@ func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
 	dev.lastReading = now
-	accSens := accelerometerSensitivity[dev.accelerometerConfig.Sensitivity]
-	gyroDegPerSec := gyroFullScale[dev.gyroConfig.FullScale]
+	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
+	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
+	accSens := accelerometerSensitivity[accConfig.Sensitivity]
+	gyroDegPerSec := gyroFullScale[gyroConfig.FullScale]
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
 	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
 	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
@@ -230,16 +261,6 @@ func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.
 	z = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / gyroDegPerSec
 	dev.GetGyro().SetData(x, y, z)
 	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
-}
-
-// GetAcc get accelerometer data
-func (dev *Device) GetAcc() threeaxissensore.ThreeAxisSensore {
-	return &(dev.acc)
-}
-
-// GetGyro get accelerometer data
-func (dev *Device) GetGyro() threeaxissensore.ThreeAxisSensore {
-	return &(dev.gyro)
 }
 
 func (a *threeAxis) GetConfig() threeaxissensore.Config {

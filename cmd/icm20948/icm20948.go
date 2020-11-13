@@ -8,8 +8,6 @@ import (
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
-	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
-	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
@@ -44,22 +42,20 @@ func acc(mpu mpu.MPU) {
 
 func main() {
 	var mpu mpu.MPU
-	mpu, err := icm20948.NewRaspberryPiICM20948Driver(0, 0)
+	mpu, err := icm20948.NewRaspberryPiICM20948Driver(
+		0,
+		0,
+		icm20948.DeviceConfig{},
+		icm20948.AccelerometerConfig{Sensitivity: 3},
+		icm20948.GyroscopeConfig{FullScale: 2},
+	)
 	errCheck("Initializing MPU", err)
 	defer mpu.Close()
-	mpu.SetDeviceConfig()
-	config, err := mpu.GetDeviceConfig()
-	prn("Device Config", config)
+	mpu.InitDevice()
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
-
-	_ = mpu.SetAccelerometerConfig(accelerometer.Config{Sensitivity: 3})
-	_ = mpu.SetGyroConfig(gyroscope.Config{FullScale: 2})
-
-	time.Sleep(1 * time.Second)
-
-	accConfig, err := mpu.GetAccelerometerConfig()
-	gyroConfig, err := mpu.GetGyroConfig()
+	config, accConfig, gyroConfig, err := mpu.GetDeviceConfig()
+	fmt.Println(config)
 	fmt.Println(accConfig)
 	fmt.Println(gyroConfig)
 
