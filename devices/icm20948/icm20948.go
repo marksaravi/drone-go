@@ -248,18 +248,8 @@ func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
 	dev.lastReading = now
-	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
-	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
-	accSens := accelerometerSensitivity[accConfig.Sensitivity]
-	gyroDegPerSec := gyroFullScale[gyroConfig.FullScale]
-	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
-	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
-	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
-	dev.GetAcc().SetData(x, y, z)
-	x = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / gyroDegPerSec
-	y = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / gyroDegPerSec
-	z = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / gyroDegPerSec
-	dev.GetGyro().SetData(x, y, z)
+	dev.processAccelerometerData(data)
+	dev.processGyroscopeData(data[6:])
 	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
 }
 

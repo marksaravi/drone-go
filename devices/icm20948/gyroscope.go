@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetGyro get accelerometer data
@@ -30,4 +31,13 @@ func (dev *Device) InitGyroscope() error {
 	config1 = (byte(config.FullScale) << 1) | (config1 & 0b11111001)
 	err := dev.writeRegister(GYRO_CONFIG_1, config1)
 	return err
+}
+
+func (dev *Device) processGyroscopeData(data []byte) {
+	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
+	gyroDegPerSec := gyroFullScale[gyroConfig.FullScale]
+	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / gyroDegPerSec
+	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / gyroDegPerSec
+	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / gyroDegPerSec
+	dev.GetGyro().SetData(x, y, z)
 }
