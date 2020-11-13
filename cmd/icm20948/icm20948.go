@@ -10,6 +10,7 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/mpu"
 	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
 	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func errCheck(step string, err error) {
@@ -28,15 +29,15 @@ func prn(msg string, bytes []byte) {
 }
 
 func acc(mpu mpu.MPU) {
-	var accX, accY, accZ, lastvector, newvector, diff float64 = 0, 0, 0, 0, 0, 0
+	var prevData, currData float64 = 0, 0
 	mpu.Start()
 	for {
-		accX, accY, accZ, _, _, _, _ = mpu.ReadData()
-		newvector = math.Sqrt(accX*accX + accY*accY + accZ*accZ)
-		diff = math.Abs(newvector - lastvector)
-		if diff > 0.05 {
-			fmt.Printf("accX: %f, accY: %f, accZ: %f\n", accX, accY, accZ)
-			lastvector = newvector
+		acc, _, _ := mpu.ReadData()
+		currData = utils.CalcVectorLen(acc)
+		if math.Abs(currData-prevData) > 0.05 {
+			fmt.Printf("accX: %f, accY: %f, accZ: %f\n", acc.X, acc.Y, acc.Z)
+			prevData = currData
+			// fmt.Printf("gyroX: %f, gyroY: %f, gyroZ: %f\n", gyro.X, gyro.Y, gyro.Z)
 		}
 	}
 }
@@ -63,5 +64,5 @@ func main() {
 	fmt.Println(gyroConfig)
 
 	go acc(mpu)
-	time.Sleep(3 * time.Second)
+	time.Sleep(100 * time.Second)
 }

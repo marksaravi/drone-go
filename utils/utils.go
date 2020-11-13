@@ -2,7 +2,10 @@ package utils
 
 import (
 	"encoding/binary"
+	"math"
 	"unsafe"
+
+	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 )
 
 // TowsComplementToInt converts 16 bit 2's complement to signed int
@@ -28,4 +31,9 @@ func IntToTowsComplementBytes(a int16) (h, l byte) {
 	h = b[1]
 	l = b[0]
 	return
+}
+
+// CalcVectorLen calculate the length of a vector
+func CalcVectorLen(v threeaxissensore.Data) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }

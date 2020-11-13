@@ -5,6 +5,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/modules/mpu/accelerometer"
 	"github.com/MarkSaravi/drone-go/modules/mpu/gyroscope"
+	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -67,6 +68,13 @@ type Register struct {
 	bank    byte
 }
 
+type threeAxis struct {
+	data     threeaxissensore.Data
+	prevData threeaxissensore.Data
+	dataDiff float64
+	config   threeaxissensore.Config
+}
+
 // Device is icm20948 mems
 type Device struct {
 	*sysfs.SPI
@@ -76,6 +84,8 @@ type Device struct {
 	gyroConfig          gyroscope.Config
 	lastReading         int64
 	duration            int64
+	acc                 threeAxis
+	gyro                threeAxis
 }
 
 var accelerometerSensitivity = make(map[int]float64)
@@ -109,6 +119,18 @@ func NewRaspberryPiICM20948Driver(busNumber int, chipSelect int) (*Device, error
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
+		acc: threeAxis{
+			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			dataDiff: 0,
+			config:   nil,
+		},
+		gyro: threeAxis{
+			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			dataDiff: 0,
+			config:   nil,
+		},
 	}
 	return &dev, nil
 }
@@ -192,18 +214,56 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (accX, accY, accZ, gyroX, gyroY, gyroZ float64, err error) {
+func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.Data, err error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
 	dev.lastReading = now
 	accSens := accelerometerSensitivity[dev.accelerometerConfig.Sensitivity]
 	gyroDegPerSec := gyroFullScale[dev.gyroConfig.FullScale]
-	accX = float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
-	accY = float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
-	accZ = float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
-	gyroX = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / gyroDegPerSec
-	gyroY = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / gyroDegPerSec
-	gyroZ = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / gyroDegPerSec
-	return
+	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
+	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
+	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
+	dev.GetAcc().SetData(x, y, z)
+	x = float64(utils.TowsComplementBytesToInt(data[6], data[7])) / gyroDegPerSec
+	y = float64(utils.TowsComplementBytesToInt(data[8], data[9])) / gyroDegPerSec
+	z = float64(utils.TowsComplementBytesToInt(data[10], data[11])) / gyroDegPerSec
+	dev.GetGyro().SetData(x, y, z)
+	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
+}
+
+// GetAcc get accelerometer data
+func (dev *Device) GetAcc() threeaxissensore.ThreeAxisSensore {
+	return &(dev.acc)
+}
+
+// GetGyro get accelerometer data
+func (dev *Device) GetGyro() threeaxissensore.ThreeAxisSensore {
+	return &(dev.gyro)
+}
+
+func (a *threeAxis) GetConfig() threeaxissensore.Config {
+	return a.config
+}
+
+func (a *threeAxis) SetConfig(config threeaxissensore.Config) {
+	a.config = config
+}
+
+func (a *threeAxis) GetData() threeaxissensore.Data {
+	return a.data
+}
+
+func (a *threeAxis) SetData(x, y, z float64) {
+	a.prevData = a.data
+	a.data = threeaxissensore.Data{
+		X: x,
+		Y: y,
+		Z: z,
+	}
+	a.dataDiff = utils.CalcVectorLen(a.data) - utils.CalcVectorLen(a.prevData)
+}
+
+func (a *threeAxis) GetDiff() float64 {
+	return a.dataDiff
 }
