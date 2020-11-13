@@ -17,14 +17,22 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(mpu mpu.MPU, data chan threeaxissensore.Data) {
+func readtask(mpu mpu.MPU, data chan threeaxissensore.Data, stop chan bool, done chan bool) {
 	var gyro threeaxissensore.Data
 	mpu.Start()
 
-	for {
+	var finished bool = false
+	for !finished {
 		_, gyro, _ = mpu.ReadData()
 		data <- gyro
+		select {
+		case finished = <-stop:
+		default:
+		}
 	}
+	fmt.Println("Reading loop stopped")
+	fmt.Println("Sending stop programm signal")
+	done <- true
 }
 
 func main() {
@@ -47,16 +55,17 @@ func main() {
 	fmt.Println(gyroConfig)
 
 	data := make(chan threeaxissensore.Data)
+	stop := make(chan bool)
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Second)
 
 	go func() {
-		time.Sleep(10 * time.Second)
-		fmt.Println("Sending Stop Singnal")
-		done <- true
+		time.Sleep(5 * time.Second)
+		fmt.Println("Sending stop reading loop signal")
+		stop <- true
 	}()
 
-	go readtask(mpu, data)
+	go readtask(mpu, data, stop, done)
 
 	var finished bool = false
 	var counter int = 0
