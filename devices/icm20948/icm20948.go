@@ -108,10 +108,10 @@ func init() {
 	accelerometerSensitivity[2] = 4096
 	accelerometerSensitivity[3] = 2048
 
-	gyroFullScale[0] = 250
-	gyroFullScale[1] = 500
-	gyroFullScale[2] = 1000
-	gyroFullScale[3] = 2000
+	gyroFullScale[0] = 131
+	gyroFullScale[1] = 65.5
+	gyroFullScale[2] = 32.8
+	gyroFullScale[3] = 16.4
 
 	host.Init()
 }

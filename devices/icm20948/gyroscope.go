@@ -34,10 +34,15 @@ func (dev *Device) InitGyroscope() error {
 }
 
 func (dev *Device) processGyroscopeData(data []byte) {
+	// return (((float)axis_val) / 131);
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	gyroDegPerSec := gyroFullScale[gyroConfig.FullScale]
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / gyroDegPerSec
 	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / gyroDegPerSec
 	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / gyroDegPerSec
-	dev.GetGyro().SetData(x, y, z)
+	dx := float64(dev.duration) * x / 1e9
+	dy := float64(dev.duration) * y / 1e9
+	dz := float64(dev.duration) * z / 1e9
+	d := dev.GetGyro().GetData()
+	dev.GetGyro().SetData(d.X+dx, d.Y+dy, d.Z+dz)
 }
