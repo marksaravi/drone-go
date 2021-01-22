@@ -29,17 +29,12 @@ func main() {
 	}
 
 	esc.Start(float32(*frequency))
+	esc.StopAll()
 	defer esc.Close()
-
-	loop := 20000
-	start := time.Now()
-	for i := 1; i < loop; i++ {
-		esc.SetPulseWidth(0, float32(*pulseWidth))
-		esc.SetPulseWidth(1, float32(*pulseWidth))
-		esc.SetPulseWidth(2, float32(*pulseWidth))
-		esc.SetPulseWidth(3, float32(*pulseWidth))
-	}
-	elapsed := time.Since(start)
-	fmt.Println(float64(loop) / elapsed.Seconds())
+	fmt.Println("Starting ", *channel, " at frequency ", *frequency, " with pulse width ", *pulseWidth)
+	esc.SetPulseWidth(*channel, float32(*pulseWidth))
+	time.Sleep(5 * time.Second)
+	fmt.Println("Stopping...")
+	esc.StopAll()
 
 }
