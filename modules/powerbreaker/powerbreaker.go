@@ -12,7 +12,7 @@ type PowerBreaker struct {
 //NewPowerBreaker creates new PowerBreaker
 func NewPowerBreaker(pin gpio.GPIO) *PowerBreaker {
 	pin.SetAsOutput()
-	pin.SetHigh()
+	pin.SetLow()
 	return &PowerBreaker{
 		GPIO: pin,
 	}

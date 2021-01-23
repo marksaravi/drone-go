@@ -18,7 +18,7 @@ func main() {
 		return
 	}
 	pca9685, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
-	esc := esc.NewESC(pca9685)
+	escs := esc.NewESC(pca9685)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -35,21 +35,18 @@ func main() {
 	defer breaker.SetLow()
 	defer breaker.SetAsInput()
 
-	esc.Start(float32(50))
-	esc.StopAll()
-	defer esc.Close()
-	fmt.Println("setting pulse width to 0.002")
+	escs.Start(float32(esc.Frequency))
+	defer escs.Close()
+	fmt.Println("setting max pulse width: ", esc.MaxPW)
 	fmt.Println("turn on ESCs")
-	esc.SetPulseWidthAll(0.002)
+	escs.SetPulseWidthAll(esc.MaxPW)
+	time.Sleep(1 * time.Second)
 	breaker.SetHigh()
-	time.Sleep(10 * time.Second)
-	fmt.Println("setting pulse width to 0.001")
-	esc.SetPulseWidthAll(0.001)
-	time.Sleep(10 * time.Second)
+	time.Sleep(12 * time.Second)
+	fmt.Println("setting min pulse width: ", esc.MinPW)
+	escs.SetPulseWidthAll(esc.MinPW)
+	time.Sleep(12 * time.Second)
 	fmt.Println("turn off ESCs")
 	breaker.SetLow()
 	time.Sleep(1 * time.Second)
-	fmt.Println("setting pulse with to 0")
-	esc.StopAll()
-
 }

@@ -1,5 +1,11 @@
 package esc
 
+const (
+	MinPW float32 = 0.001
+	MaxPW float32 = 0.002
+	Frequency float32 = 400
+)
+
 //PWMDevice is the electronic board that generate PWM
 type PWMDevice interface {
 	Start(frequency float32) error
