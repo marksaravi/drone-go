@@ -35,8 +35,9 @@ func main() {
 	defer breaker.SetLow()
 	defer breaker.SetAsInput()
 
-	escs.Start(float32(esc.Frequency))
+	defer escs.SetPulseWidthAll(0)
 	defer escs.Close()
+	escs.Start(float32(esc.Frequency))
 	fmt.Println("setting max pulse width: ", esc.MaxPW)
 	fmt.Println("turn on ESCs")
 	escs.SetPulseWidthAll(esc.MaxPW)
