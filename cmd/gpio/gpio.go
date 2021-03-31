@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/drivers/gpio"
+	"github.com/MarkSaravi/drone-go/connectors/gpio"
 )
 
 func main() {

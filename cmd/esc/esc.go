@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/pca9685"
-	"github.com/MarkSaravi/drone-go/drivers/i2c"
+	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/modules/esc"
-	"github.com/MarkSaravi/drone-go/drivers/gpio"
+	"github.com/MarkSaravi/drone-go/connectors/gpio"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 
 )

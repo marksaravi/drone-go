@@ -3,7 +3,7 @@ package pca9685
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/drivers/i2c"
+	"github.com/MarkSaravi/drone-go/connectors/i2c"
 )
 
 //PCA9685Address is i2c address of device

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/drivers/gpio"
+	"github.com/MarkSaravi/drone-go/connectors/gpio"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 )
 

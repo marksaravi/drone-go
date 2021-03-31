@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/pca9685"
-	"github.com/MarkSaravi/drone-go/drivers/i2c"
+	"github.com/MarkSaravi/drone-go/connectors/i2c"
 )
 
 func main() {

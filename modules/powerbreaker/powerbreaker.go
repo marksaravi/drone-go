@@ -1,7 +1,7 @@
 package powerbreaker
 
 import (
-	"github.com/MarkSaravi/drone-go/drivers/gpio"
+	"github.com/MarkSaravi/drone-go/connectors/gpio"
 )
 
 //PowerBreaker is the safty power breaker
