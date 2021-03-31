@@ -7,7 +7,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/mpu"
-	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
+	"github.com/MarkSaravi/drone-go/types/sensore"
 )
 
 func errCheck(step string, err error) {
@@ -17,8 +17,8 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(mpu mpu.MPU, data chan threeaxissensore.Data, stop chan bool, done chan bool) {
-	var gyro threeaxissensore.Data
+func readtask(mpu mpu.MPU, data chan sensore.Data, stop chan bool, done chan bool) {
+	var gyro sensore.Data
 	mpu.Start()
 
 	var finished bool = false
@@ -54,7 +54,7 @@ func main() {
 	fmt.Println(accConfig)
 	fmt.Println(gyroConfig)
 
-	data := make(chan threeaxissensore.Data)
+	data := make(chan sensore.Data)
 	stop := make(chan bool)
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Second)
@@ -69,7 +69,7 @@ func main() {
 
 	var finished bool = false
 	var counter int = 0
-	var d threeaxissensore.Data
+	var d sensore.Data
 	for !finished {
 		select {
 		case finished = <-done:

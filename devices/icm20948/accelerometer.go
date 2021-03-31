@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
+	"github.com/MarkSaravi/drone-go/types/sensore"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetAcc get accelerometer data
-func (dev *Device) GetAcc() threeaxissensore.ThreeAxisSensore {
+func (dev *Device) GetAcc() sensore.ThreeAxisSensore {
 	return &(dev.acc)
 }
 

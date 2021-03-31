@@ -3,7 +3,7 @@ package icm20948
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
+	"github.com/MarkSaravi/drone-go/types/sensore"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -67,10 +67,10 @@ type Register struct {
 }
 
 type threeAxis struct {
-	data     threeaxissensore.Data
-	prevData threeaxissensore.Data
+	data     sensore.Data
+	prevData sensore.Data
 	dataDiff float64
-	config   threeaxissensore.Config
+	config   sensore.Config
 }
 
 // DeviceConfig is the configuration for the device
@@ -138,14 +138,14 @@ func NewRaspberryPiICM20948Driver(
 		Conn:    conn,
 		regbank: 0xFF,
 		acc: threeAxis{
-			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
-			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			data:     sensore.Data{X: 0, Y: 0, Z: 0},
+			prevData: sensore.Data{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   accConfig,
 		},
 		gyro: threeAxis{
-			data:     threeaxissensore.Data{X: 0, Y: 0, Z: 0},
-			prevData: threeaxissensore.Data{X: 0, Y: 0, Z: 0},
+			data:     sensore.Data{X: 0, Y: 0, Z: 0},
+			prevData: sensore.Data{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   gyroConfig,
 		},
@@ -203,9 +203,9 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 
 // GetDeviceConfig reads device configurations
 func (dev *Device) GetDeviceConfig() (
-	config threeaxissensore.Config,
-	accConfig threeaxissensore.Config,
-	gyroConfig threeaxissensore.Config,
+	config sensore.Config,
+	accConfig sensore.Config,
+	gyroConfig sensore.Config,
 	err error) {
 	// data, err := dev.readRegister(LP_CONFIG, 3)
 	config = DeviceConfig{}
@@ -243,7 +243,7 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.Data, err error) {
+func (dev *Device) ReadData() (acc sensore.Data, gyro sensore.Data, err error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
@@ -253,21 +253,21 @@ func (dev *Device) ReadData() (acc threeaxissensore.Data, gyro threeaxissensore.
 	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
 }
 
-func (a *threeAxis) GetConfig() threeaxissensore.Config {
+func (a *threeAxis) GetConfig() sensore.Config {
 	return a.config
 }
 
-func (a *threeAxis) SetConfig(config threeaxissensore.Config) {
+func (a *threeAxis) SetConfig(config sensore.Config) {
 	a.config = config
 }
 
-func (a *threeAxis) GetData() threeaxissensore.Data {
+func (a *threeAxis) GetData() sensore.Data {
 	return a.data
 }
 
 func (a *threeAxis) SetData(x, y, z float64) {
 	a.prevData = a.data
-	a.data = threeaxissensore.Data{
+	a.data = sensore.Data{
 		X: x,
 		Y: y,
 		Z: z,

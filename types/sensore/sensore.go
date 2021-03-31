@@ -1,4 +1,4 @@
-package threeaxissensore
+package sensore
 
 // Config is the configurations for ThreeAxisSensore
 type Config interface {

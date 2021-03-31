@@ -3,12 +3,12 @@ package icm20948
 import (
 	"log"
 
-	"github.com/MarkSaravi/drone-go/modules/mpu/threeaxissensore"
+	"github.com/MarkSaravi/drone-go/types/sensore"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetGyro get accelerometer data
-func (dev *Device) GetGyro() threeaxissensore.ThreeAxisSensore {
+func (dev *Device) GetGyro() sensore.ThreeAxisSensore {
 	return &(dev.gyro)
 }
 
