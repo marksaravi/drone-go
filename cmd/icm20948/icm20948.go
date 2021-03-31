@@ -17,8 +17,8 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(mpu mpu.MPU, data chan sensore.Data, stop chan bool, done chan bool) {
-	var gyro sensore.Data
+func readtask(mpu mpu.MPU, data chan sensore.XYZ, stop chan bool, done chan bool) {
+	var gyro sensore.XYZ
 	mpu.Start()
 
 	var finished bool = false
@@ -54,7 +54,7 @@ func main() {
 	fmt.Println(accConfig)
 	fmt.Println(gyroConfig)
 
-	data := make(chan sensore.Data)
+	data := make(chan sensore.XYZ)
 	stop := make(chan bool)
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Second)
@@ -69,7 +69,7 @@ func main() {
 
 	var finished bool = false
 	var counter int = 0
-	var d sensore.Data
+	var d sensore.XYZ
 	for !finished {
 		select {
 		case finished = <-done:

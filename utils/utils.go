@@ -34,6 +34,6 @@ func IntToTowsComplementBytes(a int16) (h, l byte) {
 }
 
 // CalcVectorLen calculate the length of a vector
-func CalcVectorLen(v sensore.Data) float64 {
+func CalcVectorLen(v sensore.XYZ) float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }

@@ -15,7 +15,7 @@ type MPU interface {
 		gyro sensore.Config,
 		err error)
 	ReadRawData() ([]byte, error)
-	ReadData() (acc sensore.Data, gyro sensore.Data, err error)
+	ReadData() (acc sensore.XYZ, gyro sensore.XYZ, err error)
 	WhoAmI() (string, byte, error)
 	GetAcc() sensore.ThreeAxisSensore
 	GetGyro() sensore.ThreeAxisSensore

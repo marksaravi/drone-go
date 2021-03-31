@@ -4,8 +4,8 @@ package sensore
 type Config interface {
 }
 
-// Data is X, Y, Z data
-type Data struct {
+// XYZ is X, Y, Z data
+type XYZ struct {
 	X, Y, Z float64
 }
 
@@ -13,7 +13,7 @@ type Data struct {
 type ThreeAxisSensore interface {
 	GetConfig() Config
 	SetConfig(config Config)
-	GetData() Data
+	GetData() XYZ
 	SetData(x, y, z float64)
 	GetDiff() float64
 }

@@ -67,8 +67,8 @@ type Register struct {
 }
 
 type threeAxis struct {
-	data     sensore.Data
-	prevData sensore.Data
+	data     sensore.XYZ
+	prevData sensore.XYZ
 	dataDiff float64
 	config   sensore.Config
 }
@@ -138,14 +138,14 @@ func NewRaspberryPiICM20948Driver(
 		Conn:    conn,
 		regbank: 0xFF,
 		acc: threeAxis{
-			data:     sensore.Data{X: 0, Y: 0, Z: 0},
-			prevData: sensore.Data{X: 0, Y: 0, Z: 0},
+			data:     sensore.XYZ{X: 0, Y: 0, Z: 0},
+			prevData: sensore.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   accConfig,
 		},
 		gyro: threeAxis{
-			data:     sensore.Data{X: 0, Y: 0, Z: 0},
-			prevData: sensore.Data{X: 0, Y: 0, Z: 0},
+			data:     sensore.XYZ{X: 0, Y: 0, Z: 0},
+			prevData: sensore.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   gyroConfig,
 		},
@@ -243,7 +243,7 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (acc sensore.Data, gyro sensore.Data, err error) {
+func (dev *Device) ReadData() (acc sensore.XYZ, gyro sensore.XYZ, err error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
@@ -261,13 +261,13 @@ func (a *threeAxis) SetConfig(config sensore.Config) {
 	a.config = config
 }
 
-func (a *threeAxis) GetData() sensore.Data {
+func (a *threeAxis) GetData() sensore.XYZ {
 	return a.data
 }
 
 func (a *threeAxis) SetData(x, y, z float64) {
 	a.prevData = a.data
-	a.data = sensore.Data{
+	a.data = sensore.XYZ{
 		X: x,
 		Y: y,
 		Z: z,
