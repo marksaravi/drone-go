@@ -1,6 +1,7 @@
 package mpu
 
 import (
+	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/types/sensore"
 )
 
@@ -10,12 +11,12 @@ type MPU interface {
 	InitDevice() error
 	Start()
 	GetDeviceConfig() (
-		device sensore.Config,
-		acc sensore.Config,
-		gyro sensore.Config,
+		device types.Config,
+		acc types.Config,
+		gyro types.Config,
 		err error)
 	ReadRawData() ([]byte, error)
-	ReadData() (acc sensore.XYZ, gyro sensore.XYZ, err error)
+	ReadData() (acc types.XYZ, gyro types.XYZ, err error)
 	WhoAmI() (string, byte, error)
 	GetAcc() sensore.ThreeAxisSensore
 	GetGyro() sensore.ThreeAxisSensore

@@ -1,7 +1,7 @@
 package icm20948
 
 import (
-	"github.com/MarkSaravi/drone-go/types/sensore"
+	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host/sysfs"
 )
@@ -13,10 +13,10 @@ type Register struct {
 }
 
 type threeAxis struct {
-	data     sensore.XYZ
-	prevData sensore.XYZ
+	data     types.XYZ
+	prevData types.XYZ
 	dataDiff float64
-	config   sensore.Config
+	config   types.Config
 }
 
 // DeviceConfig is the configuration for the device

@@ -5,7 +5,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/MarkSaravi/drone-go/types/sensore"
+	"github.com/MarkSaravi/drone-go/types"
 )
 
 // TowsComplementToInt converts 16 bit 2's complement to signed int
@@ -34,6 +34,6 @@ func IntToTowsComplementBytes(a int16) (h, l byte) {
 }
 
 // CalcVectorLen calculate the length of a vector
-func CalcVectorLen(v sensore.XYZ) float64 {
+func CalcVectorLen(v types.XYZ) float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }

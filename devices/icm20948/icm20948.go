@@ -3,7 +3,7 @@ package icm20948
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/types/sensore"
+	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -57,14 +57,14 @@ func NewRaspberryPiICM20948Driver(
 		Conn:    conn,
 		regbank: 0xFF,
 		acc: threeAxis{
-			data:     sensore.XYZ{X: 0, Y: 0, Z: 0},
-			prevData: sensore.XYZ{X: 0, Y: 0, Z: 0},
+			data:     types.XYZ{X: 0, Y: 0, Z: 0},
+			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   accConfig,
 		},
 		gyro: threeAxis{
-			data:     sensore.XYZ{X: 0, Y: 0, Z: 0},
-			prevData: sensore.XYZ{X: 0, Y: 0, Z: 0},
+			data:     types.XYZ{X: 0, Y: 0, Z: 0},
+			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
 			config:   gyroConfig,
 		},
@@ -122,9 +122,9 @@ func (dev *Device) WhoAmI() (name string, id byte, err error) {
 
 // GetDeviceConfig reads device configurations
 func (dev *Device) GetDeviceConfig() (
-	config sensore.Config,
-	accConfig sensore.Config,
-	gyroConfig sensore.Config,
+	config types.Config,
+	accConfig types.Config,
+	gyroConfig types.Config,
 	err error) {
 	// data, err := dev.readRegister(LP_CONFIG, 3)
 	config = DeviceConfig{}
@@ -162,7 +162,7 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (acc sensore.XYZ, gyro sensore.XYZ, err error) {
+func (dev *Device) ReadData() (acc types.XYZ, gyro types.XYZ, err error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
@@ -172,21 +172,21 @@ func (dev *Device) ReadData() (acc sensore.XYZ, gyro sensore.XYZ, err error) {
 	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
 }
 
-func (a *threeAxis) GetConfig() sensore.Config {
+func (a *threeAxis) GetConfig() types.Config {
 	return a.config
 }
 
-func (a *threeAxis) SetConfig(config sensore.Config) {
+func (a *threeAxis) SetConfig(config types.Config) {
 	a.config = config
 }
 
-func (a *threeAxis) GetData() sensore.XYZ {
+func (a *threeAxis) GetData() types.XYZ {
 	return a.data
 }
 
 func (a *threeAxis) SetData(x, y, z float64) {
 	a.prevData = a.data
-	a.data = sensore.XYZ{
+	a.data = types.XYZ{
 		X: x,
 		Y: y,
 		Z: z,
