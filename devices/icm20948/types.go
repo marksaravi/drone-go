@@ -25,12 +25,12 @@ type DeviceConfig struct {
 
 // AccelerometerConfig is the configurations for Accelerometer
 type AccelerometerConfig struct {
-	Sensitivity int
+	SensitivityLevel int
 }
 
 // GyroscopeConfig is the configuration for Gyroscope
 type GyroscopeConfig struct {
-	FullScale int
+	ScaleLevel int
 }
 
 // Device is icm20948 mems

@@ -41,8 +41,8 @@ func main() {
 		0,
 		0,
 		icm20948.DeviceConfig{},
-		icm20948.AccelerometerConfig{Sensitivity: 3},
-		icm20948.GyroscopeConfig{FullScale: 2},
+		icm20948.AccelerometerConfig{SensitivityLevel: 3},
+		icm20948.GyroscopeConfig{ScaleLevel: 2},
 	)
 	errCheck("Initializing MPU", err)
 	defer mpu.Close()
