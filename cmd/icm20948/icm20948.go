@@ -37,7 +37,7 @@ func readtask(mpu mpu.MPU, data chan types.XYZ, stop chan bool, done chan bool) 
 
 func main() {
 	var mpu mpu.MPU
-	mpu, err := icm20948.NewRaspberryPiICM20948Driver(
+	mpu, err := icm20948.NewICM20948Driver(
 		0,
 		0,
 		icm20948.DeviceConfig{},

@@ -35,8 +35,8 @@ func init() {
 	host.Init()
 }
 
-// NewRaspberryPiICM20948Driver creates ICM20948 driver for raspberry pi
-func NewRaspberryPiICM20948Driver(
+// NewICM20948Driver creates ICM20948 driver for raspberry pi
+func NewICM20948Driver(
 	busNumber int,
 	chipSelect int,
 	config DeviceConfig,
