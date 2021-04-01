@@ -37,12 +37,13 @@ func readtask(mpu mpu.MPU, data chan types.XYZ, stop chan bool, done chan bool) 
 
 func main() {
 	var mpu mpu.MPU
-	mpu, err := icm20948.NewICM20948Driver(
-		0,
-		0,
-		icm20948.DeviceConfig{},
-		icm20948.AccelerometerConfig{SensitivityLevel: 3},
-		icm20948.GyroscopeConfig{ScaleLevel: 2},
+	mpu, err := icm20948.NewICM20948Driver(icm20948.Settings{
+		BusNumber:  0,
+		ChipSelect: 0,
+		Config:     icm20948.DeviceConfig{},
+		AccConfig:  icm20948.AccelerometerConfig{SensitivityLevel: 3},
+		GyroConfig: icm20948.GyroscopeConfig{ScaleLevel: 2},
+	},
 	)
 	errCheck("Initializing MPU", err)
 	defer mpu.Close()

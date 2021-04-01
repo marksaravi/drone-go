@@ -36,15 +36,8 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(
-	busNumber int,
-	chipSelect int,
-	config DeviceConfig,
-	accConfig AccelerometerConfig,
-	gyroConfig GyroscopeConfig,
-
-) (*Device, error) {
-	d, err := sysfs.NewSPI(busNumber, chipSelect)
+func NewICM20948Driver(settings Settings) (*Device, error) {
+	d, err := sysfs.NewSPI(settings.BusNumber, settings.ChipSelect)
 	if err != nil {
 		return nil, err
 	}
@@ -60,13 +53,13 @@ func NewICM20948Driver(
 			data:     types.XYZ{X: 0, Y: 0, Z: 0},
 			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
-			config:   accConfig,
+			config:   settings.AccConfig,
 		},
 		gyro: threeAxis{
 			data:     types.XYZ{X: 0, Y: 0, Z: 0},
 			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
 			dataDiff: 0,
-			config:   gyroConfig,
+			config:   settings.GyroConfig,
 		},
 	}
 	return &dev, nil

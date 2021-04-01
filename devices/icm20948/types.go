@@ -44,3 +44,11 @@ type Device struct {
 	acc         threeAxis
 	gyro        threeAxis
 }
+
+type Settings struct {
+	BusNumber  int
+	ChipSelect int
+	Config     DeviceConfig
+	AccConfig  AccelerometerConfig
+	GyroConfig GyroscopeConfig
+}
