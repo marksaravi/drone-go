@@ -22,15 +22,15 @@ var accelerometerSensitivity = make(map[int]float64)
 var gyroFullScale = make(map[int]float64)
 
 func init() {
-	accelerometerSensitivity[0] = 16384
-	accelerometerSensitivity[1] = 8192
-	accelerometerSensitivity[2] = 4096
-	accelerometerSensitivity[3] = 2048
+	accelerometerSensitivity[0] = SENSITIVITY_0
+	accelerometerSensitivity[1] = SENSITIVITY_1
+	accelerometerSensitivity[2] = SENSITIVITY_2
+	accelerometerSensitivity[3] = SENSITIVITY_3
 
-	gyroFullScale[0] = 131
-	gyroFullScale[1] = 65.5
-	gyroFullScale[2] = 32.8
-	gyroFullScale[3] = 16.4
+	gyroFullScale[0] = SCALE_0
+	gyroFullScale[1] = SCALE_1
+	gyroFullScale[2] = SCALE_2
+	gyroFullScale[3] = SCALE_3
 
 	host.Init()
 }

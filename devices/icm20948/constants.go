@@ -41,3 +41,15 @@ const (
 	ACCEL_CONFIG_2  uint16 = BANK2 | 0x15
 	MOD_CTRL_USR    uint16 = BANK2 | 0x54
 )
+
+const (
+	SENSITIVITY_0 float64 = 16384
+	SENSITIVITY_1 float64 = 8192
+	SENSITIVITY_2 float64 = 4096
+	SENSITIVITY_3 float64 = 2048
+
+	SCALE_0 float64 = 131
+	SCALE_1 float64 = 65.5
+	SCALE_2 float64 = 32.8
+	SCALE_3 float64 = 16.4
+)
