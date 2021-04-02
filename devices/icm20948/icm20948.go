@@ -133,11 +133,11 @@ func (dev *Device) InitDevice() error {
 	config := byte(data[0] & nosleep)
 	const accGyro byte = 0b00000000
 	err = dev.writeRegister(PWR_MGMT_1, config, accGyro)
-	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitAccelerometer()
-	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitGyroscope()
-	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	time.Sleep(50 * time.Millisecond) // wait for starting
 	return err
 }
 
