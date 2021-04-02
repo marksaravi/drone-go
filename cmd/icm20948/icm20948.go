@@ -17,7 +17,7 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(mpu mpu.MPU, data chan types.XYZ, stop chan bool, done chan bool) {
+func readtask(mpu mpu.MpuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
 	var gyro types.XYZ
 	mpu.Start()
 
@@ -36,7 +36,7 @@ func readtask(mpu mpu.MPU, data chan types.XYZ, stop chan bool, done chan bool) 
 }
 
 func main() {
-	var mpu mpu.MPU
+	var mpu mpu.MpuDevice
 	mpu, err := icm20948.NewICM20948Driver(icm20948.Settings{
 		BusNumber:  0,
 		ChipSelect: 0,

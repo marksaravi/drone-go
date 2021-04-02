@@ -9,7 +9,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	data := mpu.New(4)
+	data := mpu.NewSensorData(4)
 	got := len(data.GetBuffer())
 	want := 4
 	if got != want {
@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestPushToFront(t *testing.T) {
-	data := mpu.New(4)
+	data := mpu.NewSensorData(4)
 	want2 := []types.XYZ{
 		{X: 2, Y: 2, Z: 2},
 		{X: 1, Y: 1, Z: 1},

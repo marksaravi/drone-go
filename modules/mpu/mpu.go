@@ -4,8 +4,10 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 )
 
+const BUFFER_LEN uint8 = 4
+
 // MPU is interface to mpu mems
-type MPU interface {
+type MpuDevice interface {
 	Close() error
 	InitDevice() error
 	Start()
@@ -14,39 +16,29 @@ type MPU interface {
 	WhoAmI() (string, byte, error)
 }
 
-type SensorData struct {
-	isValid bool
-	data    types.XYZ
-	buffer  []types.XYZ
+type MPU struct {
+	dev  MpuDevice
+	acc  SensorData
+	gyro SensorData
 }
 
-type MpuHandler struct {
-	mpu        MPU
-	acc        types.XYZ
-	isAccValid bool
-	gyro       types.XYZ
-}
-
-func initBuffer(size int) []types.XYZ {
-	b := []types.XYZ{}
-	for i := 0; i < size; i++ {
-		b = append(b, types.XYZ{X: 0, Y: 0, Z: 0})
-	}
-	return b
-}
-
-func New(bufferSize int) SensorData {
-	return SensorData{
-		isValid: false,
-		data:    types.XYZ{X: 0, Y: 0, Z: 0},
-		buffer:  initBuffer(bufferSize),
+func NewMPU(dev MpuDevice) *MPU {
+	return &MPU{
+		dev:  dev,
+		acc:  NewSensorData(BUFFER_LEN),
+		gyro: NewSensorData(BUFFER_LEN),
 	}
 }
 
-func (s *SensorData) PushToFront(xyz types.XYZ) {
-	s.buffer = append([]types.XYZ{xyz}, s.buffer[:len(s.buffer)-1]...)
-}
-
-func (s *SensorData) GetBuffer() []types.XYZ {
-	return s.buffer
+func (mpu *MPU) ReadData() {
+	accData, isAccDataReady, gyroData, isGyroDataReady, err := mpu.dev.ReadData()
+	if err != nil {
+		return
+	}
+	if isAccDataReady {
+		mpu.acc.PushToFront(accData)
+	}
+	if isGyroDataReady {
+		mpu.acc.PushToFront(gyroData)
+	}
 }
