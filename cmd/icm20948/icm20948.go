@@ -23,7 +23,7 @@ func readtask(mpu mpu.MPU, data chan types.XYZ, stop chan bool, done chan bool) 
 
 	var finished bool = false
 	for !finished {
-		_, gyro, _ = mpu.ReadData()
+		_, _, gyro, _, _ = mpu.ReadData()
 		data <- gyro
 		select {
 		case finished = <-stop:
@@ -50,10 +50,6 @@ func main() {
 	mpu.InitDevice()
 	name, id, err := mpu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
-	config, accConfig, gyroConfig, err := mpu.GetDeviceConfig()
-	fmt.Println(config)
-	fmt.Println(accConfig)
-	fmt.Println(gyroConfig)
 
 	data := make(chan types.XYZ)
 	stop := make(chan bool)

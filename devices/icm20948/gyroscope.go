@@ -3,12 +3,12 @@ package icm20948
 import (
 	"log"
 
-	"github.com/MarkSaravi/drone-go/types/sensore"
+	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetGyro get accelerometer data
-func (dev *Device) GetGyro() sensore.ThreeAxisSensore {
+func (dev *Device) GetGyro() *types.Sensor {
 	return &(dev.gyro)
 }
 
@@ -42,6 +42,6 @@ func (dev *Device) processGyroscopeData(data []byte) {
 	dx := float64(dev.duration) * x / 1e9
 	dy := float64(dev.duration) * y / 1e9
 	dz := float64(dev.duration) * z / 1e9
-	d := dev.GetGyro().GetData()
+	d, _ := dev.gyro.GetData()
 	dev.GetGyro().SetData(d.X+dx, d.Y+dy, d.Z+dz)
 }

@@ -12,13 +12,6 @@ type Register struct {
 	bank    byte
 }
 
-type threeAxis struct {
-	data     types.XYZ
-	prevData types.XYZ
-	dataDiff float64
-	config   types.Config
-}
-
 // DeviceConfig is the configuration for the device
 type DeviceConfig struct {
 }
@@ -41,8 +34,8 @@ type Device struct {
 	lastReading int64
 	duration    int64
 	config      DeviceConfig
-	acc         threeAxis
-	gyro        threeAxis
+	acc         types.Sensor
+	gyro        types.Sensor
 }
 
 type Settings struct {

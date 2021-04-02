@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -49,17 +48,15 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
-		acc: threeAxis{
-			data:     types.XYZ{X: 0, Y: 0, Z: 0},
-			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
-			dataDiff: 0,
-			config:   settings.AccConfig,
+		acc: types.Sensor{
+			IsDataReady: false,
+			Data:        types.XYZ{X: 0, Y: 0, Z: 0},
+			Config:      settings.AccConfig,
 		},
-		gyro: threeAxis{
-			data:     types.XYZ{X: 0, Y: 0, Z: 0},
-			prevData: types.XYZ{X: 0, Y: 0, Z: 0},
-			dataDiff: 0,
-			config:   settings.GyroConfig,
+		gyro: types.Sensor{
+			IsDataReady: false,
+			Data:        types.XYZ{X: 0, Y: 0, Z: 0},
+			Config:      settings.GyroConfig,
 		},
 	}
 	return &dev, nil
@@ -155,38 +152,14 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (acc types.XYZ, gyro types.XYZ, err error) {
+func (dev *Device) ReadData() (acc types.XYZ, isAccDataReady bool, gyro types.XYZ, isGyroDataReady bool, err error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
 	dev.lastReading = now
 	dev.processAccelerometerData(data)
 	dev.processGyroscopeData(data[6:])
-	return dev.GetAcc().GetData(), dev.GetGyro().GetData(), err
-}
-
-func (a *threeAxis) GetConfig() types.Config {
-	return a.config
-}
-
-func (a *threeAxis) SetConfig(config types.Config) {
-	a.config = config
-}
-
-func (a *threeAxis) GetData() types.XYZ {
-	return a.data
-}
-
-func (a *threeAxis) SetData(x, y, z float64) {
-	a.prevData = a.data
-	a.data = types.XYZ{
-		X: x,
-		Y: y,
-		Z: z,
-	}
-	a.dataDiff = utils.CalcVectorLen(a.data) - utils.CalcVectorLen(a.prevData)
-}
-
-func (a *threeAxis) GetDiff() float64 {
-	return a.dataDiff
+	acc, isAccDataReady = dev.acc.GetData()
+	gyro, isGyroDataReady = dev.gyro.GetData()
+	return
 }
