@@ -1,4 +1,4 @@
-package main
+package utils_test
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ func TestInt16To2sComplement(t *testing.T) {
 	got := utils.IntToTowsComplement(x)
 	const want uint16 = 65476
 	if got != want {
-		t.Errorf("got %d want %d given", got, want)
+		t.Errorf("got %d, want %d", got, want)
 	}
 }
 
@@ -29,7 +29,7 @@ func Test2sComplementToInt16(t *testing.T) {
 	got := utils.TowsComplementToInt(x)
 	const want int16 = 7
 	if got != want {
-		t.Errorf("got %d want %d given", got, want)
+		t.Errorf("got %d, want %d", got, want)
 	}
 }
 
@@ -38,7 +38,7 @@ func TestInt16ToHighLowBytes(t *testing.T) {
 	const wantH byte = 254
 	const wantL byte = 132
 	if gotH != wantH || gotL != wantL {
-		t.Errorf("got %d, %d want %d, %d given", gotH, gotL, wantH, wantL)
+		t.Errorf("got %d %d, want %d %d", gotH, gotL, wantH, wantL)
 	}
 }
 
@@ -46,6 +46,6 @@ func TestHighLowBytesToInt16(t *testing.T) {
 	got := utils.TowsComplementBytesToInt(64, 168)
 	const want int16 = 16552
 	if got != want {
-		t.Errorf("got %d want %d given", got, want)
+		t.Errorf("got %d, want %d", got, want)
 	}
 }
