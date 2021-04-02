@@ -40,7 +40,7 @@ func (mpu *MPU) ReadData() {
 		mpu.acc.PushToFront(accData)
 	}
 	if isGyroDataReady {
-		mpu.acc.PushToFront(gyroData)
+		mpu.gyro.PushToFront(gyroData)
 	}
 	mpu.Orientation = mpu.gyro.data
 }
