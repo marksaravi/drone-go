@@ -17,13 +17,13 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(mpu mpu.MpuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
+func readtask(dev mpu.MpuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
 	var gyro types.XYZ
-	mpu.Start()
+	dev.Start()
 
 	var finished bool = false
 	for !finished {
-		_, _, gyro, _, _ = mpu.ReadData()
+		_, _, gyro, _, _ = dev.ReadData()
 		data <- gyro
 		select {
 		case finished = <-stop:
@@ -36,8 +36,7 @@ func readtask(mpu mpu.MpuDevice, data chan types.XYZ, stop chan bool, done chan 
 }
 
 func main() {
-	var mpu mpu.MpuDevice
-	mpu, err := icm20948.NewICM20948Driver(icm20948.Settings{
+	dev, err := icm20948.NewICM20948Driver(icm20948.Settings{
 		BusNumber:  0,
 		ChipSelect: 0,
 		Config:     icm20948.DeviceConfig{},
@@ -45,10 +44,10 @@ func main() {
 		GyroConfig: icm20948.GyroscopeConfig{ScaleLevel: 2},
 	},
 	)
-	errCheck("Initializing MPU", err)
-	defer mpu.Close()
-	mpu.InitDevice()
-	name, id, err := mpu.WhoAmI()
+	errCheck("Initializing ICM20948", err)
+	defer dev.Close()
+	dev.InitDevice()
+	name, id, err := dev.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X\n", name, id)
 
 	data := make(chan types.XYZ)
@@ -62,7 +61,7 @@ func main() {
 		stop <- true
 	}()
 
-	go readtask(mpu, data, stop, done)
+	go readtask(dev, data, stop, done)
 
 	var finished bool = false
 	var counter int = 0

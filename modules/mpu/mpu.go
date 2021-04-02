@@ -17,21 +17,22 @@ type MpuDevice interface {
 }
 
 type MPU struct {
-	dev  MpuDevice
-	acc  SensorData
-	gyro SensorData
+	Dev         MpuDevice
+	acc         SensorData
+	gyro        SensorData
+	Orientation types.XYZ
 }
 
 func NewMPU(dev MpuDevice) *MPU {
 	return &MPU{
-		dev:  dev,
+		Dev:  dev,
 		acc:  NewSensorData(BUFFER_LEN),
 		gyro: NewSensorData(BUFFER_LEN),
 	}
 }
 
 func (mpu *MPU) ReadData() {
-	accData, isAccDataReady, gyroData, isGyroDataReady, err := mpu.dev.ReadData()
+	accData, isAccDataReady, gyroData, isGyroDataReady, err := mpu.Dev.ReadData()
 	if err != nil {
 		return
 	}
@@ -41,4 +42,5 @@ func (mpu *MPU) ReadData() {
 	if isGyroDataReady {
 		mpu.acc.PushToFront(gyroData)
 	}
+	mpu.Orientation = mpu.gyro.data
 }

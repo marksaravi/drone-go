@@ -17,6 +17,7 @@ func NewSensorData(bufferSize uint8) SensorData {
 }
 
 func (s *SensorData) PushToFront(xyz types.XYZ) {
+	s.data = xyz
 	s.buffer = append([]types.XYZ{xyz}, s.buffer[:len(s.buffer)-1]...)
 	s.numOfData++
 	s.ProcessData()
