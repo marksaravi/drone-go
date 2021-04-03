@@ -20,6 +20,15 @@ type Sensor struct {
 	Config Config
 }
 
+// CommandParameters is parameters for the command
+type CommandParameters interface {
+}
+
+type Command struct {
+	Command    string
+	Parameters CommandParameters
+}
+
 // GetConfig reads the config
 func (a *Sensor) GetConfig() Config {
 	return a.Config

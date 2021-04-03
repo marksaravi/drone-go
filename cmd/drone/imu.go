@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
+	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
 )
 
-func initiateIMU() imu.IMU {
+func initiateIMU() imuLib.IMU {
 	dev, err := icm20948.NewICM20948Driver(icm20948.Settings{
 		BusNumber:  0,
 		ChipSelect: 0,
@@ -23,4 +26,24 @@ func initiateIMU() imu.IMU {
 		os.Exit(1)
 	}
 	return dev
+}
+
+func createImuChannel(imu imuLib.IMU, stopImuCh <-chan bool) chan imu.ImuData {
+	imuCh := make(chan imuLib.ImuData)
+	var stop bool = false
+	go func() {
+		for !stop {
+			select {
+			case stop = <-stopImuCh:
+				fmt.Println("Stopping IMU")
+			default:
+				data, err := imu.ReadData()
+				if err == nil {
+					imuCh <- data
+				}
+				time.Sleep(time.Second)
+			}
+		}
+	}()
+	return imuCh
 }
