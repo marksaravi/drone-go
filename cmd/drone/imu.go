@@ -4,10 +4,9 @@ import (
 	"os"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
-	"github.com/MarkSaravi/drone-go/modules/imu"
 )
 
-func initiateIMU() *imu.IMU {
+func initiateIMU() *icm20948.Device {
 	dev, err := icm20948.NewICM20948Driver(icm20948.Settings{
 		BusNumber:  0,
 		ChipSelect: 0,
@@ -19,9 +18,8 @@ func initiateIMU() *imu.IMU {
 	if err != nil {
 		os.Exit(1)
 	}
-	imu := imu.NewIMU(dev)
-	if imu.Dev.InitDevice() != nil {
+	if dev.InitDevice() != nil {
 		os.Exit(1)
 	}
-	return imu
+	return dev
 }

@@ -3,6 +3,7 @@ package icm20948
 import (
 	"time"
 
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -49,14 +50,15 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 		Conn:    conn,
 		regbank: 0xFF,
 		acc: types.Sensor{
-			IsDataReady: false,
-			Data:        types.XYZ{X: 0, Y: 0, Z: 0},
-			Config:      settings.AccConfig,
+			Type:   ACCELEROMETER,
+			Config: settings.AccConfig,
 		},
 		gyro: types.Sensor{
-			IsDataReady: false,
-			Data:        types.XYZ{X: 0, Y: 0, Z: 0},
-			Config:      settings.GyroConfig,
+			Type:   GYROSCOPE,
+			Config: settings.GyroConfig,
+		},
+		mag: types.Sensor{
+			Type: MAGNETOMETER,
 		},
 	}
 	return &dev, nil
@@ -152,14 +154,25 @@ func (dev *Device) Start() {
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (acc types.XYZ, isAccDataReady bool, gyro types.XYZ, isGyroDataReady bool, err error) {
+func (dev *Device) ReadData() (imu.ImuData, error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
 	dev.duration = dev.lastReading - now
 	dev.lastReading = now
-	dev.processAccelerometerData(data)
-	dev.processGyroscopeData(data[6:])
-	acc, isAccDataReady = dev.acc.GetData()
-	gyro, isGyroDataReady = dev.gyro.GetData()
-	return
+	if err != nil {
+		return imu.ImuData{}, err
+	}
+	acc, accErr := dev.processAccelerometerData(data)
+	gyro, gyroErr := dev.processGyroscopeData(data[6:])
+
+	return imu.ImuData{
+		Acc: types.SensorData{
+			Error: accErr,
+			Data:  acc,
+		},
+		Gyro: types.SensorData{
+			Error: gyroErr,
+			Data:  gyro,
+		},
+	}, nil
 }

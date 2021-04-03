@@ -17,14 +17,13 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(dev imu.ImuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
-	var gyro types.XYZ
+func readtask(dev imu.IMU, data chan types.XYZ, stop chan bool, done chan bool) {
 	dev.Start()
 
 	var finished bool = false
 	for !finished {
-		_, _, gyro, _, _ = dev.ReadData()
-		data <- gyro
+		imuData, _ := dev.ReadData()
+		data <- imuData.Gyro.Data
 		select {
 		case finished = <-stop:
 		default:

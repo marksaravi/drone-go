@@ -26,6 +26,10 @@ type GyroscopeConfig struct {
 	ScaleLevel int
 }
 
+// MagnetometerConfig is the configuration for Magnetometer
+type MagnetometerConfig struct {
+}
+
 // Device is icm20948 mems
 type Device struct {
 	*sysfs.SPI
@@ -36,6 +40,7 @@ type Device struct {
 	config      DeviceConfig
 	acc         types.Sensor
 	gyro        types.Sensor
+	mag         types.Sensor
 }
 
 type Settings struct {
@@ -44,4 +49,5 @@ type Settings struct {
 	Config     DeviceConfig
 	AccConfig  AccelerometerConfig
 	GyroConfig GyroscopeConfig
+	MagConfig  MagnetometerConfig
 }

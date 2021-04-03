@@ -1,7 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -21,7 +20,6 @@ func (dev *Device) InitAccelerometer() error {
 		log.Fatal("Accelerometer config mismatch")
 	}
 
-	fmt.Println("Accelerometer Sensitivity", config.SensitivityLevel)
 	data, err := dev.readRegister(ACCEL_CONFIG, 2)
 	var accsen byte = byte(config.SensitivityLevel) << 1
 	data[0] = data[0] & 0b11111001
@@ -40,11 +38,15 @@ func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
 	return config, err
 }
 
-func (dev *Device) processAccelerometerData(data []byte) {
+func (dev *Device) processAccelerometerData(data []byte) (types.XYZ, error) {
 	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
 	accSens := accelerometerSensitivity[accConfig.SensitivityLevel]
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / accSens
 	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / accSens
 	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / accSens
-	dev.GetAcc().SetData(x, y, z)
+	return types.XYZ{
+		X: x,
+		Y: y,
+		Z: z,
+	}, nil
 }

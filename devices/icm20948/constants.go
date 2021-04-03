@@ -53,3 +53,9 @@ const (
 	SCALE_2 float64 = 32.8
 	SCALE_3 float64 = 16.4
 )
+
+const (
+	ACCELEROMETER = "accelerometer"
+	GYROSCOPE     = "gyroscope"
+	MAGNETOMETER  = "magnetometer"
+)

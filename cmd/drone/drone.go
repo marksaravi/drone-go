@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+
+	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
 )
 
 func main() {
-	imu := initiateIMU()
+	var imu imuLib.IMU
+	imu = initiateIMU()
 
-	defer imu.Dev.Close()
-	name, code, err := imu.Dev.WhoAmI()
+	defer imu.Close()
+	name, code, err := imu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X, %v\n", name, code, err)
-	imu.Dev.Start()
-	imu.ReadData()
-	fmt.Println("Orientation: ", imu.Orientation)
+	imu.Start()
+	imuData, _ := imu.ReadData()
+	fmt.Println("Orientation: ", imuData.Gyro)
 }
