@@ -5,12 +5,12 @@ import (
 )
 
 func main() {
-	mpu := initiateMPU()
+	imu := initiateIMU()
 
-	defer mpu.Dev.Close()
-	name, code, err := mpu.Dev.WhoAmI()
+	defer imu.Dev.Close()
+	name, code, err := imu.Dev.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X, %v\n", name, code, err)
-	mpu.Dev.Start()
-	mpu.ReadData()
-	fmt.Println("Orientation: ", mpu.Orientation)
+	imu.Dev.Start()
+	imu.ReadData()
+	fmt.Println("Orientation: ", imu.Orientation)
 }

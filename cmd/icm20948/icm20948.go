@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
-	"github.com/MarkSaravi/drone-go/modules/mpu"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -17,7 +17,7 @@ func errCheck(step string, err error) {
 	}
 }
 
-func readtask(dev mpu.MpuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
+func readtask(dev imu.ImuDevice, data chan types.XYZ, stop chan bool, done chan bool) {
 	var gyro types.XYZ
 	dev.Start()
 

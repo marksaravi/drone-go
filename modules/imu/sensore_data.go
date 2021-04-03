@@ -1,4 +1,4 @@
-package mpu
+package imu
 
 import "github.com/MarkSaravi/drone-go/types"
 

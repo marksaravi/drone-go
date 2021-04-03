@@ -1,4 +1,4 @@
-package mpu
+package imu
 
 import (
 	"github.com/MarkSaravi/drone-go/types"
@@ -6,8 +6,8 @@ import (
 
 const BUFFER_LEN uint8 = 4
 
-// MPU is interface to mpu mems
-type MpuDevice interface {
+// IMU is interface to imu mems
+type ImuDevice interface {
 	Close() error
 	InitDevice() error
 	Start()
@@ -16,31 +16,31 @@ type MpuDevice interface {
 	WhoAmI() (string, byte, error)
 }
 
-type MPU struct {
-	Dev         MpuDevice
+type IMU struct {
+	Dev         ImuDevice
 	acc         SensorData
 	gyro        SensorData
 	Orientation types.XYZ
 }
 
-func NewMPU(dev MpuDevice) *MPU {
-	return &MPU{
+func NewIMU(dev ImuDevice) *IMU {
+	return &IMU{
 		Dev:  dev,
 		acc:  NewSensorData(BUFFER_LEN),
 		gyro: NewSensorData(BUFFER_LEN),
 	}
 }
 
-func (mpu *MPU) ReadData() {
-	accData, isAccDataReady, gyroData, isGyroDataReady, err := mpu.Dev.ReadData()
+func (imu *IMU) ReadData() {
+	accData, isAccDataReady, gyroData, isGyroDataReady, err := imu.Dev.ReadData()
 	if err != nil {
 		return
 	}
 	if isAccDataReady {
-		mpu.acc.PushToFront(accData)
+		imu.acc.PushToFront(accData)
 	}
 	if isGyroDataReady {
-		mpu.gyro.PushToFront(gyroData)
+		imu.gyro.PushToFront(gyroData)
 	}
-	mpu.Orientation = mpu.gyro.data
+	imu.Orientation = imu.gyro.data
 }
