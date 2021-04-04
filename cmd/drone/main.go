@@ -11,25 +11,24 @@ import (
 func main() {
 	imu := initiateIMU()
 	defer imu.Close()
+
 	name, code, err := imu.WhoAmI()
 	fmt.Printf("name: %s, id: 0x%X, %v\n", name, code, err)
 	imu.Start()
 
-	var isRunning bool = true
 	var command types.Command
 	var imuData imuLib.ImuData
-	var stopImuCh = make(chan bool)
-	commandCh := createCommandChannel()
-	imuCh := createImuChannel(imu, stopImuCh)
-	for isRunning {
+
+	commandChannel := createCommandChannel()
+	imuIncomingDataChannel, imuControlChannel := createImuChannel(imu)
+	for command.Command != commands.COMMAND_END_PROGRAM {
 		select {
-		case command = <-commandCh:
+		case command = <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
-				stopImuCh <- true
-				isRunning = false
+				imuControlChannel <- command
 			}
 			fmt.Println("Stopping program ")
-		case imuData = <-imuCh:
+		case imuData = <-imuIncomingDataChannel:
 			fmt.Println(imuData)
 		}
 	}

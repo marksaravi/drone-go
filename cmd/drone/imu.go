@@ -5,9 +5,11 @@ import (
 	"os"
 	"time"
 
+	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/types"
 )
 
 func initiateIMU() imuLib.IMU {
@@ -28,22 +30,25 @@ func initiateIMU() imuLib.IMU {
 	return dev
 }
 
-func createImuChannel(imu imuLib.IMU, stopImuCh <-chan bool) chan imu.ImuData {
-	imuCh := make(chan imuLib.ImuData)
-	var stop bool = false
+func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
+	imuChannel := make(chan imuLib.ImuData)
+	imuControlChannel := make(chan types.Command)
+	var control types.Command
 	go func() {
-		for !stop {
+		for control.Command != commands.COMMAND_END_PROGRAM {
 			select {
-			case stop = <-stopImuCh:
-				fmt.Println("Stopping IMU")
+			case control = <-imuControlChannel:
+				if control.Command == commands.COMMAND_END_PROGRAM {
+					fmt.Println("Stopping IMU")
+				}
 			default:
 				data, err := imu.ReadData()
 				if err == nil {
-					imuCh <- data
+					imuChannel <- data
 				}
 				time.Sleep(time.Second)
 			}
 		}
 	}()
-	return imuCh
+	return imuChannel, imuControlChannel
 }
