@@ -86,7 +86,7 @@ func (dev *Device) selRegisterBank(regbank uint8) error {
 		return nil
 	}
 	dev.regbank = regbank
-	return dev.writeReg(REG_BANK_SEL, (regbank<<4)&0x30)
+	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
 func (dev *Device) readRegister(register uint16, len int) ([]uint8, error) {

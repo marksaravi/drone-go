@@ -52,7 +52,7 @@ func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
 				if err == nil {
 					imuChannel <- data
 				}
-				time.Sleep(250 * time.Nanosecond)
+				time.Sleep(1000 * time.Microsecond)
 			}
 		}
 	}()

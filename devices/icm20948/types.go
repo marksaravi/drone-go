@@ -8,8 +8,8 @@ import (
 
 // Register is the address and bank of the register
 type Register struct {
-	address byte
-	bank    byte
+	address uint8
+	bank    uint8
 }
 
 // DeviceConfig is the configuration for the device
@@ -37,7 +37,7 @@ type MagnetometerConfig struct {
 type Device struct {
 	*sysfs.SPI
 	spi.Conn
-	regbank     byte
+	regbank     uint8
 	lastReading int64
 	duration    int64
 	config      DeviceConfig

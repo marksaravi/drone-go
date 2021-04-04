@@ -32,16 +32,16 @@ func (dev *Device) InitGyroscope() error {
 	var gyroConfig1 uint8 = 0b00000000
 
 	if config.LowPassFilterEnabled {
-		gyroConfig1 = 0b00000001 | (byte(config.LowPassFilter) << 3)
+		gyroConfig1 = 0b00000001 | (uint8(config.LowPassFilter) << 3)
 	}
-	gyroConfig1 = gyroConfig1 | (byte(config.ScaleLevel) << 1)
-
-	fmt.Println("Gyro Config: ", gyroConfig1)
+	gyroConfig1 = gyroConfig1 | (uint8(config.ScaleLevel) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1)
+	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
+	fmt.Println("Gyro Config: ", cnfg)
 	return err
 }
 
-func (dev *Device) processGyroscopeData(data []byte) (types.XYZ, error) {
+func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.ScaleLevel]
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / scale
