@@ -36,6 +36,8 @@ func (dev *Device) InitGyroscope() error {
 	}
 	gyroConfig1 = gyroConfig1 | (uint8(config.ScaleLevel) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1)
+	// h, l := utils.IntToTowsComplementBytes(-6)
+	// dev.writeRegister(ZG_OFFS_USRH, h, l)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	fmt.Println("Gyro Config: ", cnfg)
 	return err
@@ -46,7 +48,7 @@ func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	scale := gyroFullScale[gyroConfig.ScaleLevel]
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / scale
 	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / scale
-	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / scale
+	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - 6.075) / scale
 	return types.XYZ{
 		X: x,
 		Y: y,

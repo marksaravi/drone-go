@@ -36,7 +36,7 @@ const (
 	GYRO_SMPLRT_DIV uint16 = BANK2 | 0x0
 	GYRO_CONFIG_1   uint16 = BANK2 | 0x1
 	GYRO_CONFIG_2   uint16 = BANK2 | 0x2
-	ZG_OFFS_USRL    uint16 = BANK2 | 0x8
+	ZG_OFFS_USRH    uint16 = BANK2 | 0x7
 	ACCEL_CONFIG    uint16 = BANK2 | 0x14
 	ACCEL_CONFIG_2  uint16 = BANK2 | 0x15
 	MOD_CTRL_USR    uint16 = BANK2 | 0x54
