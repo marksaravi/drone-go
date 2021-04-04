@@ -21,7 +21,7 @@ func initiateIMU() imuLib.IMU {
 			ScaleLevel:             2,
 			LowPassFilterEnabled:   true,
 			LowPassFilter:          7,
-			LowPassFilterAveraging: 2,
+			LowPassFilterAveraging: 7,
 			XOffset:                3.8160075,
 			YOffset:                5.97310,
 			ZOffset:                6.07156,
