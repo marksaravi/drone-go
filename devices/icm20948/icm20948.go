@@ -130,11 +130,8 @@ func (dev *Device) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
-	data, err := dev.readRegister(PWR_MGMT_1, 1)
-	const nosleep byte = 0b10111111
-	config := byte(data[0] & nosleep)
-	const accGyro byte = 0b00000000
-	err = dev.writeRegister(PWR_MGMT_1, config, accGyro)
+	// No low power mode, enabling everything with 20Mhz clock
+	err = dev.writeRegister(PWR_MGMT_1, 0b00000000, 0b00000000)
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitAccelerometer()
 	time.Sleep(50 * time.Millisecond) // wait for starting

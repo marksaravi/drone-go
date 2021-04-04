@@ -1,6 +1,7 @@
 package icm20948
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/MarkSaravi/drone-go/types"
@@ -27,9 +28,16 @@ func (dev *Device) InitGyroscope() error {
 	if !ok {
 		log.Fatal("Gyro config mismatch")
 	}
-	var config1 byte = 0
-	config1 = (byte(config.ScaleLevel) << 1) | (config1 & 0b11111001)
-	err := dev.writeRegister(GYRO_CONFIG_1, config1)
+
+	var gyroConfig1 uint8 = 0b00000000
+
+	if config.LowPassFilterEnabled {
+		gyroConfig1 = 0b00000001 | (byte(config.LowPassFilter) << 3)
+	}
+	gyroConfig1 = gyroConfig1 | (byte(config.ScaleLevel) << 1)
+
+	fmt.Println("Gyro Config: ", gyroConfig1)
+	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1)
 	return err
 }
 
@@ -39,12 +47,9 @@ func (dev *Device) processGyroscopeData(data []byte) (types.XYZ, error) {
 	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / gyroDegPerSec
 	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / gyroDegPerSec
 	z := float64(utils.TowsComplementBytesToInt(data[4], data[5])) / gyroDegPerSec
-	dx := float64(dev.duration) * x / 1e9
-	dy := float64(dev.duration) * y / 1e9
-	dz := float64(dev.duration) * z / 1e9
 	return types.XYZ{
-		X: dx,
-		Y: dy,
-		Z: dz,
+		X: x,
+		Y: y,
+		Z: z,
 	}, nil
 }

@@ -29,7 +29,7 @@ func main() {
 			}
 			fmt.Println("Stopping program ")
 		case imuData = <-imuIncomingDataChannel:
-			fmt.Println(imuData)
+			fmt.Println(imuData.Gyro.Data)
 		}
 	}
 }

@@ -23,7 +23,10 @@ type AccelerometerConfig struct {
 
 // GyroscopeConfig is the configuration for Gyroscope
 type GyroscopeConfig struct {
-	ScaleLevel int
+	ScaleLevel             int
+	LowPassFilterEnabled   bool
+	LowPassFilter          int
+	LowPassFilterAveraging int
 }
 
 // MagnetometerConfig is the configuration for Magnetometer

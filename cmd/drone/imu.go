@@ -18,9 +18,13 @@ func initiateIMU() imuLib.IMU {
 		ChipSelect: 0,
 		Config:     icm20948.DeviceConfig{},
 		AccConfig:  icm20948.AccelerometerConfig{SensitivityLevel: 3},
-		GyroConfig: icm20948.GyroscopeConfig{ScaleLevel: 2},
-	},
-	)
+		GyroConfig: icm20948.GyroscopeConfig{
+			ScaleLevel:             2,
+			LowPassFilterEnabled:   true,
+			LowPassFilter:          7,
+			LowPassFilterAveraging: 2,
+		},
+	})
 	if err != nil {
 		os.Exit(1)
 	}
