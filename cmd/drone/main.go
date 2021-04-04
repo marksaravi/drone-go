@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"math"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
@@ -21,11 +21,10 @@ func main() {
 
 	commandChannel := createCommandChannel()
 	imuIncomingDataChannel, imuControlChannel := createImuChannel(imu)
-	var counter = 0
-	var start = time.Now()
 	var x float64 = 0
 	var y float64 = 0
 	var z float64 = 0
+	var currZ float64 = 0
 	for command.Command != commands.COMMAND_END_PROGRAM {
 		select {
 		case command = <-commandChannel:
@@ -37,12 +36,10 @@ func main() {
 
 			x = x + imuData.Gyro.Data.X*imuData.Duration
 			y = y + imuData.Gyro.Data.Y*imuData.Duration
-			z = imuData.Gyro.Data.Z * imuData.Duration
-			counter++
-			if time.Since(start) > 500*time.Millisecond {
-				fmt.Println(x, y, z, counter)
-				start = time.Now()
-				counter = 0
+			z = z + imuData.Gyro.Data.Z*imuData.Duration
+			if math.Abs(currZ-z) > 1 {
+				fmt.Println(z)
+				currZ = z
 			}
 		}
 	}

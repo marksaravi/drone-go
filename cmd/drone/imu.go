@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
@@ -52,7 +51,6 @@ func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
 				if err == nil {
 					imuChannel <- data
 				}
-				time.Sleep(1000 * time.Microsecond)
 			}
 		}
 	}()
