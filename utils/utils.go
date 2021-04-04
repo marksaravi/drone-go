@@ -18,15 +18,15 @@ func IntToTowsComplement(a int16) uint16 {
 	return *(*uint16)(unsafe.Pointer(&a))
 }
 
-// TowsComplementBytesToInt converts 2's complement H and L byte to signed int16
-func TowsComplementBytesToInt(h, l byte) int16 {
-	b := binary.BigEndian.Uint16([]byte{h, l})
+// TowsComplementBytesToInt converts 2's complement H and L uint8 to signed int16
+func TowsComplementBytesToInt(h, l uint8) int16 {
+	b := binary.BigEndian.Uint16([]uint8{h, l})
 	return TowsComplementToInt(b)
 }
 
-// IntToTowsComplementBytes converts 2's complement H and L byte to signed int16
-func IntToTowsComplementBytes(a int16) (h, l byte) {
-	b := make([]byte, 2)
+// IntToTowsComplementBytes converts 2's complement H and L uint8 to signed int16
+func IntToTowsComplementBytes(a int16) (h, l uint8) {
+	b := make([]uint8, 2)
 	binary.LittleEndian.PutUint16(b[0:], IntToTowsComplement(a))
 	h = b[1]
 	l = b[0]

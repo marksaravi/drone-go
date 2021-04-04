@@ -13,8 +13,8 @@ import (
 
 func reg(reg uint16) *Register {
 	return &Register{
-		address: byte(reg),
-		bank:    byte(reg >> 8),
+		address: uint8(reg),
+		bank:    uint8(reg >> 8),
 	}
 }
 
@@ -64,24 +64,24 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 	return &dev, nil
 }
 
-func (dev *Device) readReg(address byte, len int) ([]byte, error) {
-	w := make([]byte, len+1)
-	r := make([]byte, len+1)
+func (dev *Device) readReg(address uint8, len int) ([]uint8, error) {
+	w := make([]uint8, len+1)
+	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
 	err := dev.Conn.Tx(w, r)
 	return r[1:], err
 }
 
-func (dev *Device) writeReg(address byte, data ...byte) error {
+func (dev *Device) writeReg(address uint8, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
-	w := append([]byte{address & 0x7F}, data...)
+	w := append([]uint8{address & 0x7F}, data...)
 	err := dev.Conn.Tx(w, nil)
 	return err
 }
 
-func (dev *Device) selRegisterBank(regbank byte) error {
+func (dev *Device) selRegisterBank(regbank uint8) error {
 	if regbank == dev.regbank {
 		return nil
 	}
@@ -89,13 +89,13 @@ func (dev *Device) selRegisterBank(regbank byte) error {
 	return dev.writeReg(REG_BANK_SEL, (regbank<<4)&0x30)
 }
 
-func (dev *Device) readRegister(register uint16, len int) ([]byte, error) {
+func (dev *Device) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *Device) writeRegister(register uint16, data ...byte) error {
+func (dev *Device) writeRegister(register uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -105,7 +105,7 @@ func (dev *Device) writeRegister(register uint16, data ...byte) error {
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA
-func (dev *Device) WhoAmI() (name string, id byte, err error) {
+func (dev *Device) WhoAmI() (name string, id uint8, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	id = data[0]
@@ -141,7 +141,7 @@ func (dev *Device) InitDevice() error {
 }
 
 // ReadRawData reads all Accl and Gyro data
-func (dev *Device) ReadRawData() ([]byte, error) {
+func (dev *Device) ReadRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
