@@ -12,7 +12,6 @@ func createCommandChannel() chan types.Command {
 	go func() {
 		var input = "no"
 		for input != "end" {
-			fmt.Printf("Waiting for command: ")
 			fmt.Scanf("%s", &input)
 		}
 		command <- types.Command{

@@ -131,7 +131,7 @@ func (dev *Device) InitDevice() error {
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
 	// No low power mode, enabling everything with 20Mhz clock
-	err = dev.writeRegister(PWR_MGMT_1, 0b00000000, 0b00000000)
+	err = dev.writeRegister(PWR_MGMT_1, 0b00000001, 0b00000000)
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitAccelerometer()
 	time.Sleep(50 * time.Millisecond) // wait for starting
