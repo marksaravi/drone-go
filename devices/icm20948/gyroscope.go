@@ -46,9 +46,9 @@ func (dev *Device) InitGyroscope() error {
 func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.ScaleLevel]
-	x := float64(utils.TowsComplementBytesToInt(data[0], data[1])) / scale
-	y := float64(utils.TowsComplementBytesToInt(data[2], data[3])) / scale
-	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - 6.075) / scale
+	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - gyroConfig.XOffset) / scale
+	y := (float64(utils.TowsComplementBytesToInt(data[2], data[3])) - gyroConfig.YOffset) / scale
+	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - gyroConfig.ZOffset) / scale
 	return types.XYZ{
 		X: x,
 		Y: y,

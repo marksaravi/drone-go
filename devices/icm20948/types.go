@@ -27,6 +27,9 @@ type GyroscopeConfig struct {
 	LowPassFilterEnabled   bool
 	LowPassFilter          int
 	LowPassFilterAveraging int
+	XOffset                float64
+	YOffset                float64
+	ZOffset                float64
 }
 
 // MagnetometerConfig is the configuration for Magnetometer
