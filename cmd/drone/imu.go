@@ -24,7 +24,7 @@ func initiateIMU() imuLib.IMU {
 			LowPassFilterAveraging: 2,
 			XOffset:                0,
 			YOffset:                0,
-			ZOffset:                6.075,
+			ZOffset:                6.07156,
 		},
 	})
 	if err != nil {
