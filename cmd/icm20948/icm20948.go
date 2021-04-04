@@ -18,7 +18,7 @@ func errCheck(step string, err error) {
 }
 
 func readtask(dev imu.IMU, data chan types.XYZ, stop chan bool, done chan bool) {
-	dev.Start()
+	dev.ResetGyroTimer()
 
 	var finished bool = false
 	for !finished {

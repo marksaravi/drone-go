@@ -7,6 +7,7 @@ import (
 const BUFFER_LEN uint8 = 4
 
 type ImuData struct {
+	Duration       float64
 	Acc, Gyro, Mag types.SensorData
 }
 
@@ -14,7 +15,7 @@ type ImuData struct {
 type IMU interface {
 	Close() error
 	InitDevice() error
-	Start()
+	ResetGyroTimer()
 	ReadRawData() ([]byte, error)
 	ReadData() (ImuData, error)
 	WhoAmI() (string, byte, error)

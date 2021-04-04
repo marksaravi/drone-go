@@ -39,6 +39,8 @@ func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
 	imuControlChannel := make(chan types.Command)
 	var control types.Command
 	go func() {
+
+		imu.ResetGyroTimer()
 		for control.Command != commands.COMMAND_END_PROGRAM {
 			select {
 			case control = <-imuControlChannel:
@@ -50,7 +52,7 @@ func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
 				if err == nil {
 					imuChannel <- data
 				}
-				time.Sleep(time.Second)
+				time.Sleep(250 * time.Nanosecond)
 			}
 		}
 	}()
