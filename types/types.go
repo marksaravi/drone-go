@@ -10,7 +10,7 @@ type XYZ struct {
 }
 
 type Euler struct {
-	Theta float64
+	Theta, Phi float64
 }
 
 type SensorData struct {

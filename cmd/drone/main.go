@@ -48,7 +48,7 @@ func main() {
 			if math.Abs(currValue-v) > 0.025 && time.Since(lastPrint) > time.Millisecond*250 {
 				// fmt.Println(x, y, z)
 				e, _ := euler.AccelerometerToEulerAngles(imuData.Acc.Data)
-				fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta))
+				fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
 				lastPrint = time.Now()
 				currValue = v
 			}
