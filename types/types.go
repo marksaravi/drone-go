@@ -9,6 +9,10 @@ type XYZ struct {
 	X, Y, Z float64
 }
 
+type Euler struct {
+	Theta float64
+}
+
 type SensorData struct {
 	Error error
 	Data  XYZ
