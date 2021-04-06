@@ -32,7 +32,10 @@ func main() {
 		select {
 		case command = <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
-				imuControlChannel <- command
+				select {
+				case imuControlChannel <- command:
+				default:
+				}
 			}
 			fmt.Println("Stopping program ")
 		case imuData = <-imuIncomingDataChannel:
