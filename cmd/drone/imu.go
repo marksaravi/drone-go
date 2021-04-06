@@ -35,10 +35,9 @@ func initiateIMU() imu.IMU {
 	return dev
 }
 
-func createImuChannel() (chan imu.ImuData, chan types.Command) {
+func createImuChannel() (<-chan imu.ImuData, chan<- types.Command) {
 	imuDataChannel := make(chan imu.ImuData)
-	imuControlChannel := make(chan types.Command)
-
+	imuControlChannel := make(chan types.Command, 1)
 	go func() {
 		dev := initiateIMU()
 		defer dev.Close()
@@ -51,20 +50,25 @@ func createImuChannel() (chan imu.ImuData, chan types.Command) {
 		fmt.Printf("name: %s, id: 0x%X\n", name, code)
 		var control types.Command
 		dev.ResetGyroTimer()
-
-		for control.Command != commands.COMMAND_END_PROGRAM {
+		running := true
+		for running {
 			select {
 			case control = <-imuControlChannel:
 				if control.Command == commands.COMMAND_END_PROGRAM {
 					fmt.Println("Stopping IMU")
+					running = false
 				}
 			default:
 				data, err := dev.ReadData()
 				if err == nil {
-					imuDataChannel <- data
+					select {
+					case imuDataChannel <- data:
+					default:
+					}
 				}
 			}
 		}
+		fmt.Println("*******************************")
 	}()
 	return imuDataChannel, imuControlChannel
 }

@@ -8,7 +8,6 @@ import (
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils/euler"
 )
 
 func main() {
@@ -22,16 +21,21 @@ func main() {
 	var z float64 = 0
 	var currValue float64 = 1000
 	lastPrint := time.Now()
-	for command.Command != commands.COMMAND_END_PROGRAM {
+	var running = true
+	for running {
 		select {
 		case command = <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
+				fmt.Println("command is COMMAND_END_PROGRAM")
 				select {
 				case imuControlChannel <- command:
+					fmt.Println("Sending COMMAND_END_PROGRAM to IMU")
 				default:
+					fmt.Println("No message sent for IMU")
 				}
+				running = false
 			}
-			fmt.Println("Stopping program ")
+
 		case imuData = <-imuDataChannel:
 			// x = x + imuData.Gyro.Data.X*imuData.Duration
 			// y = y + imuData.Gyro.Data.Y*imuData.Duration
@@ -44,11 +48,12 @@ func main() {
 
 			if math.Abs(currValue-v) > 0.025 && time.Since(lastPrint) > time.Millisecond*250 {
 				// fmt.Println(x, y, z)
-				e, _ := euler.AccelerometerToEulerAngles(imuData.Acc.Data)
-				fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
+				// e, _ := euler.AccelerometerToEulerAngles(imuData.Acc.Data)
+				// fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
 				lastPrint = time.Now()
 				currValue = v
 			}
+
 		}
 	}
 }
