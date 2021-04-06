@@ -17,7 +17,7 @@ func main() {
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
 
-	commandChannel := createCommandChannel()
+	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(&wg)
 	var x float64 = 0
 	var y float64 = 0
@@ -29,12 +29,10 @@ func main() {
 		select {
 		case command = <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
-				fmt.Println("command is COMMAND_END_PROGRAM")
+				fmt.Println("COMMAND_END_PROGRAM is received, terminating services...")
 				select {
 				case imuControlChannel <- command:
-					fmt.Println("Sending COMMAND_END_PROGRAM to IMU")
 				default:
-					fmt.Println("No message sent for IMU")
 				}
 				running = false
 				wg.Wait()
@@ -60,4 +58,5 @@ func main() {
 
 		}
 	}
+	fmt.Println("Program stopped.")
 }

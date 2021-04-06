@@ -42,8 +42,6 @@ func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Comm
 	go func() {
 		wg.Add(1)
 		dev := initiateIMU()
-		defer dev.Close()
-		defer wg.Done()
 
 		name, code, deverr := dev.WhoAmI()
 		if deverr != nil {
@@ -58,7 +56,6 @@ func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Comm
 			select {
 			case control = <-imuControlChannel:
 				if control.Command == commands.COMMAND_END_PROGRAM {
-					fmt.Println("Stopping IMU")
 					running = false
 				}
 			default:
@@ -71,6 +68,9 @@ func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Comm
 				}
 			}
 		}
+		dev.Close()
+		fmt.Println("IMU stopped.")
+		wg.Done()
 	}()
 	return imuDataChannel, imuControlChannel
 }
