@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
@@ -35,12 +36,14 @@ func initiateIMU() imu.IMU {
 	return dev
 }
 
-func createImuChannel() (<-chan imu.ImuData, chan<- types.Command) {
+func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Command) {
 	imuDataChannel := make(chan imu.ImuData)
 	imuControlChannel := make(chan types.Command, 1)
 	go func() {
+		wg.Add(1)
 		dev := initiateIMU()
 		defer dev.Close()
+		defer wg.Done()
 
 		name, code, deverr := dev.WhoAmI()
 		if deverr != nil {
@@ -68,7 +71,6 @@ func createImuChannel() (<-chan imu.ImuData, chan<- types.Command) {
 				}
 			}
 		}
-		fmt.Println("*******************************")
 	}()
 	return imuDataChannel, imuControlChannel
 }

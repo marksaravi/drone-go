@@ -3,19 +3,22 @@ package main
 import (
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils/euler"
 )
 
 func main() {
 	var command types.Command
 	var imuData imu.ImuData
+	var wg sync.WaitGroup
 
 	commandChannel := createCommandChannel()
-	imuDataChannel, imuControlChannel := createImuChannel()
+	imuDataChannel, imuControlChannel := createImuChannel(&wg)
 	var x float64 = 0
 	var y float64 = 0
 	var z float64 = 0
@@ -34,6 +37,7 @@ func main() {
 					fmt.Println("No message sent for IMU")
 				}
 				running = false
+				wg.Wait()
 			}
 
 		case imuData = <-imuDataChannel:
@@ -48,8 +52,8 @@ func main() {
 
 			if math.Abs(currValue-v) > 0.025 && time.Since(lastPrint) > time.Millisecond*250 {
 				// fmt.Println(x, y, z)
-				// e, _ := euler.AccelerometerToEulerAngles(imuData.Acc.Data)
-				// fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
+				e, _ := euler.AccelerometerToEulerAngles(imuData.Acc.Data)
+				fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
 				lastPrint = time.Now()
 				currValue = v
 			}

@@ -67,8 +67,8 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 }
 
 func (dev *Device) Close() {
-	fmt.Println("Closing ", dev.Name)
 	dev.SPI.Close()
+	fmt.Println("Closing ", dev.Name)
 }
 
 func (dev *Device) readReg(address uint8, len int) ([]uint8, error) {
