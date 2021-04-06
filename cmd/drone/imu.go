@@ -7,11 +7,10 @@ import (
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
-	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-func initiateIMU() imuLib.IMU {
+func initiateIMU() imu.IMU {
 	dev, err := icm20948.NewICM20948Driver(icm20948.Settings{
 		BusNumber:  0,
 		ChipSelect: 0,
@@ -36,13 +35,23 @@ func initiateIMU() imuLib.IMU {
 	return dev
 }
 
-func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
-	imuChannel := make(chan imuLib.ImuData)
+func createImuChannel() (chan imu.ImuData, chan types.Command) {
+	imuDataChannel := make(chan imu.ImuData)
 	imuControlChannel := make(chan types.Command)
-	var control types.Command
-	go func() {
 
-		imu.ResetGyroTimer()
+	go func() {
+		dev := initiateIMU()
+		defer dev.Close()
+
+		name, code, deverr := dev.WhoAmI()
+		if deverr != nil {
+			fmt.Println("Failed to initialize IMU device with error ", deverr)
+			os.Exit(1)
+		}
+		fmt.Printf("name: %s, id: 0x%X\n", name, code)
+		var control types.Command
+		dev.ResetGyroTimer()
+
 		for control.Command != commands.COMMAND_END_PROGRAM {
 			select {
 			case control = <-imuControlChannel:
@@ -50,12 +59,12 @@ func createImuChannel(imu imuLib.IMU) (chan imu.ImuData, chan types.Command) {
 					fmt.Println("Stopping IMU")
 				}
 			default:
-				data, err := imu.ReadData()
+				data, err := dev.ReadData()
 				if err == nil {
-					imuChannel <- data
+					imuDataChannel <- data
 				}
 			}
 		}
 	}()
-	return imuChannel, imuControlChannel
+	return imuDataChannel, imuControlChannel
 }

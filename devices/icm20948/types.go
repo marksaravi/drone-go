@@ -38,6 +38,7 @@ type MagnetometerConfig struct {
 
 // Device is icm20948 mems
 type Device struct {
+	Name string
 	*sysfs.SPI
 	spi.Conn
 	regbank     uint8

@@ -13,7 +13,7 @@ type ImuData struct {
 
 // IMU is interface to imu mems
 type IMU interface {
-	Close() error
+	Close()
 	InitDevice() error
 	ResetGyroTimer()
 	ReadRawData() ([]byte, error)

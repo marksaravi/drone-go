@@ -1,6 +1,7 @@
 package icm20948
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/modules/imu"
@@ -46,6 +47,7 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 		return nil, err
 	}
 	dev := Device{
+		Name:    "ICM20948",
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
@@ -62,6 +64,11 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 		},
 	}
 	return &dev, nil
+}
+
+func (dev *Device) Close() {
+	fmt.Println("Closing ", dev.Name)
+	dev.SPI.Close()
 }
 
 func (dev *Device) readReg(address uint8, len int) ([]uint8, error) {

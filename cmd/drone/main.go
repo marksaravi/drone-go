@@ -6,23 +6,17 @@ import (
 	"time"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
-	imuLib "github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils/euler"
 )
 
 func main() {
-	imu := initiateIMU()
-	defer imu.Close()
-
-	name, code, err := imu.WhoAmI()
-	fmt.Printf("name: %s, id: 0x%X, %v\n", name, code, err)
-
 	var command types.Command
-	var imuData imuLib.ImuData
+	var imuData imu.ImuData
 
 	commandChannel := createCommandChannel()
-	imuIncomingDataChannel, imuControlChannel := createImuChannel(imu)
+	imuDataChannel, imuControlChannel := createImuChannel()
 	var x float64 = 0
 	var y float64 = 0
 	var z float64 = 0
@@ -38,7 +32,7 @@ func main() {
 				}
 			}
 			fmt.Println("Stopping program ")
-		case imuData = <-imuIncomingDataChannel:
+		case imuData = <-imuDataChannel:
 			// x = x + imuData.Gyro.Data.X*imuData.Duration
 			// y = y + imuData.Gyro.Data.Y*imuData.Duration
 			// z = z + imuData.Gyro.Data.Z*imuData.Duration
