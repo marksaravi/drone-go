@@ -9,8 +9,8 @@ type XYZ struct {
 	X, Y, Z float64
 }
 
-type Euler struct {
-	Theta, Phi float64
+type Rotations struct {
+	Roll, Pitch, Yaw float64
 }
 
 type SensorData struct {

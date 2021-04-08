@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/modules/imu"
-	"github.com/MarkSaravi/drone-go/utils/euler"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 var (
@@ -42,8 +42,8 @@ func (fs *FlightStates) ShowStates() {
 	v := math.Sqrt(x*x + y*y + z*z)
 
 	if math.Abs(currValue-v) > 0.025 && time.Since(lastPrint) > time.Millisecond*250 {
-		e, _ := euler.AccelerometerToEulerAngles(fs.imuData.Acc.Data)
-		fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Theta, e.Phi))
+		e, _ := utils.AccelerometerToRotations(fs.imuData.Acc.Data)
+		fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Roll, e.Pitch))
 		lastPrint = time.Now()
 		currValue = v
 	}
