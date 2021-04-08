@@ -35,14 +35,14 @@ type FlightStates struct {
 
 func (fs *FlightStates) Set(imuData imu.ImuData, config types.FlightConfig) {
 	fs.imuData = imuData
-	fs.setAccRotations(imuData, config.AccLowPassFilterCoefficient)
-	fs.setGyroRotations(imuData)
-	fs.setRotations(imuData, config.RotationsLowPassFilterCoefficient)
+	fs.setAccRotations(config.AccLowPassFilterCoefficient)
+	fs.setGyroRotations()
+	fs.setRotations(config.RotationsLowPassFilterCoefficient)
 }
 
-func (fs *FlightStates) setAccRotations(imuData imu.ImuData, lowPassFilterCoefficient float64) {
-	roll := math.Atan2(imuData.Acc.Data.X, imuData.Acc.Data.Z)
-	pitch := math.Atan2(imuData.Acc.Data.Y, imuData.Acc.Data.Z)
+func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
+	roll := math.Atan2(fs.imuData.Acc.Data.X, fs.imuData.Acc.Data.Z)
+	pitch := math.Atan2(fs.imuData.Acc.Data.Y, fs.imuData.Acc.Data.Z)
 
 	fs.accRotations = types.Rotations{
 		Roll:  utils.LowPassFilter(fs.accRotations.Roll, roll, lowPassFilterCoefficient),
@@ -51,24 +51,33 @@ func (fs *FlightStates) setAccRotations(imuData imu.ImuData, lowPassFilterCoeffi
 	}
 }
 
-func (fs *FlightStates) setGyroRotations(imuData imu.ImuData) {
-	fs.gyroRotations.Roll = fs.gyroRotations.Roll + fs.imuData.Gyro.Data.X*fs.imuData.Duration
-	fs.gyroRotations.Pitch = fs.gyroRotations.Pitch + fs.imuData.Gyro.Data.Y*fs.imuData.Duration
-	fs.gyroRotations.Yaw = fs.gyroRotations.Yaw + fs.imuData.Gyro.Data.Z*fs.imuData.Duration
+func (fs *FlightStates) setGyroRotations() {
+	curr := fs.gyroRotations   // current rotations by gyro
+	wg := fs.imuData.Gyro.Data // angular velocity
+	dt := fs.imuData.Duration  // time interval
+	fs.gyroRotations = types.Rotations{
+		Roll:  curr.Roll + wg.X*dt,
+		Pitch: curr.Pitch + wg.Y*dt,
+		Yaw:   curr.Yaw + wg.Z*dt,
+	}
 }
 
-func (fs *FlightStates) setRotations(imuData imu.ImuData, lowPassFilterCoefficient float64) {
-	fs.rotations = types.Rotations{
-		Roll: utils.LowPassFilter(
-			fs.rotations.Roll+fs.imuData.Gyro.Data.X*fs.imuData.Duration,
-			fs.accRotations.Roll,
-			lowPassFilterCoefficient),
-		Pitch: utils.LowPassFilter(
-			fs.rotations.Pitch+fs.imuData.Gyro.Data.Y*fs.imuData.Duration,
-			fs.accRotations.Pitch,
-			lowPassFilterCoefficient),
-		Yaw: fs.gyroRotations.Yaw,
+func lowPassFilter(curr types.Rotations, gyro types.XYZ, acc types.XYZ, dt float64, lowPassFilterCoefficient float64) types.Rotations {
+	return types.Rotations{
+		Roll:  utils.LowPassFilter(curr.Roll+gyro.X*dt, acc.X, lowPassFilterCoefficient),
+		Pitch: utils.LowPassFilter(curr.Pitch+gyro.Y*dt, acc.Y, lowPassFilterCoefficient),
+		Yaw:   utils.LowPassFilter(curr.Yaw+gyro.Z*dt, acc.Z, lowPassFilterCoefficient),
 	}
+}
+
+func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
+	fs.rotations = lowPassFilter(
+		fs.rotations,
+		fs.imuData.Gyro.Data,
+		fs.imuData.Acc.Data,
+		fs.imuData.Duration,
+		lowPassFilterCoefficient,
+	)
 }
 
 func (fs *FlightStates) ShowAccStates() {
