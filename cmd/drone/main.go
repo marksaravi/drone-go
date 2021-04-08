@@ -32,8 +32,9 @@ func main() {
 				wg.Wait()
 			}
 		case imuData = <-imuDataChannel:
-			flightStates.SetImuData(imuData)
-			flightStates.ShowStates()
+			flightStates.Set(imuData)
+			flightStates.ShowAccStates()
+			flightStates.ShowGyroStates()
 		}
 	}
 	fmt.Println("Program stopped.")

@@ -37,3 +37,7 @@ func IntToTowsComplementBytes(a int16) (h, l uint8) {
 func CalcVectorLen(v types.XYZ) float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }
+
+func LowPassFilter(oldValue, newValue, coefficient float64) float64 {
+	return oldValue*(1-coefficient) + newValue*coefficient
+}

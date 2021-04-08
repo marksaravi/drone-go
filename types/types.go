@@ -1,5 +1,7 @@
 package types
 
+import "math"
+
 // Config is the generic configuration
 type Config interface {
 }
@@ -11,6 +13,22 @@ type XYZ struct {
 
 type Rotations struct {
 	Roll, Pitch, Yaw float64
+}
+
+func (r Rotations) Scaler() float64 {
+	return math.Sqrt(r.Roll*r.Roll + r.Pitch*r.Pitch + r.Yaw*r.Yaw)
+}
+
+func toDeg(x float64) float64 {
+	return x / math.Pi * 180
+}
+
+func (r *Rotations) ToDeg() Rotations {
+	return Rotations{
+		Roll:  toDeg(r.Roll),
+		Pitch: toDeg(r.Pitch),
+		Yaw:   toDeg(r.Yaw),
+	}
 }
 
 type SensorData struct {

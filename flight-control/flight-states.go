@@ -6,45 +6,75 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/modules/imu"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/MarkSaravi/drone-go/types"
 )
 
 var (
-	lastPrint           time.Time
-	gyroX, gyroY, gyroZ float64
-	currValue           float64
+	lastAcc    time.Time
+	lastGyro   time.Time
+	millis     int
+	accScaler  float64
+	gyroScaler float64
 )
 
 func init() {
-	lastPrint = time.Now()
-	gyroX = 0
-	gyroY = 0
-	gyroZ = 0
-	currValue = 1000
+	lastAcc = time.Now()
+	lastGyro = time.Now()
+	millis = 250
+	gyroScaler = 0
+	accScaler = 0
 }
 
 type FlightStates struct {
-	imuData imu.ImuData
+	imuData       imu.ImuData
+	accRotations  types.Rotations
+	gyroRotations types.Rotations
+	rotations     types.Rotations
 }
 
-func (fs *FlightStates) SetImuData(imuData imu.ImuData) {
+func (fs *FlightStates) Set(imuData imu.ImuData) {
 	fs.imuData = imuData
+	fs.setAccRotations(imuData)
+	fs.setGyroRotations(imuData)
 }
 
-func (fs *FlightStates) ShowStates() {
-	gyroX = gyroX + fs.imuData.Gyro.Data.X*fs.imuData.Duration
-	gyroY = gyroY + fs.imuData.Gyro.Data.Y*fs.imuData.Duration
-	gyroZ = gyroZ + fs.imuData.Gyro.Data.Z*fs.imuData.Duration
-	x := fs.imuData.Acc.Data.X
-	y := fs.imuData.Acc.Data.Y
-	z := fs.imuData.Acc.Data.Z
+func (fs *FlightStates) setAccRotations(imuData imu.ImuData) {
+	roll := math.Atan2(imuData.Acc.Data.X, imuData.Acc.Data.Z)
+	pitch := math.Atan2(imuData.Acc.Data.Y, imuData.Acc.Data.Z)
 
-	v := math.Sqrt(x*x + y*y + z*z)
+	fs.accRotations = types.Rotations{
+		Roll:  roll,
+		Pitch: pitch,
+		Yaw:   0,
+	}
+}
 
-	if math.Abs(currValue-v) > 0.025 && time.Since(lastPrint) > time.Millisecond*250 {
-		e, _ := utils.AccelerometerToRotations(fs.imuData.Acc.Data)
-		fmt.Println(fmt.Sprintf("%.3f, %.3f, %.3f, %.3f, %.3f", x, y, z, e.Roll, e.Pitch))
-		lastPrint = time.Now()
-		currValue = v
+func (fs *FlightStates) setRotations() {
+
+}
+
+func (fs *FlightStates) setGyroRotations(imuData imu.ImuData) {
+	fs.gyroRotations.Roll = fs.gyroRotations.Roll + fs.imuData.Gyro.Data.X*fs.imuData.Duration
+	fs.gyroRotations.Pitch = fs.gyroRotations.Pitch + fs.imuData.Gyro.Data.Y*fs.imuData.Duration
+	fs.gyroRotations.Yaw = fs.gyroRotations.Yaw + fs.imuData.Gyro.Data.Z*fs.imuData.Duration
+}
+
+func (fs *FlightStates) ShowAccStates() {
+	s := fs.accRotations.ToDeg().Scaler()
+	if math.Abs(s-accScaler) > 1 && time.Since(lastAcc) > time.Millisecond*time.Duration(millis) {
+		ar := fs.accRotations.ToDeg()
+		fmt.Println(fmt.Sprintf("Acc: %.3f, %.3f, %.3f", ar.Roll, ar.Pitch, ar.Yaw))
+		accScaler = s
+		lastAcc = time.Now()
+	}
+}
+
+func (fs *FlightStates) ShowGyroStates() {
+	s := fs.gyroRotations.Scaler()
+	if math.Abs(s-gyroScaler) > 1 && time.Since(lastGyro) > time.Millisecond*time.Duration(millis) {
+		gr := fs.accRotations.ToDeg()
+		fmt.Println(fmt.Sprintf("Gyr: %.3f, %.3f, %.3f", gr.Roll, gr.Pitch, gr.Yaw))
+		gyroScaler = s
+		lastGyro = time.Now()
 	}
 }
