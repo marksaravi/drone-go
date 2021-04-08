@@ -6,6 +6,11 @@ import "math"
 type Config interface {
 }
 
+type FlightConfig struct {
+	AccLowPassFilterCoefficient       float64
+	RotationsLowPassFilterCoefficient float64
+}
+
 // XYZ is X, Y, Z data
 type XYZ struct {
 	X, Y, Z float64

@@ -7,6 +7,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 var (
@@ -32,31 +33,42 @@ type FlightStates struct {
 	rotations     types.Rotations
 }
 
-func (fs *FlightStates) Set(imuData imu.ImuData) {
+func (fs *FlightStates) Set(imuData imu.ImuData, config types.FlightConfig) {
 	fs.imuData = imuData
-	fs.setAccRotations(imuData)
+	fs.setAccRotations(imuData, config.AccLowPassFilterCoefficient)
 	fs.setGyroRotations(imuData)
+	fs.setRotations(imuData, config.RotationsLowPassFilterCoefficient)
 }
 
-func (fs *FlightStates) setAccRotations(imuData imu.ImuData) {
+func (fs *FlightStates) setAccRotations(imuData imu.ImuData, lowPassFilterCoefficient float64) {
 	roll := math.Atan2(imuData.Acc.Data.X, imuData.Acc.Data.Z)
 	pitch := math.Atan2(imuData.Acc.Data.Y, imuData.Acc.Data.Z)
 
 	fs.accRotations = types.Rotations{
-		Roll:  roll,
-		Pitch: pitch,
+		Roll:  utils.LowPassFilter(fs.accRotations.Roll, roll, lowPassFilterCoefficient),
+		Pitch: utils.LowPassFilter(fs.accRotations.Pitch, pitch, lowPassFilterCoefficient),
 		Yaw:   0,
 	}
-}
-
-func (fs *FlightStates) setRotations() {
-
 }
 
 func (fs *FlightStates) setGyroRotations(imuData imu.ImuData) {
 	fs.gyroRotations.Roll = fs.gyroRotations.Roll + fs.imuData.Gyro.Data.X*fs.imuData.Duration
 	fs.gyroRotations.Pitch = fs.gyroRotations.Pitch + fs.imuData.Gyro.Data.Y*fs.imuData.Duration
 	fs.gyroRotations.Yaw = fs.gyroRotations.Yaw + fs.imuData.Gyro.Data.Z*fs.imuData.Duration
+}
+
+func (fs *FlightStates) setRotations(imuData imu.ImuData, lowPassFilterCoefficient float64) {
+	fs.rotations = types.Rotations{
+		Roll: utils.LowPassFilter(
+			fs.rotations.Roll+fs.imuData.Gyro.Data.X*fs.imuData.Duration,
+			fs.accRotations.Roll,
+			lowPassFilterCoefficient),
+		Pitch: utils.LowPassFilter(
+			fs.rotations.Pitch+fs.imuData.Gyro.Data.Y*fs.imuData.Duration,
+			fs.accRotations.Pitch,
+			lowPassFilterCoefficient),
+		Yaw: fs.gyroRotations.Yaw,
+	}
 }
 
 func (fs *FlightStates) ShowAccStates() {
