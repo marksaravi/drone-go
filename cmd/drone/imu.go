@@ -16,7 +16,7 @@ func initiateIMU() imu.IMU {
 		BusNumber:  0,
 		ChipSelect: 0,
 		Config:     icm20948.DeviceConfig{},
-		AccConfig: types.AccelerometerConfig{
+		AccConfig: icm20948.AccelerometerConfig{
 			SensitivityLevel: 3,
 			Offsets: []types.Offsets{
 				{
@@ -41,7 +41,7 @@ func initiateIMU() imu.IMU {
 				},
 			},
 		},
-		GyroConfig: types.GyroscopeConfig{
+		GyroConfig: icm20948.GyroscopeConfig{
 			ScaleLevel:             2,
 			LowPassFilterEnabled:   true,
 			LowPassFilter:          7,

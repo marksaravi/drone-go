@@ -30,11 +30,30 @@ type Device struct {
 	mag         types.Sensor
 }
 
+// AccelerometerConfig is the configurations for Accelerometer
+type AccelerometerConfig struct {
+	SensitivityLevel int
+	Offsets          []types.Offsets
+}
+
+// GyroscopeConfig is the configuration for Gyroscope
+type GyroscopeConfig struct {
+	ScaleLevel             int
+	LowPassFilterEnabled   bool
+	LowPassFilter          int
+	LowPassFilterAveraging int
+	Offsets                []types.Offsets
+}
+
+// MagnetometerConfig is the configuration for Magnetometer
+type MagnetometerConfig struct {
+}
+
 type Settings struct {
 	BusNumber  int
 	ChipSelect int
 	Config     DeviceConfig
-	AccConfig  types.AccelerometerConfig
-	GyroConfig types.GyroscopeConfig
-	MagConfig  types.MagnetometerConfig
+	AccConfig  AccelerometerConfig
+	GyroConfig GyroscopeConfig
+	MagConfig  MagnetometerConfig
 }
