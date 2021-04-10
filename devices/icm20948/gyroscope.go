@@ -36,8 +36,6 @@ func (dev *Device) InitGyroscope() error {
 	}
 	gyroConfig1 = gyroConfig1 | (uint8(config.ScaleLevel) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1)
-	// h, l := utils.IntToTowsComplementBytes(-6)
-	// dev.writeRegister(ZG_OFFS_USRH, h, l)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	fmt.Println("Gyro Config: ", cnfg)
 	return err
