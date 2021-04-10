@@ -11,65 +11,8 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-func initiateIMU() imu.IMU {
-	dev, err := icm20948.NewICM20948Driver(icm20948.Settings{
-		BusNumber:  0,
-		ChipSelect: 0,
-		Config:     icm20948.DeviceConfig{},
-		AccConfig: icm20948.AccelerometerConfig{
-			SensitivityLevel: 3,
-			Offsets: []types.Offsets{
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-			},
-		},
-		GyroConfig: icm20948.GyroscopeConfig{
-			ScaleLevel:             2,
-			LowPassFilterEnabled:   true,
-			LowPassFilter:          7,
-			LowPassFilterAveraging: 7,
-			Offsets: []types.Offsets{
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-				{
-					X: 3.8160075,
-					Y: 5.97310,
-					Z: 6.07156,
-				},
-				{
-					X: 0,
-					Y: 0,
-					Z: 0,
-				},
-			},
-		},
-	})
+func initiateIMU(config icm20948.Config) imu.IMU {
+	dev, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -79,12 +22,12 @@ func initiateIMU() imu.IMU {
 	return dev
 }
 
-func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Command) {
+func createImuChannel(wg *sync.WaitGroup, config icm20948.Config) (<-chan imu.ImuData, chan<- types.Command) {
 	imuDataChannel := make(chan imu.ImuData, 64)
 	imuControlChannel := make(chan types.Command, 1)
 	go func() {
 		wg.Add(1)
-		dev := initiateIMU()
+		dev := initiateIMU(config)
 
 		name, code, deverr := dev.WhoAmI()
 		if deverr != nil {

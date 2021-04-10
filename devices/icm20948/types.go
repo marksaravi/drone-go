@@ -12,10 +12,6 @@ type Register struct {
 	bank    uint8
 }
 
-// DeviceConfig is the configuration for the device
-type DeviceConfig struct {
-}
-
 // Device is icm20948 mems
 type Device struct {
 	Name string
@@ -24,7 +20,6 @@ type Device struct {
 	regbank     uint8
 	lastReading int64
 	duration    int64
-	config      DeviceConfig
 	acc         types.Sensor
 	gyro        types.Sensor
 	mag         types.Sensor
@@ -32,28 +27,27 @@ type Device struct {
 
 // AccelerometerConfig is the configurations for Accelerometer
 type AccelerometerConfig struct {
-	SensitivityLevel int
-	Offsets          []types.Offsets
+	SensitivityLevel int             `yaml:"sensitivity_level"`
+	Offsets          []types.Offsets `yaml:"offsets"`
 }
 
 // GyroscopeConfig is the configuration for Gyroscope
 type GyroscopeConfig struct {
-	ScaleLevel             int
-	LowPassFilterEnabled   bool
-	LowPassFilter          int
-	LowPassFilterAveraging int
-	Offsets                []types.Offsets
+	ScaleLevel             int             `yaml:"scale_level"`
+	LowPassFilterEnabled   bool            `yaml:"lowpass_filter_enabled"`
+	LowPassFilter          int             `yaml:"lowpass_filter"`
+	LowPassFilterAveraging int             `yaml:"lowpass_filter_averaging"`
+	Offsets                []types.Offsets `yaml:"offsets"`
 }
 
 // MagnetometerConfig is the configuration for Magnetometer
 type MagnetometerConfig struct {
 }
 
-type Settings struct {
-	BusNumber  int
-	ChipSelect int
-	Config     DeviceConfig
-	AccConfig  AccelerometerConfig
-	GyroConfig GyroscopeConfig
-	MagConfig  MagnetometerConfig
+type Config struct {
+	BusNumber  int                 `yaml:"bus_number"`
+	ChipSelect int                 `yaml:"chip_select"`
+	AccConfig  AccelerometerConfig `yaml:"accelerometer"`
+	GyroConfig GyroscopeConfig     `yaml:"gyroscope"`
+	MagConfig  MagnetometerConfig  `yaml:"magnetometer"`
 }

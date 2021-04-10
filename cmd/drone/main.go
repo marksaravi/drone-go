@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
@@ -11,12 +12,17 @@ import (
 )
 
 func main() {
+	appConfig, err := readConfigs()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	var command types.Command
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
 	var flightStates flightcontrol.FlightStates
 	commandChannel := createCommandChannel(&wg)
-	imuDataChannel, imuControlChannel := createImuChannel(&wg)
+	imuDataChannel, imuControlChannel := createImuChannel(&wg, appConfig.Devices.ICM20948)
 	var running = true
 	flightConfig := types.FlightConfig{
 		AccLowPassFilterCoefficient:       0.05,
@@ -37,7 +43,7 @@ func main() {
 			}
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData, flightConfig)
-			flightStates.ShowAccStates()
+			// flightStates.ShowAccStates()
 			// flightStates.ShowGyroStates()
 		}
 	}

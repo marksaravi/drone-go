@@ -37,8 +37,8 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(settings Settings) (*Device, error) {
-	d, err := sysfs.NewSPI(settings.BusNumber, settings.ChipSelect)
+func NewICM20948Driver(config Config) (*Device, error) {
+	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
 	}
@@ -53,11 +53,11 @@ func NewICM20948Driver(settings Settings) (*Device, error) {
 		regbank: 0xFF,
 		acc: types.Sensor{
 			Type:   ACCELEROMETER,
-			Config: settings.AccConfig,
+			Config: config.AccConfig,
 		},
 		gyro: types.Sensor{
 			Type:   GYROSCOPE,
-			Config: settings.GyroConfig,
+			Config: config.GyroConfig,
 		},
 		mag: types.Sensor{
 			Type: MAGNETOMETER,
@@ -126,7 +126,6 @@ func (dev *Device) GetDeviceConfig() (
 	gyroConfig types.Config,
 	err error) {
 	// data, err := dev.readRegister(LP_CONFIG, 3)
-	config = DeviceConfig{}
 	accConfig, err = dev.getAccConfig()
 	gyroConfig, err = dev.getGyroConfig()
 	return

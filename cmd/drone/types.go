@@ -6,12 +6,8 @@ import (
 )
 
 type ApplicationConfig struct {
-	FlightConfig types.FlightConfig
-	ICM20948     struct {
-		BusNumber     int
-		ChipSelect    int
-		Accelerometer icm20948.AccelerometerConfig
-		Gyroscope     icm20948.GyroscopeConfig
-		Magnetometer  icm20948.MagnetometerConfig
-	}
+	FlightConfig types.FlightConfig `yaml:"flight_control"`
+	Devices      struct {
+		ICM20948 icm20948.Config `yaml:"icm20948"`
+	} `yaml:devices`
 }

@@ -1,0 +1,41 @@
+flight_control: 
+  accelerometer_lowpass_filter_coefficient: 0.05
+  rotations_lowpass_filter_coefficient: 0.05
+
+devices:
+  icm20948:
+    bus_number: 0
+    chip_select: 0
+    accelerometer:
+      sensitivity_level: 3
+      offsets:
+        - X: 0
+          Y: 0
+          Z: 0
+        - X: 0
+          Y: 0
+          Z: 0
+        - X: 0
+          Y: 0
+          Z: 0
+        - X: 0
+          Y: 0
+          Z: 0
+    gyroscope:
+      scale_level: 2
+      lowpass_filter_enabled: true
+      lowpass_filter:lowpass_filter: 0
+      lowpass_filter_averaging: 0
+      offsets:
+        - X: 0
+          Y: 0
+          Z: 0
+        - X: 0
+          Y: 0
+          Z: 0
+        - X: 3.8160075
+          Y: 5.97310
+          Z: 6.07156
+        - X: 0
+          Y: 0
+          Z: 0

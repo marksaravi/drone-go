@@ -5,8 +5,8 @@ type Config interface {
 }
 
 type FlightConfig struct {
-	AccLowPassFilterCoefficient       float64
-	RotationsLowPassFilterCoefficient float64
+	AccLowPassFilterCoefficient       float64 `yaml:"accelerometer_lowpass_filter_coefficient"`
+	RotationsLowPassFilterCoefficient float64 `yaml:"rotations_lowpass_filter_coefficient"`
 }
 
 // XYZ is X, Y, Z data
@@ -49,7 +49,7 @@ func (a *Sensor) SetConfig(config Config) {
 }
 
 type Offsets struct {
-	X float64
-	Y float64
-	Z float64
+	X float64 `yaml:"X"`
+	Y float64 `yaml:"Y"`
+	Z float64 `yaml:"Z"`
 }
