@@ -24,10 +24,6 @@ func main() {
 	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(&wg, appConfig.Devices.ICM20948)
 	var running = true
-	flightConfig := types.FlightConfig{
-		AccLowPassFilterCoefficient:       0.05,
-		RotationsLowPassFilterCoefficient: 0.05,
-	}
 
 	for running {
 		select {
@@ -42,8 +38,8 @@ func main() {
 				wg.Wait()
 			}
 		case imuData = <-imuDataChannel:
-			flightStates.Set(imuData, flightConfig)
-			// flightStates.ShowAccStates()
+			flightStates.Set(imuData, appConfig.FlightConfig)
+			flightStates.ShowAccStates()
 			// flightStates.ShowGyroStates()
 		}
 	}
