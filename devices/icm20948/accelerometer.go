@@ -41,9 +41,10 @@ func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
 func (dev *Device) processAccelerometerData(data []byte) (types.XYZ, error) {
 	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
 	accSens := accelerometerSensitivity[accConfig.SensitivityLevel]
-	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - accConfig.XOffset) / accSens
-	y := (float64(utils.TowsComplementBytesToInt(data[2], data[3])) - accConfig.XOffset) / accSens
-	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - accConfig.XOffset) / accSens
+	offsets := accConfig.Offsets[accConfig.SensitivityLevel]
+	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - offsets.X) / accSens
+	y := (float64(utils.TowsComplementBytesToInt(data[2], data[3])) - offsets.Y) / accSens
+	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - offsets.Z) / accSens
 	return types.XYZ{
 		X: x,
 		Y: y,

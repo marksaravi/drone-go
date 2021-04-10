@@ -16,12 +16,16 @@ type Register struct {
 type DeviceConfig struct {
 }
 
+type Offsets struct {
+	X float64
+	Y float64
+	Z float64
+}
+
 // AccelerometerConfig is the configurations for Accelerometer
 type AccelerometerConfig struct {
 	SensitivityLevel int
-	XOffset          float64
-	YOffset          float64
-	ZOffset          float64
+	Offsets          []Offsets
 }
 
 // GyroscopeConfig is the configuration for Gyroscope
@@ -30,9 +34,7 @@ type GyroscopeConfig struct {
 	LowPassFilterEnabled   bool
 	LowPassFilter          int
 	LowPassFilterAveraging int
-	XOffset                float64
-	YOffset                float64
-	ZOffset                float64
+	Offsets                []Offsets
 }
 
 // MagnetometerConfig is the configuration for Magnetometer
