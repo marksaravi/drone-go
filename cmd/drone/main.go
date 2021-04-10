@@ -19,8 +19,8 @@ func main() {
 	imuDataChannel, imuControlChannel := createImuChannel(&wg)
 	var running = true
 	flightConfig := types.FlightConfig{
-		AccLowPassFilterCoefficient:       0.1,
-		RotationsLowPassFilterCoefficient: 0.1,
+		AccLowPassFilterCoefficient:       0.05,
+		RotationsLowPassFilterCoefficient: 0.05,
 	}
 
 	for running {
@@ -38,7 +38,7 @@ func main() {
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData, flightConfig)
 			flightStates.ShowAccStates()
-			flightStates.ShowGyroStates()
+			// flightStates.ShowGyroStates()
 		}
 	}
 	fmt.Println("Program stopped.")

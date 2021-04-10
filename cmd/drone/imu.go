@@ -37,7 +37,7 @@ func initiateIMU() imu.IMU {
 }
 
 func createImuChannel(wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Command) {
-	imuDataChannel := make(chan imu.ImuData)
+	imuDataChannel := make(chan imu.ImuData, 64)
 	imuControlChannel := make(chan types.Command, 1)
 	go func() {
 		wg.Add(1)

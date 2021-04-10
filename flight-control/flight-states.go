@@ -21,7 +21,7 @@ var (
 func init() {
 	lastAcc = time.Now()
 	lastGyro = time.Now()
-	millis = 250
+	millis = 50
 	gyroScaler = 0
 	accScaler = 0
 }
@@ -41,8 +41,11 @@ func (fs *FlightStates) Set(imuData imu.ImuData, config types.FlightConfig) {
 }
 
 func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
-	roll := math.Atan2(fs.imuData.Acc.Data.X, fs.imuData.Acc.Data.Z)
-	pitch := math.Atan2(fs.imuData.Acc.Data.Y, fs.imuData.Acc.Data.Z)
+	x := fs.imuData.Acc.Data.X
+	y := fs.imuData.Acc.Data.Y
+	z := fs.imuData.Acc.Data.Z
+	roll := math.Atan2(y, z)
+	pitch := math.Atan2(-x, math.Sqrt(y*y+z*z))
 
 	fs.accRotations = types.Rotations{
 		Roll:  utils.LowPassFilter(fs.accRotations.Roll, roll, lowPassFilterCoefficient),
@@ -82,9 +85,12 @@ func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
 
 func (fs *FlightStates) ShowAccStates() {
 	s := fs.accRotations.ToDeg().Scaler()
-	if math.Abs(s-accScaler) > 1 && time.Since(lastAcc) > time.Millisecond*time.Duration(millis) {
+	if time.Since(lastAcc) > time.Millisecond*time.Duration(millis) {
 		ar := fs.accRotations.ToDeg()
-		fmt.Println(fmt.Sprintf("Acc: %.3f, %.3f, %.3f", ar.Roll, ar.Pitch, ar.Yaw))
+		// fmt.Println(fmt.Sprintf("Acc: %.3f, %.3f, %.3f", ar.Roll, ar.Pitch, ar.Yaw))
+		fmt.Println(fmt.Sprintf("%.5f", ar.Roll))
+		// fmt.Println(fmt.Sprintf("%.5f", ar.Pitch))
+		// fmt.Println(fmt.Sprintf("%.5f", ar.Yaw))
 		accScaler = s
 		lastAcc = time.Now()
 	}
