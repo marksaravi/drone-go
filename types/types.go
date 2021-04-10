@@ -47,3 +47,32 @@ func (a *Sensor) GetConfig() Config {
 func (a *Sensor) SetConfig(config Config) {
 	a.Config = config
 }
+
+type Offsets struct {
+	X float64
+	Y float64
+	Z float64
+}
+
+// AccelerometerConfig is the configurations for Accelerometer
+type AccelerometerConfig struct {
+	SensitivityLevel int
+	Offsets          []Offsets
+}
+
+// GyroscopeConfig is the configuration for Gyroscope
+type GyroscopeConfig struct {
+	ScaleLevel             int
+	LowPassFilterEnabled   bool
+	LowPassFilter          int
+	LowPassFilterAveraging int
+	Offsets                []Offsets
+}
+
+// MagnetometerConfig is the configuration for Magnetometer
+type MagnetometerConfig struct {
+}
+
+type ApplicationConfig struct {
+	Acc string `yaml:"host"`
+}

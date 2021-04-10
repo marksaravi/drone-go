@@ -15,7 +15,7 @@ func (dev *Device) GetAcc() *types.Sensor {
 
 // InitAccelerometer initialise the Accelerometer
 func (dev *Device) InitAccelerometer() error {
-	config, ok := dev.GetAcc().GetConfig().(AccelerometerConfig)
+	config, ok := dev.GetAcc().GetConfig().(types.AccelerometerConfig)
 	if !ok {
 		log.Fatal("Accelerometer config mismatch")
 	}
@@ -29,9 +29,9 @@ func (dev *Device) InitAccelerometer() error {
 	return err
 }
 
-func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
+func (dev *Device) getAccConfig() (types.AccelerometerConfig, error) {
 	data, err := dev.readRegister(ACCEL_CONFIG, 2)
-	config := AccelerometerConfig{
+	config := types.AccelerometerConfig{
 		SensitivityLevel: int((data[0] >> 1) & 0b00000011),
 	}
 	dev.GetAcc().SetConfig(config)
@@ -39,7 +39,7 @@ func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
 }
 
 func (dev *Device) processAccelerometerData(data []byte) (types.XYZ, error) {
-	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
+	accConfig, _ := dev.GetAcc().GetConfig().(types.AccelerometerConfig)
 	accSens := accelerometerSensitivity[accConfig.SensitivityLevel]
 	offsets := accConfig.Offsets[accConfig.SensitivityLevel]
 	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - offsets.X) / accSens

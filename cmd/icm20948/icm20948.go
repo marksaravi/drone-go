@@ -39,8 +39,8 @@ func main() {
 		BusNumber:  0,
 		ChipSelect: 0,
 		Config:     icm20948.DeviceConfig{},
-		AccConfig:  icm20948.AccelerometerConfig{SensitivityLevel: 3},
-		GyroConfig: icm20948.GyroscopeConfig{ScaleLevel: 2},
+		AccConfig:  types.AccelerometerConfig{SensitivityLevel: 3},
+		GyroConfig: types.GyroscopeConfig{ScaleLevel: 2},
 	},
 	)
 	errCheck("Initializing ICM20948", err)

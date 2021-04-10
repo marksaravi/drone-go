@@ -13,9 +13,9 @@ func (dev *Device) GetGyro() *types.Sensor {
 	return &(dev.gyro)
 }
 
-func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
+func (dev *Device) getGyroConfig() (types.GyroscopeConfig, error) {
 	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
-	config := GyroscopeConfig{
+	config := types.GyroscopeConfig{
 		ScaleLevel: int((data[0] >> 1) & 0b00000011),
 	}
 	dev.GetGyro().SetConfig(config)
@@ -24,7 +24,7 @@ func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
 
 // InitGyroscope initialise the Gyroscope
 func (dev *Device) InitGyroscope() error {
-	config, ok := dev.GetGyro().GetConfig().(GyroscopeConfig)
+	config, ok := dev.GetGyro().GetConfig().(types.GyroscopeConfig)
 	if !ok {
 		log.Fatal("Gyro config mismatch")
 	}
@@ -42,7 +42,7 @@ func (dev *Device) InitGyroscope() error {
 }
 
 func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
-	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
+	gyroConfig, _ := dev.GetGyro().GetConfig().(types.GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.ScaleLevel]
 	offsets := gyroConfig.Offsets[gyroConfig.ScaleLevel]
 	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - offsets.X) / scale
