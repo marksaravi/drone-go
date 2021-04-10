@@ -19,6 +19,9 @@ type DeviceConfig struct {
 // AccelerometerConfig is the configurations for Accelerometer
 type AccelerometerConfig struct {
 	SensitivityLevel int
+	XOffset          float64
+	YOffset          float64
+	ZOffset          float64
 }
 
 // GyroscopeConfig is the configuration for Gyroscope

@@ -41,3 +41,7 @@ func CalcVectorLen(v types.XYZ) float64 {
 func LowPassFilter(currValue, newValue, coefficient float64) float64 {
 	return currValue*(1-coefficient) + newValue*coefficient
 }
+
+func RadToDeg(x float64) float64 {
+	return x / math.Pi * 180
+}

@@ -16,7 +16,12 @@ func initiateIMU() imu.IMU {
 		BusNumber:  0,
 		ChipSelect: 0,
 		Config:     icm20948.DeviceConfig{},
-		AccConfig:  icm20948.AccelerometerConfig{SensitivityLevel: 3},
+		AccConfig: icm20948.AccelerometerConfig{
+			SensitivityLevel: 3,
+			XOffset:          0,
+			YOffset:          0,
+			ZOffset:          0,
+		},
 		GyroConfig: icm20948.GyroscopeConfig{
 			ScaleLevel:             2,
 			LowPassFilterEnabled:   true,
