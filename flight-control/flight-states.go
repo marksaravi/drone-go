@@ -11,14 +11,12 @@ import (
 )
 
 var (
-	lastAcc  time.Time
-	lastGyro time.Time
-	millis   int
+	lastPrint time.Time
+	millis    int
 )
 
 func init() {
-	lastAcc = time.Now()
-	lastGyro = time.Now()
+	lastPrint = time.Now()
 	millis = 50
 }
 
@@ -61,42 +59,41 @@ func (fs *FlightStates) setGyroRotations() {
 	}
 }
 
-func lowPassFilter(curr types.Rotations, gyro types.XYZ, acc types.XYZ, dt float64, lowPassFilterCoefficient float64) types.Rotations {
-	return types.Rotations{
-		Roll:  utils.LowPassFilter(curr.Roll+gyro.X*dt, acc.X, lowPassFilterCoefficient),
-		Pitch: utils.LowPassFilter(curr.Pitch+gyro.Y*dt, acc.Y, lowPassFilterCoefficient),
-		Yaw:   utils.LowPassFilter(curr.Yaw+gyro.Z*dt, acc.Z, lowPassFilterCoefficient),
-	}
-}
-
 func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
-	fs.rotations = lowPassFilter(
-		fs.rotations,
-		fs.imuData.Gyro.Data,
-		fs.imuData.Acc.Data,
-		fs.imuData.Duration,
-		lowPassFilterCoefficient,
-	)
-}
+	curr := fs.rotations
+	acc := fs.accRotations
+	gyro := fs.imuData.Gyro.Data
+	dt := fs.imuData.Duration
+	roll := utils.LowPassFilter(curr.Roll+gyro.X*dt, acc.Roll, lowPassFilterCoefficient)
+	pitch := utils.LowPassFilter(curr.Pitch+gyro.Y*dt, acc.Pitch, lowPassFilterCoefficient)
 
-func (fs *FlightStates) ShowAccStates() {
-	if time.Since(lastAcc) > time.Millisecond*time.Duration(millis) {
-		ar := fs.accRotations
-		fmt.Println(fmt.Sprintf("Acc: %.3f, %.3f, %.3f", ar.Roll, ar.Pitch, ar.Yaw))
-		// fmt.Println(fmt.Sprintf("%.5f", ar.Roll))
-		// fmt.Println(fmt.Sprintf("%.5f", ar.Pitch))
-		// fmt.Println(fmt.Sprintf("%.5f", ar.Yaw))
-		lastAcc = time.Now()
+	fs.rotations = types.Rotations{
+		Roll:  roll,
+		Pitch: pitch,
+		Yaw:   fs.gyroRotations.Yaw,
 	}
 }
 
-func (fs *FlightStates) ShowGyroStates() {
-	if time.Since(lastGyro) > time.Millisecond*time.Duration(millis) {
-		gr := fs.gyroRotations
-		fmt.Println(fmt.Sprintf("Gyr: %.3f, %.3f, %.3f", gr.Roll, gr.Pitch, gr.Yaw))
-		// fmt.Println(fmt.Sprintf("%.5f", gr.Roll))
-		// fmt.Println(fmt.Sprintf("%.5f", gr.Pitch))
-		// fmt.Println(fmt.Sprintf("%.5f", gr.Yaw))
-		lastGyro = time.Now()
+func (fs *FlightStates) ShowRotations(sensor string) {
+	var r types.Rotations
+	var name string
+	switch sensor {
+	case "acc":
+		r = fs.accRotations
+		name = "Acc"
+	case "gyro":
+		r = fs.gyroRotations
+		name = "Gyro"
+	default:
+		r = fs.rotations
+		name = "Rotations"
+	}
+
+	if time.Since(lastPrint) > time.Millisecond*time.Duration(millis) {
+		fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f", name, r.Roll, r.Pitch, r.Yaw))
+		// fmt.Println(fmt.Sprintf("%.5f", r.Roll))
+		// fmt.Println(fmt.Sprintf("%.5f", r.Pitch))
+		// fmt.Println(fmt.Sprintf("%.5f", r.Yaw))
+		lastPrint = time.Now()
 	}
 }

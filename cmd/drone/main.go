@@ -39,8 +39,7 @@ func main() {
 			}
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData, appConfig.FlightConfig)
-			flightStates.ShowAccStates()
-			// flightStates.ShowGyroStates()
+			flightStates.ShowRotations("")
 		}
 	}
 	fmt.Println("Program stopped.")
