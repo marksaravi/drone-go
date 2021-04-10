@@ -30,12 +30,13 @@ func (dev *Device) InitGyroscope() error {
 	}
 
 	var gyroConfig1 uint8 = 0b00000000
+	var gyroConfig2 uint8 = uint8(config.Averaging)
 
 	if config.LowPassFilterEnabled {
-		gyroConfig1 = 0b00000001 | (uint8(config.LowPassFilter) << 3)
+		gyroConfig1 = 0b00000001 | (uint8(config.LowPassFilterConfig) << 3)
 	}
 	gyroConfig1 = gyroConfig1 | (uint8(config.ScaleLevel) << 1)
-	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1)
+	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1, gyroConfig2)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	fmt.Println("Gyro Config: ", cnfg)
 	return err

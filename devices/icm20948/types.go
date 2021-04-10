@@ -33,11 +33,11 @@ type AccelerometerConfig struct {
 
 // GyroscopeConfig is the configuration for Gyroscope
 type GyroscopeConfig struct {
-	ScaleLevel             int             `yaml:"scale_level"`
-	LowPassFilterEnabled   bool            `yaml:"lowpass_filter_enabled"`
-	LowPassFilter          int             `yaml:"lowpass_filter"`
-	LowPassFilterAveraging int             `yaml:"lowpass_filter_averaging"`
-	Offsets                []types.Offsets `yaml:"offsets"`
+	ScaleLevel           int             `yaml:"scale_level"`
+	LowPassFilterEnabled bool            `yaml:"lowpass_filter_enabled"`
+	LowPassFilterConfig  int             `yaml:"lowpass_filter_config"`
+	Averaging            int             `yaml:"averaging"`
+	Offsets              []types.Offsets `yaml:"offsets"`
 }
 
 // MagnetometerConfig is the configuration for Magnetometer
