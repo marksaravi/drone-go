@@ -43,7 +43,7 @@ func main() {
 				wg.Wait()
 			}
 		case imuData = <-imuDataChannel:
-			flightStates.Set(imuData, appConfig.FlightConfig)
+			flightStates.Set(imuData, appConfig.Flight)
 			json := flightStates.ShowRotations("")
 			conn.WriteTo([]byte(json), dst)
 		}

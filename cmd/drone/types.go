@@ -6,8 +6,12 @@ import (
 )
 
 type ApplicationConfig struct {
-	FlightConfig types.FlightConfig `yaml:"flight_control"`
-	Devices      struct {
+	Flight  types.FlightConfig `yaml:"flight_control"`
+	Devices struct {
 		ICM20948 icm20948.Config `yaml:"icm20948"`
-	} `yaml:devices`
+	} `yaml:"devices"`
+	UDP struct {
+		enabled bool `yaml:"enabled"`
+		port    int  `yaml:"port"`
+	} `yaml:"udp"`
 }
