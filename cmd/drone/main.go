@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"sync"
 
@@ -17,6 +18,10 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	conn, err := net.ListenPacket("udp", ":0")
+	dst, err := net.ResolveUDPAddr("udp", "192.168.1.103:6431")
+	defer conn.Close()
+
 	var command types.Command
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
@@ -39,7 +44,8 @@ func main() {
 			}
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData, appConfig.FlightConfig)
-			flightStates.ShowRotations("")
+			json := flightStates.ShowRotations("")
+			conn.WriteTo([]byte(json), dst)
 		}
 	}
 	fmt.Println("Program stopped.")

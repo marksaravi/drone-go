@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
@@ -37,14 +38,19 @@ func createImuChannel(wg *sync.WaitGroup, config icm20948.Config) (<-chan imu.Im
 		fmt.Printf("name: %s, id: 0x%X\n", name, code)
 		var control types.Command
 		dev.ResetGyroTimer()
+		lastReading := time.Now()
 		running := true
 		for running {
+			if time.Since(lastReading) < time.Microsecond*250 {
+				continue
+			}
 			select {
 			case control = <-imuControlChannel:
 				if control.Command == commands.COMMAND_END_PROGRAM {
 					running = false
 				}
 			default:
+				lastReading = time.Now()
 				data, err := dev.ReadData()
 				if err == nil {
 					select {

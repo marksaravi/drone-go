@@ -11,13 +11,17 @@ import (
 )
 
 var (
-	lastPrint time.Time
-	millis    int
+	lastPrint  time.Time
+	millis     int
+	counter    int
+	sampleRate int
 )
 
 func init() {
 	lastPrint = time.Now()
-	millis = 50
+	millis = 1000
+	counter = 0
+	sampleRate = 0
 }
 
 type FlightStates struct {
@@ -74,9 +78,15 @@ func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
 	}
 }
 
-func (fs *FlightStates) ShowRotations(sensor string) {
+func toJson(r types.Rotations) string {
+	return fmt.Sprintf("{\"roll\": %.3f, \"pitch\": %.3f, \"yaw\": %.3f}", r.Roll, r.Pitch, r.Yaw)
+}
+
+func (fs *FlightStates) ShowRotations(sensor string) string {
 	var r types.Rotations
 	var name string
+	var json string
+
 	switch sensor {
 	case "acc":
 		r = fs.accRotations
@@ -89,11 +99,19 @@ func (fs *FlightStates) ShowRotations(sensor string) {
 		name = "Rotations"
 	}
 
+	counter++
 	if time.Since(lastPrint) > time.Millisecond*time.Duration(millis) {
-		fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f", name, r.Roll, r.Pitch, r.Yaw))
-		// fmt.Println(fmt.Sprintf("%.5f", r.Roll))
-		// fmt.Println(fmt.Sprintf("%.5f", r.Pitch))
-		// fmt.Println(fmt.Sprintf("%.5f", r.Yaw))
+		sampleRate = counter
+		counter = 0
 		lastPrint = time.Now()
+		fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f, %d", name, r.Roll, r.Pitch, r.Yaw, sampleRate))
 	}
+
+	json = fmt.Sprintf("{\"acc\": %s, \"gyro\": %s, \"rotations\": %s, \"sampleRate\": %d}",
+		toJson(fs.accRotations),
+		toJson(fs.gyroRotations),
+		toJson(fs.rotations),
+		sampleRate,
+	)
+	return json
 }
