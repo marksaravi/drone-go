@@ -10,8 +10,5 @@ type ApplicationConfig struct {
 	Devices struct {
 		ICM20948 icm20948.Config `yaml:"icm20948"`
 	} `yaml:"devices"`
-	UDP struct {
-		enabled bool `yaml:"enabled"`
-		port    int  `yaml:"port"`
-	} `yaml:"udp"`
+	UDP string `yaml:"udp"`
 }

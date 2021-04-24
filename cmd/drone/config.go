@@ -16,6 +16,7 @@ func readConfigs() (ApplicationConfig, error) {
 		log.Fatal(err)
 		return config, err
 	}
+	fmt.Println(string(content))
 	err = yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
 		log.Fatalf("cannot unmarshal config: %v", err)
