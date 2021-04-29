@@ -1,5 +1,5 @@
 flight_control: 
-  accelerometer_lowpass_filter_coefficient: 0.05
+  accelerometer_lowpass_filter_coefficient: 0.45
   rotations_lowpass_filter_coefficient: 0.0005
 devices:
   icm20948:
