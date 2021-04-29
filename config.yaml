@@ -1,6 +1,6 @@
 flight_control: 
   accelerometer_lowpass_filter_coefficient: 0.05
-  rotations_lowpass_filter_coefficient: 0.05
+  rotations_lowpass_filter_coefficient: 0.0005
 devices:
   icm20948:
     bus_number: 0

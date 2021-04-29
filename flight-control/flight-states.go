@@ -66,10 +66,10 @@ func (fs *FlightStates) setGyroRotations() {
 func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
 	curr := fs.rotations
 	acc := fs.accRotations
-	gyro := fs.imuData.Gyro.Data
+	wg := fs.imuData.Gyro.Data // angular velocity
 	dt := fs.imuData.Duration
-	roll := utils.LowPassFilter(curr.Roll+gyro.X*dt, acc.Roll, lowPassFilterCoefficient)
-	pitch := utils.LowPassFilter(curr.Pitch+gyro.Y*dt, acc.Pitch, lowPassFilterCoefficient)
+	roll := utils.LowPassFilter(curr.Roll-wg.X*dt, acc.Roll, lowPassFilterCoefficient)
+	pitch := utils.LowPassFilter(curr.Pitch-wg.Y*dt, acc.Pitch, lowPassFilterCoefficient)
 
 	fs.rotations = types.Rotations{
 		Roll:  roll,
