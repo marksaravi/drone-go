@@ -87,11 +87,14 @@ func toJson(r types.Rotations) string {
 }
 
 func (fs *FlightStates) ImuDataToJson() string {
-	return fmt.Sprintf("{\"acc\": %s, \"gyro\": %s, \"rotations\": %s, \"sampleRate\": %d}",
+	return fmt.Sprintf("{\"accelerometer\": %s, \"gyroscope\": %s, \"rotations\": %s, \"readingInterval\": %d, \"elapsedTime\": %d, \"sampleRate\": %d, \"totalData\": %d}",
 		toJson(fs.accRotations),
 		toJson(fs.gyroRotations),
 		toJson(fs.rotations),
-		sampleRate,
+		fs.imuData.ReadingInterval,
+		fs.imuData.ElapsedTime,
+		fs.imuData.SampleRate,
+		fs.imuData.TotalData,
 	)
 }
 

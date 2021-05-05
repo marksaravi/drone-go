@@ -24,7 +24,10 @@ func main() {
 	var flightStates flightcontrol.FlightStates
 	udpCon, udpAddr, udpEnabled := createUdpConnection(appConfig)
 	commandChannel := createCommandChannel(&wg)
-	imuDataChannel, imuControlChannel := createImuChannel(&wg, appConfig.Devices.ICM20948)
+	imuDataChannel, imuControlChannel := createImuChannel(
+		appConfig.Flight.ImuDataPerSecond,
+		appConfig.Devices.ICM20948,
+		&wg)
 	var running = true
 
 	for running {

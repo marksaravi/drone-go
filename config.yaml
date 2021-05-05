@@ -1,4 +1,5 @@
-flight_control: 
+flight_control:
+  imu_data_per_second: 2500
   accelerometer_lowpass_filter_coefficient: 0.45
   rotations_lowpass_filter_coefficient: 0.0005
 devices:

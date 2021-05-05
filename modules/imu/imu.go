@@ -9,7 +9,7 @@ const BUFFER_LEN uint8 = 4
 type ImuData struct {
 	Acc, Gyro, Mag  types.SensorData
 	ReadingInterval int64
-	TimeElapsed     int64
+	ElapsedTime     int64
 	TotalData       int64
 	SampleRate      int
 }
