@@ -40,5 +40,5 @@ devices:
           Z: 0
 udp:
   enabled: true
-  ip: 192.168.1.103
+  ip: 192.168.1.101
   port: 6431

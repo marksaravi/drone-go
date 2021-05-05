@@ -41,7 +41,8 @@ func main() {
 			}
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData, appConfig.Flight)
-			json := flightStates.ShowRotations("")
+			json := flightStates.ImuDataToJson()
+			flightStates.ShowRotations("json", json)
 			if udpEnabled {
 				(*udpCon).WriteTo([]byte(json), udpAddr)
 			}

@@ -86,10 +86,18 @@ func toJson(r types.Rotations) string {
 	return fmt.Sprintf("{\"roll\": %.3f, \"pitch\": %.3f, \"yaw\": %.3f}", r.Roll, r.Pitch, r.Yaw)
 }
 
-func (fs *FlightStates) ShowRotations(sensor string) string {
+func (fs *FlightStates) ImuDataToJson() string {
+	return fmt.Sprintf("{\"acc\": %s, \"gyro\": %s, \"rotations\": %s, \"sampleRate\": %d}",
+		toJson(fs.accRotations),
+		toJson(fs.gyroRotations),
+		toJson(fs.rotations),
+		sampleRate,
+	)
+}
+
+func (fs *FlightStates) ShowRotations(sensor string, json string) {
 	var r types.Rotations
 	var name string
-	var json string
 
 	switch sensor {
 	case "acc":
@@ -102,20 +110,16 @@ func (fs *FlightStates) ShowRotations(sensor string) string {
 		r = fs.rotations
 		name = "Rotations"
 	}
-
 	counter++
+
 	if time.Since(lastPrint) > time.Millisecond*time.Duration(millis) {
+		if sensor == "json" {
+			fmt.Println(json)
+		} else {
+			fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f, %d", name, r.Roll, r.Pitch, r.Yaw, sampleRate))
+		}
 		sampleRate = counter
 		counter = 0
 		lastPrint = time.Now()
-		fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f, %d", name, r.Roll, r.Pitch, r.Yaw, sampleRate))
 	}
-
-	json = fmt.Sprintf("{\"acc\": %s, \"gyro\": %s, \"rotations\": %s, \"sampleRate\": %d}",
-		toJson(fs.accRotations),
-		toJson(fs.gyroRotations),
-		toJson(fs.rotations),
-		sampleRate,
-	)
-	return json
 }

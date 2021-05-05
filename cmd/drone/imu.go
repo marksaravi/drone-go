@@ -38,10 +38,18 @@ func createImuChannel(wg *sync.WaitGroup, config icm20948.Config) (<-chan imu.Im
 		fmt.Printf("name: %s, id: 0x%X\n", name, code)
 		var control types.Command
 		dev.ResetGyroTimer()
-		lastReading := time.Now()
+		const dataPerSecond int16 = 4000
+		const readingInterval int64 = int64(time.Microsecond / time.Duration(dataPerSecond))
+		firstReading := time.Now()
+		nextReading := firstReading
+		var total int64 = 0
+		var sampleRate int = 0
+		var sampleCounter int = 0
+		var second = firstReading
+
 		running := true
 		for running {
-			if time.Since(lastReading) < time.Microsecond*250 {
+			if time.Now().Before(nextReading) {
 				continue
 			}
 			select {
@@ -50,9 +58,19 @@ func createImuChannel(wg *sync.WaitGroup, config icm20948.Config) (<-chan imu.Im
 					running = false
 				}
 			default:
-				lastReading = time.Now()
 				data, err := dev.ReadData()
 				if err == nil {
+					total += 1
+					sampleCounter += 1
+					nextReading = firstReading.Add(time.Duration(total * readingInterval))
+					data.TimeElapsed = int64(time.Since(firstReading))
+					data.TotalData = total
+					data.SampleRate = sampleRate
+					if time.Since(second) >= time.Second {
+						second = time.Now()
+						sampleRate = sampleCounter
+						sampleCounter = 0
+					}
 					select {
 					case imuDataChannel <- data:
 					default:
