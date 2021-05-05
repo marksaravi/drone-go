@@ -17,12 +17,12 @@ type Device struct {
 	Name string
 	*sysfs.SPI
 	spi.Conn
-	regbank     uint8
-	lastReading int64
-	duration    int64
-	acc         types.Sensor
-	gyro        types.Sensor
-	mag         types.Sensor
+	regbank         uint8
+	lastReading     int64
+	readingInterval int64
+	acc             types.Sensor
+	gyro            types.Sensor
+	mag             types.Sensor
 }
 
 // AccelerometerConfig is the configurations for Accelerometer

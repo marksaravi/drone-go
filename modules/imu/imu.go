@@ -7,8 +7,10 @@ import (
 const BUFFER_LEN uint8 = 4
 
 type ImuData struct {
-	Duration       float64
-	Acc, Gyro, Mag types.SensorData
+	ReadingInterval int64
+	Acc, Gyro, Mag  types.SensorData
+	TimeElapsed     int64
+	TotalData       int64
 }
 
 // IMU is interface to imu mems

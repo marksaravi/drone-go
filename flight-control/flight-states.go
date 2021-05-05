@@ -52,10 +52,14 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 	}
 }
 
+func goDurToDt(d int64) float64 {
+	return float64(d) / 1e9
+}
+
 func (fs *FlightStates) setGyroRotations() {
-	curr := fs.gyroRotations   // current rotations by gyro
-	wg := fs.imuData.Gyro.Data // angular velocity
-	dt := fs.imuData.Duration  // time interval
+	curr := fs.gyroRotations                    // current rotations by gyro
+	wg := fs.imuData.Gyro.Data                  // angular velocity
+	dt := goDurToDt(fs.imuData.ReadingInterval) // reading interval
 	fs.gyroRotations = types.Rotations{
 		Roll:  curr.Roll - wg.X*dt,
 		Pitch: curr.Pitch - wg.Y*dt,
@@ -67,7 +71,7 @@ func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
 	curr := fs.rotations
 	acc := fs.accRotations
 	wg := fs.imuData.Gyro.Data // angular velocity
-	dt := fs.imuData.Duration
+	dt := goDurToDt(fs.imuData.ReadingInterval)
 	roll := utils.LowPassFilter(curr.Roll-wg.X*dt, acc.Roll, lowPassFilterCoefficient)
 	pitch := utils.LowPassFilter(curr.Pitch-wg.Y*dt, acc.Pitch, lowPassFilterCoefficient)
 

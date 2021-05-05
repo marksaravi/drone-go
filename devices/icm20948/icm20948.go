@@ -160,7 +160,7 @@ func (dev *Device) ResetGyroTimer() {
 func (dev *Device) ReadData() (imu.ImuData, error) {
 	data, err := dev.ReadRawData()
 	now := time.Now().UnixNano()
-	dev.duration = dev.lastReading - now
+	dev.readingInterval = dev.lastReading - now
 	dev.lastReading = now
 	if err != nil {
 		return imu.ImuData{}, err
@@ -169,7 +169,7 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 	gyro, gyroErr := dev.processGyroscopeData(data[6:])
 
 	return imu.ImuData{
-		Duration: float64(dev.duration) / 1e9,
+		ReadingInterval: dev.readingInterval,
 		Acc: types.SensorData{
 			Error: accErr,
 			Data:  acc,
