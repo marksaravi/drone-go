@@ -21,7 +21,6 @@ func main() {
 	var command types.Command
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
-	var flightStates flightcontrol.FlightStates
 	udpLogger := createUdpConnection(appConfig)
 	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(
@@ -29,6 +28,13 @@ func main() {
 		appConfig.Devices.ICM20948,
 		&wg)
 	var running = true
+	var flightStates flightcontrol.FlightStates = flightcontrol.FlightStates{
+		Config:         appConfig.Flight,
+		ImuDataChannel: imuDataChannel,
+	}
+
+	flightStates.Calibrate()
+	flightStates.Reset()
 
 	for running {
 		select {
@@ -43,7 +49,7 @@ func main() {
 				wg.Wait()
 			}
 		case imuData = <-imuDataChannel:
-			flightStates.Set(imuData, appConfig.Flight)
+			flightStates.Set(imuData)
 			json := flightStates.ImuDataToJson()
 			flightStates.ShowRotations("json", json)
 			udpLogger.send(json)

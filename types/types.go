@@ -8,6 +8,8 @@ type FlightConfig struct {
 	ImuDataPerSecond                  int     `yaml:"imu_data_per_second"`
 	AccLowPassFilterCoefficient       float64 `yaml:"accelerometer_lowpass_filter_coefficient"`
 	RotationsLowPassFilterCoefficient float64 `yaml:"rotations_lowpass_filter_coefficient"`
+	AccelerometerOffsets              Offsets
+	GyroscopeOffsets                  Offsets
 }
 
 // XYZ is X, Y, Z data

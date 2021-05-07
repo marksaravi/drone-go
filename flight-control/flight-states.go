@@ -27,17 +27,27 @@ func init() {
 }
 
 type FlightStates struct {
-	imuData       imu.ImuData
-	accRotations  types.Rotations
-	gyroRotations types.Rotations
-	rotations     types.Rotations
+	Config         types.FlightConfig
+	ImuDataChannel <-chan imu.ImuData
+	imuData        imu.ImuData
+	accRotations   types.Rotations
+	gyroRotations  types.Rotations
+	rotations      types.Rotations
 }
 
-func (fs *FlightStates) Set(imuData imu.ImuData, config types.FlightConfig) {
+func (fs *FlightStates) Reset() {
+	fs.gyroRotations = types.Rotations{
+		Roll:  0,
+		Pitch: 0,
+		Yaw:   0,
+	}
+}
+
+func (fs *FlightStates) Set(imuData imu.ImuData) {
 	fs.imuData = imuData
-	fs.setAccRotations(config.AccLowPassFilterCoefficient)
+	fs.setAccRotations(fs.Config.AccLowPassFilterCoefficient)
 	fs.setGyroRotations()
-	fs.setRotations(config.RotationsLowPassFilterCoefficient)
+	fs.setRotations(fs.Config.RotationsLowPassFilterCoefficient)
 }
 
 func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
@@ -58,12 +68,16 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
+func getOffset(offset float64, dt float64) float64 {
+	return 0
+}
+
 func (fs *FlightStates) setGyroRotations() {
 	curr := fs.gyroRotations                    // current rotations by gyro
 	wg := fs.imuData.Gyro.Data                  // angular velocity
 	dt := goDurToDt(fs.imuData.ReadingInterval) // reading interval
 	fs.gyroRotations = types.Rotations{
-		Roll:  curr.Roll - wg.X*dt,
+		Roll:  curr.Roll - wg.X*dt - getOffset(fs.Config.GyroscopeOffsets.X, dt),
 		Pitch: curr.Pitch - wg.Y*dt,
 		Yaw:   curr.Yaw - wg.Z*dt,
 	}
@@ -127,4 +141,21 @@ func (fs *FlightStates) ShowRotations(sensor string, json string) {
 		counter = 0
 		lastPrint = time.Now()
 	}
+}
+
+func (fs *FlightStates) Calibrate() {
+	const CALIBRATION_TIME = 5
+	fs.Reset()
+	fmt.Println("Calibration started...")
+	start := time.Now()
+	for time.Since(start) < time.Second*CALIBRATION_TIME {
+		imuData := <-fs.ImuDataChannel
+		fs.Set(imuData)
+	}
+	fs.Config.GyroscopeOffsets = types.Offsets{
+		X: fs.gyroRotations.Roll / CALIBRATION_TIME,
+		Y: fs.gyroRotations.Pitch / CALIBRATION_TIME,
+		Z: fs.gyroRotations.Yaw / CALIBRATION_TIME,
+	}
+	fmt.Println("Calibration finished.", fs.Config.GyroscopeOffsets)
 }
