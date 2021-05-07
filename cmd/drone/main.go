@@ -51,7 +51,7 @@ func main() {
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData)
 			json := flightStates.ImuDataToJson()
-			flightStates.ShowRotations("json", json)
+			// flightStates.ShowRotations("json", json)
 			udpLogger.send(json)
 		}
 	}

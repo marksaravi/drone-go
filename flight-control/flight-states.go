@@ -69,7 +69,7 @@ func goDurToDt(d int64) float64 {
 }
 
 func getOffset(offset float64, dt float64) float64 {
-	return 0
+	return dt * offset
 }
 
 func (fs *FlightStates) setGyroRotations() {
@@ -78,8 +78,8 @@ func (fs *FlightStates) setGyroRotations() {
 	dt := goDurToDt(fs.imuData.ReadingInterval) // reading interval
 	fs.gyroRotations = types.Rotations{
 		Roll:  curr.Roll - wg.X*dt - getOffset(fs.Config.GyroscopeOffsets.X, dt),
-		Pitch: curr.Pitch - wg.Y*dt,
-		Yaw:   curr.Yaw - wg.Z*dt,
+		Pitch: curr.Pitch - wg.Y*dt - getOffset(fs.Config.GyroscopeOffsets.Y, dt),
+		Yaw:   curr.Yaw - wg.Z*dt - getOffset(fs.Config.GyroscopeOffsets.Z, dt),
 	}
 }
 
@@ -144,7 +144,7 @@ func (fs *FlightStates) ShowRotations(sensor string, json string) {
 }
 
 func (fs *FlightStates) Calibrate() {
-	const CALIBRATION_TIME = 5
+	const CALIBRATION_TIME = 10
 	fs.Reset()
 	fmt.Println("Calibration started...")
 	start := time.Now()
