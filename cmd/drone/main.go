@@ -22,7 +22,7 @@ func main() {
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
 	var flightStates flightcontrol.FlightStates
-	udpCon, udpAddr, udpEnabled := createUdpConnection(appConfig)
+	udpLogger := createUdpConnection(appConfig)
 	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(
 		appConfig.Flight.ImuDataPerSecond,
@@ -46,11 +46,7 @@ func main() {
 			flightStates.Set(imuData, appConfig.Flight)
 			json := flightStates.ImuDataToJson()
 			flightStates.ShowRotations("json", json)
-			if udpEnabled {
-				go func() {
-					(*udpCon).WriteTo([]byte(json), udpAddr)
-				}()
-			}
+			udpLogger.send(json)
 		}
 	}
 	fmt.Println("Program stopped.")
