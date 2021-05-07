@@ -12,6 +12,7 @@ import (
 
 var (
 	lastPrint  time.Time
+	lastUDP    time.Time
 	millis     int
 	counter    int
 	sampleRate int
@@ -19,6 +20,7 @@ var (
 
 func init() {
 	lastPrint = time.Now()
+	lastUDP = time.Now()
 	millis = 1000
 	counter = 0
 	sampleRate = 0

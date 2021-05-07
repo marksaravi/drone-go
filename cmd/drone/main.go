@@ -47,7 +47,9 @@ func main() {
 			json := flightStates.ImuDataToJson()
 			flightStates.ShowRotations("json", json)
 			if udpEnabled {
-				(*udpCon).WriteTo([]byte(json), udpAddr)
+				go func() {
+					(*udpCon).WriteTo([]byte(json), udpAddr)
+				}()
 			}
 		}
 	}
