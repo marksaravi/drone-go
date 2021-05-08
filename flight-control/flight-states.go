@@ -55,7 +55,7 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 	y := fs.imuData.Acc.Data.Y
 	z := fs.imuData.Acc.Data.Z
 	roll := utils.RadToDeg(math.Atan2(y, z))
-	pitch := utils.RadToDeg(math.Atan2(-x, math.Sqrt(y*y+z*z)))
+	pitch := -utils.RadToDeg(math.Atan2(x, z))
 
 	fs.accRotations = types.Rotations{
 		Roll:  utils.LowPassFilter(fs.accRotations.Roll, roll, lowPassFilterCoefficient),
@@ -144,7 +144,7 @@ func (fs *FlightStates) ShowRotations(sensor string, json string) {
 }
 
 func (fs *FlightStates) Calibrate() {
-	const CALIBRATION_TIME = 10
+	const CALIBRATION_TIME = 3
 	fs.Reset()
 	fmt.Println("Calibration started...")
 	start := time.Now()
