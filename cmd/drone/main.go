@@ -33,7 +33,7 @@ func main() {
 		ImuDataChannel: imuDataChannel,
 	}
 
-	flightStates.Calibrate()
+	// flightStates.Calibrate()
 	flightStates.Reset()
 
 	for running {
