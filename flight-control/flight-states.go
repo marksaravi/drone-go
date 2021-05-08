@@ -47,7 +47,7 @@ func (fs *FlightStates) Set(imuData imu.ImuData) {
 	fs.imuData = imuData
 	fs.setAccRotations(fs.Config.AccLowPassFilterCoefficient)
 	fs.setGyroRotations()
-	fs.setRotations(fs.Config.RotationsLowPassFilterCoefficient)
+	fs.setRotations()
 }
 
 func goDurToDt(d int64) float64 {
@@ -76,8 +76,8 @@ func gyroscopeDataToRollPitchYawChange(wg types.XYZ, readingInterval int64) (
 func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 	roll, pitch := accelerometerDataToRollPitch(fs.imuData.Acc.Data)
 	fs.accRotations = types.Rotations{
-		Roll:  utils.LowPassFilter(fs.accRotations.Roll, roll, lowPassFilterCoefficient),
-		Pitch: utils.LowPassFilter(fs.accRotations.Pitch, pitch, lowPassFilterCoefficient),
+		Roll:  roll,
+		Pitch: pitch,
 		Yaw:   0,
 	}
 }
@@ -96,18 +96,21 @@ func (fs *FlightStates) setGyroRotations() {
 	}
 }
 
-func (fs *FlightStates) setRotations(lowPassFilterCoefficient float64) {
+func (fs *FlightStates) setRotations() {
+	accCoeff := fs.Config.AccLowPassFilterCoefficient
+	rotCoeff := fs.Config.RotationsLowPassFilterCoefficient
 	curr := fs.rotations
-	wg := fs.imuData.Gyro.Data // angular velocity
-	dt := goDurToDt(fs.imuData.ReadingInterval)
-	accRoll, accPitch := accelerometerDataToRollPitch(fs.imuData.Acc.Data)
-	roll := utils.LowPassFilter(curr.Roll-wg.X*dt, accRoll, lowPassFilterCoefficient)
-	pitch := utils.LowPassFilter(curr.Pitch-wg.Y*dt, accPitch, lowPassFilterCoefficient)
-
+	accNewRoll, accNewPitch := accelerometerDataToRollPitch(fs.imuData.Acc.Data)
+	accRoll := utils.LowPassFilter(curr.Roll, accNewRoll, accCoeff)
+	accPitch := utils.LowPassFilter(curr.Pitch, accNewPitch, accCoeff)
+	gyroDRoll, gyroDPitch, gyroDYaw := gyroscopeDataToRollPitchYawChange(fs.imuData.Gyro.Data, fs.imuData.ReadingInterval)
+	roll := utils.LowPassFilter(curr.Roll+gyroDRoll, accRoll, rotCoeff)
+	pitch := utils.LowPassFilter(curr.Pitch+gyroDPitch, accPitch, rotCoeff)
+	yaw := curr.Yaw + gyroDYaw
 	fs.rotations = types.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
-		Yaw:   fs.gyroRotations.Yaw,
+		Yaw:   yaw,
 	}
 }
 

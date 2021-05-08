@@ -1,7 +1,7 @@
 flight_control:
   imu_data_per_second: 4000
-  accelerometer_lowpass_filter_coefficient: 1
-  rotations_lowpass_filter_coefficient: 0.01
+  accelerometer_lowpass_filter_coefficient: 0.15
+  rotations_lowpass_filter_coefficient: 0.05
 devices:
   icm20948:
     bus_number: 0
