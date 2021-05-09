@@ -12,6 +12,12 @@ type FlightConfig struct {
 	GyroscopeOffsets                  Offsets
 }
 
+type UdpLoggerConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	IP      string `yaml:"ip"`
+	Port    int    `yaml:"port"`
+}
+
 // XYZ is X, Y, Z data
 type XYZ struct {
 	X, Y, Z float64

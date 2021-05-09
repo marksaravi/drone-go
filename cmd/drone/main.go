@@ -8,6 +8,7 @@ import (
 	commands "github.com/MarkSaravi/drone-go/constants"
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
 	"github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/modules/udplogger"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -21,7 +22,7 @@ func main() {
 	var command types.Command
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
-	udpLogger := createUdpConnection(appConfig)
+	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(
 		appConfig.Flight.ImuDataPerSecond,
@@ -52,7 +53,7 @@ func main() {
 			flightStates.Set(imuData)
 			json := flightStates.ImuDataToJson()
 			// flightStates.ShowRotations("json", json)
-			udpLogger.send(json)
+			udpLogger.Send(json)
 		}
 	}
 	fmt.Println("Program stopped.")
