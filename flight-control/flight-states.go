@@ -16,7 +16,6 @@ var (
 	millis     int
 	counter    int
 	sampleRate int
-	angle      float64
 )
 
 func init() {
@@ -25,7 +24,6 @@ func init() {
 	millis = 1000
 	counter = 0
 	sampleRate = 0
-	angle = 0
 }
 
 type FlightStates struct {
@@ -83,17 +81,13 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 
 func (fs *FlightStates) setGyroRotations() {
 	curr := fs.gyroRotations // current rotations by gyro
-	_, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
+	dRoll, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
 		fs.imuData.Gyro.Data,
 		fs.imuData.ReadingInterval,
 	)
 
-	angle += float64(math.Pi*2.0) / float64(fs.Config.ImuDataPerSecond)
-	if angle > 2.0*math.Pi {
-		angle = 0
-	}
 	fs.gyroRotations = types.Rotations{
-		Roll:  math.Sin(angle) * 45,
+		Roll:  curr.Roll + dRoll,
 		Pitch: curr.Pitch + dPitch,
 		Yaw:   curr.Yaw + dYaw,
 	}
@@ -159,7 +153,7 @@ func (fs *FlightStates) ShowRotations(sensor string, json string) {
 }
 
 func (fs *FlightStates) Calibrate() {
-	const CALIBRATION_TIME = 3
+	const CALIBRATION_TIME = 5
 	fs.Reset()
 	fmt.Println("Calibration started...")
 	start := time.Now()
