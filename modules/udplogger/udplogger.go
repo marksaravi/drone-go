@@ -8,11 +8,13 @@ import (
 )
 
 type udpLogger struct {
-	con       *net.PacketConn
-	address   *net.UDPAddr
-	enabled   bool
-	buffer    []string
-	bufferLen int
+	con           *net.PacketConn
+	address       *net.UDPAddr
+	enabled       bool
+	buffer        []string
+	bufferLen     int
+	dataPerSecond int
+	sendFrequency int
 }
 
 func (l *udpLogger) Send(json string) {
@@ -21,13 +23,17 @@ func (l *udpLogger) Send(json string) {
 	}
 	l.buffer = append(l.buffer, json)
 	if len(l.buffer) == l.bufferLen {
-		data := "["
+		jsonArray := ""
 		comma := ""
 		for _, s := range l.buffer {
-			data = data + comma + s
+			jsonArray = jsonArray + comma + s
 			comma = ","
 		}
-		data = data + "]"
+		data := fmt.Sprintf("{\"data\": [%s], \"dataPerSecond\": %d, \"sendFrequenc\": %d}",
+			jsonArray,
+			l.dataPerSecond,
+			l.sendFrequency,
+		)
 		l.buffer = nil
 		go func() {
 			(*l.con).WriteTo([]byte(data), l.address)
@@ -58,14 +64,17 @@ func CreateUdpLogger(
 			enabled: false,
 		}
 	}
-	var bufferLen int = dataPerSecond / 50
+	const sendFrequency = 50
+	var bufferLen int = dataPerSecond / sendFrequency
 	if bufferLen == 0 {
 		bufferLen = 1
 	}
 	return udpLogger{
-		con:       &con,
-		address:   address,
-		enabled:   true,
-		bufferLen: bufferLen,
+		con:           &con,
+		address:       address,
+		enabled:       true,
+		bufferLen:     bufferLen,
+		dataPerSecond: dataPerSecond,
+		sendFrequency: sendFrequency,
 	}
 }
