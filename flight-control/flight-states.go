@@ -16,6 +16,7 @@ var (
 	millis     int
 	counter    int
 	sampleRate int
+	angle      float64
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 	millis = 1000
 	counter = 0
 	sampleRate = 0
+	angle = 0
 }
 
 type FlightStates struct {
@@ -65,12 +67,9 @@ func accelerometerDataToRollPitch(data types.XYZ) (roll, pitch float64) {
 }
 
 func gyroscopeDataToRollPitchYawChange(wg types.XYZ, readingInterval int64) (
-	dRoll, dPitch, dYaw float64) { // angular velocity
+	float64, float64, float64) { // angular velocity
 	dt := goDurToDt(readingInterval) // reading interval
-	dRoll = wg.X * dt
-	dPitch = wg.Y * dt
-	dYaw = wg.X * dt
-	return
+	return wg.X * dt, wg.Y * dt, wg.X * dt
 }
 
 func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
@@ -84,15 +83,19 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 
 func (fs *FlightStates) setGyroRotations() {
 	curr := fs.gyroRotations // current rotations by gyro
-	dRoll, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
+	_, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
 		fs.imuData.Gyro.Data,
 		fs.imuData.ReadingInterval,
 	)
 
+	angle += float64(math.Pi*2.0) / float64(fs.Config.ImuDataPerSecond)
+	if angle > 2.0*math.Pi {
+		angle = 0
+	}
 	fs.gyroRotations = types.Rotations{
-		Roll:  curr.Roll - dRoll,
-		Pitch: curr.Pitch - dPitch,
-		Yaw:   curr.Yaw - dYaw,
+		Roll:  math.Sin(angle) * 45,
+		Pitch: curr.Pitch + dPitch,
+		Yaw:   curr.Yaw + dYaw,
 	}
 }
 
@@ -115,18 +118,14 @@ func (fs *FlightStates) setRotations() {
 }
 
 func toJson(r types.Rotations) string {
-	return fmt.Sprintf("{\"roll\": %.3f, \"pitch\": %.3f, \"yaw\": %.3f}", r.Roll, r.Pitch, r.Yaw)
+	return fmt.Sprintf("[%.2f,%.2f,%.2f]", r.Roll, r.Pitch, r.Yaw)
 }
 
 func (fs *FlightStates) ImuDataToJson() string {
-	return fmt.Sprintf("{\"accelerometer\": %s, \"gyroscope\": %s, \"rotations\": %s, \"readingInterval\": %d, \"elapsedTime\": %d, \"sampleRate\": %d, \"totalData\": %d}",
+	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s}",
 		toJson(fs.accRotations),
 		toJson(fs.gyroRotations),
 		toJson(fs.rotations),
-		fs.imuData.ReadingInterval,
-		fs.imuData.ElapsedTime,
-		fs.imuData.SampleRate,
-		fs.imuData.TotalData,
 	)
 }
 
@@ -151,7 +150,7 @@ func (fs *FlightStates) ShowRotations(sensor string, json string) {
 		if sensor == "json" {
 			fmt.Println(json)
 		} else {
-			fmt.Println(fmt.Sprintf("%s: %.3f, %.3f, %.3f, %d", name, r.Roll, r.Pitch, r.Yaw, sampleRate))
+			fmt.Println(fmt.Sprintf("%s:%.3f,%.3f,%.3f,%d", name, r.Roll, r.Pitch, r.Yaw, sampleRate))
 		}
 		sampleRate = counter
 		counter = 0

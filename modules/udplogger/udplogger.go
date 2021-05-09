@@ -15,8 +15,6 @@ type udpLogger struct {
 	bufferLen     int
 	dataPerSecond int
 	sendFrequency int
-	maxDataSize   int
-	chunkId       byte
 }
 
 func (l *udpLogger) Send(json string) {
@@ -31,7 +29,7 @@ func (l *udpLogger) Send(json string) {
 			jsonArray = jsonArray + comma + s
 			comma = ","
 		}
-		data := fmt.Sprintf("{\"data\": [%s], \"dataPerSecond\": %d, \"packetsPerSecond\": %d}",
+		data := fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d}",
 			jsonArray,
 			l.dataPerSecond,
 			l.sendFrequency,
@@ -39,28 +37,7 @@ func (l *udpLogger) Send(json string) {
 		l.buffer = nil
 		go func() {
 			bytes := []byte(data)
-			total := len(bytes)
-			var numOfChunks byte = byte(total / l.maxDataSize)
-			if total%l.maxDataSize > 0 {
-				numOfChunks += 1
-			}
-			var chunkCounter byte = 0
-			var chunk []byte
-			for from := 0; from < total; from += l.maxDataSize {
-				if from+l.maxDataSize <= total {
-					chunk = bytes[from : from+l.maxDataSize]
-				} else {
-					chunk = bytes[from:]
-				}
-				chunkInfo := []byte{l.chunkId, chunkCounter, numOfChunks}
-				udpdata := append(chunkInfo, chunk...)
-				l.conn.WriteToUDP(udpdata, l.address)
-				chunkCounter += 1
-			}
-			l.chunkId += 1
-			if l.chunkId > 100 {
-				l.chunkId = 0
-			}
+			l.conn.WriteToUDP(bytes, l.address)
 		}()
 	}
 }
@@ -100,7 +77,5 @@ func CreateUdpLogger(
 		bufferLen:     bufferLen,
 		dataPerSecond: dataPerSecond,
 		sendFrequency: sendFrequency,
-		maxDataSize:   9000,
-		chunkId:       0,
 	}
 }
