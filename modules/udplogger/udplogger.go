@@ -8,13 +8,15 @@ import (
 )
 
 type udpLogger struct {
-	con           *net.PacketConn
+	conn          *net.UDPConn
 	address       *net.UDPAddr
 	enabled       bool
 	buffer        []string
 	bufferLen     int
 	dataPerSecond int
 	sendFrequency int
+	maxDataSize   int
+	chunkId       byte
 }
 
 func (l *udpLogger) Send(json string) {
@@ -29,14 +31,36 @@ func (l *udpLogger) Send(json string) {
 			jsonArray = jsonArray + comma + s
 			comma = ","
 		}
-		data := fmt.Sprintf("{\"data\": [%s], \"dataPerSecond\": %d, \"sendFrequenc\": %d}",
+		data := fmt.Sprintf("{\"data\": [%s], \"dataPerSecond\": %d, \"packetsPerSecond\": %d}",
 			jsonArray,
 			l.dataPerSecond,
 			l.sendFrequency,
 		)
 		l.buffer = nil
 		go func() {
-			(*l.con).WriteTo([]byte(data), l.address)
+			bytes := []byte(data)
+			total := len(bytes)
+			var numOfChunks byte = byte(total / l.maxDataSize)
+			if total%l.maxDataSize > 0 {
+				numOfChunks += 1
+			}
+			var chunkCounter byte = 0
+			var chunk []byte
+			for from := 0; from < total; from += l.maxDataSize {
+				if from+l.maxDataSize <= total {
+					chunk = bytes[from : from+l.maxDataSize]
+				} else {
+					chunk = bytes[from:]
+				}
+				chunkInfo := []byte{l.chunkId, chunkCounter, numOfChunks}
+				udpdata := append(chunkInfo, chunk...)
+				l.conn.WriteToUDP(udpdata, l.address)
+				chunkCounter += 1
+			}
+			l.chunkId += 1
+			if l.chunkId > 100 {
+				l.chunkId = 0
+			}
 		}()
 	}
 }
@@ -50,7 +74,7 @@ func CreateUdpLogger(
 			enabled: false,
 		}
 	}
-	con, err := net.ListenPacket("udp", ":0")
+	conn, err := net.ListenUDP("udp", nil)
 	if err != nil {
 		fmt.Println("UDP initialization error: ", err)
 		return udpLogger{
@@ -70,11 +94,13 @@ func CreateUdpLogger(
 		bufferLen = 1
 	}
 	return udpLogger{
-		con:           &con,
+		conn:          conn,
 		address:       address,
 		enabled:       true,
 		bufferLen:     bufferLen,
 		dataPerSecond: dataPerSecond,
 		sendFrequency: sendFrequency,
+		maxDataSize:   9000,
+		chunkId:       0,
 	}
 }
