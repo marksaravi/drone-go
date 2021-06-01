@@ -65,7 +65,7 @@ func CreateUdpLogger(
 			enabled: false,
 		}
 	}
-	const sendFrequency = 50
+	const sendFrequency = 60
 	var bufferLen int = dataPerSecond / sendFrequency
 	if bufferLen == 0 {
 		bufferLen = 1
