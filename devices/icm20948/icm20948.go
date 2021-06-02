@@ -13,9 +13,11 @@ import (
 )
 
 var prevReadTime int64
+var firstReadTime int64
 
 func init() {
 	prevReadTime = 0
+	firstReadTime = 0
 }
 
 func reg(reg uint16) *Register {
@@ -163,6 +165,8 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 	var readInterval int64 = 0
 	if prevReadTime > 0 {
 		readInterval = readTime - prevReadTime
+	} else {
+		firstReadTime = readTime
 	}
 	prevReadTime = readTime
 
@@ -183,7 +187,7 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 			Error: gyroErr,
 			Data:  gyro,
 		},
-		ReadTime:     readTime,
+		ReadTime:     readTime - firstReadTime,
 		ReadInterval: readInterval,
 	}, nil
 }

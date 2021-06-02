@@ -35,7 +35,6 @@ func main() {
 		ImuDataChannel: imuDataChannel,
 	}
 
-	// flightStates.Calibrate()
 	flightStates.Reset()
 
 	for running {
@@ -53,7 +52,6 @@ func main() {
 		case imuData = <-imuDataChannel:
 			flightStates.Set(imuData)
 			json := flightStates.ImuDataToJson()
-			flightStates.ShowRotations("json", json)
 			udpLogger.Send(json)
 		}
 	}

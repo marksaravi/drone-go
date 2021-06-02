@@ -13,9 +13,10 @@ type FlightConfig struct {
 }
 
 type UdpLoggerConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	IP      string `yaml:"ip"`
-	Port    int    `yaml:"port"`
+	IP               string `yaml:"ip"`
+	Port             int    `yaml:"port"`
+	PacketsPerSecond int    `yaml:"udp_packets_per_second"`
+	PrintIntervalMs  int    `yaml:"print_interval_ms"`
 }
 
 // XYZ is X, Y, Z data
