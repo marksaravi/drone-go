@@ -12,6 +12,12 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
+var prevReadTime int64
+
+func init() {
+	prevReadTime = 0
+}
+
 func reg(reg uint16) *Register {
 	return &Register{
 		address: uint8(reg),
@@ -153,7 +159,15 @@ func (dev *Device) ReadRawData() ([]uint8, error) {
 
 // ReadData reads Accelerometer and Gyro data
 func (dev *Device) ReadData() (imu.ImuData, error) {
+	readTime := time.Now().Local().UnixNano()
+	var readInterval int64 = 0
+	if prevReadTime > 0 {
+		readInterval = readTime - prevReadTime
+	}
+	prevReadTime = readTime
+
 	data, err := dev.ReadRawData()
+
 	if err != nil {
 		return imu.ImuData{}, err
 	}
@@ -169,7 +183,7 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 			Error: gyroErr,
 			Data:  gyro,
 		},
-		ReadTime:     time.Now().UnixNano(),
-		ReadInterval: 0,
+		ReadTime:     readTime,
+		ReadInterval: readInterval,
 	}, nil
 }

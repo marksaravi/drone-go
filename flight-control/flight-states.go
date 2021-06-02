@@ -11,12 +11,11 @@ import (
 )
 
 var (
-	lastPrint    time.Time
-	lastUDP      time.Time
-	millis       int
-	counter      int
-	sampleRate   int
-	lastDataRead int64
+	lastPrint  time.Time
+	lastUDP    time.Time
+	millis     int
+	counter    int
+	sampleRate int
 )
 
 func init() {
@@ -25,7 +24,6 @@ func init() {
 	millis = 1000
 	counter = 0
 	sampleRate = 0
-	lastDataRead = 0
 }
 
 type FlightStates struct {
@@ -82,15 +80,11 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 }
 
 func (fs *FlightStates) setGyroRotations() {
-	if lastDataRead > 0 {
-		fs.imuData.ReadInterval = fs.imuData.ReadTime - lastDataRead
-	}
 	curr := fs.gyroRotations // current rotations by gyro
 	dRoll, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
 		fs.imuData.Gyro.Data,
 		fs.imuData.ReadInterval,
 	)
-	lastDataRead = fs.imuData.ReadTime
 	fs.gyroRotations = types.Rotations{
 		Roll:  curr.Roll + dRoll,
 		Pitch: curr.Pitch + dPitch,
@@ -111,7 +105,7 @@ func toJson(r types.Rotations) string {
 }
 
 func (fs *FlightStates) ImuDataToJson() string {
-	return fmt.Sprintf("{\"aR\":%0.2f,\"aP\":%0.2f,\"aY\":%0.2f,\"gR\":%0.2f,\"gP\":%0.2f,\"gY\":%0.2f,\"rR\":%0.2f,\"rP\":%0.2f,\"rY\":%0.2f,\"t\":%0.3f}",
+	return fmt.Sprintf("{\"aR\":%0.2f,\"aP\":%0.2f,\"aY\":%0.2f,\"gR\":%0.2f,\"gP\":%0.2f,\"gY\":%0.2f,\"rR\":%0.2f,\"rP\":%0.2f,\"rY\":%0.2f,\"dT\":%d,\"rT\":%d}",
 		fs.accRotations.Roll,
 		fs.accRotations.Pitch,
 		fs.accRotations.Yaw,
@@ -121,6 +115,8 @@ func (fs *FlightStates) ImuDataToJson() string {
 		fs.rotations.Roll,
 		fs.rotations.Pitch,
 		fs.rotations.Yaw,
+		fs.imuData.ReadInterval,
+		fs.imuData.ReadTime,
 	)
 }
 
