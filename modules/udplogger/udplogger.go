@@ -43,7 +43,6 @@ func (l *udpLogger) Send(json string) {
 			l.dataPerPacket,
 		)
 		l.buffer = nil
-		fmt.Println(data)
 		go func() {
 			bytes := []byte(data)
 			l.conn.WriteToUDP(bytes, l.address)
