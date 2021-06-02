@@ -18,7 +18,6 @@ type Device struct {
 	*sysfs.SPI
 	spi.Conn
 	regbank         uint8
-	lastReading     int64
 	readingInterval int64
 	acc             types.Sensor
 	gyro            types.Sensor

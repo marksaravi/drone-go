@@ -37,7 +37,6 @@ func createImuChannel(dataPerSecond int, config icm20948.Config, wg *sync.WaitGr
 		}
 		fmt.Printf("name: %s, id: 0x%X\n", name, code)
 		var control types.Command
-		dev.ResetGyroTimer()
 		readingInterval := int64(time.Second) / int64(dataPerSecond)
 		firstReading := time.Now()
 		nextReading := firstReading
@@ -62,7 +61,6 @@ func createImuChannel(dataPerSecond int, config icm20948.Config, wg *sync.WaitGr
 					total += 1
 					sampleCounter += 1
 					nextReading = firstReading.Add(time.Duration(total * readingInterval))
-					data.ElapsedTime = int64(time.Since(firstReading))
 					data.TotalData = total
 					data.SampleRate = sampleRate
 					if time.Since(second) >= time.Second {

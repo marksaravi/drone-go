@@ -11,11 +11,12 @@ import (
 )
 
 var (
-	lastPrint  time.Time
-	lastUDP    time.Time
-	millis     int
-	counter    int
-	sampleRate int
+	lastPrint    time.Time
+	lastUDP      time.Time
+	millis       int
+	counter      int
+	sampleRate   int
+	lastDataRead int64
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 	millis = 1000
 	counter = 0
 	sampleRate = 0
+	lastDataRead = 0
 }
 
 type FlightStates struct {
@@ -80,12 +82,15 @@ func (fs *FlightStates) setAccRotations(lowPassFilterCoefficient float64) {
 }
 
 func (fs *FlightStates) setGyroRotations() {
+	if lastDataRead > 0 {
+		fs.imuData.ReadInterval = fs.imuData.ReadTime - lastDataRead
+	}
 	curr := fs.gyroRotations // current rotations by gyro
 	dRoll, dPitch, dYaw := gyroscopeDataToRollPitchYawChange(
 		fs.imuData.Gyro.Data,
-		fs.imuData.ReadingInterval,
+		fs.imuData.ReadInterval,
 	)
-
+	lastDataRead = fs.imuData.ReadTime
 	fs.gyroRotations = types.Rotations{
 		Roll:  curr.Roll + dRoll,
 		Pitch: curr.Pitch + dPitch,
@@ -94,20 +99,10 @@ func (fs *FlightStates) setGyroRotations() {
 }
 
 func (fs *FlightStates) setRotations() {
-	accCoeff := fs.Config.AccLowPassFilterCoefficient
-	rotCoeff := fs.Config.RotationsLowPassFilterCoefficient
-	curr := fs.rotations
-	accNewRoll, accNewPitch := accelerometerDataToRollPitch(fs.imuData.Acc.Data)
-	accRoll := utils.LowPassFilter(curr.Roll, accNewRoll, accCoeff)
-	accPitch := utils.LowPassFilter(curr.Pitch, accNewPitch, accCoeff)
-	gyroDRoll, gyroDPitch, gyroDYaw := gyroscopeDataToRollPitchYawChange(fs.imuData.Gyro.Data, fs.imuData.ReadingInterval)
-	roll := utils.LowPassFilter(curr.Roll+gyroDRoll, accRoll, rotCoeff)
-	pitch := utils.LowPassFilter(curr.Pitch+gyroDPitch, accPitch, rotCoeff)
-	yaw := curr.Yaw + gyroDYaw
 	fs.rotations = types.Rotations{
-		Roll:  roll,
-		Pitch: pitch,
-		Yaw:   yaw,
+		Roll:  fs.accRotations.Roll,
+		Pitch: fs.accRotations.Pitch,
+		Yaw:   fs.accRotations.Yaw,
 	}
 }
 
@@ -126,7 +121,6 @@ func (fs *FlightStates) ImuDataToJson() string {
 		fs.rotations.Roll,
 		fs.rotations.Pitch,
 		fs.rotations.Yaw,
-		float64(fs.imuData.ElapsedTime)/1000000000.0,
 	)
 }
 

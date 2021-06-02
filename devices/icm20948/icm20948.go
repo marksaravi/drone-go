@@ -151,17 +151,9 @@ func (dev *Device) ReadRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
-// ResetGyroTimer resets gyro timer
-func (dev *Device) ResetGyroTimer() {
-	dev.lastReading = time.Now().UnixNano()
-}
-
 // ReadData reads Accelerometer and Gyro data
 func (dev *Device) ReadData() (imu.ImuData, error) {
 	data, err := dev.ReadRawData()
-	now := time.Now().UnixNano()
-	dev.readingInterval = now - dev.lastReading
-	dev.lastReading = now
 	if err != nil {
 		return imu.ImuData{}, err
 	}
@@ -169,7 +161,6 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 	gyro, gyroErr := dev.processGyroscopeData(data[6:])
 
 	return imu.ImuData{
-		ReadingInterval: dev.readingInterval,
 		Acc: types.SensorData{
 			Error: accErr,
 			Data:  acc,
@@ -178,5 +169,7 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 			Error: gyroErr,
 			Data:  gyro,
 		},
+		ReadTime:     time.Now().UnixNano(),
+		ReadInterval: 0,
 	}, nil
 }
