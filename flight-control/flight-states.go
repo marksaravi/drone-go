@@ -84,7 +84,7 @@ func (fs *FlightStates) setRotations() {
 }
 
 func (fs *FlightStates) ImuDataToJson() string {
-	return fmt.Sprintf("{\"aR\":%0.2f,\"aP\":%0.2f,\"aY\":%0.2f,\"gR\":%0.2f,\"gP\":%0.2f,\"gY\":%0.2f,\"rR\":%0.2f,\"rP\":%0.2f,\"rY\":%0.2f,\"dT\":%d,\"rT\":%d}",
+	return fmt.Sprintf("{\"accRoll\":%0.2f,\"accPitch\":%0.2f,\"accYaw\":%0.2f,\"gyroRoll\":%0.2f,\"gyroPitch\":%0.2f,\"gyroYaw\":%0.2f,\"roll\":%0.2f,\"ritch\":%0.2f,\"yaw\":%0.2f,\"dT\":%d,\"T\":%d}",
 		fs.accRotations.Roll,
 		fs.accRotations.Pitch,
 		fs.accRotations.Yaw,

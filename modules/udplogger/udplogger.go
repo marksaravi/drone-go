@@ -36,14 +36,14 @@ func (l *udpLogger) Send(json string) {
 			jsonArray = jsonArray + comma + s
 			comma = ","
 		}
-		data := fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d,,\"dataPerPacket\":%d}",
+		data := fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d,\"dataPerPacket\":%d}",
 			jsonArray,
 			l.dataPerSecond,
 			l.packetsPerSecond,
 			l.dataPerPacket,
 		)
 		l.buffer = nil
-		// fmt.Println(data)
+		fmt.Println(data)
 		go func() {
 			bytes := []byte(data)
 			l.conn.WriteToUDP(bytes, l.address)

@@ -1,5 +1,5 @@
 flight_control:
-  imu_data_per_second: 1000
+  imu_data_per_second: 4000
   accelerometer_lowpass_filter_coefficient: 0.15
   rotations_lowpass_filter_coefficient: 0.05
 devices:
@@ -42,5 +42,5 @@ devices:
 udp:
   ip: 192.168.1.101
   port: 6431
-  udp_packets_per_second: 0 # set to zero for disabling udp send
+  udp_packets_per_second: 100 # set to zero for disabling udp send
   print_interval_ms: 1000  # set to zero for disabling print
