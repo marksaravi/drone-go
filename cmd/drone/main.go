@@ -18,7 +18,6 @@ func main() {
 	var imuData imu.ImuData
 	var wg sync.WaitGroup
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
-	fmt.Println("udpLogger: ", udpLogger)
 	commandChannel := createCommandChannel(&wg)
 	imuDataChannel, imuControlChannel := createImuChannel(
 		appConfig.Flight.ImuDataPerSecond,

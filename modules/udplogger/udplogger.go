@@ -21,12 +21,12 @@ type udpLogger struct {
 }
 
 func (l *udpLogger) Send(json string) {
+	if !l.enabled || l.packetsPerSecond == 0 {
+		return
+	}
 	if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
 		l.lastPrint = time.Now()
 		fmt.Println(json)
-	}
-	if !l.enabled || l.packetsPerSecond == 0 {
-		return
 	}
 	l.buffer = append(l.buffer, json)
 	if len(l.buffer) == l.dataPerPacket {
@@ -84,3 +84,14 @@ func CreateUdpLogger(
 		lastPrint:        time.Now(),
 	}
 }
+
+// https://github.com/google/gopacket
+// func (s *scanner) sendUDPHW(dstIP string, idx int, ipPtr *layers.IPv4, udpPtr *layers.UDP, buf gopacket.SerializeBuffer) {
+// 	srcPort = s.srcPorts[idx]
+// 	pldPtr = &s.payloads[idx]
+// 	ipPtr.DstIP = net.ParseIP(dstIP)
+// 	udpPtr.SrcPort = layers.UDPPort(srcPort)
+
+// 	if err := gopacket.SerializeLayers(buf, s.opts, &s.eth, ipPtr, udpPtr, pldPtr); err != nil {...}
+// 	s.handle.WritePacketData(buf.Bytes())
+// }
