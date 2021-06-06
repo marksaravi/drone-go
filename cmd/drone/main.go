@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"sync"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
@@ -13,11 +12,7 @@ import (
 )
 
 func main() {
-	appConfig, err := readConfigs()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	appConfig := readConfigs()
 
 	var command types.Command
 	var imuData imu.ImuData
