@@ -1,8 +1,13 @@
+/*
+TO increase udp packet size in macOS use the following command
+sudo sysctl -w net.inet.udp.maxdgram=65535
+*/
 package udplogger
 
 import (
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
@@ -24,28 +29,30 @@ func (l *udpLogger) Send(json string) {
 	if !l.enabled || l.packetsPerSecond == 0 {
 		return
 	}
+	l.buffer = append(l.buffer, json)
 	if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
 		l.lastPrint = time.Now()
-		fmt.Println(json)
 	}
-	l.buffer = append(l.buffer, json)
 	if len(l.buffer) == l.dataPerPacket {
-		jsonArray := ""
-		comma := ""
-		for _, s := range l.buffer {
-			jsonArray = jsonArray + comma + s
-			comma = ","
-		}
+		jsonArray := strings.Join(l.buffer, ",")
 		data := fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d,\"dataPerPacket\":%d}",
 			jsonArray,
 			l.dataPerSecond,
 			l.packetsPerSecond,
 			l.dataPerPacket,
 		)
-		l.buffer = nil
+		bytes := []byte(data)
+		datalen := len(bytes)
+		chunk := 9000
+
 		go func() {
-			bytes := []byte(data)
-			l.conn.WriteToUDP(bytes, l.address)
+			for i := 0; i < datalen; i += chunk {
+				if i < datalen-chunk {
+					l.conn.WriteToUDP(bytes[i:i+chunk], l.address)
+				} else {
+					l.conn.WriteToUDP(bytes[i:], l.address)
+				}
+			}
 		}()
 	}
 }

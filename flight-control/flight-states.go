@@ -10,12 +10,11 @@ import (
 )
 
 type FlightStates struct {
-	Config         types.FlightConfig
-	ImuDataChannel <-chan imu.ImuData
-	imuData        imu.ImuData
-	accRotations   types.Rotations
-	gyroRotations  types.Rotations
-	rotations      types.Rotations
+	Config        types.FlightConfig
+	imuData       imu.ImuData
+	accRotations  types.Rotations
+	gyroRotations types.Rotations
+	rotations     types.Rotations
 }
 
 func (fs *FlightStates) Reset() {
