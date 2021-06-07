@@ -34,25 +34,16 @@ func (l *udpLogger) Send(json string) {
 		l.lastPrint = time.Now()
 	}
 	if len(l.buffer) == l.dataPerPacket {
-		jsonPayload := fmt.Sprintf("\n{\"data\":[%s],\"dataPerSecond\":%d,\"packetsPerSecond\":%d,\"dataPerPacket\":%d}\n\n",
+		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d,\"pps\":%d,\"dpp\":%d}",
 			strings.Join(l.buffer, ","),
 			l.dataPerSecond,
 			l.packetsPerSecond,
 			l.dataPerPacket,
 		)
 		l.buffer = nil
-		datalen := len(jsonPayload)
+		// data len should be less than sysctl net.inet.udp.maxdgram for macOS
 		go func() {
-			chunk := 9000 // based on "sysctl net.inet.udp.maxdgram" in macOS
-			var sum int = 0
-			for sum <= datalen {
-				if sum+chunk < datalen {
-					l.conn.WriteToUDP([]byte(jsonPayload[sum:sum+chunk]), l.address)
-				} else {
-					l.conn.WriteToUDP([]byte(jsonPayload[sum:]), l.address)
-				}
-				sum += chunk
-			}
+			l.conn.WriteToUDP([]byte(jsonPayload), l.address)
 		}()
 	}
 }
