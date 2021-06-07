@@ -34,24 +34,25 @@ func (l *udpLogger) Send(json string) {
 		l.lastPrint = time.Now()
 	}
 	if len(l.buffer) == l.dataPerPacket {
-		jsonArray := strings.Join(l.buffer, ",")
-		data := fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d,\"dataPerPacket\":%d}",
-			jsonArray,
+		bytes := []byte(fmt.Sprintf("{\"data\":[%s],\"dataPerSecond\": %d,\"packetsPerSecond\":%d,\"dataPerPacket\":%d}",
+			strings.Join(l.buffer, ","),
 			l.dataPerSecond,
 			l.packetsPerSecond,
 			l.dataPerPacket,
-		)
-		bytes := []byte(data)
-		datalen := len(bytes)
-		chunk := 9000
-
+		))
+		l.buffer = nil
 		go func() {
-			for i := 0; i < datalen; i += chunk {
-				if i < datalen-chunk {
-					l.conn.WriteToUDP(bytes[i:i+chunk], l.address)
+			datalen := len(bytes)
+			chunk := 9000
+			var sum int = 0
+			for sum <= datalen {
+				if sum+chunk < datalen {
+					l.conn.WriteToUDP(bytes[sum:sum+chunk], l.address)
 				} else {
-					l.conn.WriteToUDP(bytes[i:], l.address)
+					l.conn.WriteToUDP(bytes[sum:], l.address)
 				}
+				sum += chunk
+				chunk--
 			}
 		}()
 	}
