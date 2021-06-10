@@ -40,6 +40,7 @@ type ImuSensorsData struct {
 }
 
 type ImuRotations struct {
+	PrevRotations Rotations
 	Accelerometer Rotations
 	Gyroscope     Rotations
 	Rotations     Rotations
