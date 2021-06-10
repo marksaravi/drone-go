@@ -8,8 +8,8 @@ const BUFFER_LEN uint8 = 4
 type IMU interface {
 	Close()
 	InitDevice() error
-	ReadRawData() ([]byte, error)
-	ReadData() (types.ImuSensorsData, error)
+	ReadSensorsRawData() ([]byte, error)
+	ReadSensors() (types.ImuSensorsData, error)
 	GetRotations() (types.ImuRotations, error)
 	WhoAmI() (string, byte, error)
 }

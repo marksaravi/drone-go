@@ -153,13 +153,13 @@ func (dev *ImuDevice) InitDevice() error {
 	return err
 }
 
-// ReadRawData reads all Accl and Gyro data
-func (dev *ImuDevice) ReadRawData() ([]uint8, error) {
+// ReadSensorsRawData reads all Accl and Gyro data
+func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
-// ReadData reads Accelerometer and Gyro data
-func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
+// ReadSensors reads Accelerometer and Gyro data
+func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
 	readTime := time.Now().Local().UnixNano()
 	var readInterval int64 = 0
 	if prevReadTime > 0 {
@@ -169,7 +169,7 @@ func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
 	}
 	prevReadTime = readTime
 
-	data, err := dev.ReadRawData()
+	data, err := dev.ReadSensorsRawData()
 
 	if err != nil {
 		return types.ImuSensorsData{}, err
@@ -192,7 +192,7 @@ func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
 }
 
 func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
-	imuData, err := dev.ReadData()
+	imuData, err := dev.ReadSensors()
 	return types.ImuRotations{
 		Accelerometer: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		Gyroscope:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
