@@ -69,6 +69,8 @@ func NewICM20948Driver(config Config) (*ImuDevice, error) {
 		mag: types.Sensor{
 			Type: MAGNETOMETER,
 		},
+		prevReadTime: -1,
+		readTime:     -1,
 	}
 	return &dev, nil
 }
@@ -155,6 +157,13 @@ func (dev *ImuDevice) InitDevice() error {
 
 // ReadSensorsRawData reads all Accl and Gyro data
 func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
+	now := time.Now().UnixNano()
+	if dev.readTime < 0 {
+		dev.prevReadTime = now
+	} else {
+		dev.prevReadTime = dev.readTime
+	}
+	dev.readTime = now
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
