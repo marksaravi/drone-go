@@ -35,7 +35,6 @@ type SensorData struct {
 
 type ImuSensorsData struct {
 	Acc, Gyro, Mag SensorData
-	SampleRate     int
 	ReadTime       int64
 	ReadInterval   int64
 }

@@ -11,14 +11,6 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-var prevReadTime int64
-var firstReadTime int64
-
-func init() {
-	prevReadTime = 0
-	firstReadTime = 0
-}
-
 func reg(reg uint16) *Register {
 	return &Register{
 		address: uint8(reg),
@@ -169,15 +161,6 @@ func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
 
 // ReadSensors reads Accelerometer and Gyro data
 func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
-	readTime := time.Now().Local().UnixNano()
-	var readInterval int64 = 0
-	if prevReadTime > 0 {
-		readInterval = readTime - prevReadTime
-	} else {
-		firstReadTime = readTime
-	}
-	prevReadTime = readTime
-
 	data, err := dev.ReadSensorsRawData()
 
 	if err != nil {
@@ -195,8 +178,12 @@ func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
 			Error: gyroErr,
 			Data:  gyro,
 		},
-		ReadTime:     readTime - firstReadTime,
-		ReadInterval: readInterval,
+		Mag: types.SensorData{
+			Error: nil,
+			Data:  types.XYZ{X: 0, Y: 0, Z: 0},
+		},
+		ReadTime:     dev.readTime,
+		ReadInterval: dev.readTime - dev.prevReadTime,
 	}, nil
 }
 
