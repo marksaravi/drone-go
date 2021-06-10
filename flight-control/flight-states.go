@@ -75,6 +75,7 @@ func (fs *FlightStates) setGyroRotations() {
 }
 
 func (fs *FlightStates) setRotations() {
+	//  nR = gyAcMix * (pR + gyroDPS * timeDelta ) + (1-gyAcMix) * accR;
 	fs.rotations = types.Rotations{
 		Roll:  fs.accRotations.Roll,
 		Pitch: fs.accRotations.Pitch,
