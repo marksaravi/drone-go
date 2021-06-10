@@ -9,12 +9,12 @@ import (
 )
 
 // GetAcc get accelerometer data
-func (dev *Device) GetAcc() *types.Sensor {
+func (dev *ImuDevice) GetAcc() *types.Sensor {
 	return &(dev.acc)
 }
 
 // InitAccelerometer initialise the Accelerometer
-func (dev *Device) InitAccelerometer() error {
+func (dev *ImuDevice) InitAccelerometer() error {
 	config, ok := dev.GetAcc().GetConfig().(AccelerometerConfig)
 	if !ok {
 		log.Fatal("Accelerometer config mismatch")
@@ -29,7 +29,7 @@ func (dev *Device) InitAccelerometer() error {
 	return err
 }
 
-func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
+func (dev *ImuDevice) getAccConfig() (AccelerometerConfig, error) {
 	data, err := dev.readRegister(ACCEL_CONFIG, 2)
 	config := AccelerometerConfig{
 		SensitivityLevel: int((data[0] >> 1) & 0b00000011),
@@ -38,7 +38,7 @@ func (dev *Device) getAccConfig() (AccelerometerConfig, error) {
 	return config, err
 }
 
-func (dev *Device) processAccelerometerData(data []byte) (types.XYZ, error) {
+func (dev *ImuDevice) processAccelerometerData(data []byte) (types.XYZ, error) {
 	accConfig, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
 	accSens := accelerometerSensitivity[accConfig.SensitivityLevel]
 	offsets := accConfig.Offsets[accConfig.SensitivityLevel]

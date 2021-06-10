@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type FlightStates struct {
 	Config        types.FlightConfig
-	imuData       imu.ImuData
+	imuData       types.ImuSensorsData
 	accRotations  types.Rotations
 	gyroRotations types.Rotations
 	rotations     types.Rotations
@@ -25,7 +24,7 @@ func (fs *FlightStates) Reset() {
 	}
 }
 
-func (fs *FlightStates) Set(imuData imu.ImuData) {
+func (fs *FlightStates) Set(imuData types.ImuSensorsData) {
 	fs.imuData = imuData
 	fs.setAccRotations(fs.Config.AccLowPassFilterCoefficient)
 	fs.setGyroRotations()

@@ -12,8 +12,8 @@ type Register struct {
 	bank    uint8
 }
 
-// Device is icm20948 mems
-type Device struct {
+// ImuDevice is icm20948 mems
+type ImuDevice struct {
 	Name string
 	*sysfs.SPI
 	spi.Conn

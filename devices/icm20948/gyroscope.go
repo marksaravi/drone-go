@@ -9,11 +9,11 @@ import (
 )
 
 // GetGyro get accelerometer data
-func (dev *Device) GetGyro() *types.Sensor {
+func (dev *ImuDevice) GetGyro() *types.Sensor {
 	return &(dev.gyro)
 }
 
-func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
+func (dev *ImuDevice) getGyroConfig() (GyroscopeConfig, error) {
 	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
 	config := GyroscopeConfig{
 		SensitivityLevel: int((data[0] >> 1) & 0b00000011),
@@ -23,7 +23,7 @@ func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
 }
 
 // InitGyroscope initialise the Gyroscope
-func (dev *Device) InitGyroscope() error {
+func (dev *ImuDevice) InitGyroscope() error {
 	config, ok := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	if !ok {
 		log.Fatal("Gyro config mismatch")
@@ -42,7 +42,7 @@ func (dev *Device) InitGyroscope() error {
 	return err
 }
 
-func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
+func (dev *ImuDevice) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	offsets := gyroConfig.Offsets[gyroConfig.SensitivityLevel]

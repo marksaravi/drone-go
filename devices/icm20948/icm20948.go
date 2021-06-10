@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -45,7 +44,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config) (*Device, error) {
+func NewICM20948Driver(config Config) (*ImuDevice, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -54,7 +53,7 @@ func NewICM20948Driver(config Config) (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	dev := Device{
+	dev := ImuDevice{
 		Name:    "ICM20948",
 		SPI:     d,
 		Conn:    conn,
@@ -74,12 +73,12 @@ func NewICM20948Driver(config Config) (*Device, error) {
 	return &dev, nil
 }
 
-func (dev *Device) Close() {
+func (dev *ImuDevice) Close() {
 	dev.SPI.Close()
 	fmt.Println("Closing ", dev.Name)
 }
 
-func (dev *Device) readReg(address uint8, len int) ([]uint8, error) {
+func (dev *ImuDevice) readReg(address uint8, len int) ([]uint8, error) {
 	w := make([]uint8, len+1)
 	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
@@ -87,7 +86,7 @@ func (dev *Device) readReg(address uint8, len int) ([]uint8, error) {
 	return r[1:], err
 }
 
-func (dev *Device) writeReg(address uint8, data ...uint8) error {
+func (dev *ImuDevice) writeReg(address uint8, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -96,7 +95,7 @@ func (dev *Device) writeReg(address uint8, data ...uint8) error {
 	return err
 }
 
-func (dev *Device) selRegisterBank(regbank uint8) error {
+func (dev *ImuDevice) selRegisterBank(regbank uint8) error {
 	if regbank == dev.regbank {
 		return nil
 	}
@@ -104,13 +103,13 @@ func (dev *Device) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *Device) readRegister(register uint16, len int) ([]uint8, error) {
+func (dev *ImuDevice) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *Device) writeRegister(register uint16, data ...uint8) error {
+func (dev *ImuDevice) writeRegister(register uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -120,7 +119,7 @@ func (dev *Device) writeRegister(register uint16, data ...uint8) error {
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA
-func (dev *Device) WhoAmI() (name string, id uint8, err error) {
+func (dev *ImuDevice) WhoAmI() (name string, id uint8, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	id = data[0]
@@ -128,7 +127,7 @@ func (dev *Device) WhoAmI() (name string, id uint8, err error) {
 }
 
 // GetDeviceConfig reads device configurations
-func (dev *Device) GetDeviceConfig() (
+func (dev *ImuDevice) GetDeviceConfig() (
 	config types.Config,
 	accConfig types.Config,
 	gyroConfig types.Config,
@@ -140,7 +139,7 @@ func (dev *Device) GetDeviceConfig() (
 }
 
 // InitDevice applies initial configurations to device
-func (dev *Device) InitDevice() error {
+func (dev *ImuDevice) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -155,12 +154,12 @@ func (dev *Device) InitDevice() error {
 }
 
 // ReadRawData reads all Accl and Gyro data
-func (dev *Device) ReadRawData() ([]uint8, error) {
+func (dev *ImuDevice) ReadRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
 // ReadData reads Accelerometer and Gyro data
-func (dev *Device) ReadData() (imu.ImuData, error) {
+func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
 	readTime := time.Now().Local().UnixNano()
 	var readInterval int64 = 0
 	if prevReadTime > 0 {
@@ -173,12 +172,12 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 	data, err := dev.ReadRawData()
 
 	if err != nil {
-		return imu.ImuData{}, err
+		return types.ImuSensorsData{}, err
 	}
 	acc, accErr := dev.processAccelerometerData(data)
 	gyro, gyroErr := dev.processGyroscopeData(data[6:])
 
-	return imu.ImuData{
+	return types.ImuSensorsData{
 		Acc: types.SensorData{
 			Error: accErr,
 			Data:  acc,
@@ -190,4 +189,7 @@ func (dev *Device) ReadData() (imu.ImuData, error) {
 		ReadTime:     readTime - firstReadTime,
 		ReadInterval: readInterval,
 	}, nil
+}
+
+func (dev *ImuDevice) GetRotations() {
 }

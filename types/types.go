@@ -33,6 +33,13 @@ type SensorData struct {
 	Data  XYZ
 }
 
+type ImuSensorsData struct {
+	Acc, Gyro, Mag SensorData
+	SampleRate     int
+	ReadTime       int64
+	ReadInterval   int64
+}
+
 // Sensor is devices that read data in x, y, z format
 type Sensor struct {
 	Type   string
