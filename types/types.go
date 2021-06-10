@@ -40,6 +40,14 @@ type ImuSensorsData struct {
 	ReadInterval   int64
 }
 
+type ImuRotations struct {
+	Accelerometer Rotations
+	Gyroscope     Rotations
+	Rotations     Rotations
+	ReadTime      int64
+	ReadInterval  int64
+}
+
 // Sensor is devices that read data in x, y, z format
 type Sensor struct {
 	Type   string

@@ -10,6 +10,6 @@ type IMU interface {
 	InitDevice() error
 	ReadRawData() ([]byte, error)
 	ReadData() (types.ImuSensorsData, error)
-	GetRotations()
+	GetRotations() (types.ImuRotations, error)
 	WhoAmI() (string, byte, error)
 }

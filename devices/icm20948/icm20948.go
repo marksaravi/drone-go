@@ -191,5 +191,10 @@ func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
 	}, nil
 }
 
-func (dev *ImuDevice) GetRotations() {
+func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
+	return types.ImuRotations{
+		Accelerometer: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		Gyroscope:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		Rotations:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+	}, nil
 }
