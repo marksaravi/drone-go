@@ -24,7 +24,6 @@ func main() {
 		Config: appConfig.Flight,
 	}
 
-	flightStates.Reset()
 	var sendData = true
 	var json string
 	var readingInterval time.Duration = time.Duration(int64(time.Second) / int64(appConfig.Flight.ImuDataPerSecond))
