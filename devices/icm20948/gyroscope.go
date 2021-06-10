@@ -16,7 +16,7 @@ func (dev *Device) GetGyro() *types.Sensor {
 func (dev *Device) getGyroConfig() (GyroscopeConfig, error) {
 	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
 	config := GyroscopeConfig{
-		ScaleLevel: int((data[0] >> 1) & 0b00000011),
+		SensitivityLevel: int((data[0] >> 1) & 0b00000011),
 	}
 	dev.GetGyro().SetConfig(config)
 	return config, err
@@ -35,7 +35,7 @@ func (dev *Device) InitGyroscope() error {
 	if config.LowPassFilterEnabled {
 		gyroConfig1 = 0b00000001 | (uint8(config.LowPassFilterConfig) << 3)
 	}
-	gyroConfig1 = gyroConfig1 | (uint8(config.ScaleLevel) << 1)
+	gyroConfig1 = gyroConfig1 | (uint8(config.SensitivityLevel) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1, gyroConfig2)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	fmt.Println("Gyro Config: ", cnfg)
@@ -44,8 +44,8 @@ func (dev *Device) InitGyroscope() error {
 
 func (dev *Device) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
-	scale := gyroFullScale[gyroConfig.ScaleLevel]
-	offsets := gyroConfig.Offsets[gyroConfig.ScaleLevel]
+	scale := gyroFullScale[gyroConfig.SensitivityLevel]
+	offsets := gyroConfig.Offsets[gyroConfig.SensitivityLevel]
 	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - offsets.X) / scale
 	y := (float64(utils.TowsComplementBytesToInt(data[2], data[3])) - offsets.Y) / scale
 	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - offsets.Z) / scale

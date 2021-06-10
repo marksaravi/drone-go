@@ -1,15 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"sync"
-	"time"
 
-	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
-	"github.com/MarkSaravi/drone-go/types"
 )
 
 func initiateIMU(config icm20948.Config) imu.IMU {
@@ -21,51 +16,4 @@ func initiateIMU(config icm20948.Config) imu.IMU {
 		os.Exit(1)
 	}
 	return dev
-}
-
-func createImuChannel(dataPerSecond int, config icm20948.Config, wg *sync.WaitGroup) (<-chan imu.ImuData, chan<- types.Command) {
-	imuDataChannel := make(chan imu.ImuData, 64)
-	imuControlChannel := make(chan types.Command, 1)
-	go func() {
-		wg.Add(1)
-		dev := initiateIMU(config)
-
-		name, code, deverr := dev.WhoAmI()
-		if deverr != nil {
-			fmt.Println("Failed to initialize IMU device with error ", deverr)
-			os.Exit(1)
-		}
-		fmt.Printf("name: %s, id: 0x%X\n", name, code)
-		var control types.Command
-		readingInterval := int64(time.Second) / int64(dataPerSecond)
-
-		var sampleRate int = 0
-		var sampleCounter int = 0
-		var stop bool = false
-		for range time.Tick(time.Duration(readingInterval) * time.Nanosecond) {
-			if stop {
-				break
-			}
-			select {
-			case control = <-imuControlChannel:
-				if control.Command == commands.COMMAND_END_PROGRAM {
-					stop = true
-				}
-			default:
-				data, err := dev.ReadData()
-				if err == nil {
-					sampleCounter += 1
-					data.SampleRate = sampleRate
-					select {
-					case imuDataChannel <- data:
-					default:
-					}
-				}
-			}
-		}
-		dev.Close()
-		fmt.Println("IMU stopped.")
-		wg.Done()
-	}()
-	return imuDataChannel, imuControlChannel
 }
