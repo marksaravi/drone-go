@@ -29,13 +29,6 @@ func (fs *FlightStates) Reset() {
 	}
 }
 
-func (fs *FlightStates) Set(imuData types.ImuSensorsData) {
-	fs.imuData = imuData
-	fs.setAccRotations(fs.Config.AccLowPassFilterCoefficient)
-	fs.setGyroRotations()
-	fs.setRotations()
-}
-
 func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }

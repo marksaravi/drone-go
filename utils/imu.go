@@ -19,8 +19,7 @@ func GyroChanges(imuSensorsData types.ImuSensorsData) types.RotationsChanges {
 	}
 }
 
-func GyroRotations(imuSensorsData types.ImuSensorsData, gyroRotations types.Rotations) types.Rotations {
-	dg := GyroChanges(imuSensorsData)
+func GyroRotations(dg types.RotationsChanges, gyroRotations types.Rotations) types.Rotations {
 	return types.Rotations{
 		Roll:  gyroRotations.Roll + dg.DRoll,
 		Pitch: gyroRotations.Pitch + dg.DPitch,
@@ -35,5 +34,22 @@ func AccelerometerDataRotations(data types.XYZ) types.Rotations {
 		Roll:  roll,
 		Pitch: pitch,
 		Yaw:   0,
+	}
+}
+
+func applyFilter(pR float64, accR float64, gyroDR float64, lpfc float64, dt float64) float64 {
+	return (1-lpfc)*(pR+gyroDR*dt) + lpfc*accR
+}
+
+func CalcRotations(pR types.Rotations, aR types.Rotations, dg types.RotationsChanges, lowPassFilterCoefficient float64, ri int64) types.Rotations {
+	//  nR = lpfc * (pR + gyroDPS * timeDelta ) + (1-lpfc) * accR;
+	dt := goDurToDt(ri)
+	roll := applyFilter(pR.Roll, aR.Roll, dg.DRoll, lowPassFilterCoefficient, dt)
+	pitch := applyFilter(pR.Pitch, aR.Pitch, dg.DPitch, lowPassFilterCoefficient, dt)
+	yaw := applyFilter(pR.Yaw, aR.Yaw, dg.DYaw, lowPassFilterCoefficient, dt)
+	return types.Rotations{
+		Roll:  roll,
+		Pitch: pitch,
+		Yaw:   yaw,
 	}
 }

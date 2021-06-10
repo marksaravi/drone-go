@@ -37,7 +37,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config) (*ImuDevice, error) {
+func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (*ImuDevice, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -62,8 +62,9 @@ func NewICM20948Driver(config Config) (*ImuDevice, error) {
 		mag: types.Sensor{
 			Type: MAGNETOMETER,
 		},
-		prevReadTime: -1,
-		readTime:     -1,
+		prevReadTime:             -1,
+		readTime:                 -1,
+		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 	return &dev, nil
 }
@@ -196,15 +197,24 @@ func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
 
 func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
 	imuData, imuError := dev.ReadSensors()
-	gyroRotations := utils.GyroRotations(imuData, dev.prevGyro)
+	dg := utils.GyroChanges(imuData)
+	gyroRotations := utils.GyroRotations(dg, dev.prevGyro)
 	dev.prevGyro = gyroRotations
 	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
-
+	prevRotations := dev.prevRotations
+	rotations := utils.CalcRotations(
+		prevRotations,
+		accRotations,
+		dg,
+		dev.lowPassFilterCoefficient,
+		imuData.ReadInterval,
+	)
+	dev.prevRotations = rotations
 	return types.ImuRotations{
-		PrevRotations: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		PrevRotations: prevRotations,
 		Accelerometer: accRotations,
 		Gyroscope:     gyroRotations,
-		Rotations:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		Rotations:     rotations,
 		ReadTime:      imuData.ReadTime,
 		ReadInterval:  imuData.ReadInterval,
 	}, imuError
