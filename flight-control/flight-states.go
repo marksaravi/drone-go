@@ -7,12 +7,8 @@ import (
 )
 
 type FlightStates struct {
-	Config        types.FlightConfig
-	imuData       types.ImuSensorsData
-	accRotations  types.Rotations
-	gyroRotations types.Rotations
-	rotations     types.Rotations
-	imuRotations  types.ImuRotations
+	Config       types.FlightConfig
+	imuRotations types.ImuRotations
 }
 
 func (fs *FlightStates) Update(imuRotations types.ImuRotations) {
