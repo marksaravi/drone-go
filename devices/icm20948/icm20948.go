@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -147,11 +148,17 @@ func (dev *ImuDevice) InitDevice() error {
 	return err
 }
 
+func (dev *ImuDevice) initDeviceReadings(now int64) {
+	dev.prevReadTime = now
+	dev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	dev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+}
+
 // ReadSensorsRawData reads all Accl and Gyro data
 func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
 	now := time.Now().UnixNano()
 	if dev.readTime < 0 {
-		dev.prevReadTime = now
+		dev.initDeviceReadings(now)
 	} else {
 		dev.prevReadTime = dev.readTime
 	}
@@ -189,10 +196,13 @@ func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
 
 func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
 	imuData, err := dev.ReadSensors()
+	gyroRotations := utils.GyroRotations(imuData, dev.prevGyro)
+	dev.prevGyro = gyroRotations
+
 	return types.ImuRotations{
 		PrevRotations: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		Accelerometer: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		Gyroscope:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		Gyroscope:     gyroRotations,
 		Rotations:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		ReadTime:      imuData.ReadTime,
 		ReadInterval:  imuData.ReadInterval,

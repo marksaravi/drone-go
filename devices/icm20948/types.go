@@ -17,12 +17,14 @@ type ImuDevice struct {
 	Name string
 	*sysfs.SPI
 	spi.Conn
-	regbank      uint8
-	acc          types.Sensor
-	gyro         types.Sensor
-	mag          types.Sensor
-	prevReadTime int64
-	readTime     int64
+	regbank       uint8
+	acc           types.Sensor
+	gyro          types.Sensor
+	mag           types.Sensor
+	prevRotations types.Rotations
+	prevGyro      types.Rotations
+	prevReadTime  int64
+	readTime      int64
 }
 
 // AccelerometerConfig is the configurations for Accelerometer

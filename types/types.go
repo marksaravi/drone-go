@@ -28,6 +28,10 @@ type Rotations struct {
 	Roll, Pitch, Yaw float64
 }
 
+type RotationsChanges struct {
+	DRoll, DPitch, DYaw float64
+}
+
 type SensorData struct {
 	Error error
 	Data  XYZ
