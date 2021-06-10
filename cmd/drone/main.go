@@ -50,9 +50,9 @@ func main() {
 			badInterval++
 		}
 		prevRead = now
-		imudata, err := dev.ReadData()
+		imuRotations, err := dev.GetRotations()
 		if err == nil {
-			flightStates.Set(imudata)
+			flightStates.Update(imuRotations)
 			json = flightStates.ImuDataToJson()
 		} else {
 			badImuCounter++

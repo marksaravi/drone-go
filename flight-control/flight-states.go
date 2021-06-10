@@ -14,6 +14,11 @@ type FlightStates struct {
 	accRotations  types.Rotations
 	gyroRotations types.Rotations
 	rotations     types.Rotations
+	imuRotations  types.ImuRotations
+}
+
+func (fs *FlightStates) Update(imuRotations types.ImuRotations) {
+	fs.imuRotations = imuRotations
 }
 
 func (fs *FlightStates) Reset() {
@@ -84,16 +89,16 @@ func (fs *FlightStates) setRotations() {
 
 func (fs *FlightStates) ImuDataToJson() string {
 	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
-		fs.accRotations.Roll,
-		fs.accRotations.Pitch,
-		fs.accRotations.Yaw,
-		fs.gyroRotations.Roll,
-		fs.gyroRotations.Pitch,
-		fs.gyroRotations.Yaw,
-		fs.rotations.Roll,
-		fs.rotations.Pitch,
-		fs.rotations.Yaw,
-		fs.imuData.ReadTime,
-		fs.imuData.ReadInterval,
+		fs.imuRotations.Accelerometer.Roll,
+		fs.imuRotations.Accelerometer.Pitch,
+		fs.imuRotations.Accelerometer.Yaw,
+		fs.imuRotations.Gyroscope.Roll,
+		fs.imuRotations.Gyroscope.Pitch,
+		fs.imuRotations.Gyroscope.Yaw,
+		fs.imuRotations.Rotations.Roll,
+		fs.imuRotations.Rotations.Pitch,
+		fs.imuRotations.Rotations.Yaw,
+		fs.imuRotations.ReadTime,
+		fs.imuRotations.ReadInterval,
 	)
 }

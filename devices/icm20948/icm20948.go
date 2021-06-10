@@ -192,9 +192,12 @@ func (dev *ImuDevice) ReadData() (types.ImuSensorsData, error) {
 }
 
 func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
+	imuData, err := dev.ReadData()
 	return types.ImuRotations{
 		Accelerometer: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		Gyroscope:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		Rotations:     types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-	}, nil
+		ReadTime:      imuData.ReadTime,
+		ReadInterval:  imuData.ReadInterval,
+	}, err
 }
