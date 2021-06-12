@@ -207,7 +207,6 @@ func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
 		accRotations,
 		dg,
 		dev.lowPassFilterCoefficient,
-		imuData.ReadInterval,
 	)
 	dev.prevRotations = rotations
 	return types.ImuRotations{
