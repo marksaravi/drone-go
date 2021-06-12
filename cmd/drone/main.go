@@ -36,12 +36,15 @@ func main() {
 	var badImuCounter int64 = 0
 
 	for running {
+		now := time.Now()
+		diff := now.Sub(prevRead)
+		if diff < readingInterval {
+			continue
+		}
 		counter++
 		if counter%100000 == 0 {
 			fmt.Println("Error Rate: ", float64(badInterval)/float64(counter)*100)
 		}
-		now := time.Now()
-		diff := now.Sub(prevRead)
 		if diff >= readingInterval {
 			max = diff
 		}

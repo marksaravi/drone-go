@@ -1,10 +1,21 @@
 package utils
 
 import (
+	"fmt"
 	"math"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
 )
+
+var lastReading = time.Now()
+
+func Print(v float64, msInterval int) {
+	if time.Since(lastReading) >= time.Millisecond*time.Duration(msInterval) {
+		fmt.Println(v)
+		lastReading = time.Now()
+	}
+}
 
 func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
@@ -42,7 +53,6 @@ func applyFilter(pR float64, accR float64, gyroDR float64, lpfc float64) float64
 }
 
 func CalcRotations(pR types.Rotations, aR types.Rotations, dg types.RotationsChanges, lowPassFilterCoefficient float64) types.Rotations {
-	//  nR = lpfc * (pR + gyroDPS * timeDelta ) + (1-lpfc) * accR;
 	roll := applyFilter(pR.Roll, aR.Roll, dg.DRoll, lowPassFilterCoefficient)
 	pitch := applyFilter(pR.Pitch, aR.Pitch, dg.DPitch, lowPassFilterCoefficient)
 	yaw := applyFilter(pR.Yaw, aR.Yaw, dg.DYaw, lowPassFilterCoefficient)
