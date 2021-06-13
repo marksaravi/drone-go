@@ -10,7 +10,7 @@ import (
 
 var lastReading = time.Now()
 
-func Print(v float64, msInterval int) {
+func Print(v []float64, msInterval int) {
 	if time.Since(lastReading) >= time.Millisecond*time.Duration(msInterval) {
 		fmt.Println(v)
 		lastReading = time.Now()
@@ -32,9 +32,9 @@ func GyroChanges(imuSensorsData types.ImuSensorsData) types.RotationsChanges {
 
 func GyroRotations(dg types.RotationsChanges, gyroRotations types.Rotations) types.Rotations {
 	return types.Rotations{
-		Roll:  gyroRotations.Roll + dg.DRoll,
-		Pitch: gyroRotations.Pitch + dg.DPitch,
-		Yaw:   gyroRotations.Yaw + dg.DYaw,
+		Roll:  math.Mod(gyroRotations.Roll+dg.DRoll, 360),
+		Pitch: math.Mod(gyroRotations.Pitch+dg.DPitch, 360),
+		Yaw:   math.Mod(gyroRotations.Yaw+dg.DYaw, 360),
 	}
 }
 
@@ -49,7 +49,12 @@ func AccelerometerDataRotations(data types.XYZ) types.Rotations {
 }
 
 func applyFilter(pR float64, accR float64, gyroDR float64, lpfc float64) float64 {
-	return lpfc*(pR+gyroDR) + (1-lpfc)*accR
+	nR := math.Mod(pR+gyroDR, 360)
+	if math.Abs(nR) >= 90 {
+		// preventint acc correction for more than 90° as values can have different sign
+		return nR
+	}
+	return lpfc*nR + (1-lpfc)*accR
 }
 
 func CalcRotations(pR types.Rotations, aR types.Rotations, dg types.RotationsChanges, lowPassFilterCoefficient float64) types.Rotations {
