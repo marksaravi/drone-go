@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -37,7 +36,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (*ImuDevice, error) {
+func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (*Meme20948, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -46,7 +45,7 @@ func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (*ImuDev
 	if err != nil {
 		return nil, err
 	}
-	dev := ImuDevice{
+	dev := Meme20948{
 		Name:    "ICM20948",
 		SPI:     d,
 		Conn:    conn,
@@ -69,12 +68,12 @@ func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (*ImuDev
 	return &dev, nil
 }
 
-func (dev *ImuDevice) Close() {
+func (dev *Meme20948) Close() {
 	dev.SPI.Close()
 	fmt.Println("Closing ", dev.Name)
 }
 
-func (dev *ImuDevice) readReg(address uint8, len int) ([]uint8, error) {
+func (dev *Meme20948) readReg(address uint8, len int) ([]uint8, error) {
 	w := make([]uint8, len+1)
 	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
@@ -82,7 +81,7 @@ func (dev *ImuDevice) readReg(address uint8, len int) ([]uint8, error) {
 	return r[1:], err
 }
 
-func (dev *ImuDevice) writeReg(address uint8, data ...uint8) error {
+func (dev *Meme20948) writeReg(address uint8, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -91,7 +90,7 @@ func (dev *ImuDevice) writeReg(address uint8, data ...uint8) error {
 	return err
 }
 
-func (dev *ImuDevice) selRegisterBank(regbank uint8) error {
+func (dev *Meme20948) selRegisterBank(regbank uint8) error {
 	if regbank == dev.regbank {
 		return nil
 	}
@@ -99,13 +98,13 @@ func (dev *ImuDevice) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *ImuDevice) readRegister(register uint16, len int) ([]uint8, error) {
+func (dev *Meme20948) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *ImuDevice) writeRegister(register uint16, data ...uint8) error {
+func (dev *Meme20948) writeRegister(register uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -115,27 +114,15 @@ func (dev *ImuDevice) writeRegister(register uint16, data ...uint8) error {
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA
-func (dev *ImuDevice) WhoAmI() (name string, id uint8, err error) {
+func (dev *Meme20948) WhoAmI() (name string, id uint8, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	id = data[0]
 	return
 }
 
-// GetDeviceConfig reads device configurations
-func (dev *ImuDevice) GetDeviceConfig() (
-	config types.Config,
-	accConfig types.Config,
-	gyroConfig types.Config,
-	err error) {
-	// data, err := dev.readRegister(LP_CONFIG, 3)
-	accConfig, err = dev.getAccConfig()
-	gyroConfig, err = dev.getGyroConfig()
-	return
-}
-
 // InitDevice applies initial configurations to device
-func (dev *ImuDevice) InitDevice() error {
+func (dev *Meme20948) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -149,14 +136,14 @@ func (dev *ImuDevice) InitDevice() error {
 	return err
 }
 
-func (dev *ImuDevice) initDeviceReadings(now int64) {
+func (dev *Meme20948) initDeviceReadings(now int64) {
 	dev.prevReadTime = now
 	dev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	dev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
 // ReadSensorsRawData reads all Accl and Gyro data
-func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
+func (dev *Meme20948) ReadSensorsRawData() ([]uint8, error) {
 	now := time.Now().UnixNano()
 	if dev.readTime < 0 {
 		dev.initDeviceReadings(now)
@@ -168,7 +155,7 @@ func (dev *ImuDevice) ReadSensorsRawData() ([]uint8, error) {
 }
 
 // ReadSensors reads Accelerometer and Gyro data
-func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
+func (dev *Meme20948) ReadSensors() (types.ImuSensorsData, error) {
 	data, err := dev.ReadSensorsRawData()
 
 	if err != nil {
@@ -193,28 +180,4 @@ func (dev *ImuDevice) ReadSensors() (types.ImuSensorsData, error) {
 		ReadTime:     dev.readTime,
 		ReadInterval: dev.readTime - dev.prevReadTime,
 	}, nil
-}
-
-func (dev *ImuDevice) GetRotations() (types.ImuRotations, error) {
-	imuData, imuError := dev.ReadSensors()
-	dg := utils.GyroChanges(imuData)
-	gyroRotations := utils.GyroRotations(dg, dev.prevGyro)
-	dev.prevGyro = gyroRotations
-	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
-	prevRotations := dev.prevRotations
-	rotations := utils.CalcRotations(
-		prevRotations,
-		accRotations,
-		dg,
-		dev.lowPassFilterCoefficient,
-	)
-	dev.prevRotations = rotations
-	return types.ImuRotations{
-		PrevRotations: prevRotations,
-		Accelerometer: accRotations,
-		Gyroscope:     gyroRotations,
-		Rotations:     rotations,
-		ReadTime:      imuData.ReadTime,
-		ReadInterval:  imuData.ReadInterval,
-	}, imuError
 }

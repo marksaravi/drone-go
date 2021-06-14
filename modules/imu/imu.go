@@ -21,7 +21,7 @@ type ImuMems interface {
 	WhoAmI() (string, byte, error)
 }
 
-type ImuDevice2 struct {
+type ImuDevice struct {
 	imuMemes                 ImuMems
 	acc                      types.Sensor
 	gyro                     types.Sensor
@@ -33,17 +33,17 @@ type ImuDevice2 struct {
 	lowPassFilterCoefficient float64
 }
 
-func NewImuDevice(imuMems ImuMems) ImuDevice2 {
-	return ImuDevice2{
+func NewImuDevice(imuMems ImuMems) ImuDevice {
+	return ImuDevice{
 		imuMemes: imuMems,
 	}
 }
 
-func (dev ImuDevice2) Close() {
+func (dev ImuDevice) Close() {
 	dev.imuMemes.Close()
 }
 
-func (dev ImuDevice2) GetRotations() (types.ImuRotations, error) {
+func (dev ImuDevice) GetRotations() (types.ImuRotations, error) {
 	imuData, imuError := dev.imuMemes.ReadSensors()
 	dg := utils.GyroChanges(imuData)
 	gyroRotations := utils.GyroRotations(dg, dev.prevGyro)
