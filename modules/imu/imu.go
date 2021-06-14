@@ -9,6 +9,7 @@ const BUFFER_LEN uint8 = 4
 
 // IMU is interface to imu mems
 type IMU interface {
+	Close()
 	GetRotations() (types.ImuRotations, error)
 }
 
@@ -36,6 +37,10 @@ func NewImuDevice(imuMems ImuMems) ImuDevice2 {
 	return ImuDevice2{
 		imuMemes: imuMems,
 	}
+}
+
+func (dev ImuDevice2) Close() {
+	dev.imuMemes.Close()
 }
 
 func (dev ImuDevice2) GetRotations() (types.ImuRotations, error) {

@@ -70,6 +70,7 @@ func main() {
 		default:
 		}
 	}
+	mpu.Close()
 	fmt.Println("worst delay:      ", max)
 	fmt.Println("total read data:  ", counter)
 	fmt.Println("bad time interval:", badInterval)
