@@ -24,8 +24,6 @@ func main() {
 		Config: appConfig.Flight,
 	}
 
-	var sendData = true
-	var json string
 	var readingInterval time.Duration = time.Duration(int64(time.Second) / int64(appConfig.Flight.ImuDataPerSecond))
 	var badReadingInterval = readingInterval + readingInterval/10
 	var max time.Duration = 0
@@ -55,12 +53,11 @@ func main() {
 		imuRotations, err := dev.GetRotations()
 		if err == nil {
 			flightStates.Update(imuRotations)
-			json = flightStates.ImuDataToJson()
 		} else {
 			badImuCounter++
 		}
-		if sendData {
-			udpLogger.Send(json)
+		if udpLogger.Enabled() {
+			udpLogger.Send(flightStates.ImuDataToJson())
 		}
 		select {
 		case command = <-commandChannel:

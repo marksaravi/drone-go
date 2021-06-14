@@ -39,6 +39,7 @@ devices:
           Y: 0
           Z: 0
 udp:
+  enabled: false
   ip: 192.168.1.102
   port: 6431
   udp_packets_per_second: 60 # set to zero for disabling udp send
