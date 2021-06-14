@@ -83,8 +83,8 @@ type Offsets struct {
 	Z float64 `yaml:"Z"`
 }
 
-// ImuMems is interface for the imu mems
-type ImuMems interface {
+// ImuDevice is interface for the imu mems
+type ImuDevice interface {
 	Close()
 	InitDevice() error
 	ReadSensorsRawData() ([]byte, error)

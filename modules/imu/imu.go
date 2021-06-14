@@ -8,8 +8,8 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
-type ImuDevice struct {
-	imuMemes                 types.ImuMems
+type ImuModule struct {
+	dev                      types.ImuDevice
 	acc                      types.Sensor
 	gyro                     types.Sensor
 	mag                      types.Sensor
@@ -20,59 +20,59 @@ type ImuDevice struct {
 	lowPassFilterCoefficient float64
 }
 
-func (imudev *ImuDevice) initDeviceReadings(now int64) {
+func (imu *ImuModule) initDeviceReadings(now int64) {
 	fmt.Println("initDeviceReadings")
-	imudev.prevReadTime = now
-	imudev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-	imudev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.prevReadTime = now
+	imu.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
-func (imudev *ImuDevice) readSensors() (types.ImuSensorsData, error) {
+func (imu *ImuModule) readSensors() (types.ImuSensorsData, error) {
 	now := time.Now().UnixNano()
-	if imudev.readTime < 0 {
-		imudev.initDeviceReadings(now)
+	if imu.readTime < 0 {
+		imu.initDeviceReadings(now)
 	} else {
-		imudev.prevReadTime = imudev.readTime
+		imu.prevReadTime = imu.readTime
 	}
-	imudev.readTime = now
-	acc, gyro, mag, err := imudev.imuMemes.ReadSensors()
+	imu.readTime = now
+	acc, gyro, mag, err := imu.dev.ReadSensors()
 
 	return types.ImuSensorsData{
 		Acc:          acc,
 		Gyro:         gyro,
 		Mag:          mag,
-		ReadTime:     imudev.readTime,
-		ReadInterval: imudev.readTime - imudev.prevReadTime,
+		ReadTime:     imu.readTime,
+		ReadInterval: imu.readTime - imu.prevReadTime,
 	}, err
 }
 
-func NewImuDevice(imuMems types.ImuMems, lowPassFilterCoefficient float64) ImuDevice {
-	return ImuDevice{
-		imuMemes:                 imuMems,
+func NewIMU(imuMems types.ImuDevice, lowPassFilterCoefficient float64) ImuModule {
+	return ImuModule{
+		dev:                      imuMems,
 		prevReadTime:             -1,
 		readTime:                 -1,
 		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 }
 
-func (imudev ImuDevice) Close() {
-	imudev.imuMemes.Close()
+func (imu ImuModule) Close() {
+	imu.dev.Close()
 }
 
-func (imudev *ImuDevice) GetRotations() (types.ImuRotations, error) {
-	imuData, imuError := imudev.readSensors()
+func (imu *ImuModule) GetRotations() (types.ImuRotations, error) {
+	imuData, imuError := imu.readSensors()
 	dg := utils.GyroChanges(imuData)
-	gyroRotations := utils.GyroRotations(dg, imudev.prevGyro)
-	imudev.prevGyro = gyroRotations
+	gyroRotations := utils.GyroRotations(dg, imu.prevGyro)
+	imu.prevGyro = gyroRotations
 	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
-	prevRotations := imudev.prevRotations
+	prevRotations := imu.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,
 		accRotations,
 		dg,
-		imudev.lowPassFilterCoefficient,
+		imu.lowPassFilterCoefficient,
 	)
-	imudev.prevRotations = rotations
+	imu.prevRotations = rotations
 	return types.ImuRotations{
 		PrevRotations: prevRotations,
 		Accelerometer: accRotations,

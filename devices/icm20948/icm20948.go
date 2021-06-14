@@ -36,7 +36,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config) (types.ImuMems, error) {
+func NewICM20948Driver(config Config) (types.ImuDevice, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
