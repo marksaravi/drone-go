@@ -7,7 +7,6 @@ import (
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
-	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
 	"github.com/MarkSaravi/drone-go/types"
 )
@@ -19,7 +18,7 @@ func main() {
 	var wg sync.WaitGroup
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
-	var mpu imu.IMU = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
+	var mpu types.IMU = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
 	var running = true
 	var flightStates flightcontrol.FlightStates = flightcontrol.FlightStates{
 		Config: appConfig.Flight,

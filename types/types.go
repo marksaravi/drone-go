@@ -82,3 +82,9 @@ type Offsets struct {
 	Y float64 `yaml:"Y"`
 	Z float64 `yaml:"Z"`
 }
+
+// IMU is interface to imu mems
+type IMU interface {
+	Close()
+	GetRotations() (ImuRotations, error)
+}

@@ -5,14 +5,6 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
-const BUFFER_LEN uint8 = 4
-
-// IMU is interface to imu mems
-type IMU interface {
-	Close()
-	GetRotations() (types.ImuRotations, error)
-}
-
 type ImuMems interface {
 	Close()
 	InitDevice() error
