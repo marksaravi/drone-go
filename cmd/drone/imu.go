@@ -12,8 +12,9 @@ func initiateIMU(config icm20948.Config, lowPassFilterCoefficient float64) imu.I
 	if err != nil {
 		os.Exit(1)
 	}
-	if dev.InitDevice() != nil {
+	dev.InitDevice()
+	if err != nil {
 		os.Exit(1)
 	}
-	return dev
+	return imu.NewImuDevice(dev)
 }
