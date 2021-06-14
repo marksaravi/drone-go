@@ -15,43 +15,51 @@ type ImuModule struct {
 	mag                      types.Sensor
 	prevRotations            types.Rotations
 	prevGyro                 types.Rotations
-	prevReadTime             int64
-	readTime                 int64
+	readTime                 time.Time
+	readingInterval          time.Duration
 	lowPassFilterCoefficient float64
+	readingData              types.ImuReadingQualities
 }
 
-func (imu *ImuModule) initDeviceReadings(now int64) {
-	fmt.Println("initDeviceReadings")
-	imu.prevReadTime = now
+func (imu *ImuModule) ResetReadingTimes() {
+	imu.readTime = time.Now()
 	imu.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	imu.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
-func (imu *ImuModule) readSensors() (types.ImuSensorsData, error) {
-	now := time.Now().UnixNano()
-	if imu.readTime < 0 {
-		imu.initDeviceReadings(now)
-	} else {
-		imu.prevReadTime = imu.readTime
+func (imu *ImuModule) updateReadingData(diff time.Duration, err bool) {
+	imu.readingData.Total++
+	if diff >= imu.readingData.BadIntervalThereshold {
+		imu.readingData.BadInterval++
+		if diff > imu.readingData.MaxBadInterval {
+			imu.readingData.MaxBadInterval = diff
+		}
 	}
-	imu.readTime = now
-	acc, gyro, mag, err := imu.dev.ReadSensors()
-
-	return types.ImuSensorsData{
-		Acc:          acc,
-		Gyro:         gyro,
-		Mag:          mag,
-		ReadTime:     imu.readTime,
-		ReadInterval: imu.readTime - imu.prevReadTime,
-	}, err
+	if err {
+		imu.readingData.BadData++
+	}
 }
 
-func NewIMU(imuMems types.ImuDevice, lowPassFilterCoefficient float64) ImuModule {
+func (imu *ImuModule) readSensors() (acc types.SensorData, gyro types.SensorData, mag types.SensorData, err error) {
+	acc, gyro, mag, err = imu.dev.ReadSensors()
+	return
+}
+
+func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
+	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
+	fmt.Println(readingInterval, readingInterval+readingInterval/20)
 	return ImuModule{
 		dev:                      imuMems,
-		prevReadTime:             -1,
-		readTime:                 -1,
-		lowPassFilterCoefficient: lowPassFilterCoefficient,
+		readTime:                 time.Time{},
+		readingInterval:          readingInterval,
+		lowPassFilterCoefficient: config.LowPassFilterCoefficient,
+		readingData: types.ImuReadingQualities{
+			Total:                 0,
+			BadInterval:           0,
+			MaxBadInterval:        0,
+			BadData:               0,
+			BadIntervalThereshold: readingInterval + readingInterval/20,
+		},
 	}
 }
 
@@ -59,12 +67,19 @@ func (imu ImuModule) Close() {
 	imu.dev.Close()
 }
 
-func (imu *ImuModule) GetRotations() (types.ImuRotations, error) {
-	imuData, imuError := imu.readSensors()
-	dg := utils.GyroChanges(imuData)
+func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
+	now := time.Now()
+	diff := now.Sub(imu.readTime)
+	if diff < imu.readingInterval {
+		return false, types.ImuRotations{}, nil
+	}
+	imu.readTime = now
+	acc, gyro, _, imuError := imu.readSensors()
+	imu.updateReadingData(diff, imuError != nil)
+	dg := utils.GyroChanges(gyro, diff.Nanoseconds())
 	gyroRotations := utils.GyroRotations(dg, imu.prevGyro)
 	imu.prevGyro = gyroRotations
-	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
+	accRotations := utils.AccelerometerDataRotations(acc.Data)
 	prevRotations := imu.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,
@@ -73,12 +88,16 @@ func (imu *ImuModule) GetRotations() (types.ImuRotations, error) {
 		imu.lowPassFilterCoefficient,
 	)
 	imu.prevRotations = rotations
-	return types.ImuRotations{
+	return true, types.ImuRotations{
 		PrevRotations: prevRotations,
 		Accelerometer: accRotations,
 		Gyroscope:     gyroRotations,
 		Rotations:     rotations,
-		ReadTime:      imuData.ReadTime,
-		ReadInterval:  imuData.ReadInterval,
+		ReadTime:      imu.readTime.UnixNano(),
+		ReadInterval:  diff.Nanoseconds(),
 	}, imuError
+}
+
+func (imu *ImuModule) GetReadingQualities() types.ImuReadingQualities {
+	return imu.readingData
 }

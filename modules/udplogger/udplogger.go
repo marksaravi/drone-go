@@ -29,7 +29,7 @@ func (l *udpLogger) Enabled() bool {
 	return l.enabled
 }
 
-func (l *udpLogger) Send(json string) {
+func (l *udpLogger) Append(json string) {
 	if !l.enabled || l.packetsPerSecond == 0 {
 		return
 	}
@@ -37,7 +37,10 @@ func (l *udpLogger) Send(json string) {
 	if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
 		l.lastPrint = time.Now()
 	}
-	if len(l.buffer) == l.dataPerPacket {
+}
+
+func (l *udpLogger) Send() {
+	if l.enabled && len(l.buffer) == l.dataPerPacket {
 		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d,\"pps\":%d,\"dpp\":%d}",
 			strings.Join(l.buffer, ","),
 			l.dataPerSecond,

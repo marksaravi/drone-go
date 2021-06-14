@@ -8,8 +8,8 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-func initiateIMU(config icm20948.Config, lowPassFilterCoefficient float64) types.IMU {
-	dev, err := icm20948.NewICM20948Driver(config)
+func initiateIMU(config ApplicationConfig) types.IMU {
+	dev, err := icm20948.NewICM20948Driver(config.Devices.ICM20948)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -17,6 +17,6 @@ func initiateIMU(config icm20948.Config, lowPassFilterCoefficient float64) types
 	if err != nil {
 		os.Exit(1)
 	}
-	imudevice := imu.NewIMU(dev, lowPassFilterCoefficient)
+	imudevice := imu.NewIMU(dev, config.Flight)
 	return &imudevice
 }

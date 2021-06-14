@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 // Config is the generic configuration
 type Config interface {
 }
@@ -83,6 +85,14 @@ type Offsets struct {
 	Z float64 `yaml:"Z"`
 }
 
+type ImuReadingQualities struct {
+	Total                 int64
+	BadInterval           int64
+	BadData               int64
+	MaxBadInterval        time.Duration
+	BadIntervalThereshold time.Duration
+}
+
 // ImuDevice is interface for the imu mems
 type ImuDevice interface {
 	Close()
@@ -95,5 +105,7 @@ type ImuDevice interface {
 // IMU is interface to imu mems
 type IMU interface {
 	Close()
-	GetRotations() (ImuRotations, error)
+	GetRotations() (bool, ImuRotations, error)
+	ResetReadingTimes()
+	GetReadingQualities() ImuReadingQualities
 }

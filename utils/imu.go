@@ -21,12 +21,12 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
-func GyroChanges(imuSensorsData types.ImuSensorsData) types.RotationsChanges {
-	dt := goDurToDt(imuSensorsData.ReadInterval)
+func GyroChanges(gyro types.SensorData, timeInterval int64) types.RotationsChanges {
+	dt := goDurToDt(timeInterval)
 	return types.RotationsChanges{
-		DRoll:  imuSensorsData.Gyro.Data.X * dt,
-		DPitch: imuSensorsData.Gyro.Data.Y * dt,
-		DYaw:   imuSensorsData.Gyro.Data.Z * dt,
+		DRoll:  gyro.Data.X * dt,
+		DPitch: gyro.Data.Y * dt,
+		DYaw:   gyro.Data.Z * dt,
 	}
 }
 
