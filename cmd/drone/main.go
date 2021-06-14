@@ -18,7 +18,7 @@ func main() {
 	var wg sync.WaitGroup
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
-	var mpu types.IMU = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
+	var imu types.IMU = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
 	var running = true
 	var flightStates flightcontrol.FlightStates = flightcontrol.FlightStates{
 		Config: appConfig.Flight,
@@ -50,7 +50,7 @@ func main() {
 			badInterval++
 		}
 		prevRead = now
-		imuRotations, err := mpu.GetRotations()
+		imuRotations, err := imu.GetRotations()
 		if err == nil {
 			flightStates.Update(imuRotations)
 		} else {
@@ -69,7 +69,7 @@ func main() {
 		default:
 		}
 	}
-	mpu.Close()
+	imu.Close()
 	fmt.Println("worst delay:      ", max)
 	fmt.Println("total read data:  ", counter)
 	fmt.Println("bad time interval:", badInterval)

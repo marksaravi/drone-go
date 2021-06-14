@@ -88,3 +88,11 @@ type IMU interface {
 	Close()
 	GetRotations() (ImuRotations, error)
 }
+
+type ImuMems interface {
+	Close()
+	InitDevice() error
+	ReadSensorsRawData() ([]byte, error)
+	ReadSensors() (ImuSensorsData, error)
+	WhoAmI() (string, byte, error)
+}

@@ -5,16 +5,8 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
-type ImuMems interface {
-	Close()
-	InitDevice() error
-	ReadSensorsRawData() ([]byte, error)
-	ReadSensors() (types.ImuSensorsData, error)
-	WhoAmI() (string, byte, error)
-}
-
 type ImuDevice struct {
-	imuMemes                 ImuMems
+	imuMemes                 types.ImuMems
 	acc                      types.Sensor
 	gyro                     types.Sensor
 	mag                      types.Sensor
@@ -25,7 +17,7 @@ type ImuDevice struct {
 	lowPassFilterCoefficient float64
 }
 
-func NewImuDevice(imuMems ImuMems) ImuDevice {
+func NewImuDevice(imuMems types.ImuMems) ImuDevice {
 	return ImuDevice{
 		imuMemes: imuMems,
 	}
