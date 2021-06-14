@@ -8,7 +8,6 @@ import (
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
@@ -36,7 +35,6 @@ func main() {
 				}
 			}
 			readingData = imu.GetReadingQualities()
-			utils.Print([]float64{float64(readingData.BadInterval) / float64(readingData.Total) * 100}, 1000)
 		}
 		udpLogger.Send()
 		select {
