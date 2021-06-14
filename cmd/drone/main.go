@@ -23,7 +23,6 @@ func main() {
 		Config: appConfig.Flight,
 	}
 
-	var readingData types.ImuReadingQualities
 	imu.ResetReadingTimes()
 	for running {
 		available, imuRotations, err := imu.GetRotations()
@@ -31,10 +30,9 @@ func main() {
 			if err == nil {
 				flightStates.Update(imuRotations)
 				if udpLogger.Enabled() {
-					udpLogger.Append(flightStates.ImuDataToJson())
+					udpLogger.Append(&flightStates)
 				}
 			}
-			readingData = imu.GetReadingQualities()
 		}
 		udpLogger.Send()
 		select {
@@ -47,6 +45,7 @@ func main() {
 		default:
 		}
 	}
+	readingData := imu.GetReadingQualities()
 	imu.Close()
 	fmt.Println("total data:             ", readingData.Total)
 	fmt.Println("number of bad imu data: ", readingData.BadData)

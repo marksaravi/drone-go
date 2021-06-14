@@ -21,7 +21,9 @@ type udpLogger struct {
 	dataPerPacket    int
 	dataPerSecond    int
 	packetsPerSecond int
+	dataOffset       int
 	printIntervalMs  int
+	dataCounter      int
 	lastPrint        time.Time
 }
 
@@ -29,13 +31,17 @@ func (l *udpLogger) Enabled() bool {
 	return l.enabled
 }
 
-func (l *udpLogger) Append(json string) {
+func (l *udpLogger) Append(dataProvider types.UdpDataProvider) {
 	if !l.enabled || l.packetsPerSecond == 0 {
 		return
 	}
-	l.buffer = append(l.buffer, json)
-	if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
-		l.lastPrint = time.Now()
+	l.dataCounter++
+	if l.dataCounter == l.dataOffset {
+		l.buffer = append(l.buffer, dataProvider.ImuDataToJson())
+		if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
+			l.lastPrint = time.Now()
+		}
+		l.dataCounter = 0
 	}
 }
 
@@ -55,10 +61,7 @@ func (l *udpLogger) Send() {
 	}
 }
 
-func CreateUdpLogger(
-	udpConfig types.UdpLoggerConfig,
-	dataPerSecond int,
-) udpLogger {
+func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) udpLogger {
 	if !udpConfig.Enabled {
 		return udpLogger{
 			enabled: false,
@@ -81,16 +84,19 @@ func CreateUdpLogger(
 
 	var dataPerPacket int = 0
 	if udpConfig.PacketsPerSecond > 0 {
-		dataPerPacket = dataPerSecond / udpConfig.PacketsPerSecond
+		dataPerPacket = udpConfig.DataPerSecond / udpConfig.PacketsPerSecond
 	}
+	dataOffset := imuDataPerSecond / udpConfig.DataPerSecond
 	return udpLogger{
 		conn:             conn,
 		address:          address,
 		enabled:          true,
 		dataPerPacket:    dataPerPacket,
-		dataPerSecond:    dataPerSecond,
+		dataPerSecond:    udpConfig.DataPerSecond,
 		packetsPerSecond: udpConfig.PacketsPerSecond,
 		printIntervalMs:  udpConfig.PrintIntervalMs,
+		dataOffset:       dataOffset,
+		dataCounter:      0,
 		lastPrint:        time.Now(),
 	}
 }
