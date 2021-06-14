@@ -83,16 +83,17 @@ type Offsets struct {
 	Z float64 `yaml:"Z"`
 }
 
-// IMU is interface to imu mems
-type IMU interface {
-	Close()
-	GetRotations() (ImuRotations, error)
-}
-
+// ImuMems is interface for the imu mems
 type ImuMems interface {
 	Close()
 	InitDevice() error
 	ReadSensorsRawData() ([]byte, error)
-	ReadSensors() (ImuSensorsData, error)
+	ReadSensors() (acc SensorData, gyro SensorData, mag SensorData, err error)
 	WhoAmI() (string, byte, error)
+}
+
+// IMU is interface to imu mems
+type IMU interface {
+	Close()
+	GetRotations() (ImuRotations, error)
 }

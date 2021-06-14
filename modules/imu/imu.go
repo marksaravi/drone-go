@@ -1,6 +1,8 @@
 package imu
 
 import (
+	"time"
+
 	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils"
 )
@@ -17,30 +19,56 @@ type ImuDevice struct {
 	lowPassFilterCoefficient float64
 }
 
-func NewImuDevice(imuMems types.ImuMems) ImuDevice {
+func (imudev *ImuDevice) initDeviceReadings(now int64) {
+	imudev.prevReadTime = now
+	imudev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imudev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+}
+
+func (imudev *ImuDevice) readSensors() (types.ImuSensorsData, error) {
+	now := time.Now().UnixNano()
+	if imudev.readTime < 0 {
+		imudev.initDeviceReadings(now)
+	} else {
+		imudev.prevReadTime = imudev.readTime
+	}
+	imudev.readTime = now
+	acc, gyro, mag, err := imudev.imuMemes.ReadSensors()
+
+	return types.ImuSensorsData{
+		Acc:          acc,
+		Gyro:         gyro,
+		Mag:          mag,
+		ReadTime:     imudev.readTime,
+		ReadInterval: imudev.readTime - imudev.prevReadTime,
+	}, err
+}
+
+func NewImuDevice(imuMems types.ImuMems, lowPassFilterCoefficient float64) ImuDevice {
 	return ImuDevice{
-		imuMemes: imuMems,
+		imuMemes:                 imuMems,
+		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 }
 
-func (dev ImuDevice) Close() {
-	dev.imuMemes.Close()
+func (imudev ImuDevice) Close() {
+	imudev.imuMemes.Close()
 }
 
-func (dev ImuDevice) GetRotations() (types.ImuRotations, error) {
-	imuData, imuError := dev.imuMemes.ReadSensors()
+func (imudev ImuDevice) GetRotations() (types.ImuRotations, error) {
+	imuData, imuError := imudev.readSensors()
 	dg := utils.GyroChanges(imuData)
-	gyroRotations := utils.GyroRotations(dg, dev.prevGyro)
-	dev.prevGyro = gyroRotations
+	gyroRotations := utils.GyroRotations(dg, imudev.prevGyro)
+	imudev.prevGyro = gyroRotations
 	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
-	prevRotations := dev.prevRotations
+	prevRotations := imudev.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,
 		accRotations,
 		dg,
-		dev.lowPassFilterCoefficient,
+		imudev.lowPassFilterCoefficient,
 	)
-	dev.prevRotations = rotations
+	imudev.prevRotations = rotations
 	return types.ImuRotations{
 		PrevRotations: prevRotations,
 		Accelerometer: accRotations,

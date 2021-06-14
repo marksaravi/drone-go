@@ -36,7 +36,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (types.ImuMems, error) {
+func NewICM20948Driver(config Config) (types.ImuMems, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -61,9 +61,6 @@ func NewICM20948Driver(config Config, lowPassFilterCoefficient float64) (types.I
 		mag: types.Sensor{
 			Type: MAGNETOMETER,
 		},
-		prevReadTime:             -1,
-		readTime:                 -1,
-		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 	return &dev, nil
 }
@@ -136,48 +133,36 @@ func (dev *Meme20948) InitDevice() error {
 	return err
 }
 
-func (dev *Meme20948) initDeviceReadings(now int64) {
-	dev.prevReadTime = now
-	dev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-	dev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-}
-
 // ReadSensorsRawData reads all Accl and Gyro data
 func (dev *Meme20948) ReadSensorsRawData() ([]uint8, error) {
-	now := time.Now().UnixNano()
-	if dev.readTime < 0 {
-		dev.initDeviceReadings(now)
-	} else {
-		dev.prevReadTime = dev.readTime
-	}
-	dev.readTime = now
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
 // ReadSensors reads Accelerometer and Gyro data
-func (dev *Meme20948) ReadSensors() (types.ImuSensorsData, error) {
+func (dev *Meme20948) ReadSensors() (
+	acc types.SensorData,
+	gyro types.SensorData,
+	mag types.SensorData,
+	err error) {
 	data, err := dev.ReadSensorsRawData()
 
 	if err != nil {
-		return types.ImuSensorsData{}, err
+		return
 	}
-	acc, accErr := dev.processAccelerometerData(data)
-	gyro, gyroErr := dev.processGyroscopeData(data[6:])
+	accData, accErr := dev.processAccelerometerData(data)
+	gyroData, gyroErr := dev.processGyroscopeData(data[6:])
 
-	return types.ImuSensorsData{
-		Acc: types.SensorData{
-			Error: accErr,
-			Data:  acc,
-		},
-		Gyro: types.SensorData{
-			Error: gyroErr,
-			Data:  gyro,
-		},
-		Mag: types.SensorData{
-			Error: nil,
-			Data:  types.XYZ{X: 0, Y: 0, Z: 0},
-		},
-		ReadTime:     dev.readTime,
-		ReadInterval: dev.readTime - dev.prevReadTime,
-	}, nil
+	acc = types.SensorData{
+		Error: accErr,
+		Data:  accData,
+	}
+	gyro = types.SensorData{
+		Error: gyroErr,
+		Data:  gyroData,
+	}
+	mag = types.SensorData{
+		Error: nil,
+		Data:  types.XYZ{X: 0, Y: 0, Z: 0},
+	}
+	return
 }
