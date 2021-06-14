@@ -65,7 +65,6 @@ func (imudev *ImuDevice) GetRotations() (types.ImuRotations, error) {
 	gyroRotations := utils.GyroRotations(dg, imudev.prevGyro)
 	imudev.prevGyro = gyroRotations
 	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
-	utils.Print([]float64{dg.DRoll, gyroRotations.Roll}, 250)
 	prevRotations := imudev.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,

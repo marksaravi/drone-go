@@ -12,8 +12,8 @@ type Register struct {
 	bank    uint8
 }
 
-// Meme20948 is icm20948 mems
-type Meme20948 struct {
+// MemsICM20948 is icm20948 mems
+type MemsICM20948 struct {
 	Name string
 	*sysfs.SPI
 	spi.Conn

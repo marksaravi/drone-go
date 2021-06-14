@@ -45,7 +45,7 @@ func NewICM20948Driver(config Config) (types.ImuMems, error) {
 	if err != nil {
 		return nil, err
 	}
-	dev := Meme20948{
+	dev := MemsICM20948{
 		Name:    "ICM20948",
 		SPI:     d,
 		Conn:    conn,
@@ -65,12 +65,12 @@ func NewICM20948Driver(config Config) (types.ImuMems, error) {
 	return &dev, nil
 }
 
-func (dev *Meme20948) Close() {
+func (dev *MemsICM20948) Close() {
 	dev.SPI.Close()
 	fmt.Println("Closing ", dev.Name)
 }
 
-func (dev *Meme20948) readReg(address uint8, len int) ([]uint8, error) {
+func (dev *MemsICM20948) readReg(address uint8, len int) ([]uint8, error) {
 	w := make([]uint8, len+1)
 	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
@@ -78,7 +78,7 @@ func (dev *Meme20948) readReg(address uint8, len int) ([]uint8, error) {
 	return r[1:], err
 }
 
-func (dev *Meme20948) writeReg(address uint8, data ...uint8) error {
+func (dev *MemsICM20948) writeReg(address uint8, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (dev *Meme20948) writeReg(address uint8, data ...uint8) error {
 	return err
 }
 
-func (dev *Meme20948) selRegisterBank(regbank uint8) error {
+func (dev *MemsICM20948) selRegisterBank(regbank uint8) error {
 	if regbank == dev.regbank {
 		return nil
 	}
@@ -95,13 +95,13 @@ func (dev *Meme20948) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *Meme20948) readRegister(register uint16, len int) ([]uint8, error) {
+func (dev *MemsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *Meme20948) writeRegister(register uint16, data ...uint8) error {
+func (dev *MemsICM20948) writeRegister(register uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -111,7 +111,7 @@ func (dev *Meme20948) writeRegister(register uint16, data ...uint8) error {
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA
-func (dev *Meme20948) WhoAmI() (name string, id uint8, err error) {
+func (dev *MemsICM20948) WhoAmI() (name string, id uint8, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	id = data[0]
@@ -119,7 +119,7 @@ func (dev *Meme20948) WhoAmI() (name string, id uint8, err error) {
 }
 
 // InitDevice applies initial configurations to device
-func (dev *Meme20948) InitDevice() error {
+func (dev *MemsICM20948) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -134,12 +134,12 @@ func (dev *Meme20948) InitDevice() error {
 }
 
 // ReadSensorsRawData reads all Accl and Gyro data
-func (dev *Meme20948) ReadSensorsRawData() ([]uint8, error) {
+func (dev *MemsICM20948) ReadSensorsRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
 // ReadSensors reads Accelerometer and Gyro data
-func (dev *Meme20948) ReadSensors() (
+func (dev *MemsICM20948) ReadSensors() (
 	acc types.SensorData,
 	gyro types.SensorData,
 	mag types.SensorData,
