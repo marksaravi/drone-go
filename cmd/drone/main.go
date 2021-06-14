@@ -8,6 +8,7 @@ import (
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 		Config: appConfig.Flight,
 	}
 
+	var readingData types.ImuReadingQualities
 	imu.ResetReadingTimes()
 	for running {
 		available, imuRotations, err := imu.GetRotations()
@@ -33,6 +35,8 @@ func main() {
 					udpLogger.Append(flightStates.ImuDataToJson())
 				}
 			}
+			readingData = imu.GetReadingQualities()
+			utils.Print([]float64{float64(readingData.BadInterval) / float64(readingData.Total) * 100}, 1000)
 		}
 		udpLogger.Send()
 		select {
@@ -46,7 +50,6 @@ func main() {
 		}
 	}
 	imu.Close()
-	readingData := imu.GetReadingQualities()
 	fmt.Println("total data:             ", readingData.Total)
 	fmt.Println("number of bad imu data: ", readingData.BadData)
 	fmt.Println("number of bad timing:   ", readingData.BadInterval)

@@ -47,7 +47,8 @@ func (imu *ImuModule) readSensors() (acc types.SensorData, gyro types.SensorData
 
 func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
-	fmt.Println(readingInterval, readingInterval+readingInterval/20)
+	badIntervalThereshold := readingInterval + readingInterval/20
+	fmt.Println(readingInterval, badIntervalThereshold)
 	return ImuModule{
 		dev:                      imuMems,
 		readTime:                 time.Time{},
@@ -58,7 +59,7 @@ func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 			BadInterval:           0,
 			MaxBadInterval:        0,
 			BadData:               0,
-			BadIntervalThereshold: readingInterval + readingInterval/20,
+			BadIntervalThereshold: badIntervalThereshold,
 		},
 	}
 }
