@@ -18,7 +18,7 @@ func main() {
 	var wg sync.WaitGroup
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
-	var imu types.IMU = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
+	var imu = initiateIMU(appConfig.Devices.ICM20948, appConfig.Flight.LowPassFilterCoefficient)
 	var running = true
 	var flightStates flightcontrol.FlightStates = flightcontrol.FlightStates{
 		Config: appConfig.Flight,

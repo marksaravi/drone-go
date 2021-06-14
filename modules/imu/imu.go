@@ -1,6 +1,7 @@
 package imu
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
@@ -20,6 +21,7 @@ type ImuDevice struct {
 }
 
 func (imudev *ImuDevice) initDeviceReadings(now int64) {
+	fmt.Println("initDeviceReadings")
 	imudev.prevReadTime = now
 	imudev.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	imudev.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
@@ -47,6 +49,8 @@ func (imudev *ImuDevice) readSensors() (types.ImuSensorsData, error) {
 func NewImuDevice(imuMems types.ImuMems, lowPassFilterCoefficient float64) ImuDevice {
 	return ImuDevice{
 		imuMemes:                 imuMems,
+		prevReadTime:             -1,
+		readTime:                 -1,
 		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 }
@@ -55,12 +59,13 @@ func (imudev ImuDevice) Close() {
 	imudev.imuMemes.Close()
 }
 
-func (imudev ImuDevice) GetRotations() (types.ImuRotations, error) {
+func (imudev *ImuDevice) GetRotations() (types.ImuRotations, error) {
 	imuData, imuError := imudev.readSensors()
 	dg := utils.GyroChanges(imuData)
 	gyroRotations := utils.GyroRotations(dg, imudev.prevGyro)
 	imudev.prevGyro = gyroRotations
 	accRotations := utils.AccelerometerDataRotations(imuData.Acc.Data)
+	utils.Print([]float64{dg.DRoll, gyroRotations.Roll}, 250)
 	prevRotations := imudev.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,
