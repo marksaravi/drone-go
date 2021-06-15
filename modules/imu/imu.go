@@ -15,6 +15,7 @@ type ImuModule struct {
 	mag                      types.Sensor
 	prevRotations            types.Rotations
 	prevGyro                 types.Rotations
+	startTime                time.Time
 	readTime                 time.Time
 	readingInterval          time.Duration
 	lowPassFilterCoefficient float64
@@ -22,7 +23,8 @@ type ImuModule struct {
 }
 
 func (imu *ImuModule) ResetReadingTimes() {
-	imu.readTime = time.Now()
+	imu.startTime = time.Now()
+	imu.readTime = imu.startTime
 	imu.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	imu.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
@@ -94,7 +96,7 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 		Accelerometer: accRotations,
 		Gyroscope:     gyroRotations,
 		Rotations:     rotations,
-		ReadTime:      imu.readTime.UnixNano(),
+		ReadTime:      imu.readTime.UnixNano() - imu.startTime.UnixNano(),
 		ReadInterval:  diff.Nanoseconds(),
 	}, imuError
 }
