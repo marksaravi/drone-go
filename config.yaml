@@ -37,7 +37,7 @@ devices:
           Z: 0
         - X: 3.1629
           Y: 1
-          Z: 0.7
+          Z: 0.8125
 udp:
   enabled: true
   ip: 192.168.1.102
