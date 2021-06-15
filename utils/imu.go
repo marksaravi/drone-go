@@ -38,7 +38,7 @@ func GyroRotations(dg types.RotationsChanges, gyroRotations types.Rotations) typ
 	}
 }
 
-func AccelerometerDataRotations(data types.XYZ) types.Rotations {
+func AccelerometerRotations(data types.XYZ) types.Rotations {
 	roll := RadToDeg(math.Atan2(data.Y, data.Z))
 	pitch := -RadToDeg(math.Atan2(data.X, data.Z))
 	return types.Rotations{

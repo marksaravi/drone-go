@@ -82,7 +82,7 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 	dg := utils.GyroChanges(gyro, diff.Nanoseconds())
 	gyroRotations := utils.GyroRotations(dg, imu.prevGyro)
 	imu.prevGyro = gyroRotations
-	accRotations := utils.AccelerometerDataRotations(acc.Data)
+	accRotations := utils.AccelerometerRotations(acc.Data)
 	prevRotations := imu.prevRotations
 	rotations := utils.CalcRotations(
 		prevRotations,
