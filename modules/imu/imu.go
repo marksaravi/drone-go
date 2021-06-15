@@ -10,11 +10,8 @@ import (
 
 type ImuModule struct {
 	dev                      types.ImuDevice
-	acc                      types.Sensor
-	gyro                     types.Sensor
-	mag                      types.Sensor
-	prevRotations            types.Rotations
-	prevGyro                 types.Rotations
+	rotations                types.Rotations
+	gyro                     types.Rotations
 	startTime                time.Time
 	readTime                 time.Time
 	readingInterval          time.Duration
@@ -25,8 +22,8 @@ type ImuModule struct {
 func (imu *ImuModule) ResetReadingTimes() {
 	imu.startTime = time.Now()
 	imu.readTime = imu.startTime
-	imu.prevRotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-	imu.prevGyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
 func (imu *ImuModule) updateReadingData(diff time.Duration, err bool) {
@@ -80,22 +77,20 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 	acc, gyro, _, imuError := imu.readSensors()
 	imu.updateReadingData(diff, imuError != nil)
 	dg := utils.GyroChanges(gyro, diff.Nanoseconds())
-	gyroRotations := utils.GyroRotations(dg, imu.prevGyro)
-	imu.prevGyro = gyroRotations
+	imu.gyro = utils.GyroRotations(dg, imu.gyro)
 	accRotations := utils.AccelerometerRotations(acc.Data)
-	prevRotations := imu.prevRotations
-	rotations := utils.CalcRotations(
+	prevRotations := imu.rotations
+	imu.rotations = utils.CalcRotations(
 		prevRotations,
 		accRotations,
 		dg,
 		imu.lowPassFilterCoefficient,
 	)
-	imu.prevRotations = rotations
+
 	return true, types.ImuRotations{
-		PrevRotations: prevRotations,
 		Accelerometer: accRotations,
-		Gyroscope:     gyroRotations,
-		Rotations:     rotations,
+		Gyroscope:     imu.gyro,
+		Rotations:     imu.rotations,
 		ReadTime:      imu.readTime.UnixNano() - imu.startTime.UnixNano(),
 		ReadInterval:  diff.Nanoseconds(),
 	}, imuError
