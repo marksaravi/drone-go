@@ -17,9 +17,9 @@ devices:
         - X: 0
           Y: 0
           Z: 0
-        - X: 0
-          Y: 0
-          Z: 0
+        - X: -25
+          Y: -7
+          Z: 37
     gyroscope:
       sensitivity_level: 3
       lowpass_filter_enabled: true
