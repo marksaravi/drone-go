@@ -8,23 +8,22 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
 )
 
+const BUFFER_SIZE int = 40
+
 type udpLogger struct {
-	conn             *net.UDPConn
-	address          *net.UDPAddr
-	enabled          bool
-	buffer           []string
-	dataPerPacket    int
-	dataPerSecond    int
-	packetsPerSecond int
-	dataOffset       int
-	printIntervalMs  int
-	dataCounter      int
-	lastPrint        time.Time
+	conn                 *net.UDPConn
+	address              *net.UDPAddr
+	enabled              bool
+	buffer               []string
+	imuDataPerSecond     int
+	dataPerPacket        int
+	dataPerPacketCounter int
+	dataOffset           int
+	dataOffsetCounter    int
 }
 
 func (l *udpLogger) Enabled() bool {
@@ -32,28 +31,24 @@ func (l *udpLogger) Enabled() bool {
 }
 
 func (l *udpLogger) Append(dataProvider types.UdpDataProvider) {
-	if !l.enabled || l.packetsPerSecond == 0 {
+	if !l.enabled {
 		return
 	}
-	l.dataCounter++
-	if l.dataCounter == l.dataOffset {
-		l.buffer = append(l.buffer, dataProvider.ImuDataToJson())
-		if time.Since(l.lastPrint) >= time.Duration(time.Millisecond*time.Duration(l.printIntervalMs)) {
-			l.lastPrint = time.Now()
-		}
-		l.dataCounter = 0
+	l.dataOffsetCounter++
+	if l.dataOffsetCounter == l.dataOffset {
+		l.buffer[l.dataPerPacketCounter] = dataProvider.ImuDataToJson()
+		l.dataOffsetCounter = 0
+		l.dataPerPacketCounter++
 	}
 }
 
 func (l *udpLogger) Send() {
-	if l.enabled && len(l.buffer) == l.dataPerPacket {
-		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d,\"pps\":%d,\"dpp\":%d}",
-			strings.Join(l.buffer, ","),
-			l.dataPerSecond,
-			l.packetsPerSecond,
-			l.dataPerPacket,
+	if l.enabled && l.dataPerPacketCounter == l.dataPerPacket {
+		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d}",
+			strings.Join(l.buffer[0:l.dataPerPacketCounter], ","),
+			l.imuDataPerSecond,
 		)
-		l.buffer = nil
+		l.dataPerPacketCounter = 0
 		// data len should be less than sysctl net.inet.udp.maxdgram for macOS
 		go func() {
 			l.conn.WriteToUDP([]byte(jsonPayload), l.address)
@@ -85,18 +80,23 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) udpL
 	var dataPerPacket int = 0
 	if udpConfig.PacketsPerSecond > 0 {
 		dataPerPacket = udpConfig.DataPerSecond / udpConfig.PacketsPerSecond
+		if dataPerPacket > BUFFER_SIZE {
+			fmt.Println("Data per packet is more than buffer size BUFFER_SIZE")
+			return udpLogger{
+				enabled: false,
+			}
+		}
 	}
 	dataOffset := imuDataPerSecond / udpConfig.DataPerSecond
 	return udpLogger{
-		conn:             conn,
-		address:          address,
-		enabled:          true,
-		dataPerPacket:    dataPerPacket,
-		dataPerSecond:    udpConfig.DataPerSecond,
-		packetsPerSecond: udpConfig.PacketsPerSecond,
-		printIntervalMs:  udpConfig.PrintIntervalMs,
-		dataOffset:       dataOffset,
-		dataCounter:      0,
-		lastPrint:        time.Now(),
+		conn:                 conn,
+		address:              address,
+		enabled:              true,
+		imuDataPerSecond:     imuDataPerSecond,
+		dataPerPacket:        dataPerPacket,
+		dataPerPacketCounter: 0,
+		dataOffset:           dataOffset,
+		dataOffsetCounter:    0,
+		buffer:               make([]string, BUFFER_SIZE),
 	}
 }

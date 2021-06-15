@@ -19,7 +19,6 @@ type UdpLoggerConfig struct {
 	Port             int    `yaml:"port"`
 	PacketsPerSecond int    `yaml:"udp_packets_per_second"`
 	DataPerSecond    int    `yaml:"udp_data_per_second"`
-	PrintIntervalMs  int    `yaml:"print_interval_ms"`
 }
 
 type UdpDataProvider interface {

@@ -44,4 +44,3 @@ udp:
   port: 6431
   udp_packets_per_second: 20 # set to zero for disabling udp send
   udp_data_per_second: 320
-  print_interval_ms: 1000  # set to zero for disabling print
