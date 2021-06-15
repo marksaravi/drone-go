@@ -35,8 +35,8 @@ devices:
         - X: 0
           Y: 0
           Z: 0
-        - X: 3.2
-          Y: 1.5
+        - X: 3.1575
+          Y: 1
           Z: 0.7
 udp:
   enabled: true
