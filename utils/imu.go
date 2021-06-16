@@ -60,7 +60,8 @@ func applyFilter(pR float64, accR float64, gyroDR float64, lpfc float64) float64
 func CalcRotations(pR types.Rotations, aR types.Rotations, dg types.RotationsChanges, lowPassFilterCoefficient float64) types.Rotations {
 	roll := applyFilter(pR.Roll, aR.Roll, dg.DRoll, lowPassFilterCoefficient)
 	pitch := applyFilter(pR.Pitch, aR.Pitch, dg.DPitch, lowPassFilterCoefficient)
-	yaw := applyFilter(pR.Yaw, aR.Yaw, dg.DYaw, lowPassFilterCoefficient)
+	// we don't use accelerometer yaw for the correction
+	yaw := math.Mod(pR.Yaw+dg.DYaw, 360)
 	return types.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
