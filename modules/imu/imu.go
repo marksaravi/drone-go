@@ -27,24 +27,6 @@ func (imu *ImuModule) ResetReadingTimes() {
 	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
-func (imu *ImuModule) updateReadingData(diff time.Duration, err bool) {
-	imu.readingData.Total++
-	if diff >= imu.readingData.BadIntervalThereshold {
-		imu.readingData.BadInterval++
-		if diff > imu.readingData.MaxBadInterval {
-			imu.readingData.MaxBadInterval = diff
-		}
-	}
-	if err {
-		imu.readingData.BadData++
-	}
-}
-
-func (imu *ImuModule) readSensors() (acc types.SensorData, gyro types.SensorData, mag types.SensorData, err error) {
-	acc, gyro, mag, err = imu.dev.ReadSensors()
-	return
-}
-
 func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	badIntervalThereshold := readingInterval + readingInterval/20
@@ -61,6 +43,8 @@ func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 			BadData:               0,
 			BadIntervalThereshold: badIntervalThereshold,
 		},
+		rotations: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyro:      types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
 }
 
@@ -75,50 +59,38 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 		return false, types.ImuRotations{}, nil
 	}
 	imu.readTime = now
-	acc, gyro, _, imuError := imu.readSensors()
-	imu.updateReadingData(diff, imuError != nil)
-	dg := GyroChanges(gyro, diff.Nanoseconds())
-	imu.gyro = GyroRotations(dg, imu.gyro)
-	accRotations := AccelerometerRotations(acc.Data)
-	prevRotations := imu.rotations
-	imu.rotations = CalcRotations(
-		prevRotations,
-		accRotations,
-		dg,
-		imu.lowPassFilterCoefficient,
-	)
+	accData, gyroData, _, devErr := imu.dev.ReadSensors()
 
+	accRotations := AccelerometerRotations(accData.Data)
+	dg := GyroChanges(gyroData.Data, diff.Nanoseconds())
+	imu.gyro = GyroRotations(dg, imu.gyro)
+	rotations := GyroRotations(dg, imu.rotations)
+	imu.rotations = rotations
+
+	imu.updateReadingData(diff, devErr != nil)
 	return true, types.ImuRotations{
 		Accelerometer: accRotations,
 		Gyroscope:     imu.gyro,
 		Rotations:     imu.rotations,
 		ReadTime:      imu.readTime.UnixNano() - imu.startTime.UnixNano(),
 		ReadInterval:  diff.Nanoseconds(),
-	}, imuError
+	}, devErr
 }
 
-func (imu *ImuModule) GetReadingQualities() types.ImuReadingQualities {
-	return imu.readingData
-}
-
-func GyroChanges(gyro types.SensorData, timeInterval int64) types.RotationsChanges {
+func GyroChanges(gyro types.XYZ, timeInterval int64) types.RotationsChanges {
 	dt := goDurToDt(timeInterval)
 	return types.RotationsChanges{
-		DRoll:  gyro.Data.X * dt,
-		DPitch: gyro.Data.Y * dt,
-		DYaw:   gyro.Data.Z * dt,
+		DRoll:  gyro.X * dt,
+		DPitch: gyro.Y * dt,
+		DYaw:   gyro.Z * dt,
 	}
 }
 
-func goDurToDt(d int64) float64 {
-	return float64(d) / 1e9
-}
-
-func GyroRotations(dg types.RotationsChanges, gyroRotations types.Rotations) types.Rotations {
+func GyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rotations {
 	return types.Rotations{
-		Roll:  math.Mod(gyroRotations.Roll+dg.DRoll, 360),
-		Pitch: math.Mod(gyroRotations.Pitch+dg.DPitch, 360),
-		Yaw:   math.Mod(gyroRotations.Yaw+dg.DYaw, 360),
+		Roll:  math.Mod(gyro.Roll+dGyro.DRoll, 360),
+		Pitch: math.Mod(gyro.Pitch+dGyro.DPitch, 360),
+		Yaw:   math.Mod(gyro.Yaw+dGyro.DYaw, 360),
 	}
 }
 
@@ -132,19 +104,23 @@ func AccelerometerRotations(data types.XYZ) types.Rotations {
 	}
 }
 
-func applyFilter(pR float64, accR float64, gyroDR float64, lpfc float64) float64 {
-	nR := (lpfc)*(pR+gyroDR) + (1-lpfc)*accR
-	return math.Mod(nR, 360)
+func goDurToDt(d int64) float64 {
+	return float64(d) / 1e9
 }
 
-func CalcRotations(pR types.Rotations, aR types.Rotations, dg types.RotationsChanges, lowPassFilterCoefficient float64) types.Rotations {
-	roll := applyFilter(pR.Roll, aR.Roll, dg.DRoll, lowPassFilterCoefficient)
-	pitch := applyFilter(pR.Pitch, aR.Pitch, dg.DPitch, lowPassFilterCoefficient)
-	// we don't use accelerometer yaw for the correction
-	yaw := math.Mod(pR.Yaw+dg.DYaw, 360)
-	return types.Rotations{
-		Roll:  roll,
-		Pitch: pitch,
-		Yaw:   yaw,
+func (imu *ImuModule) GetReadingQualities() types.ImuReadingQualities {
+	return imu.readingData
+}
+
+func (imu *ImuModule) updateReadingData(diff time.Duration, err bool) {
+	imu.readingData.Total++
+	if diff >= imu.readingData.BadIntervalThereshold {
+		imu.readingData.BadInterval++
+		if diff > imu.readingData.MaxBadInterval {
+			imu.readingData.MaxBadInterval = diff
+		}
+	}
+	if err {
+		imu.readingData.BadData++
 	}
 }
