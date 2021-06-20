@@ -2,11 +2,22 @@ package utils
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
+	"time"
 	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/types"
 )
+
+var lastReading = time.Now()
+
+func Print(v []float64, msInterval int) {
+	if time.Since(lastReading) >= time.Millisecond*time.Duration(msInterval) {
+		fmt.Println(v)
+		lastReading = time.Now()
+	}
+}
 
 // TowsComplementToInt converts 16 bit 2's complement to signed int
 func TowsComplementToInt(a uint16) int16 {
