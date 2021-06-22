@@ -65,7 +65,11 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 	dg := GyroChanges(gyroData.Data, diff.Nanoseconds())
 	imu.gyro = GyroRotations(dg, imu.gyro)
 	rotations := GyroRotations(dg, imu.rotations)
-	imu.rotations = rotations
+	imu.rotations = types.Rotations{
+		Roll:  OffsetCorrection(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
+		Pitch: OffsetCorrection(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
+		Yaw:   rotations.Yaw,
+	}
 
 	imu.updateReadingData(diff, devErr != nil)
 	return true, types.ImuRotations{
@@ -102,6 +106,13 @@ func AccelerometerRotations(data types.XYZ) types.Rotations {
 		Pitch: pitch,
 		Yaw:   0,
 	}
+}
+
+func OffsetCorrection(lowNoiseReading float64, lowOffsetReading float64, lpfc float64) float64 {
+	v1 := lpfc * lowNoiseReading
+	v2 := (1 - lpfc) * lowOffsetReading
+	// fmt.Println(v1, v2, lpfc)
+	return v1 + v2
 }
 
 func goDurToDt(d int64) float64 {

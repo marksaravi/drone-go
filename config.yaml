@@ -1,6 +1,6 @@
 flight_control:
-  imu_data_per_second: 3200
-  lowpass_filter_coefficient: 0.999
+  imu_data_per_second: 2500
+  lowpass_filter_coefficient: 0.9975
 devices:
   icm20948:
     bus_number: 0
@@ -40,7 +40,7 @@ devices:
           Z: 0.8125
 udp:
   enabled: true
-  ip: 192.168.1.102
+  ip: 192.168.1.106
   port: 6431
   udp_packets_per_second: 20 # set to zero for disabling udp send
   udp_data_per_second: 320
