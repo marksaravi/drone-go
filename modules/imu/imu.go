@@ -20,13 +20,6 @@ type ImuModule struct {
 	readingData              types.ImuReadingQualities
 }
 
-func (imu *ImuModule) ResetReadingTimes() {
-	imu.startTime = time.Now()
-	imu.readTime = imu.startTime
-	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-}
-
 func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	badIntervalThereshold := readingInterval + readingInterval/20
@@ -50,6 +43,13 @@ func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 
 func (imu ImuModule) Close() {
 	imu.dev.Close()
+}
+
+func (imu *ImuModule) ResetReadingTimes() {
+	imu.startTime = time.Now()
+	imu.readTime = imu.startTime
+	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
 func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
@@ -100,7 +100,7 @@ func GyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rot
 
 func AccelerometerRotations(data types.XYZ) types.Rotations {
 	roll := utils.RadToDeg(math.Atan2(data.Y, data.Z))
-	pitch := -utils.RadToDeg(math.Atan2(data.X, data.Z))
+	pitch := utils.RadToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
 	return types.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
