@@ -1,7 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -38,14 +37,12 @@ func (dev *MemsICM20948) InitAccelerometer() error {
 		accConfig1 = accConfig1 | (uint8(config.LowPassFilterConfig) << 3)
 	}
 	err := dev.writeRegister(ACCEL_CONFIG, accConfig1, accConfig2)
-	// dev.setOffset(XA_OFFS_H, config.Offsets.X)
-	// dev.setOffset(YA_OFFS_H, config.Offsets.Y)
+	dev.setOffset(XA_OFFS_H, config.Offsets.X)
+	dev.setOffset(YA_OFFS_H, config.Offsets.Y)
 	dev.setOffset(ZA_OFFS_H, config.Offsets.Z)
 	time.Sleep(time.Millisecond * 100)
 	return err
 }
-
-var lastReading time.Time = time.Now()
 
 func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
 	config, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
@@ -56,10 +53,6 @@ func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error
 	x := float64(xRaw) / accSens
 	y := float64(yRaw) / accSens
 	z := float64(zRaw) / accSens
-	if time.Since(lastReading) >= time.Millisecond*500 {
-		fmt.Println(xRaw, yRaw, zRaw, accSens)
-		lastReading = time.Now()
-	}
 
 	return types.XYZ{
 		X: x,

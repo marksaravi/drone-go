@@ -12,7 +12,7 @@ devices:
       averaging: 7
       offsets:
         X: -65
-        Y: 0
+        Y: 831
         Z: -790
     gyroscope:
       sensitivity_level: 3
