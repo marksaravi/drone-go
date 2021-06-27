@@ -31,6 +31,11 @@ const (
 
 	// BANK1
 	XA_OFFS_H uint16 = BANK1 | 0x14
+	XA_OFFS_L uint16 = BANK1 | 0x15
+	YA_OFFS_H uint16 = BANK1 | 0x17
+	YA_OFFS_L uint16 = BANK1 | 0x18
+	ZA_OFFS_H uint16 = BANK1 | 0x1A
+	ZA_OFFS_L uint16 = BANK1 | 0x1B
 
 	// BANK2
 	GYRO_SMPLRT_DIV uint16 = BANK2 | 0x0

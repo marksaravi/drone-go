@@ -11,18 +11,18 @@ devices:
       lowpass_filter_config: 3
       averaging: 7
       offsets:
-        X: -0.01220703125
-        Y: -0.00341796875
-        Z: 0.01806640625
+        X: 0
+        Y: 0
+        Z: -790
     gyroscope:
       sensitivity_level: 3
       lowpass_filter_enabled: true
       lowpass_filter_config: 3
       averaging: 7
       offsets:
-        X: 3.1629
-        Y: 1
-        Z: 0.8125
+        X: 0
+        Y: 0
+        Z: 0
 udp:
   enabled: true
   ip: 192.168.1.101
