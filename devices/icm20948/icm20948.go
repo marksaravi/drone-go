@@ -18,14 +18,14 @@ func reg(reg uint16) *Register {
 	}
 }
 
-var accelerometerSensitivity = make(map[int]float64)
+var accelerometerSensitivity = make(map[string]float64)
 var gyroFullScale = make(map[int]float64)
 
 func init() {
-	accelerometerSensitivity[0] = SENSITIVITY_0
-	accelerometerSensitivity[1] = SENSITIVITY_1
-	accelerometerSensitivity[2] = SENSITIVITY_2
-	accelerometerSensitivity[3] = SENSITIVITY_3
+	accelerometerSensitivity["2g"] = SENSITIVITY_2G
+	accelerometerSensitivity["4g"] = SENSITIVITY_4G
+	accelerometerSensitivity["8g"] = SENSITIVITY_8G
+	accelerometerSensitivity["16g"] = SENSITIVITY_16G
 
 	gyroFullScale[0] = SCALE_0
 	gyroFullScale[1] = SCALE_1

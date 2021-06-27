@@ -6,7 +6,7 @@ devices:
     bus_number: 0
     chip_select: 0
     accelerometer:
-      sensitivity_level: 1
+      sensitivity_level: '8g'
       lowpass_filter_enabled: true
       lowpass_filter_config: 3
       averaging: 7

@@ -25,7 +25,7 @@ type MemsICM20948 struct {
 
 // AccelerometerConfig is the configurations for Accelerometer
 type AccelerometerConfig struct {
-	SensitivityLevel     int           `yaml:"sensitivity_level"`
+	SensitivityLevel     string        `yaml:"sensitivity_level"`
 	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
 	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
 	Averaging            int           `yaml:"averaging"`
