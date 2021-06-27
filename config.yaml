@@ -11,7 +11,7 @@ devices:
       lowpass_filter_config: 3
       averaging: 7
       offsets:
-        X: 0
+        X: -65
         Y: 0
         Z: -790
     gyroscope:
