@@ -20,9 +20,9 @@ devices:
       lowpass_filter_config: 3
       averaging: 7
       offsets:
-        X: -13
-        Y: 0
-        Z: 0
+        X: -12
+        Y: -6
+        Z: -8
 udp:
   enabled: true
   ip: 192.168.1.101

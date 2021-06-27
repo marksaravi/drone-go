@@ -42,8 +42,8 @@ func (dev *MemsICM20948) InitGyroscope() error {
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1, gyroConfig2)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	dev.setGyroOffset(XG_OFFS_USRH, config.Offsets.X)
-	// dev.setGyroOffset(YG_OFFS_USRH, config.Offsets.Y)
-	// dev.setGyroOffset(ZG_OFFS_USRH, config.Offsets.Z)
+	dev.setGyroOffset(YG_OFFS_USRH, config.Offsets.Y)
+	dev.setGyroOffset(ZG_OFFS_USRH, config.Offsets.Z)
 	fmt.Println("Gyro Config: ", cnfg)
 	return err
 }
