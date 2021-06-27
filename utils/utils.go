@@ -19,20 +19,17 @@ func Print(v []float64, msInterval int) {
 	}
 }
 
-// TowsComplementToInt converts 16 bit 2's complement to signed int
-func TowsComplementToInt(a uint16) int16 {
-	return *(*int16)(unsafe.Pointer(&a))
-}
-
 // IntToTowsComplement converts 16 bit signed int to 2's complement
 func IntToTowsComplement(a int16) uint16 {
 	return *(*uint16)(unsafe.Pointer(&a))
 }
 
-// TowsComplementBytesToInt converts 2's complement H and L uint8 to signed int16
-func TowsComplementBytesToInt(h, l uint8) int16 {
-	b := binary.BigEndian.Uint16([]uint8{h, l})
-	return TowsComplementToInt(b)
+// TowsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
+func TowsComplementUint8ToInt16(h, l uint8) int16 {
+	var h16 uint16 = uint16(h)
+	var l16 uint16 = uint16(l)
+
+	return int16((h16 << 8) | l16)
 }
 
 // IntToTowsComplementBytes converts 2's complement H and L uint8 to signed int16

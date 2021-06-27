@@ -24,15 +24,6 @@ func TestInt16To2sComplement(t *testing.T) {
 	}
 }
 
-func Test2sComplementToInt16(t *testing.T) {
-	const x uint16 = 7
-	got := utils.TowsComplementToInt(x)
-	const want int16 = 7
-	if got != want {
-		t.Errorf("got %d, want %d", got, want)
-	}
-}
-
 func TestInt16ToHighLowBytes(t *testing.T) {
 	gotH, gotL := utils.IntToTowsComplementBytes(int16(-380))
 	const wantH byte = 254
@@ -43,7 +34,7 @@ func TestInt16ToHighLowBytes(t *testing.T) {
 }
 
 func TestHighLowBytesToInt16(t *testing.T) {
-	got := utils.TowsComplementBytesToInt(64, 168)
+	got := utils.TowsComplementUint8ToInt16(64, 168)
 	const want int16 = 16552
 	if got != want {
 		t.Errorf("got %d, want %d", got, want)

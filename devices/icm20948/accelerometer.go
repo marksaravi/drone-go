@@ -1,7 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -45,13 +44,13 @@ func (dev *MemsICM20948) InitAccelerometer() error {
 func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
 	config, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
-	xRaw := utils.TowsComplementBytesToInt(data[0], data[1])
-	yRaw := utils.TowsComplementBytesToInt(data[2], data[3])
-	zRaw := utils.TowsComplementBytesToInt(data[4], data[5])
+	xRaw := utils.TowsComplementUint8ToInt16(data[0], data[1])
+	yRaw := utils.TowsComplementUint8ToInt16(data[2], data[3])
+	zRaw := utils.TowsComplementUint8ToInt16(data[4], data[5])
 	x := float64(xRaw)/accSens - config.Offsets.X
 	y := float64(yRaw)/accSens - config.Offsets.Y
 	z := float64(zRaw)/accSens - config.Offsets.Z
-	fmt.Println(zRaw, z, accSens)
+
 	return types.XYZ{
 		X: x,
 		Y: y,

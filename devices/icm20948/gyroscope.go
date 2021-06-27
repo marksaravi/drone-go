@@ -46,9 +46,9 @@ func (dev *MemsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	offsets := gyroConfig.Offsets
-	x := (float64(utils.TowsComplementBytesToInt(data[0], data[1])) - offsets.X) / scale
-	y := (float64(utils.TowsComplementBytesToInt(data[2], data[3])) - offsets.Y) / scale
-	z := (float64(utils.TowsComplementBytesToInt(data[4], data[5])) - offsets.Z) / scale
+	x := (float64(utils.TowsComplementUint8ToInt16(data[0], data[1])) - offsets.X) / scale
+	y := (float64(utils.TowsComplementUint8ToInt16(data[2], data[3])) - offsets.Y) / scale
+	z := (float64(utils.TowsComplementUint8ToInt16(data[4], data[5])) - offsets.Z) / scale
 	return types.XYZ{
 		X: x,
 		Y: y,
