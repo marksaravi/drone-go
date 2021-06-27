@@ -37,9 +37,9 @@ func (dev *MemsICM20948) InitAccelerometer() error {
 		accConfig1 = accConfig1 | (uint8(config.LowPassFilterConfig) << 3)
 	}
 	err := dev.writeRegister(ACCEL_CONFIG, accConfig1, accConfig2)
-	dev.setOffset(XA_OFFS_H, config.Offsets.X)
-	dev.setOffset(YA_OFFS_H, config.Offsets.Y)
-	dev.setOffset(ZA_OFFS_H, config.Offsets.Z)
+	dev.setAccOffset(XA_OFFS_H, config.Offsets.X)
+	dev.setAccOffset(YA_OFFS_H, config.Offsets.Y)
+	dev.setAccOffset(ZA_OFFS_H, config.Offsets.Z)
 	time.Sleep(time.Millisecond * 100)
 	return err
 }
@@ -61,7 +61,7 @@ func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error
 	}, nil
 }
 
-func (dev *MemsICM20948) setOffset(address uint16, offset int16) {
+func (dev *MemsICM20948) setAccOffset(address uint16, offset int16) {
 	offsets, _ := dev.readRegister(address, 2)
 	var h uint8 = uint8((uint16(offset) >> 7) & 0xFF)
 	var l uint8 = uint8((uint16(offset)<<1)&0xFF) | (offsets[1] & 0x01)

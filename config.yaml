@@ -15,12 +15,12 @@ devices:
         Y: 831
         Z: -790
     gyroscope:
-      sensitivity_level: 3
+      sensitivity_level: '250dps'
       lowpass_filter_enabled: true
       lowpass_filter_config: 3
       averaging: 7
       offsets:
-        X: 0
+        X: -13
         Y: 0
         Z: 0
 udp:

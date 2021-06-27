@@ -13,15 +13,6 @@ func (dev *MemsICM20948) GetGyro() *types.Sensor {
 	return &(dev.gyro)
 }
 
-func (dev *MemsICM20948) getGyroConfig() (GyroscopeConfig, error) {
-	data, err := dev.readRegister(GYRO_CONFIG_1, 2)
-	config := GyroscopeConfig{
-		SensitivityLevel: int((data[0] >> 1) & 0b00000011),
-	}
-	dev.GetGyro().SetConfig(config)
-	return config, err
-}
-
 // InitGyroscope initialise the Gyroscope
 func (dev *MemsICM20948) InitGyroscope() error {
 	config, ok := dev.GetGyro().GetConfig().(GyroscopeConfig)
@@ -35,9 +26,24 @@ func (dev *MemsICM20948) InitGyroscope() error {
 	if config.LowPassFilterEnabled {
 		gyroConfig1 = 0b00000001 | (uint8(config.LowPassFilterConfig) << 3)
 	}
-	gyroConfig1 = gyroConfig1 | (uint8(config.SensitivityLevel) << 1)
+	var sensitivity uint8 = 0
+	switch config.SensitivityLevel {
+	case "250dps":
+		sensitivity = 0
+	case "500dps":
+		sensitivity = 1
+	case "1000dps":
+		sensitivity = 2
+	case "2000dps":
+		sensitivity = 3
+	}
+
+	gyroConfig1 = gyroConfig1 | (uint8(sensitivity) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1, gyroConfig2)
 	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
+	dev.setGyroOffset(XG_OFFS_USRH, config.Offsets.X)
+	// dev.setGyroOffset(YG_OFFS_USRH, config.Offsets.Y)
+	// dev.setGyroOffset(ZG_OFFS_USRH, config.Offsets.Z)
 	fmt.Println("Gyro Config: ", cnfg)
 	return err
 }
@@ -53,4 +59,10 @@ func (dev *MemsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
 		Y: y,
 		Z: z,
 	}, nil
+}
+
+func (dev *MemsICM20948) setGyroOffset(address uint16, offset int16) {
+	var h uint8 = uint8(uint16(offset) >> 8)
+	var l uint8 = uint8(uint16(offset) & 0xFF)
+	dev.writeRegister(address, h, l)
 }

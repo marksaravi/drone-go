@@ -34,7 +34,7 @@ type AccelerometerConfig struct {
 
 // GyroscopeConfig is the configuration for Gyroscope
 type GyroscopeConfig struct {
-	SensitivityLevel     int           `yaml:"sensitivity_level"`
+	SensitivityLevel     string        `yaml:"sensitivity_level"`
 	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
 	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
 	Averaging            int           `yaml:"averaging"`
