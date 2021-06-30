@@ -7,10 +7,11 @@ type Config interface {
 }
 
 type FlightConfig struct {
-	ImuDataPerSecond         int     `yaml:"imu_data_per_second"`
-	LowPassFilterCoefficient float64 `yaml:"lowpass_filter_coefficient"`
-	AccelerometerOffsets     Offsets
-	GyroscopeOffsets         Offsets
+	ImuDataPerSecond            int     `yaml:"imu_data_per_second"`
+	AccLowPassFilterCoefficient float64 `yaml:"acc_lowpass_filter_coefficient"`
+	LowPassFilterCoefficient    float64 `yaml:"lowpass_filter_coefficient"`
+	AccelerometerOffsets        Offsets
+	GyroscopeOffsets            Offsets
 }
 
 type UdpLoggerConfig struct {

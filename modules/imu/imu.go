@@ -10,14 +10,16 @@ import (
 )
 
 type ImuModule struct {
-	dev                      types.ImuDevice
-	rotations                types.Rotations
-	gyro                     types.Rotations
-	startTime                time.Time
-	readTime                 time.Time
-	readingInterval          time.Duration
-	lowPassFilterCoefficient float64
-	readingData              types.ImuReadingQualities
+	dev                         types.ImuDevice
+	accData                     types.SensorData
+	rotations                   types.Rotations
+	gyro                        types.Rotations
+	startTime                   time.Time
+	readTime                    time.Time
+	readingInterval             time.Duration
+	accLowPassFilterCoefficient float64
+	lowPassFilterCoefficient    float64
+	readingData                 types.ImuReadingQualities
 }
 
 func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
@@ -25,10 +27,11 @@ func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 	badIntervalThereshold := readingInterval + readingInterval/20
 	fmt.Println(readingInterval, badIntervalThereshold)
 	return ImuModule{
-		dev:                      imuMems,
-		readTime:                 time.Time{},
-		readingInterval:          readingInterval,
-		lowPassFilterCoefficient: config.LowPassFilterCoefficient,
+		dev:                         imuMems,
+		readTime:                    time.Time{},
+		readingInterval:             readingInterval,
+		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
+		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
 		readingData: types.ImuReadingQualities{
 			Total:                 0,
 			BadInterval:           0,
@@ -36,6 +39,7 @@ func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
 			BadData:               0,
 			BadIntervalThereshold: badIntervalThereshold,
 		},
+		accData:   types.SensorData{Data: types.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
 		rotations: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyro:      types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
@@ -60,17 +64,20 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 	}
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
-
-	accRotations := AccelerometerRotations(accData.Data)
+	imu.accData.Data = types.XYZ{
+		X: LowPassFilter(imu.accData.Data.X, accData.Data.X, imu.accLowPassFilterCoefficient),
+		Y: LowPassFilter(imu.accData.Data.Y, accData.Data.Y, imu.accLowPassFilterCoefficient),
+		Z: LowPassFilter(imu.accData.Data.Z, accData.Data.Z, imu.accLowPassFilterCoefficient),
+	}
+	accRotations := AccelerometerRotations(imu.accData.Data)
 	dg := GyroChanges(gyroData.Data, diff.Nanoseconds())
 	imu.gyro = GyroRotations(dg, imu.gyro)
 	rotations := GyroRotations(dg, imu.rotations)
 	imu.rotations = types.Rotations{
-		Roll:  OffsetCorrection(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
-		Pitch: OffsetCorrection(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
-		Yaw:   rotations.Yaw,
+		Roll:  LowPassFilter(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
+		Pitch: LowPassFilter(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
+		Yaw:   imu.gyro.Yaw,
 	}
-
 	imu.updateReadingData(diff, devErr != nil)
 	return true, types.ImuRotations{
 		Accelerometer: accRotations,
@@ -108,9 +115,9 @@ func AccelerometerRotations(data types.XYZ) types.Rotations {
 	}
 }
 
-func OffsetCorrection(lowNoiseReading float64, lowOffsetReading float64, lpfc float64) float64 {
-	v1 := lpfc * lowNoiseReading
-	v2 := (1 - lpfc) * lowOffsetReading
+func LowPassFilter(prevValue float64, newValue float64, coefficient float64) float64 {
+	v1 := (1 - coefficient) * prevValue
+	v2 := coefficient * newValue
 	// fmt.Println(v1, v2, lpfc)
 	return v1 + v2
 }
