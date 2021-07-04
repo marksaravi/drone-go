@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/devices/pca9685"
-	"github.com/MarkSaravi/drone-go/connectors/i2c"
-	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/connectors/gpio"
+	"github.com/MarkSaravi/drone-go/connectors/i2c"
+	"github.com/MarkSaravi/drone-go/devices/pca9685"
+	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
-
 )
 
 func main() {
@@ -54,7 +53,7 @@ func main() {
 	power := 1
 	inc := 1
 	for power != 0 {
-		pw := float32(esc.MaxPW - esc.MinPW) * float32(power) / 100 + float32(esc.MinPW)
+		pw := float32(esc.MaxPW-esc.MinPW)*float32(power)/100 + float32(esc.MinPW)
 		fmt.Println("channel: ", *channel, ", PW:  ", pw)
 		escs.SetPulseWidth(*channel, pw)
 		time.Sleep(250 * time.Millisecond)
