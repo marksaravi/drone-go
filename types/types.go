@@ -6,6 +6,10 @@ import "time"
 type Config interface {
 }
 
+type EscConfig struct {
+	MaxPulseWidth float32 `yaml:"max_esc_pulse_width_ms"`
+}
+
 type ImuConfig struct {
 	ImuDataPerSecond            int     `yaml:"imu_data_per_second"`
 	AccLowPassFilterCoefficient float64 `yaml:"acc_lowpass_filter_coefficient"`
@@ -14,6 +18,7 @@ type ImuConfig struct {
 
 type FlightConfig struct {
 	Imu ImuConfig `yaml:"imu"`
+	Esc EscConfig `yaml:"esc"`
 }
 
 type UdpLoggerConfig struct {
