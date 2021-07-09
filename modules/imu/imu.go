@@ -10,7 +10,7 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
-type ImuModule struct {
+type imuModule struct {
 	dev                         types.ImuDevice
 	accData                     types.SensorData
 	rotations                   types.Rotations
@@ -23,11 +23,11 @@ type ImuModule struct {
 	readingData                 types.ImuReadingQualities
 }
 
-func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) ImuModule {
+func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) imuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	badIntervalThereshold := readingInterval + readingInterval/20
 	fmt.Println(readingInterval, badIntervalThereshold)
-	return ImuModule{
+	return imuModule{
 		dev:                         imuMems,
 		readTime:                    time.Time{},
 		readingInterval:             readingInterval,
@@ -46,18 +46,18 @@ func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) ImuModule {
 	}
 }
 
-func (imu ImuModule) Close() {
+func (imu imuModule) Close() {
 	imu.dev.Close()
 }
 
-func (imu *ImuModule) ResetReadingTimes() {
+func (imu *imuModule) ResetReadingTimes() {
 	imu.startTime = time.Now()
 	imu.readTime = imu.startTime
 	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
-func (imu *ImuModule) GetRotations() (types.ImuRotations, error) {
+func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	now := time.Now()
 	diff := now.Sub(imu.readTime)
 	if diff < imu.readingInterval {
@@ -127,11 +127,11 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
-func (imu *ImuModule) GetReadingQualities() types.ImuReadingQualities {
+func (imu *imuModule) GetReadingQualities() types.ImuReadingQualities {
 	return imu.readingData
 }
 
-func (imu *ImuModule) updateReadingData(diff time.Duration, err bool) {
+func (imu *imuModule) updateReadingData(diff time.Duration, err bool) {
 	imu.readingData.Total++
 	if diff >= imu.readingData.BadIntervalThereshold {
 		imu.readingData.BadInterval++
