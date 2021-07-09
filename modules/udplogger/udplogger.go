@@ -30,23 +30,23 @@ func (l *udpLogger) Enabled() bool {
 	return l.enabled
 }
 
-func (l *udpLogger) Append(jsonData string) {
+func (l *udpLogger) Append(imuRotations types.ImuRotations) {
 	if !l.enabled {
 		return
 	}
 	l.dataOffsetCounter++
 	if l.dataOffsetCounter == l.dataOffset {
-		l.buffer[l.dataPerPacketCounter] = jsonData
+		l.buffer[l.dataPerPacketCounter] = ImuDataToJson(imuRotations)
 		l.dataOffsetCounter = 0
 		l.dataPerPacketCounter++
 	}
 }
 
-func (l *udpLogger) Send(jsonData string) {
+func (l *udpLogger) Send(imuRotations types.ImuRotations) {
 	if !l.Enabled() {
 		return
 	}
-	l.Append(jsonData)
+	l.Append(imuRotations)
 	l.SendData()
 }
 
@@ -107,4 +107,20 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) type
 		dataOffsetCounter:    0,
 		buffer:               make([]string, BUFFER_SIZE),
 	}
+}
+
+func ImuDataToJson(imuRotations types.ImuRotations) string {
+	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
+		imuRotations.Accelerometer.Roll,
+		imuRotations.Accelerometer.Pitch,
+		imuRotations.Accelerometer.Yaw,
+		imuRotations.Gyroscope.Roll,
+		imuRotations.Gyroscope.Pitch,
+		imuRotations.Gyroscope.Yaw,
+		imuRotations.Rotations.Roll,
+		imuRotations.Rotations.Pitch,
+		imuRotations.Rotations.Yaw,
+		imuRotations.ReadTime,
+		imuRotations.ReadInterval,
+	)
 }

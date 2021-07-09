@@ -126,5 +126,5 @@ type IMU interface {
 
 // Logger is interface for the udpLogger
 type UdpLogger interface {
-	Send(jsonData string)
+	Send(imuRotations ImuRotations)
 }
