@@ -26,12 +26,10 @@ func main() {
 
 	var running = true
 	for running {
-		available, imuRotations, err := imu.GetRotations()
-		if available {
-			if err == nil {
-				flightStates.Update(imuRotations)
-				udpLogger.Send(flightStates.ImuDataToJson())
-			}
+		imuRotations, err := imu.GetRotations()
+		if err == nil {
+			flightStates.Update(imuRotations)
+			udpLogger.Send(flightStates.ImuDataToJson())
 		}
 
 		select {

@@ -1,6 +1,7 @@
 package imu
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -56,11 +57,11 @@ func (imu *ImuModule) ResetReadingTimes() {
 	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
-func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
+func (imu *ImuModule) GetRotations() (types.ImuRotations, error) {
 	now := time.Now()
 	diff := now.Sub(imu.readTime)
 	if diff < imu.readingInterval {
-		return false, types.ImuRotations{}, nil
+		return types.ImuRotations{}, errors.New("timeing")
 	}
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
@@ -79,7 +80,7 @@ func (imu *ImuModule) GetRotations() (bool, types.ImuRotations, error) {
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.updateReadingData(diff, devErr != nil)
-	return true, types.ImuRotations{
+	return types.ImuRotations{
 		Accelerometer: accRotations,
 		Gyroscope:     imu.gyro,
 		Rotations:     imu.rotations,

@@ -119,7 +119,7 @@ type ImuDevice interface {
 // IMU is interface to imu mems
 type IMU interface {
 	Close()
-	GetRotations() (bool, ImuRotations, error)
+	GetRotations() (ImuRotations, error)
 	ResetReadingTimes()
 	GetReadingQualities() ImuReadingQualities
 }
