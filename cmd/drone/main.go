@@ -15,7 +15,7 @@ func main() {
 
 	var command types.Command
 	var wg sync.WaitGroup
-	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.ImuDataPerSecond)
+	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
 	var running = true

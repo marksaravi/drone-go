@@ -22,7 +22,7 @@ type ImuModule struct {
 	readingData                 types.ImuReadingQualities
 }
 
-func NewIMU(imuMems types.ImuDevice, config types.FlightConfig) ImuModule {
+func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) ImuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	badIntervalThereshold := readingInterval + readingInterval/20
 	fmt.Println(readingInterval, badIntervalThereshold)

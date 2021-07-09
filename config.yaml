@@ -1,7 +1,12 @@
 flight_control:
-  imu_data_per_second: 2500
-  acc_lowpass_filter_coefficient: 0.005
-  lowpass_filter_coefficient: 0.01
+  imu:
+    imu_data_per_second: 2500
+    acc_lowpass_filter_coefficient: 0.005
+    lowpass_filter_coefficient: 0.01
+  esc:
+    # max_esc_pulse_width is float between 1 to 1.5
+    max_esc_pulse_width_ms: 1.2
+
 devices:
   icm20948:
     bus_number: 0
@@ -24,9 +29,10 @@ devices:
         X: -12
         Y: -6
         Z: -8
+
 udp:
   enabled: true
-  ip: 192.168.1.101
+  ip: 192.168.1.103
   port: 6431
   udp_packets_per_second: 20 # set to zero for disabling udp send
   udp_data_per_second: 320

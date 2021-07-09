@@ -17,6 +17,6 @@ func initiateIMU(config ApplicationConfig) types.IMU {
 	if err != nil {
 		os.Exit(1)
 	}
-	imudevice := imu.NewIMU(dev, config.Flight)
+	imudevice := imu.NewIMU(dev, config.Flight.Imu)
 	return &imudevice
 }

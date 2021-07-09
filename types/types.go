@@ -6,10 +6,14 @@ import "time"
 type Config interface {
 }
 
-type FlightConfig struct {
+type ImuConfig struct {
 	ImuDataPerSecond            int     `yaml:"imu_data_per_second"`
 	AccLowPassFilterCoefficient float64 `yaml:"acc_lowpass_filter_coefficient"`
 	LowPassFilterCoefficient    float64 `yaml:"lowpass_filter_coefficient"`
+}
+
+type FlightConfig struct {
+	Imu ImuConfig `yaml:"imu"`
 }
 
 type UdpLoggerConfig struct {
