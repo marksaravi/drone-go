@@ -6,31 +6,26 @@ import (
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
-	"github.com/MarkSaravi/drone-go/types"
 )
 
 func main() {
 	appConfig := readConfigs()
 
-	var command types.Command
 	var wg sync.WaitGroup
+
 	udpLogger := initUdpLogger(appConfig)
 	commandChannel := createCommandChannel(&wg)
-	imu := initiateIMU(appConfig)
+	imuChannel := createImuDataChannel(appConfig)
 	pid := flightcontrol.CreatePidController()
 
-	imu.ResetReadingTimes()
-
-	var running = true
+	var running bool = true
 	for running {
-		imuRotations, err := imu.GetRotations()
-		if err == nil {
-			pid.Update(imuRotations)
-			udpLogger.Send(imuRotations)
-		}
-
 		select {
-		case command = <-commandChannel:
+		case rotations := <-imuChannel:
+			pid.Update(rotations)
+			udpLogger.Send(rotations)
+
+		case command := <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
 				fmt.Println("COMMAND_END_PROGRAM is received, terminating services...")
 				running = false
@@ -39,6 +34,5 @@ func main() {
 		default:
 		}
 	}
-	imu.Close()
-	dataQualityReport(imu.GetReadingQualities())
+	// dataQualityReport(imu.GetReadingQualities())
 }

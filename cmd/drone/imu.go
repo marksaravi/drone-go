@@ -20,3 +20,18 @@ func initiateIMU(config ApplicationConfig) types.IMU {
 	imudevice := imu.NewIMU(dev, config.Flight.Imu)
 	return &imudevice
 }
+
+func createImuDataChannel(config ApplicationConfig) chan types.ImuRotations {
+	imuDataChannel := make(chan types.ImuRotations, 1)
+	imu := initiateIMU(config)
+	imu.ResetReadingTimes()
+	go func() {
+		for {
+			rotations, err := imu.GetRotations()
+			if err == nil {
+				imuDataChannel <- rotations
+			}
+		}
+	}()
+	return imuDataChannel
+}
