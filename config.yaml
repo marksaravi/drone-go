@@ -1,4 +1,8 @@
 flight_control:
+  pid:
+    proportional–gain: 1
+    integral-gain: 0
+    derivative-gain: 0 
   imu:
     imu_data_per_second: 2500
     acc_lowpass_filter_coefficient: 0.005

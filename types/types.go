@@ -6,6 +6,12 @@ import "time"
 type Config interface {
 }
 
+type PidConfig struct {
+	ProportionalGain float32 `yaml:"proportional–gain"`
+	IntegralGain     float32 `yaml:"integral-gain"`
+	DerivativeGain   float32 `yaml:"derivative-gain"`
+}
+
 type EscConfig struct {
 	MaxPulseWidth float32 `yaml:"max_esc_pulse_width_ms"`
 }
@@ -17,6 +23,7 @@ type ImuConfig struct {
 }
 
 type FlightConfig struct {
+	PID PidConfig `yaml:"pid"`
 	Imu ImuConfig `yaml:"imu"`
 	Esc EscConfig `yaml:"esc"`
 }
