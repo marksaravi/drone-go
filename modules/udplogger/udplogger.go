@@ -30,19 +30,27 @@ func (l *udpLogger) Enabled() bool {
 	return l.enabled
 }
 
-func (l *udpLogger) Append(dataProvider types.UdpDataProvider) {
+func (l *udpLogger) Append(jsonData string) {
 	if !l.enabled {
 		return
 	}
 	l.dataOffsetCounter++
 	if l.dataOffsetCounter == l.dataOffset {
-		l.buffer[l.dataPerPacketCounter] = dataProvider.ImuDataToJson()
+		l.buffer[l.dataPerPacketCounter] = jsonData
 		l.dataOffsetCounter = 0
 		l.dataPerPacketCounter++
 	}
 }
 
-func (l *udpLogger) Send() {
+func (l *udpLogger) Send(jsonData string) {
+	if !l.Enabled() {
+		return
+	}
+	l.Append(jsonData)
+	l.SendData()
+}
+
+func (l *udpLogger) SendData() {
 	if l.enabled && l.dataPerPacketCounter == l.dataPerPacket {
 		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d}",
 			strings.Join(l.buffer[0:l.dataPerPacketCounter], ","),
@@ -56,23 +64,23 @@ func (l *udpLogger) Send() {
 	}
 }
 
-func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) udpLogger {
+func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) types.UdpLogger {
 	if !udpConfig.Enabled {
-		return udpLogger{
+		return &udpLogger{
 			enabled: false,
 		}
 	}
 	conn, err := net.ListenUDP("udp", nil)
 	if err != nil {
 		fmt.Println("UDP initialization error: ", err)
-		return udpLogger{
+		return &udpLogger{
 			enabled: false,
 		}
 	}
 	address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", udpConfig.IP, udpConfig.Port))
 	if err != nil {
 		fmt.Println("UDP initialization error: ", err)
-		return udpLogger{
+		return &udpLogger{
 			enabled: false,
 		}
 	}
@@ -82,13 +90,13 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) udpL
 		dataPerPacket = udpConfig.DataPerSecond / udpConfig.PacketsPerSecond
 		if dataPerPacket > BUFFER_SIZE {
 			fmt.Println("Data per packet is more than buffer size BUFFER_SIZE")
-			return udpLogger{
+			return &udpLogger{
 				enabled: false,
 			}
 		}
 	}
 	dataOffset := imuDataPerSecond / udpConfig.DataPerSecond
-	return udpLogger{
+	return &udpLogger{
 		conn:                 conn,
 		address:              address,
 		enabled:              true,

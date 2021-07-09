@@ -36,10 +36,6 @@ type UdpLoggerConfig struct {
 	DataPerSecond    int    `yaml:"udp_data_per_second"`
 }
 
-type UdpDataProvider interface {
-	ImuDataToJson() string
-}
-
 // XYZ is X, Y, Z data
 type XYZ struct {
 	X, Y, Z float64
@@ -126,4 +122,9 @@ type IMU interface {
 	GetRotations() (bool, ImuRotations, error)
 	ResetReadingTimes()
 	GetReadingQualities() ImuReadingQualities
+}
+
+// Logger is interface for the udpLogger
+type UdpLogger interface {
+	Send(jsonData string)
 }
