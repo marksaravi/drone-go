@@ -126,5 +126,14 @@ type IMU interface {
 
 // Logger is interface for the udpLogger
 type UdpLogger interface {
-	Send(imuRotations ImuRotations)
+	Send(ImuRotations)
+}
+
+type Throttle struct {
+	Motor int
+	Value float32
+}
+
+type PID interface {
+	Update(ImuRotations) []Throttle
 }

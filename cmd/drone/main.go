@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	commands "github.com/MarkSaravi/drone-go/constants"
+	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -16,6 +17,7 @@ func main() {
 	udpLogger := initUdpLogger(appConfig)
 	commandChannel := createCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
+	pid := flightcontrol.CreatePidController()
 
 	imu.ResetReadingTimes()
 
@@ -23,6 +25,7 @@ func main() {
 	for running {
 		imuRotations, err := imu.GetRotations()
 		if err == nil {
+			pid.Update(imuRotations)
 			udpLogger.Send(imuRotations)
 		}
 
