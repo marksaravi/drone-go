@@ -18,12 +18,14 @@ func main() {
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	commandChannel := createCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
-	var running = true
+
 	var flightStates flightcontrol.FlightStates = flightcontrol.FlightStates{
 		Config: appConfig.Flight,
 	}
 
 	imu.ResetReadingTimes()
+
+	var running = true
 	for running {
 		available, imuRotations, err := imu.GetRotations()
 		if available {
@@ -31,10 +33,11 @@ func main() {
 				flightStates.Update(imuRotations)
 				if udpLogger.Enabled() {
 					udpLogger.Append(&flightStates)
+					udpLogger.Send()
 				}
 			}
 		}
-		udpLogger.Send()
+
 		select {
 		case command = <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
@@ -45,12 +48,6 @@ func main() {
 		default:
 		}
 	}
-	readingData := imu.GetReadingQualities()
 	imu.Close()
-	fmt.Println("total data:             ", readingData.Total)
-	fmt.Println("number of bad imu data: ", readingData.BadData)
-	fmt.Println("number of bad timing:   ", readingData.BadInterval)
-	fmt.Println("bad timing rate:        ", float64(readingData.BadInterval)/float64(readingData.Total)*100)
-	fmt.Println("max bad timing:         ", readingData.MaxBadInterval)
-	fmt.Println("Program stopped.")
+	dataQualityReport(imu.GetReadingQualities())
 }
