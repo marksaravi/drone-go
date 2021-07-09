@@ -1,8 +1,6 @@
 package imu
 
 import (
-	"errors"
-	"fmt"
 	"math"
 	"time"
 
@@ -17,32 +15,19 @@ type imuModule struct {
 	gyro                        types.Rotations
 	startTime                   time.Time
 	readTime                    time.Time
-	readingInterval             time.Duration
 	accLowPassFilterCoefficient float64
 	lowPassFilterCoefficient    float64
-	readingData                 types.ImuReadingQualities
 }
 
 func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) imuModule {
-	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
-	badIntervalThereshold := readingInterval + readingInterval/20
-	fmt.Println(readingInterval, badIntervalThereshold)
 	return imuModule{
 		dev:                         imuMems,
 		readTime:                    time.Time{},
-		readingInterval:             readingInterval,
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
-		readingData: types.ImuReadingQualities{
-			Total:                 0,
-			BadInterval:           0,
-			MaxBadInterval:        0,
-			BadData:               0,
-			BadIntervalThereshold: badIntervalThereshold,
-		},
-		accData:   types.SensorData{Data: types.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
-		rotations: types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyro:      types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		accData:                     types.SensorData{Data: types.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
+		rotations:                   types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyro:                        types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
 }
 
@@ -60,9 +45,6 @@ func (imu *imuModule) ResetReadingTimes() {
 func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	now := time.Now()
 	diff := now.Sub(imu.readTime)
-	if diff < imu.readingInterval {
-		return types.ImuRotations{}, errors.New("timeing")
-	}
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
 	imu.accData.Data = types.XYZ{
@@ -79,7 +61,7 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 		Pitch: LowPassFilter(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
-	imu.updateReadingData(diff, devErr != nil)
+
 	return types.ImuRotations{
 		Accelerometer: accRotations,
 		Gyroscope:     imu.gyro,
@@ -125,21 +107,4 @@ func LowPassFilter(prevValue float64, newValue float64, coefficient float64) flo
 
 func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
-}
-
-func (imu *imuModule) GetReadingQualities() types.ImuReadingQualities {
-	return imu.readingData
-}
-
-func (imu *imuModule) updateReadingData(diff time.Duration, err bool) {
-	imu.readingData.Total++
-	if diff >= imu.readingData.BadIntervalThereshold {
-		imu.readingData.BadInterval++
-		if diff > imu.readingData.MaxBadInterval {
-			imu.readingData.MaxBadInterval = diff
-		}
-	}
-	if err {
-		imu.readingData.BadData++
-	}
 }

@@ -28,11 +28,10 @@ func main() {
 		case command := <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
 				fmt.Println("COMMAND_END_PROGRAM is received, terminating services...")
-				running = false
 				wg.Wait()
+				running = false
 			}
 		default:
 		}
 	}
-	// dataQualityReport(imu.GetReadingQualities())
 }

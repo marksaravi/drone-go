@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/devices/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
@@ -25,8 +26,9 @@ func createImuDataChannel(config ApplicationConfig) chan types.ImuRotations {
 	imuDataChannel := make(chan types.ImuRotations, 1)
 	imu := initiateIMU(config)
 	imu.ResetReadingTimes()
+	readingInterval := time.Duration(int64(time.Second)/int64(config.Flight.Imu.ImuDataPerSecond)) - time.Microsecond*80
 	go func() {
-		for {
+		for range time.Tick(readingInterval) {
 			rotations, err := imu.GetRotations()
 			if err == nil {
 				imuDataChannel <- rotations

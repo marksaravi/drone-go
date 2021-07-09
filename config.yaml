@@ -4,7 +4,7 @@ flight_control:
     integral-gain: 0
     derivative-gain: 0 
   imu:
-    imu_data_per_second: 2500
+    imu_data_per_second: 1000
     acc_lowpass_filter_coefficient: 0.005
     lowpass_filter_coefficient: 0.01
   esc:

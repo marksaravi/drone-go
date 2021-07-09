@@ -1,7 +1,5 @@
 package types
 
-import "time"
-
 // Config is the generic configuration
 type Config interface {
 }
@@ -99,14 +97,6 @@ type Offsets struct {
 	Z int16 `yaml:"Z"`
 }
 
-type ImuReadingQualities struct {
-	Total                 int64
-	BadInterval           int64
-	BadData               int64
-	MaxBadInterval        time.Duration
-	BadIntervalThereshold time.Duration
-}
-
 // ImuDevice is interface for the imu mems
 type ImuDevice interface {
 	Close()
@@ -121,7 +111,6 @@ type IMU interface {
 	Close()
 	GetRotations() (ImuRotations, error)
 	ResetReadingTimes()
-	GetReadingQualities() ImuReadingQualities
 }
 
 // Logger is interface for the udpLogger
