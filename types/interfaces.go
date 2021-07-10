@@ -10,6 +10,8 @@ type PID interface {
 
 type ESC interface {
 	SetThrottles([]Throttle)
+	MotorsOn()
+	MotorsOff()
 }
 
 // Logger is interface for the udpLogger

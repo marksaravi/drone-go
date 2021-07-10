@@ -23,6 +23,7 @@ func (fc *flightControl) Start() {
 	fc.imu.ResetReadingTimes()
 	var running bool = true
 
+	fc.esc.MotorsOn()
 	for running {
 		if fc.imu.CanRead() {
 			rotations, err := fc.imu.GetRotations()
@@ -36,6 +37,7 @@ func (fc *flightControl) Start() {
 		case command := <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
 				wg.Wait()
+				fc.esc.MotorsOff()
 				running = false
 			}
 		default:

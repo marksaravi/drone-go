@@ -20,12 +20,12 @@ func NewPowerBreaker() *powerBreaker {
 	}
 }
 
-func (pb *powerBreaker) MototsOn() {
+func (pb *powerBreaker) MotorsOn() {
 	pb.pin.SetAsOutput()
 	pb.pin.SetHigh()
 }
 
-func (pb *powerBreaker) MototsOff() {
+func (pb *powerBreaker) MotorsOff() {
 	pb.pin.SetLow()
 	pb.pin.SetAsInput()
 	gpio.Close()

@@ -27,8 +27,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	defer pwmDev.SetPulseWidthAll(0)
-	defer pwmDev.Close()
 
 	if err != nil {
 		fmt.Println(err)
@@ -40,7 +38,7 @@ func main() {
 	pwmDev.Start(pca9685.Frequency)
 	fmt.Println("channel: ", *channel, ", PW:  ", pca9685.MinPW)
 	pwmDev.SetPulseWidth(*channel, pca9685.MinPW)
-	breaker.MototsOn()
+	breaker.MotorsOn()
 	time.Sleep(4 * time.Second)
 	power := 1
 	inc := 1
@@ -54,6 +52,8 @@ func main() {
 			inc = -1
 		}
 	}
-	breaker.MototsOff()
+	breaker.MotorsOff()
+	pwmDev.SetPulseWidthAll(0)
+	pwmDev.Close()
 	fmt.Println("finished")
 }

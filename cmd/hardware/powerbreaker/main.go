@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println("Started")
 	breaker := powerbreaker.NewPowerBreaker()
-	breaker.MototsOn()
+	breaker.MotorsOn()
 	time.Sleep(5 * time.Second)
-	breaker.MototsOff()
+	breaker.MotorsOff()
 }
