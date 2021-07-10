@@ -4,16 +4,16 @@ import (
 	"github.com/MarkSaravi/drone-go/connectors/gpio"
 )
 
-//PowerBreaker is the safty power breaker
-type PowerBreaker struct {
+//powerBreaker is the safty power breaker
+type powerBreaker struct {
 	gpio.GPIO
 }
 
-//NewPowerBreaker creates new PowerBreaker
-func NewPowerBreaker(pin gpio.GPIO) *PowerBreaker {
+//NewPowerBreaker creates new powerBreaker
+func NewPowerBreaker(pin gpio.GPIO) *powerBreaker {
 	pin.SetAsOutput()
 	pin.SetLow()
-	return &PowerBreaker{
+	return &powerBreaker{
 		GPIO: pin,
 	}
 }

@@ -26,44 +26,6 @@ type udpLogger struct {
 	dataOffsetCounter    int
 }
 
-func (l *udpLogger) Enabled() bool {
-	return l.enabled
-}
-
-func (l *udpLogger) Append(imuRotations types.ImuRotations) {
-	if !l.enabled {
-		return
-	}
-	l.dataOffsetCounter++
-	if l.dataOffsetCounter == l.dataOffset {
-		l.buffer[l.dataPerPacketCounter] = ImuDataToJson(imuRotations)
-		l.dataOffsetCounter = 0
-		l.dataPerPacketCounter++
-	}
-}
-
-func (l *udpLogger) Send(imuRotations types.ImuRotations) {
-	if !l.Enabled() {
-		return
-	}
-	l.Append(imuRotations)
-	l.SendData()
-}
-
-func (l *udpLogger) SendData() {
-	if l.enabled && l.dataPerPacketCounter == l.dataPerPacket {
-		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d}",
-			strings.Join(l.buffer[0:l.dataPerPacketCounter], ","),
-			l.imuDataPerSecond,
-		)
-		l.dataPerPacketCounter = 0
-		// data len should be less than sysctl net.inet.udp.maxdgram for macOS
-		go func() {
-			l.conn.WriteToUDP([]byte(jsonPayload), l.address)
-		}()
-	}
-}
-
 func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) types.UdpLogger {
 	if !udpConfig.Enabled {
 		return &udpLogger{
@@ -109,7 +71,41 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) type
 	}
 }
 
-func ImuDataToJson(imuRotations types.ImuRotations) string {
+func (l *udpLogger) appendData(imuRotations types.ImuRotations) {
+	if !l.enabled {
+		return
+	}
+	l.dataOffsetCounter++
+	if l.dataOffsetCounter == l.dataOffset {
+		l.buffer[l.dataPerPacketCounter] = imuDataToJson(imuRotations)
+		l.dataOffsetCounter = 0
+		l.dataPerPacketCounter++
+	}
+}
+
+func (l *udpLogger) Send(imuRotations types.ImuRotations) {
+	if !l.enabled {
+		return
+	}
+	l.appendData(imuRotations)
+	l.sendData()
+}
+
+func (l *udpLogger) sendData() {
+	if l.enabled && l.dataPerPacketCounter == l.dataPerPacket {
+		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d}",
+			strings.Join(l.buffer[0:l.dataPerPacketCounter], ","),
+			l.imuDataPerSecond,
+		)
+		l.dataPerPacketCounter = 0
+		// data len should be less than sysctl net.inet.udp.maxdgram for macOS
+		go func() {
+			l.conn.WriteToUDP([]byte(jsonPayload), l.address)
+		}()
+	}
+}
+
+func imuDataToJson(imuRotations types.ImuRotations) string {
 	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
 		imuRotations.Accelerometer.Roll,
 		imuRotations.Accelerometer.Pitch,
