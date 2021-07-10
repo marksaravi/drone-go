@@ -1,6 +1,7 @@
 package imu
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -15,14 +16,18 @@ type imuModule struct {
 	gyro                        types.Rotations
 	startTime                   time.Time
 	readTime                    time.Time
+	readingInterval             time.Duration
 	accLowPassFilterCoefficient float64
 	lowPassFilterCoefficient    float64
 }
 
 func NewIMU(imuMems types.ImuDevice, config types.ImuConfig) imuModule {
+	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
+	fmt.Println("reading interval: ", readingInterval)
 	return imuModule{
 		dev:                         imuMems,
 		readTime:                    time.Time{},
+		readingInterval:             readingInterval,
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
 		accData:                     types.SensorData{Data: types.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
@@ -40,6 +45,13 @@ func (imu *imuModule) ResetReadingTimes() {
 	imu.readTime = imu.startTime
 	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+}
+
+func (imu *imuModule) CanRead() bool {
+	if time.Since(imu.readTime) >= imu.readingInterval {
+		return true
+	}
+	return false
 }
 
 func (imu *imuModule) GetRotations() (types.ImuRotations, error) {

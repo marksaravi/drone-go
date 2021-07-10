@@ -111,6 +111,7 @@ type IMU interface {
 	Close()
 	GetRotations() (ImuRotations, error)
 	ResetReadingTimes()
+	CanRead() bool
 }
 
 // Logger is interface for the udpLogger

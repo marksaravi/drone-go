@@ -15,16 +15,20 @@ func main() {
 
 	udpLogger := initUdpLogger(appConfig)
 	commandChannel := createCommandChannel(&wg)
-	imuChannel := createImuDataChannel(appConfig)
+	imu := initiateIMU(appConfig)
 	pid := flightcontrol.CreatePidController()
 
 	var running bool = true
+	imu.ResetReadingTimes()
 	for running {
+		if imu.CanRead() {
+			rotations, err := imu.GetRotations()
+			if err == nil {
+				pid.Update(rotations)
+				udpLogger.Send(rotations)
+			}
+		}
 		select {
-		case rotations := <-imuChannel:
-			pid.Update(rotations)
-			udpLogger.Send(rotations)
-
 		case command := <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
 				fmt.Println("COMMAND_END_PROGRAM is received, terminating services...")
