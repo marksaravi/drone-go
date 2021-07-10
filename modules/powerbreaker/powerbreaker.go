@@ -2,19 +2,19 @@ package powerbreaker
 
 import (
 	"github.com/MarkSaravi/drone-go/connectors/gpio"
+	"github.com/MarkSaravi/drone-go/types"
 )
 
 //powerBreaker is the safty power breaker
 type powerBreaker struct {
-	pin *gpio.Pin
+	pin types.GPIO
 }
 
 //NewPowerBreaker creates new powerBreaker
 func NewPowerBreaker() *powerBreaker {
 	gpio.Open()
 	pin, _ := gpio.NewPin(gpio.GPIO17)
-	pin.SetAsOutput()
-	pin.SetLow()
+	pin.SetAsInput()
 	return &powerBreaker{
 		pin: pin,
 	}

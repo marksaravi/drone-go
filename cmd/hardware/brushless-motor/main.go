@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/connectors/gpio"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
@@ -31,8 +30,6 @@ func main() {
 	defer pwmDev.SetPulseWidthAll(0)
 	defer pwmDev.Close()
 
-	err = gpio.Open()
-	defer gpio.Close()
 	if err != nil {
 		fmt.Println(err)
 		return
