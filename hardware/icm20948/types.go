@@ -23,22 +23,28 @@ type memsICM20948 struct {
 	mag     types.Sensor
 }
 
+type offsets struct {
+	X int16 `yaml:"X"`
+	Y int16 `yaml:"Y"`
+	Z int16 `yaml:"Z"`
+}
+
 // accelerometerConfig is the configurations for Accelerometer
 type accelerometerConfig struct {
-	SensitivityLevel     string        `yaml:"sensitivity_level"`
-	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
-	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
-	Averaging            int           `yaml:"averaging"`
-	Offsets              types.Offsets `yaml:"offsets"`
+	SensitivityLevel     string  `yaml:"sensitivity_level"`
+	LowPassFilterEnabled bool    `yaml:"lowpass_filter_enabled"`
+	LowPassFilterConfig  int     `yaml:"lowpass_filter_config"`
+	Averaging            int     `yaml:"averaging"`
+	Offsets              offsets `yaml:"offsets"`
 }
 
 // gyroscopeConfig is the configuration for Gyroscope
 type gyroscopeConfig struct {
-	SensitivityLevel     string        `yaml:"sensitivity_level"`
-	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
-	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
-	Averaging            int           `yaml:"averaging"`
-	Offsets              types.Offsets `yaml:"offsets"`
+	SensitivityLevel     string  `yaml:"sensitivity_level"`
+	LowPassFilterEnabled bool    `yaml:"lowpass_filter_enabled"`
+	LowPassFilterConfig  int     `yaml:"lowpass_filter_config"`
+	Averaging            int     `yaml:"averaging"`
+	Offsets              offsets `yaml:"offsets"`
 }
 
 // magnetometerConfig is the configuration for Magnetometer

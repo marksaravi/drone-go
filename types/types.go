@@ -85,12 +85,6 @@ func (a *Sensor) SetConfig(config Config) {
 	a.Config = config
 }
 
-type Offsets struct {
-	X int16 `yaml:"X"`
-	Y int16 `yaml:"Y"`
-	Z int16 `yaml:"Z"`
-}
-
 // IMU is interface to imu mems
 type IMU interface {
 	Close()
