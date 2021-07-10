@@ -35,7 +35,7 @@ func main() {
 
 	breaker := powerbreaker.NewPowerBreaker()
 
-	pwmDev.Start(pca9685.Frequency)
+	pwmDev.Start()
 	fmt.Println("channel: ", *channel, ", PW:  ", pca9685.MinPW)
 	pwmDev.SetPulseWidth(*channel, pca9685.MinPW)
 	breaker.MotorsOn()

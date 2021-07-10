@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 	breaker := powerbreaker.NewPowerBreaker()
-	pwmDev.Start(float32(pca9685.Frequency))
+	pwmDev.Start()
 	fmt.Println("setting max pulse width: ", pca9685.MaxPW)
 	fmt.Println("turn on ESCs")
 	pwmDev.SetPulseWidthAll(pca9685.MaxPW)

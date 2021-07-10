@@ -37,7 +37,7 @@ const (
 	Frequency       float32 = 400
 	MinPW           float32 = 0.001
 	MaxPW           float32 = 0.002
-	MaxApplicablePW float32 = MinPW + (MaxPW-MinPW)/15
+	MaxApplicablePW float32 = MinPW + (MaxPW-MinPW)*0.1
 )
 
 //PCA9685 is struct for PCA9685
@@ -147,7 +147,7 @@ func (d *PCA9685) setAllPWM(on uint16, off uint16) (err error) {
 }
 
 //Start starts the device with a frequency
-func (d *PCA9685) Start(frequency float32) error {
+func (d *PCA9685) Start() error {
 	if err := d.setAllPWM(0, 0); err != nil {
 		return err
 	}
@@ -176,8 +176,13 @@ func (d *PCA9685) Start(frequency float32) error {
 	}
 
 	time.Sleep(5 * time.Millisecond)
-	d.setFrequency(frequency)
+	d.setFrequency(Frequency)
 	return err
+}
+
+//SetPulseWidth sets PWM for a channel
+func (d *PCA9685) SetThrottle(motor int, throttle float32) {
+	d.SetPulseWidth(motor, MinPW+throttle*(MaxPW-MinPW))
 }
 
 //SetPulseWidth sets PWM for a channel

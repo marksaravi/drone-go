@@ -19,7 +19,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	err = pca9685.Start(400)
+	err = pca9685.Start()
 	if err != nil {
 		fmt.Println(err)
 		return
