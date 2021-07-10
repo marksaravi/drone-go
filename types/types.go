@@ -39,10 +39,6 @@ type XYZ struct {
 	X, Y, Z float64
 }
 
-type Rotations struct {
-	Roll, Pitch, Yaw float64
-}
-
 type RotationsChanges struct {
 	DRoll, DPitch, DYaw float64
 }
@@ -52,10 +48,8 @@ type SensorData struct {
 	Data  XYZ
 }
 
-type ImuSensorsData struct {
-	Acc, Gyro, Mag SensorData
-	ReadTime       int64
-	ReadInterval   int64
+type Rotations struct {
+	Roll, Pitch, Yaw float64
 }
 
 type ImuRotations struct {
@@ -95,15 +89,6 @@ type Offsets struct {
 	X int16 `yaml:"X"`
 	Y int16 `yaml:"Y"`
 	Z int16 `yaml:"Z"`
-}
-
-// ImuDevice is interface for the imu mems
-type ImuDevice interface {
-	Close()
-	InitDevice() error
-	ReadSensorsRawData() ([]byte, error)
-	ReadSensors() (acc SensorData, gyro SensorData, mag SensorData, err error)
-	WhoAmI() (string, byte, error)
 }
 
 // IMU is interface to imu mems
