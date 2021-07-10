@@ -6,12 +6,6 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-// register is the address and bank of the register
-type register struct {
-	address uint8
-	bank    uint8
-}
-
 // memsICM20948 is icm20948 mems
 type memsICM20948 struct {
 	Name string

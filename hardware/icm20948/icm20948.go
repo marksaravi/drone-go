@@ -11,10 +11,10 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func reg(reg uint16) *register {
-	return &register{
-		address: uint8(reg),
-		bank:    uint8(reg >> 8),
+func reg(reg uint16) *types.Register {
+	return &types.Register{
+		Address: uint8(reg),
+		Bank:    uint8(reg >> 8),
 	}
 }
 
@@ -97,8 +97,8 @@ func (dev *memsICM20948) selRegisterBank(regbank uint8) error {
 
 func (dev *memsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
-	dev.selRegisterBank(reg.bank)
-	return dev.readReg(reg.address, len)
+	dev.selRegisterBank(reg.Bank)
+	return dev.readReg(reg.Address, len)
 }
 
 func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
@@ -106,8 +106,8 @@ func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
 		return nil
 	}
 	reg := reg(register)
-	dev.selRegisterBank(reg.bank)
-	return dev.writeReg(reg.address, data...)
+	dev.selRegisterBank(reg.Bank)
+	return dev.writeReg(reg.Address, data...)
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA

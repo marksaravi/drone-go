@@ -157,7 +157,7 @@ type Pin struct {
 }
 
 func (pin *Pin) setMode(mode Mode) {
-	// shift for pin mode field within fsel register.
+	// shift for pin mode field within fsel Register.
 	modeShift := uint(pin.pin%10) * 3
 
 	memoryLock.Lock()

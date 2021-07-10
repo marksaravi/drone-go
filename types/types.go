@@ -1,5 +1,11 @@
 package types
 
+// Register is the address and bank of the Register
+type Register struct {
+	Address uint8
+	Bank    uint8
+}
+
 // Config is the generic configuration
 type Config interface {
 }
