@@ -107,6 +107,6 @@ type PID interface {
 	Update(ImuRotations) []Throttle
 }
 
-type ESCsHandler interface {
+type ESC interface {
 	SetThrottles([]Throttle)
 }
