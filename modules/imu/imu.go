@@ -3,8 +3,10 @@ package imu
 import (
 	"fmt"
 	"math"
+	"os"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -29,7 +31,20 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func NewIMU(imuMems imuHardware, config types.ImuConfig) imuModule {
+func CreateIM(config types.ApplicationConfig) types.IMU {
+	dev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
+	if err != nil {
+		os.Exit(1)
+	}
+	dev.InitDevice()
+	if err != nil {
+		os.Exit(1)
+	}
+	imudevice := newIMU(dev, config.Flight.Imu)
+	return &imudevice
+}
+
+func newIMU(imuMems imuHardware, config types.ImuConfig) imuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
 	return imuModule{
