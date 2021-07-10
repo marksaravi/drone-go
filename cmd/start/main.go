@@ -1,7 +1,7 @@
 package main
 
 import (
-	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
+	"github.com/MarkSaravi/drone-go/flightcontrol"
 	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
