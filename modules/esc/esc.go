@@ -18,9 +18,9 @@ type escsHandler struct {
 
 func (h *escsHandler) SetThrottles(throttles []types.Throttle) {
 	h.throttles = throttles
-	for _, throttle := range h.throttles {
-		h.esc.SetPulseWidth(throttle.Motor, throttle.Value)
-	}
+	// for _, throttle := range h.throttles {
+	// 	h.esc.SetPulseWidth(throttle.Motor, throttle.Value)
+	// }
 }
 
 func NewESCsHandler() *escsHandler {

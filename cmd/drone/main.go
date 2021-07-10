@@ -6,6 +6,7 @@ import (
 
 	commands "github.com/MarkSaravi/drone-go/constants"
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
+	"github.com/MarkSaravi/drone-go/modules/command"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	udpLogger := initUdpLogger(appConfig)
-	commandChannel := createCommandChannel(&wg)
+	commandChannel := command.CreateCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
 	pid := flightcontrol.CreatePidController()
 	esc := createESCsHandler()

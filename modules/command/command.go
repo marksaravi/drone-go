@@ -1,4 +1,4 @@
-package main
+package command
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-func createCommandChannel(wg *sync.WaitGroup) chan types.Command {
+func CreateCommandChannel(wg *sync.WaitGroup) chan types.Command {
 	command := make(chan types.Command, 1)
 	go func() {
 		wg.Add(1)
