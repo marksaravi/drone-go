@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/devices/pca9685"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
+	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 )
 
 func main() {

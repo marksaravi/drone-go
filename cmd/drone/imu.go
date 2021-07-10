@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/MarkSaravi/drone-go/devices/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 )

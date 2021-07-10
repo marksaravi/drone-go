@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MarkSaravi/drone-go/devices/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
