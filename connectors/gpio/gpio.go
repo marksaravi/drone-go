@@ -10,14 +10,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-//GPIO is interface to GPIO pin
-type GPIO interface {
-	SetAsInput()
-	SetAsOutput()
-	SetHigh()
-	SetLow()
-}
-
 //Pins in J8
 const (
 	J8Pin27 = iota

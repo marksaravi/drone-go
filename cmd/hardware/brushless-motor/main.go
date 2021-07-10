@@ -33,20 +33,17 @@ func main() {
 
 	err = gpio.Open()
 	defer gpio.Close()
-	pin, err := gpio.NewPin(gpio.GPIO17)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	breaker := powerbreaker.NewPowerBreaker(pin)
-	defer breaker.SetLow()
-	defer breaker.SetAsInput()
+	breaker := powerbreaker.NewPowerBreaker()
 
 	pwmDev.Start(pca9685.Frequency)
 	fmt.Println("channel: ", *channel, ", PW:  ", pca9685.MinPW)
 	pwmDev.SetPulseWidth(*channel, pca9685.MinPW)
-	breaker.SetHigh()
+	breaker.MototsOn()
 	time.Sleep(4 * time.Second)
 	power := 1
 	inc := 1
@@ -60,6 +57,6 @@ func main() {
 			inc = -1
 		}
 	}
-	breaker.SetLow()
+	breaker.MototsOff()
 	fmt.Println("finished")
 }
