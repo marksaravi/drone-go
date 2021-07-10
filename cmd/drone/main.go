@@ -5,13 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sync"
 
-	commands "github.com/MarkSaravi/drone-go/constants"
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
-	"github.com/MarkSaravi/drone-go/modules/command"
 	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
@@ -29,33 +26,11 @@ func main() {
 	appConfig := readConfigs()
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 
-	var wg sync.WaitGroup
-	commandChannel := command.CreateCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
 	pid := flightcontrol.CreatePidController()
 	esc := esc.NewESCsHandler()
-
-	var running bool = true
-	imu.ResetReadingTimes()
-	for running {
-		if imu.CanRead() {
-			rotations, err := imu.GetRotations()
-			if err == nil {
-				throttles := pid.Update(rotations)
-				esc.SetThrottles(throttles)
-				udpLogger.Send(rotations)
-			}
-		}
-		select {
-		case command := <-commandChannel:
-			if command.Command == commands.COMMAND_END_PROGRAM {
-				fmt.Println("COMMAND_END_PROGRAM is received, terminating services...")
-				wg.Wait()
-				running = false
-			}
-		default:
-		}
-	}
+	flightControl := flightcontrol.CreateFlightControl(imu, pid, esc, udpLogger)
+	flightControl.Start()
 }
 
 func initiateIMU(config ApplicationConfig) types.IMU {
