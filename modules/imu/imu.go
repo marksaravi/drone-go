@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type imuModule struct {
@@ -60,17 +59,17 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
 	imu.accData.Data = types.XYZ{
-		X: LowPassFilter(imu.accData.Data.X, accData.Data.X, imu.accLowPassFilterCoefficient),
-		Y: LowPassFilter(imu.accData.Data.Y, accData.Data.Y, imu.accLowPassFilterCoefficient),
-		Z: LowPassFilter(imu.accData.Data.Z, accData.Data.Z, imu.accLowPassFilterCoefficient),
+		X: lowPassFilter(imu.accData.Data.X, accData.Data.X, imu.accLowPassFilterCoefficient),
+		Y: lowPassFilter(imu.accData.Data.Y, accData.Data.Y, imu.accLowPassFilterCoefficient),
+		Z: lowPassFilter(imu.accData.Data.Z, accData.Data.Z, imu.accLowPassFilterCoefficient),
 	}
-	accRotations := AccelerometerRotations(imu.accData.Data)
-	dg := GyroChanges(gyroData.Data, diff.Nanoseconds())
-	imu.gyro = GyroRotations(dg, imu.gyro)
-	rotations := GyroRotations(dg, imu.rotations)
+	accRotations := calcaAcelerometerRotations(imu.accData.Data)
+	dg := gyroChanges(gyroData.Data, diff.Nanoseconds())
+	imu.gyro = calcGyroRotations(dg, imu.gyro)
+	rotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = types.Rotations{
-		Roll:  LowPassFilter(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
-		Pitch: LowPassFilter(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
+		Roll:  lowPassFilter(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
+		Pitch: lowPassFilter(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
 
@@ -83,7 +82,7 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	}, devErr
 }
 
-func GyroChanges(gyro types.XYZ, timeInterval int64) types.RotationsChanges {
+func gyroChanges(gyro types.XYZ, timeInterval int64) types.RotationsChanges {
 	dt := goDurToDt(timeInterval)
 	return types.RotationsChanges{
 		DRoll:  gyro.X * dt,
@@ -92,7 +91,7 @@ func GyroChanges(gyro types.XYZ, timeInterval int64) types.RotationsChanges {
 	}
 }
 
-func GyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rotations {
+func calcGyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rotations {
 	return types.Rotations{
 		Roll:  math.Mod(gyro.Roll+dGyro.DRoll, 360),
 		Pitch: math.Mod(gyro.Pitch+dGyro.DPitch, 360),
@@ -100,9 +99,9 @@ func GyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rot
 	}
 }
 
-func AccelerometerRotations(data types.XYZ) types.Rotations {
-	roll := utils.RadToDeg(math.Atan2(data.Y, data.Z))
-	pitch := utils.RadToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
+func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
+	roll := radToDeg(math.Atan2(data.Y, data.Z))
+	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
 	return types.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
@@ -110,7 +109,11 @@ func AccelerometerRotations(data types.XYZ) types.Rotations {
 	}
 }
 
-func LowPassFilter(prevValue float64, newValue float64, coefficient float64) float64 {
+func radToDeg(x float64) float64 {
+	return x / math.Pi * 180
+}
+
+func lowPassFilter(prevValue float64, newValue float64, coefficient float64) float64 {
 	v1 := (1 - coefficient) * prevValue
 	v2 := coefficient * newValue
 	// fmt.Println(v1, v2, lpfc)

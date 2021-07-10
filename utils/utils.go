@@ -45,11 +45,3 @@ func IntToTowsComplementBytes(a int16) (h, l uint8) {
 func CalcVectorLen(v types.XYZ) float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y + v.Z*v.Z)
 }
-
-func LowPassFilter(currValue, newValue, coefficient float64) float64 {
-	return currValue*(1-coefficient) + newValue*coefficient
-}
-
-func RadToDeg(x float64) float64 {
-	return x / math.Pi * 180
-}
