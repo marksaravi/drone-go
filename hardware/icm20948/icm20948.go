@@ -11,8 +11,8 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func reg(reg uint16) *Register {
-	return &Register{
+func reg(reg uint16) *register {
+	return &register{
 		address: uint8(reg),
 		bank:    uint8(reg >> 8),
 	}
@@ -36,7 +36,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Config) (types.ImuDevice, error) {
+func NewICM20948Driver(config Icm20948Config) (types.ImuDevice, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func NewICM20948Driver(config Config) (types.ImuDevice, error) {
 	if err != nil {
 		return nil, err
 	}
-	dev := MemsICM20948{
+	dev := memsICM20948{
 		Name:    "ICM20948",
 		SPI:     d,
 		Conn:    conn,
@@ -65,12 +65,12 @@ func NewICM20948Driver(config Config) (types.ImuDevice, error) {
 	return &dev, nil
 }
 
-func (dev *MemsICM20948) Close() {
+func (dev *memsICM20948) Close() {
 	dev.SPI.Close()
 	fmt.Println("Closing ", dev.Name)
 }
 
-func (dev *MemsICM20948) readReg(address uint8, len int) ([]uint8, error) {
+func (dev *memsICM20948) readReg(address uint8, len int) ([]uint8, error) {
 	w := make([]uint8, len+1)
 	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
@@ -78,7 +78,7 @@ func (dev *MemsICM20948) readReg(address uint8, len int) ([]uint8, error) {
 	return r[1:], err
 }
 
-func (dev *MemsICM20948) writeReg(address uint8, data ...uint8) error {
+func (dev *memsICM20948) writeReg(address uint8, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (dev *MemsICM20948) writeReg(address uint8, data ...uint8) error {
 	return err
 }
 
-func (dev *MemsICM20948) selRegisterBank(regbank uint8) error {
+func (dev *memsICM20948) selRegisterBank(regbank uint8) error {
 	if regbank == dev.regbank {
 		return nil
 	}
@@ -95,13 +95,13 @@ func (dev *MemsICM20948) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *MemsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
+func (dev *memsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
 	reg := reg(register)
 	dev.selRegisterBank(reg.bank)
 	return dev.readReg(reg.address, len)
 }
 
-func (dev *MemsICM20948) writeRegister(register uint16, data ...uint8) error {
+func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -111,7 +111,7 @@ func (dev *MemsICM20948) writeRegister(register uint16, data ...uint8) error {
 }
 
 // WhoAmI return value for ICM-20948 is 0xEA
-func (dev *MemsICM20948) WhoAmI() (name string, id uint8, err error) {
+func (dev *memsICM20948) WhoAmI() (name string, id uint8, err error) {
 	name = "ICM-20948"
 	data, err := dev.readRegister(WHO_AM_I, 1)
 	id = data[0]
@@ -119,7 +119,7 @@ func (dev *MemsICM20948) WhoAmI() (name string, id uint8, err error) {
 }
 
 // InitDevice applies initial configurations to device
-func (dev *MemsICM20948) InitDevice() error {
+func (dev *memsICM20948) InitDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -134,12 +134,12 @@ func (dev *MemsICM20948) InitDevice() error {
 }
 
 // ReadSensorsRawData reads all Accl and Gyro data
-func (dev *MemsICM20948) ReadSensorsRawData() ([]uint8, error) {
+func (dev *memsICM20948) ReadSensorsRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
 // ReadSensors reads Accelerometer and Gyro data
-func (dev *MemsICM20948) ReadSensors() (
+func (dev *memsICM20948) ReadSensors() (
 	acc types.SensorData,
 	gyro types.SensorData,
 	mag types.SensorData,

@@ -9,7 +9,7 @@ import (
 )
 
 func initiateIMU(config ApplicationConfig) types.IMU {
-	dev, err := icm20948.NewICM20948Driver(config.Devices.ICM20948)
+	dev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
 	if err != nil {
 		os.Exit(1)
 	}

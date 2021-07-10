@@ -9,13 +9,13 @@ import (
 )
 
 // GetGyro get accelerometer data
-func (dev *MemsICM20948) GetGyro() *types.Sensor {
+func (dev *memsICM20948) GetGyro() *types.Sensor {
 	return &(dev.gyro)
 }
 
 // InitGyroscope initialise the Gyroscope
-func (dev *MemsICM20948) InitGyroscope() error {
-	config, ok := dev.GetGyro().GetConfig().(GyroscopeConfig)
+func (dev *memsICM20948) InitGyroscope() error {
+	config, ok := dev.GetGyro().GetConfig().(gyroscopeConfig)
 	if !ok {
 		log.Fatal("Gyro config mismatch")
 	}
@@ -48,8 +48,8 @@ func (dev *MemsICM20948) InitGyroscope() error {
 	return err
 }
 
-func (dev *MemsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
-	gyroConfig, _ := dev.GetGyro().GetConfig().(GyroscopeConfig)
+func (dev *memsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
+	gyroConfig, _ := dev.GetGyro().GetConfig().(gyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	x := float64(utils.TowsComplementUint8ToInt16(data[0], data[1])) / scale
 	y := float64(utils.TowsComplementUint8ToInt16(data[2], data[3])) / scale
@@ -61,7 +61,7 @@ func (dev *MemsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	}, nil
 }
 
-func (dev *MemsICM20948) setGyroOffset(address uint16, offset int16) {
+func (dev *memsICM20948) setGyroOffset(address uint16, offset int16) {
 	var h uint8 = uint8(uint16(offset) >> 8)
 	var l uint8 = uint8(uint16(offset) & 0xFF)
 	dev.writeRegister(address, h, l)

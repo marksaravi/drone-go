@@ -9,13 +9,13 @@ import (
 )
 
 // GetAcc get accelerometer data
-func (dev *MemsICM20948) GetAcc() *types.Sensor {
+func (dev *memsICM20948) GetAcc() *types.Sensor {
 	return &(dev.acc)
 }
 
 // InitAccelerometer initialise the Accelerometer
-func (dev *MemsICM20948) InitAccelerometer() error {
-	config, ok := dev.GetAcc().GetConfig().(AccelerometerConfig)
+func (dev *memsICM20948) InitAccelerometer() error {
+	config, ok := dev.GetAcc().GetConfig().(accelerometerConfig)
 	if !ok {
 		log.Fatal("Accelerometer config mismatch")
 	}
@@ -44,8 +44,8 @@ func (dev *MemsICM20948) InitAccelerometer() error {
 	return err
 }
 
-func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
-	config, _ := dev.GetAcc().GetConfig().(AccelerometerConfig)
+func (dev *memsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
+	config, _ := dev.GetAcc().GetConfig().(accelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
 	xRaw := utils.TowsComplementUint8ToInt16(data[0], data[1])
 	yRaw := utils.TowsComplementUint8ToInt16(data[2], data[3])
@@ -61,7 +61,7 @@ func (dev *MemsICM20948) processAccelerometerData(data []byte) (types.XYZ, error
 	}, nil
 }
 
-func (dev *MemsICM20948) setAccOffset(address uint16, offset int16) {
+func (dev *memsICM20948) setAccOffset(address uint16, offset int16) {
 	offsets, _ := dev.readRegister(address, 2)
 	var h uint8 = uint8((uint16(offset) >> 7) & 0xFF)
 	var l uint8 = uint8((uint16(offset)<<1)&0xFF) | (offsets[1] & 0x01)

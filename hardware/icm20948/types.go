@@ -6,14 +6,14 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-// Register is the address and bank of the register
-type Register struct {
+// register is the address and bank of the register
+type register struct {
 	address uint8
 	bank    uint8
 }
 
-// MemsICM20948 is icm20948 mems
-type MemsICM20948 struct {
+// memsICM20948 is icm20948 mems
+type memsICM20948 struct {
 	Name string
 	*sysfs.SPI
 	spi.Conn
@@ -23,8 +23,8 @@ type MemsICM20948 struct {
 	mag     types.Sensor
 }
 
-// AccelerometerConfig is the configurations for Accelerometer
-type AccelerometerConfig struct {
+// accelerometerConfig is the configurations for Accelerometer
+type accelerometerConfig struct {
 	SensitivityLevel     string        `yaml:"sensitivity_level"`
 	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
 	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
@@ -32,8 +32,8 @@ type AccelerometerConfig struct {
 	Offsets              types.Offsets `yaml:"offsets"`
 }
 
-// GyroscopeConfig is the configuration for Gyroscope
-type GyroscopeConfig struct {
+// gyroscopeConfig is the configuration for Gyroscope
+type gyroscopeConfig struct {
 	SensitivityLevel     string        `yaml:"sensitivity_level"`
 	LowPassFilterEnabled bool          `yaml:"lowpass_filter_enabled"`
 	LowPassFilterConfig  int           `yaml:"lowpass_filter_config"`
@@ -41,14 +41,14 @@ type GyroscopeConfig struct {
 	Offsets              types.Offsets `yaml:"offsets"`
 }
 
-// MagnetometerConfig is the configuration for Magnetometer
-type MagnetometerConfig struct {
+// magnetometerConfig is the configuration for Magnetometer
+type magnetometerConfig struct {
 }
 
-type Config struct {
+type Icm20948Config struct {
 	BusNumber  int                 `yaml:"bus_number"`
 	ChipSelect int                 `yaml:"chip_select"`
-	AccConfig  AccelerometerConfig `yaml:"accelerometer"`
-	GyroConfig GyroscopeConfig     `yaml:"gyroscope"`
-	MagConfig  MagnetometerConfig  `yaml:"magnetometer"`
+	AccConfig  accelerometerConfig `yaml:"accelerometer"`
+	GyroConfig gyroscopeConfig     `yaml:"gyroscope"`
+	MagConfig  magnetometerConfig  `yaml:"magnetometer"`
 }
