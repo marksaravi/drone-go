@@ -106,3 +106,7 @@ type Throttle struct {
 type PID interface {
 	Update(ImuRotations) []Throttle
 }
+
+type ESCsHandler interface {
+	SetThrottles([]Throttle)
+}

@@ -8,8 +8,8 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-// ImuDevice is interface for the imu mems
-type ImuDevice interface {
+// imuHardware is interface for the imu mems
+type imuHardware interface {
 	Close()
 	InitDevice() error
 	ReadSensorsRawData() ([]byte, error)
@@ -18,7 +18,7 @@ type ImuDevice interface {
 }
 
 type imuModule struct {
-	dev                         ImuDevice
+	dev                         imuHardware
 	accData                     types.SensorData
 	rotations                   types.Rotations
 	gyro                        types.Rotations
@@ -29,7 +29,7 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func NewIMU(imuMems ImuDevice, config types.ImuConfig) imuModule {
+func NewIMU(imuMems imuHardware, config types.ImuConfig) imuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
 	return imuModule{

@@ -33,6 +33,13 @@ const (
 	PCA9685OutDrv  = 0x04
 )
 
+const (
+	Frequency       float32 = 400
+	MinPW           float32 = 0.001
+	MaxPW           float32 = 0.002
+	MaxApplicablePW float32 = MinPW + (MaxPW-MinPW)/15
+)
+
 //PCA9685 is struct for PCA9685
 type PCA9685 struct {
 	name       string
@@ -175,16 +182,20 @@ func (d *PCA9685) Start(frequency float32) error {
 
 //SetPulseWidth sets PWM for a channel
 func (d *PCA9685) SetPulseWidth(channel int, pulseWidth float32) {
-	period := float32(1) / d.frequency
-	on := pulseWidth / period * 4096
-	d.setPWM(channel, 0, uint16(on))
+	if pulseWidth <= MaxApplicablePW {
+		period := float32(1) / d.frequency
+		on := pulseWidth / period * 4096
+		d.setPWM(channel, 0, uint16(on))
+	}
 }
 
 //SetPulseWidthAll sets PWM for all channels
 func (d *PCA9685) SetPulseWidthAll(pulseWidth float32) {
-	period := float32(1) / d.frequency
-	on := pulseWidth / period * 4096
-	d.setAllPWM(0, uint16(on))
+	if pulseWidth <= MaxPW {
+		period := float32(1) / d.frequency
+		on := pulseWidth / period * 4096
+		d.setAllPWM(0, uint16(on))
+	}
 }
 
 // Close closes the i2c connection

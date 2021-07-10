@@ -1,13 +1,8 @@
 package esc
 
-const (
-	MinPW float32 = 0.001
-	MaxPW float32 = 0.002
-	Frequency float32 = 400
-)
+import "github.com/MarkSaravi/drone-go/types"
 
-//PWMDevice is the electronic board that generate PWM
-type PWMDevice interface {
+type esc interface {
 	Start(frequency float32) error
 	SetPulseWidth(channel int, pulseWidth float32)
 	SetPulseWidthAll(pulseWidth float32)
@@ -16,14 +11,18 @@ type PWMDevice interface {
 	Close()
 }
 
-//ESC is the PWM manager
-type ESC struct {
-	PWMDevice
+type escsHandler struct {
+	esc       esc
+	throttles []types.Throttle
 }
 
-//NewESC create an ESC
-func NewESC(device PWMDevice) *ESC {
-	return &ESC{
-		PWMDevice: device,
+func (h *escsHandler) SetThrottles(throttles []types.Throttle) {
+	h.throttles = throttles
+	for _, throttle := range h.throttles {
+		h.esc.SetPulseWidth(throttle.Motor, throttle.Value)
 	}
+}
+
+func NewESCsHandler() *escsHandler {
+	return &escsHandler{}
 }

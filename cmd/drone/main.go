@@ -17,6 +17,7 @@ func main() {
 	commandChannel := createCommandChannel(&wg)
 	imu := initiateIMU(appConfig)
 	pid := flightcontrol.CreatePidController()
+	esc := createESCsHandler()
 
 	var running bool = true
 	imu.ResetReadingTimes()
@@ -24,7 +25,8 @@ func main() {
 		if imu.CanRead() {
 			rotations, err := imu.GetRotations()
 			if err == nil {
-				pid.Update(rotations)
+				throttles := pid.Update(rotations)
+				esc.SetThrottles(throttles)
 				udpLogger.Send(rotations)
 			}
 		}

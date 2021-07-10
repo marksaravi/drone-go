@@ -7,7 +7,6 @@ import (
 	"github.com/MarkSaravi/drone-go/connectors/gpio"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
-	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 )
 
@@ -17,8 +16,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	pca9685, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
-	escs := esc.NewESC(pca9685)
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -35,17 +33,17 @@ func main() {
 	defer breaker.SetLow()
 	defer breaker.SetAsInput()
 
-	defer escs.SetPulseWidthAll(0)
-	defer escs.Close()
-	escs.Start(float32(esc.Frequency))
-	fmt.Println("setting max pulse width: ", esc.MaxPW)
+	defer pwmDev.SetPulseWidthAll(0)
+	defer pwmDev.Close()
+	pwmDev.Start(float32(pca9685.Frequency))
+	fmt.Println("setting max pulse width: ", pca9685.MaxPW)
 	fmt.Println("turn on ESCs")
-	escs.SetPulseWidthAll(esc.MaxPW)
+	pwmDev.SetPulseWidthAll(pca9685.MaxPW)
 	time.Sleep(1 * time.Second)
 	breaker.SetHigh()
 	time.Sleep(12 * time.Second)
-	fmt.Println("setting min pulse width: ", esc.MinPW)
-	escs.SetPulseWidthAll(esc.MinPW)
+	fmt.Println("setting min pulse width: ", pca9685.MinPW)
+	pwmDev.SetPulseWidthAll(pca9685.MinPW)
 	time.Sleep(12 * time.Second)
 	fmt.Println("turn off ESCs")
 	breaker.SetLow()
