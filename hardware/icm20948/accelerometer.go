@@ -15,7 +15,7 @@ func (dev *memsICM20948) GetAcc() *types.Sensor {
 
 // InitAccelerometer initialise the Accelerometer
 func (dev *memsICM20948) InitAccelerometer() error {
-	config, ok := dev.GetAcc().GetConfig().(accelerometerConfig)
+	config, ok := dev.GetAcc().GetConfig().(types.AccelerometerConfig)
 	if !ok {
 		log.Fatal("Accelerometer config mismatch")
 	}
@@ -45,7 +45,7 @@ func (dev *memsICM20948) InitAccelerometer() error {
 }
 
 func (dev *memsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
-	config, _ := dev.GetAcc().GetConfig().(accelerometerConfig)
+	config, _ := dev.GetAcc().GetConfig().(types.AccelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
 	xRaw := utils.TowsComplementUint8ToInt16(data[0], data[1])
 	yRaw := utils.TowsComplementUint8ToInt16(data[2], data[3])

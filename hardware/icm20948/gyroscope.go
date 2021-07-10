@@ -15,7 +15,7 @@ func (dev *memsICM20948) GetGyro() *types.Sensor {
 
 // InitGyroscope initialise the Gyroscope
 func (dev *memsICM20948) InitGyroscope() error {
-	config, ok := dev.GetGyro().GetConfig().(gyroscopeConfig)
+	config, ok := dev.GetGyro().GetConfig().(types.GyroscopeConfig)
 	if !ok {
 		log.Fatal("Gyro config mismatch")
 	}
@@ -49,7 +49,7 @@ func (dev *memsICM20948) InitGyroscope() error {
 }
 
 func (dev *memsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
-	gyroConfig, _ := dev.GetGyro().GetConfig().(gyroscopeConfig)
+	gyroConfig, _ := dev.GetGyro().GetConfig().(types.GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	x := float64(utils.TowsComplementUint8ToInt16(data[0], data[1])) / scale
 	y := float64(utils.TowsComplementUint8ToInt16(data[2], data[3])) / scale

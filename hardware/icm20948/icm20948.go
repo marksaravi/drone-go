@@ -11,6 +11,17 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
+// memsICM20948 is icm20948 mems
+type memsICM20948 struct {
+	Name string
+	*sysfs.SPI
+	spi.Conn
+	regbank uint8
+	acc     types.Sensor
+	gyro    types.Sensor
+	mag     types.Sensor
+}
+
 func reg(reg uint16) *types.Register {
 	return &types.Register{
 		Address: uint8(reg),
@@ -36,7 +47,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config Icm20948Config) (*memsICM20948, error) {
+func NewICM20948Driver(config types.Icm20948Config) (*memsICM20948, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err

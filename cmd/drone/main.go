@@ -7,7 +7,6 @@ import (
 	"os"
 
 	flightcontrol "github.com/MarkSaravi/drone-go/flight-control"
-	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/modules/esc"
 	"github.com/MarkSaravi/drone-go/modules/imu"
@@ -15,12 +14,6 @@ import (
 	"github.com/MarkSaravi/drone-go/types"
 	"gopkg.in/yaml.v3"
 )
-
-type ApplicationConfig struct {
-	Flight   types.FlightConfig      `yaml:"flight_control"`
-	Hardware hardware.HardwareConfig `yaml:"devices"`
-	UDP      types.UdpLoggerConfig   `yaml:"udp"`
-}
 
 func main() {
 	appConfig := readConfigs()
@@ -33,7 +26,7 @@ func main() {
 	flightControl.Start()
 }
 
-func initiateIMU(config ApplicationConfig) types.IMU {
+func initiateIMU(config types.ApplicationConfig) types.IMU {
 	dev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
 	if err != nil {
 		os.Exit(1)
@@ -46,8 +39,8 @@ func initiateIMU(config ApplicationConfig) types.IMU {
 	return &imudevice
 }
 
-func readConfigs() ApplicationConfig {
-	var config ApplicationConfig
+func readConfigs() types.ApplicationConfig {
+	var config types.ApplicationConfig
 
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {

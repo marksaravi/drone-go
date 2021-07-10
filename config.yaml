@@ -33,6 +33,8 @@ devices:
         X: -12
         Y: -6
         Z: -8
+    magnetometer:
+      sensitivity_level: '0'
 
 udp:
   enabled: true
