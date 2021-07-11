@@ -13,7 +13,7 @@ func main() {
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(appConfig)
 	pid := flightcontrol.CreatePidController()
-	esc := esc.NewESCsHandler()
+	esc := esc.NewESCsHandler(appConfig.Flight.Esc)
 	flightControl := flightcontrol.CreateFlightControl(imu, pid, esc, udpLogger)
 
 	flightControl.Start()

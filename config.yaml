@@ -8,8 +8,8 @@ flight_control:
     acc_lowpass_filter_coefficient: 0.005
     lowpass_filter_coefficient: 0.01
   esc:
-    # max_esc_pulse_width is float between 1 to 1.5
-    max_esc_pulse_width_ms: 1.2
+    update_frequency: 50
+    max_pulse_width_ms: 1.2 # a float between 1 to 1.5, more than 1.5 may damage your brushless motors
 
 devices:
   icm20948:

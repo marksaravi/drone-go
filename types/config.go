@@ -50,7 +50,8 @@ type PidConfig struct {
 }
 
 type EscConfig struct {
-	MaxPulseWidth float32 `yaml:"max_esc_pulse_width_ms"`
+	UpdateFrequency int     `yaml:"update_frequency"`
+	MaxPulseWidth   float32 `yaml:"max_pulse_width_ms"`
 }
 
 type FlightConfig struct {

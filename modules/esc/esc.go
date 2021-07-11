@@ -24,9 +24,11 @@ type breaker interface {
 }
 
 type escsHandler struct {
-	esc       esc
-	breaker   breaker
-	throttles []types.Throttle
+	esc            esc
+	breaker        breaker
+	throttles      []types.Throttle
+	lastUpdate     time.Time
+	updateInterval time.Duration
 }
 
 func (h *escsHandler) MotorsOn() {
@@ -45,12 +47,18 @@ func (h *escsHandler) MotorsOff() {
 
 func (h *escsHandler) SetThrottles(throttles []types.Throttle) {
 	h.throttles = throttles
-	for _, throttle := range h.throttles {
-		h.esc.SetThrottle(throttle.Motor, throttle.Value)
+	if time.Since(h.lastUpdate) < h.updateInterval {
+		return
 	}
+	h.lastUpdate = time.Now()
+	go func() {
+		for _, throttle := range h.throttles {
+			h.esc.SetThrottle(throttle.Motor, throttle.Value)
+		}
+	}()
 }
 
-func NewESCsHandler() *escsHandler {
+func NewESCsHandler(config types.EscConfig) *escsHandler {
 	i2cConnection, err := i2c.Open("/dev/i2c-1")
 	if err != nil {
 		fmt.Println(err)
@@ -68,7 +76,9 @@ func NewESCsHandler() *escsHandler {
 		os.Exit(1)
 	}
 	return &escsHandler{
-		esc:     pwmDev,
-		breaker: breaker,
+		esc:            pwmDev,
+		breaker:        breaker,
+		lastUpdate:     time.Now(),
+		updateInterval: time.Second / time.Duration(config.UpdateFrequency),
 	}
 }
