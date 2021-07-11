@@ -56,10 +56,10 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) type
 	var skipOffset int = 1
 	var maxDataPerPacket = dataPerPacket
 	if dataPerPacket > udpConfig.MaxDataPerPacket {
-		skipOffset = int(math.Ceil(float64(dataPerPacket) / float64(udpConfig.MaxDataPerPacket)))
 		maxDataPerPacket = udpConfig.MaxDataPerPacket
+		skipOffset = int(math.Ceil(float64(dataPerPacket) / float64(udpConfig.MaxDataPerPacket)))
 	}
-	fmt.Println("DPP: ", dataPerPacket, maxDataPerPacket, skipOffset)
+	fmt.Println("DPP: ", imuDataPerSecond, dataPerPacket, maxDataPerPacket, skipOffset)
 
 	return &udpLogger{
 		conn:                 conn,
@@ -97,7 +97,7 @@ func (l *udpLogger) Send(imuRotations types.ImuRotations) {
 func (l *udpLogger) sendData() {
 	if l.enabled && l.dataPerPacketCounter == l.dataPerPacket {
 		jsonPayload := fmt.Sprintf("{\"d\":[%s],\"dps\":%d}",
-			strings.Join(l.buffer, ","),
+			strings.Join(l.buffer[0:l.bufferCounter], ","),
 			l.imuDataPerSecond,
 		)
 		l.dataPerPacketCounter = 0

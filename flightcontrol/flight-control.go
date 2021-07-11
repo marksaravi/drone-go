@@ -28,8 +28,8 @@ func (fc *flightControl) Start() {
 		if fc.imu.CanRead() {
 			rotations, err := fc.imu.GetRotations()
 			if err == nil {
-				throttles := fc.pid.Update(rotations)
-				fc.esc.SetThrottles(throttles)
+				_ = fc.pid.Update(rotations)
+				// fc.esc.SetThrottles(throttles)
 				fc.logger.Send(rotations)
 			}
 		}
