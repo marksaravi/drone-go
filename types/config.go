@@ -67,8 +67,8 @@ type UdpLoggerConfig struct {
 	Enabled          bool   `yaml:"enabled"`
 	IP               string `yaml:"ip"`
 	Port             int    `yaml:"port"`
-	PacketsPerSecond int    `yaml:"udp_packets_per_second"`
-	DataPerSecond    int    `yaml:"udp_data_per_second"`
+	PacketsPerSecond int    `yaml:"packets_per_second"`
+	MaxDataPerPacket int    `yaml:"max_data_per_packet"`
 }
 
 type ApplicationConfig struct {

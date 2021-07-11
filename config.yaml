@@ -40,5 +40,5 @@ udp:
   enabled: true
   ip: 192.168.1.103
   port: 6431
-  udp_packets_per_second: 20 # set to zero for disabling udp send
-  udp_data_per_second: 320
+  packets_per_second: 20 # set to zero for disabling udp send
+  max_data_per_packet: 20
