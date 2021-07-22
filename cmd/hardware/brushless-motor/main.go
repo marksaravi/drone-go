@@ -53,7 +53,7 @@ func main() {
 		}
 	}
 	breaker.MotorsOff()
-	pwmDev.SetPulseWidthAll(0)
+	pwmDev.StopAll()
 	pwmDev.Close()
 	fmt.Println("finished")
 }

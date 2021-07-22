@@ -60,10 +60,15 @@ func (d *PCA9685) writeAddress(offset uint8) (err error) {
 	return d.connection.WriteBytes(d.address, offset)
 }
 
+func getOffTime(frequency float32, pulseWidth float32) (on uint16, off uint16) {
+	period := float32(1) / frequency
+	on = 0
+	off = uint16(pulseWidth / period * 4096)
+	return
+}
+
 func (d *PCA9685) setPWM(channel int, pulseWidth float32) (err error) {
-	period := float32(1) / d.frequency
-	var on uint16 = 0
-	off := uint16(pulseWidth / period * 4096)
+	on, off := getOffTime(d.frequency, pulseWidth)
 
 	if err := d.writeByte(byte(PCA9685LED0OnL+4*channel), byte(on)&0xFF); err != nil {
 		return err
@@ -130,7 +135,8 @@ func (d *PCA9685) setFrequency(freq float32) error {
 	return nil
 }
 
-func (d *PCA9685) setAllPWM(on uint16, off uint16) (err error) {
+func (d *PCA9685) setAllPWM(pulseWidth float32) (err error) {
+	on, off := getOffTime(d.frequency, pulseWidth)
 	if err := d.writeByte(byte(PCA9685AlliedOnL), byte(on)&0xFF); err != nil {
 		return err
 	}
@@ -152,7 +158,7 @@ func (d *PCA9685) setAllPWM(on uint16, off uint16) (err error) {
 
 //Start starts the device with a frequency
 func (d *PCA9685) Start() error {
-	if err := d.setAllPWM(0, 0); err != nil {
+	if err := d.setAllPWM(0); err != nil {
 		return err
 	}
 
@@ -194,15 +200,6 @@ func (d *PCA9685) SetPulseWidth(channel int, pulseWidth float32) {
 	d.setPWM(channel, pulseWidth)
 }
 
-//SetPulseWidthAll sets PWM for all channels
-func (d *PCA9685) SetPulseWidthAll(pulseWidth float32) {
-	if pulseWidth <= MaxPW {
-		period := float32(1) / d.frequency
-		on := pulseWidth / period * 4096
-		d.setAllPWM(0, uint16(on))
-	}
-}
-
 // Close closes the i2c connection
 func (d *PCA9685) Close() {
 	d.connection.Close()
@@ -216,7 +213,7 @@ func (d *PCA9685) Halt() (err error) {
 
 //StopAll stops all channels
 func (d *PCA9685) StopAll() {
-	d.setAllPWM(0, 0)
+	d.setAllPWM(0)
 }
 
 // NewPCA9685Driver creates new PCA9685 driver
