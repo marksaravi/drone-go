@@ -60,7 +60,11 @@ func (d *PCA9685) writeAddress(offset uint8) (err error) {
 	return d.connection.WriteBytes(d.address, offset)
 }
 
-func (d *PCA9685) setPWM(channel int, on uint16, off uint16) (err error) {
+func (d *PCA9685) setPWM(channel int, pulseWidth float32) (err error) {
+	period := float32(1) / d.frequency
+	var on uint16 = 0
+	off := uint16(pulseWidth / period * 4096)
+
 	if err := d.writeByte(byte(PCA9685LED0OnL+4*channel), byte(on)&0xFF); err != nil {
 		return err
 	}
@@ -187,11 +191,7 @@ func (d *PCA9685) SetThrottle(motor int, throttle float32) {
 
 //SetPulseWidth sets PWM for a channel
 func (d *PCA9685) SetPulseWidth(channel int, pulseWidth float32) {
-	if pulseWidth <= MaxApplicablePW {
-		period := float32(1) / d.frequency
-		on := pulseWidth / period * 4096
-		d.setPWM(channel, 0, uint16(on))
-	}
+	d.setPWM(channel, pulseWidth)
 }
 
 //SetPulseWidthAll sets PWM for all channels
