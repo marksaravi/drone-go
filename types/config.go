@@ -51,7 +51,7 @@ type PidConfig struct {
 
 type EscConfig struct {
 	UpdateFrequency int     `yaml:"update_frequency"`
-	MaxPulseWidth   float32 `yaml:"max_pulse_width_ms"`
+	MaxThrottle     float32 `yaml:"max_throttle"`
 }
 
 type FlightConfig struct {

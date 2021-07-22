@@ -9,7 +9,7 @@ flight_control:
     lowpass_filter_coefficient: 0.01
   esc:
     update_frequency: 50
-    max_pulse_width_ms: 1.2 # a float between 1 to 1.5, more than 1.5 may damage your brushless motors
+    max_throttle: 15 # a float between 0 100
 
 devices:
   icm20948:

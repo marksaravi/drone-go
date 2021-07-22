@@ -1,9 +1,11 @@
 package pca9685
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
+	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 )
 
 //PCA9685Address is i2c address of device
@@ -34,18 +36,19 @@ const (
 )
 
 const (
-	Frequency       float32 = 400
-	MinPW           float32 = 0.001
-	MaxPW           float32 = 0.002
-	MaxApplicablePW float32 = MinPW + (MaxPW-MinPW)*0.1
+	Frequency float32 = 400
+	MinPW     float32 = 0.001
+	MaxPW     float32 = 0.002
 )
 
 //PCA9685 is struct for PCA9685
 type PCA9685 struct {
-	name       string
-	address    uint8
-	connection *i2c.Connection
-	frequency  float32
+	name           string
+	address        uint8
+	connection     *i2c.Connection
+	frequency      float32
+	maxThrottle    float32
+	motorToChannel map[int]int
 }
 
 func (d *PCA9685) readByte(offset uint8) (b uint8, err error) {
@@ -190,14 +193,47 @@ func (d *PCA9685) Start() error {
 	return err
 }
 
-//SetPulseWidth sets PWM for a channel
+//SetThrottle sets PWM for a channel
 func (d *PCA9685) SetThrottle(motor int, throttle float32) {
-	d.SetPulseWidth(motor, MinPW+throttle*(MaxPW-MinPW))
+	if throttle > 100 || throttle > d.maxThrottle || throttle < 0 {
+		return
+	}
+	d.setPWM(d.motorToChannel[motor], MinPW+throttle/100*(MaxPW-MinPW))
 }
 
-//SetPulseWidth sets PWM for a channel
-func (d *PCA9685) SetPulseWidth(channel int, pulseWidth float32) {
-	d.setPWM(channel, pulseWidth)
+//Calibrate
+func Calibrate() {
+	i2cConnection, err := i2c.Open("/dev/i2c-1")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	pwmDev, err := NewPCA9685Driver(PCA9685Address, i2cConnection, 0, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	breaker := powerbreaker.NewPowerBreaker()
+	pwmDev.Start()
+	fmt.Println("setting max pulse width: ", MaxPW)
+	fmt.Println("turn on ESCs")
+	pwmDev.setAllPWM(MaxPW)
+	time.Sleep(1 * time.Second)
+	breaker.MotorsOn()
+	time.Sleep(12 * time.Second)
+	fmt.Println("setting min pulse width: ", MinPW)
+	pwmDev.setAllPWM(MinPW)
+	time.Sleep(12 * time.Second)
+	fmt.Println("turn off ESCs")
+	breaker.MotorsOff()
+	time.Sleep(1 * time.Second)
+	pwmDev.setAllPWM(0)
+	pwmDev.Close()
 }
 
 // Close closes the i2c connection
@@ -217,10 +253,19 @@ func (d *PCA9685) StopAll() {
 }
 
 // NewPCA9685Driver creates new PCA9685 driver
-func NewPCA9685Driver(address uint8, connection *i2c.Connection) (*PCA9685, error) {
+func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorToChannel map[int]int) (*PCA9685, error) {
+	mtc := motorToChannel
+	if mtc == nil {
+		mtc = make(map[int]int)
+		for ch := 0; ch < 16; ch++ {
+			mtc[ch] = ch
+		}
+	}
 	return &PCA9685{
-		name:       "PCA9685",
-		address:    address,
-		connection: connection,
+		name:           "PCA9685",
+		address:        address,
+		connection:     connection,
+		maxThrottle:    maxThrottle,
+		motorToChannel: mtc,
 	}, nil
 }

@@ -14,15 +14,13 @@ func main() {
 	channel := flag.Int("ch", 0, "ESC channel")
 	flag.Parse()
 
-	maxPower := 25
-
 	i2cConnection, err := i2c.Open("/dev/i2c-1")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, map[int]int{0: 0, 1: 1, 2: 2, 3: 4})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -36,21 +34,22 @@ func main() {
 	breaker := powerbreaker.NewPowerBreaker()
 
 	pwmDev.Start()
-	fmt.Println("channel: ", *channel, ", PW:  ", pca9685.MinPW)
-	pwmDev.SetPulseWidth(*channel, pca9685.MinPW)
+	fmt.Println("channel: ", *channel)
+	pwmDev.SetThrottle(*channel, 0)
 	breaker.MotorsOn()
 	time.Sleep(4 * time.Second)
-	power := 1
-	inc := 1
-	for power != 0 {
-		pw := float32(pca9685.MaxPW-pca9685.MinPW)*float32(power)/100 + float32(pca9685.MinPW)
-		fmt.Println("channel: ", *channel, ", PW:  ", pw)
-		pwmDev.SetPulseWidth(*channel, pw)
-		time.Sleep(250 * time.Millisecond)
-		power += inc
-		if power == maxPower {
-			inc = -1
+	const maxThrottle float32 = 10
+	const steps int = 10
+	var dThrottle float32 = maxThrottle / float32(steps)
+	var throttle float32 = 0
+	for repeat := 0; repeat < 4; repeat++ {
+		for step := 0; step < steps; step++ {
+			fmt.Println("channel: ", *channel, ", throttle:  ", throttle, "%")
+			pwmDev.SetThrottle(*channel, throttle)
+			time.Sleep(250 * time.Millisecond)
+			throttle += dThrottle
 		}
+		dThrottle = -dThrottle
 	}
 	breaker.MotorsOff()
 	pwmDev.StopAll()

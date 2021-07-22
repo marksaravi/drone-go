@@ -69,7 +69,11 @@ func NewESCsHandler(config types.EscConfig) *escsHandler {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection)
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, config.MaxThrottle, map[int]int{0: 0, 1: 1, 2: 2, 3: 4})
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	err = pwmDev.Start()
 	if err != nil {
 		fmt.Println(err)
