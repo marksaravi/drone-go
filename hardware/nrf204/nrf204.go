@@ -24,11 +24,21 @@ const (
 
 const (
 	NRF_CONFIG byte = 0x00
+	EN_AA      byte = 0x01
+	EN_RXADDR  byte = 0x02
+	SETUP_AW   byte = 0x03
 	SETUP_RETR byte = 0x04
+	RF_CH      byte = 0x5
 	RF_SETUP   byte = 0x06
 	NRF_STATUS byte = 0x07
-	RX_ADDRESS byte = 0x0A
+	RX_PW_P0   byte = 0x11
+	RX_ADDR_P0 byte = 0x0A
+	DYNPD      byte = 0x1C
+	FEATURE    byte = 0x1D
+	FLUSH_TX   byte = 0xE1
+	FLUSH_RX   byte = 0xE2
 )
+
 const (
 	RF24_PA_MIN byte = iota
 	RF24_PA_LOW
@@ -76,6 +86,37 @@ func (radio *nrf204l01) setRetries(delay byte, count byte) {
 	retry := utils.Min(delay, 15)<<4 | utils.Min(count, 15)
 	radio.writeRegisterByte(SETUP_RETR, retry)
 	radio.serDataSize()
+	radio.writeRegisterByte(DYNPD, 0)
+	radio.writeRegisterByte(EN_AA, 0x3F)  // enable auto-ack on all pipes
+	radio.writeRegisterByte(EN_RXADDR, 3) // only open RX pipes 0 & 1
+	radio.setPayloadSize(32)              // set static payload size to 32 (max) bytes by default
+	radio.setAddressWidth(5)              // set default address length to (max) 5 bytes
+
+	// Set up default configuration.  Callers can always change it later.
+	// This channel should be universally safe and not bleed over into adjacent
+	// spectrum.
+	radio.setChannel(76)
+
+	// Reset current status
+	// Notice reset and flush is the last thing we do
+	radio.writeRegisterByte(NRF_STATUS, 112)
+
+	// Flush buffers
+	radio.flushRx()
+	radio.flushTx()
+
+	// Clear CONFIG register:
+	//      Reflect all IRQ events on IRQ pin
+	//      Enable PTX
+	//      Power Up
+	//      16-bit CRC (CRC required by auto-ack)
+	// Do not write CE high so radio will remain in standby I mode
+	// PTX should use only 22uA of power
+	radio.writeRegisterByte(NRF_CONFIG, 12)
+	configReg, _ := radio.readRegisterByte(NRF_CONFIG)
+	fmt.Println("config reg: ", configReg)
+
+	radio.powerUp()
 }
 
 func (radio *nrf204l01) serDataSize() {
@@ -90,35 +131,33 @@ func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
 		log.Fatal("Rx Address for Radio link is incorrect")
 	}
 	for i := 0; i < lenb; i++ {
-		radio.address[i] = b[i] - 48
+		radio.address[i] = b[i]
 	}
 	fmt.Println(radio.address)
 }
 
 func (radio *nrf204l01) SetPALevel(level byte, lnaEnable byte) {
-	// r, err := radio.readRegister(RF_SETUP, 1)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// setup := r[0] & 0xF8
-	// l := level
-	// if l > 3 {
-	// 	l = (RF24_PA_MAX << 1) + lnaEnable
-	// } else {
-	// 	l = (l << 1) + lnaEnable
-	// }
-	// data := []byte{setup | l}
-	// radio.writeRegister(RF_SETUP, data)
+	reg, _ := radio.readRegisterByte(RF_SETUP)
+	setup := reg & 0xF8
+
+	if level > 3 { // If invalid level, go to max PA
+		level = (RF24_PA_MAX << 1) + lnaEnable // +1 to support the SI24R1 chip extra bit
+	} else {
+		level = (level << 1) + lnaEnable // Else set level as requested
+	}
+
+	nSetup := setup | level
+	radio.writeRegisterByte(RF_SETUP, nSetup)
 }
 
 func (radio *nrf204l01) StartListening() {
 	radio.powerUp()
-	// var config_reg byte = 0
-	// var status_reg byte = 0
+	radio.writeRegisterByte(NRF_CONFIG, 15)
+	radio.writeRegisterByte(NRF_STATUS, 112)
+	radio.ce.Out(gpio.High)
 
-	// r.writeRegister(NRF_CONFIG, config_reg)
-	// r.writeRegister(NRF_STATUS, status_reg)
-	// r.writeRegister(RX_ADDRESS, r.address)
+	// Restore the pipe0 address, if exists
+	radio.writeRegister(RX_ADDR_P0, radio.address)
 }
 
 func (radio *nrf204l01) IsAvailable() bool {
@@ -130,6 +169,7 @@ func (radio *nrf204l01) Read() []byte {
 }
 
 func (radio *nrf204l01) powerUp() {
+	radio.writeRegisterByte(NRF_CONFIG, 12)
 }
 
 func (radio *nrf204l01) readRegister(address byte, datalen int) ([]byte, error) {
@@ -147,6 +187,30 @@ func (radio *nrf204l01) writeRegister(address byte, data []byte) error {
 
 func (radio *nrf204l01) writeRegisterByte(address byte, data byte) error {
 	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
+}
+
+func (radio *nrf204l01) setPayloadSize(size byte) {
+	var i byte
+	for i = 0; i < 6; i++ {
+		radio.writeRegisterByte(RX_PW_P0+i, size)
+	}
+}
+
+func (radio *nrf204l01) setAddressWidth(addressWidth byte) {
+	radio.writeRegisterByte(SETUP_AW, addressWidth%4)
+	addressWidth = (addressWidth % 4) + 2
+}
+
+func (radio *nrf204l01) setChannel(channel byte) {
+	radio.writeRegisterByte(RF_CH, channel)
+}
+
+func (radio *nrf204l01) flushRx() {
+	radio.writeRegisterByte(FLUSH_RX, 0xFF)
+}
+
+func (radio *nrf204l01) flushTx() {
+	radio.writeRegisterByte(FLUSH_TX, 0xFF)
 }
 
 func initPin(pinName string) gpio.PinIO {

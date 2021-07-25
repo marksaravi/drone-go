@@ -14,3 +14,10 @@ func Min(a byte, b byte) byte {
 	}
 	return b
 }
+
+func Max(a byte, b byte) byte {
+	if a >= b {
+		return a
+	}
+	return b
+}
