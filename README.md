@@ -53,4 +53,5 @@ mkdir ~/go/pkg/
 mkdir ~/go/bin/
 ```
 ## Enabling SPI1 in Raspberry Pi
-Add `dtoverlay=spi1-2cs` to ***/boot/config.txt***
+Add `dtoverlay=spi1-3cs` to ***/boot/config.txt***  
+Use GPIO16 as CS. This is SPI1.CS2

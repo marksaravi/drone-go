@@ -18,7 +18,7 @@ func main() {
 			CE: "GPIO26",
 		},
 		BusNumber:  1,
-		ChipSelect: 0,
+		ChipSelect: 2,
 		RxAddress:  "03896",
 	}
 	if _, err := host.Init(); err != nil {

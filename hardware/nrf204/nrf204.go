@@ -6,21 +6,41 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
 )
 
 const (
-	NRF_CONFIG    byte = 0x00
-	RF_SETUP      byte = 0x06
-	NRF_STATUS    byte = 0x07
-	RF24_PA_MIN   byte = 0
-	RF24_PA_LOW   byte = 1
-	RF24_PA_HIGH  byte = 2
-	RF24_PA_MAX   byte = 3
-	RF24_PA_ERROR byte = 4
-	RX_ADDRESS    byte = 0x0A
+	R_REGISTER byte = 0x1F
+	W_REGISTER byte = 0x20
+)
+const (
+	CLEAR_CONFIG      = 0x00
+	EN_CRC       byte = 0b00001000
+	CRCO         byte = 0b00000100
+)
+
+const (
+	NRF_CONFIG byte = 0x00
+	SETUP_RETR byte = 0x04
+	RF_SETUP   byte = 0x06
+	NRF_STATUS byte = 0x07
+	RX_ADDRESS byte = 0x0A
+)
+const (
+	RF24_PA_MIN byte = iota
+	RF24_PA_LOW
+	RF24_PA_HIGH
+	RF24_PA_MAX
+	RF24_PA_ERROR
+)
+
+const (
+	RF24_1MBPS byte = iota
+	RF24_2MBPS
+	RF24_250KBPS
 )
 
 const addressSize int = 5
@@ -39,9 +59,6 @@ type nrf204l01 struct {
 }
 
 func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
-	// SPI1 only supports Mode0
-	//to enable SPI1 in raspberry pi follow instructions here https://docs.rs/rppal/0.8.1/rppal/spi/index.html
-	// or add "dtoverlay=spi1-2cs" to /boot/config.txt
 	return &nrf204l01{
 		ce:      initPin(config.GPIO.CE),
 		address: make([]byte, addressSize),
@@ -50,8 +67,19 @@ func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 }
 
 func (radio *nrf204l01) Init() {
-	radio.setRadioMode(Receiver)
-	time.Sleep(time.Millisecond * 200)
+	radio.ce.Out(gpio.Low)
+	time.Sleep(time.Millisecond * 10)
+	radio.setRetries(5, 15)
+}
+
+func (radio *nrf204l01) setRetries(delay byte, count byte) {
+	retry := utils.Min(delay, 15)<<4 | utils.Min(count, 15)
+	radio.writeRegisterByte(SETUP_RETR, retry)
+	radio.serDataSize()
+}
+
+func (radio *nrf204l01) serDataSize() {
+	radio.writeRegisterByte(RF_SETUP, 1)
 }
 
 func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
@@ -68,19 +96,19 @@ func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
 }
 
 func (radio *nrf204l01) SetPALevel(level byte, lnaEnable byte) {
-	r, err := radio.readRegister(RF_SETUP, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	setup := r[0] & 0xF8
-	l := level
-	if l > 3 {
-		l = (RF24_PA_MAX << 1) + lnaEnable
-	} else {
-		l = (l << 1) + lnaEnable
-	}
-	data := []byte{setup | l}
-	radio.writeRegister(RF_SETUP, data)
+	// r, err := radio.readRegister(RF_SETUP, 1)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// setup := r[0] & 0xF8
+	// l := level
+	// if l > 3 {
+	// 	l = (RF24_PA_MAX << 1) + lnaEnable
+	// } else {
+	// 	l = (l << 1) + lnaEnable
+	// }
+	// data := []byte{setup | l}
+	// radio.writeRegister(RF_SETUP, data)
 }
 
 func (radio *nrf204l01) StartListening() {
@@ -101,36 +129,24 @@ func (radio *nrf204l01) Read() []byte {
 	return []byte{0, 0, 0, 0}
 }
 
-func (radio *nrf204l01) initRadio() {
-}
-
-func (radio *nrf204l01) setRadioMode(mode RadioMode) {
-	if mode == Receiver {
-		radio.ce.Out(gpio.Low)
-	} else {
-		radio.ce.Out(gpio.High)
-	}
-}
-
 func (radio *nrf204l01) powerUp() {
 }
 
 func (radio *nrf204l01) readRegister(address byte, datalen int) ([]byte, error) {
-	w := make([]byte, datalen+1)
-	r := make([]byte, datalen+1)
-	w[0] = address
-	err := radio.conn.Tx(w, r)
-	return r[1:], err
+	return utils.ReadSPI(address&R_REGISTER, datalen, radio.conn)
 }
+
+func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
+	b, err := utils.ReadSPI(address&R_REGISTER, 1, radio.conn)
+	return b[0], err
+}
+
 func (radio *nrf204l01) writeRegister(address byte, data []byte) error {
-	datalen := len(data)
-	w := make([]byte, datalen+1)
-	w[0] = address
-	for i := 0; i < datalen; i++ {
-		w[i+1] = data[i]
-	}
-	err := radio.conn.Tx(w, nil)
-	return err
+	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
+}
+
+func (radio *nrf204l01) writeRegisterByte(address byte, data byte) error {
+	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
 }
 
 func initPin(pinName string) gpio.PinIO {

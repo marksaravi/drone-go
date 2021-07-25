@@ -7,3 +7,10 @@ func TowsComplementUint8ToInt16(h, l uint8) int16 {
 
 	return int16((h16 << 8) | l16)
 }
+
+func Min(a byte, b byte) byte {
+	if a <= b {
+		return a
+	}
+	return b
+}
