@@ -18,7 +18,7 @@ func main() {
 			CE: "GPIO26",
 		},
 		BusNumber:  1,
-		ChipSelect: 2,
+		ChipSelect: 0,
 		RxAddress:  "03896",
 	}
 	if _, err := host.Init(); err != nil {
@@ -36,11 +36,12 @@ func main() {
 	fmt.Println("Start")
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
-	receiver.OpenReadingPipe()
+	receiver.OpenReadingPipe(config.RxAddress)
 	// receiver.SetPALevel()
 	// receiver.StartListening()
 	// receiver.IsAvailable()
 	// data := receiver.Read()
 	// fmt.Println(data)
+	spibus.Close()
 	fmt.Println("End")
 }

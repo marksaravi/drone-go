@@ -1,7 +1,9 @@
 package nrf204
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/gpio"
@@ -23,6 +25,13 @@ const (
 
 const addressSize int = 5
 
+type RadioMode int
+
+const (
+	Receiver RadioMode = iota
+	Transmitter
+)
+
 type nrf204l01 struct {
 	ce      gpio.PinOut
 	address []byte
@@ -41,9 +50,21 @@ func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 }
 
 func (radio *nrf204l01) Init() {
+	radio.setRadioMode(Receiver)
+	time.Sleep(time.Millisecond * 200)
 }
 
-func (radio *nrf204l01) OpenReadingPipe() {
+func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
+	// This implementation only supports the single pipe for now
+	b := []byte(rxAddress)
+	lenb := len(b)
+	if lenb != len(radio.address) {
+		log.Fatal("Rx Address for Radio link is incorrect")
+	}
+	for i := 0; i < lenb; i++ {
+		radio.address[i] = b[i] - 48
+	}
+	fmt.Println(radio.address)
 }
 
 func (radio *nrf204l01) SetPALevel(level byte, lnaEnable byte) {
@@ -69,7 +90,6 @@ func (radio *nrf204l01) StartListening() {
 
 	// r.writeRegister(NRF_CONFIG, config_reg)
 	// r.writeRegister(NRF_STATUS, status_reg)
-	// r.ce.Out(gpio.High)
 	// r.writeRegister(RX_ADDRESS, r.address)
 }
 
@@ -82,6 +102,14 @@ func (radio *nrf204l01) Read() []byte {
 }
 
 func (radio *nrf204l01) initRadio() {
+}
+
+func (radio *nrf204l01) setRadioMode(mode RadioMode) {
+	if mode == Receiver {
+		radio.ce.Out(gpio.Low)
+	} else {
+		radio.ce.Out(gpio.High)
+	}
 }
 
 func (radio *nrf204l01) powerUp() {
