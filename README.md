@@ -52,3 +52,5 @@ mkdir ~/go/src/
 mkdir ~/go/pkg/
 mkdir ~/go/bin/
 ```
+## Enabling SPI1 in Raspberry Pi
+Add `dtoverlay=spi1-2cs` to ***/boot/config.txt***
