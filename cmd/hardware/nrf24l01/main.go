@@ -37,11 +37,18 @@ func main() {
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
 	receiver.OpenReadingPipe(config.RxAddress)
-	// receiver.SetPALevel()
-	// receiver.StartListening()
-	// receiver.IsAvailable()
+	receiver.SetPALevel(0, 1)
+	receiver.StartListening()
+	receiver.Read(32)
+	for {
+		if receiver.IsAvailable(0) {
+			fmt.Println("Data Ready")
+			receiver.Read(32)
+		}
+	}
+
 	// data := receiver.Read()
 	// fmt.Println(data)
-	spibus.Close()
-	fmt.Println("End")
+	// spibus.Close()
+	// fmt.Println("End")
 }

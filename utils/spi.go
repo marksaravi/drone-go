@@ -12,7 +12,7 @@ func ReadSPI(address byte, datalen int, conn spi.Conn) ([]byte, error) {
 	return r[1:], err
 }
 
-func WriteSPI(address byte, data []byte, conn spi.Conn) error {
+func WriteSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
 	w := make([]byte, datalen+1)
 	r := make([]byte, datalen+1)
@@ -23,5 +23,5 @@ func WriteSPI(address byte, data []byte, conn spi.Conn) error {
 	}
 
 	err := conn.Tx(w, r)
-	return err
+	return r, err
 }
