@@ -39,11 +39,9 @@ func main() {
 	receiver.OpenReadingPipe(config.RxAddress)
 	receiver.SetPALevel()
 	receiver.StartListening()
-	receiver.Read(32)
 	for {
 		if receiver.IsAvailable(0) {
 			fmt.Println("Data Ready")
-			receiver.Read(32)
 		}
 	}
 

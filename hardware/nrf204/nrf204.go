@@ -126,40 +126,48 @@ func (radio *nrf204l01) SetPALevel() {
 func (radio *nrf204l01) StartListening() {
 	radio.powerUp()
 	radio.writeRegisterByte(NRF_CONFIG, 15)
+	d, _ := radio.readRegisterByte(NRF_CONFIG)
+	fmt.Println("NRF_CONFIG: ", d)
 	radio.writeRegisterByte(NRF_STATUS, 112)
+	d, _ = radio.readRegisterByte(NRF_STATUS)
+	time.Sleep(250 * time.Millisecond)
+	fmt.Println("NRF_STATUS: ", d)
 	radio.ce.Out(gpio.High)
-	radio.writeRegister(RX_ADDR_P0, radio.address)
+	var offset byte
+	for offset = 0; int(offset) < len(radio.address); offset++ {
+		radio.writeRegisterByte(RX_ADDR_P0+offset, radio.address[offset])
+	}
+
+	fmt.Println(radio.address)
+	var i byte
+	for i = 0; i < 5; i++ {
+		d, _ = radio.readRegisterByte(RX_ADDR_P0 + i)
+		fmt.Println("add", i, " :", d)
+	}
 }
 
 func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
-	pipe := (status >> 1) & 0x77
-	fmt.Println(pipe)
-	return pipe <= 5
+
+	return status == 64
 }
 
 func (radio *nrf204l01) getStatus() byte {
-	// status, _ := radio.readRegisterByte(NRF_STATUS)
-	r, _ := radio.writeRegisterByte(0xFF, 0xFF)
-	return r[0]
+	status, _ := radio.readRegisterByte(NRF_STATUS)
+	if status != 0 {
+		fmt.Println(status)
+	}
+	return status
 }
 
 func (radio *nrf204l01) powerUp() {
 	radio.writeRegisterByte(NRF_CONFIG, 14)
 }
 
-// func (radio *nrf204l01) readRegister(address byte, datalen int) ([]byte, error) {
-// 	return utils.ReadSPI(address&R_REGISTER, datalen, radio.conn)
-// }
-
 func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
 	b, err := utils.ReadSPI(address&R_REGISTER, 1, radio.conn)
 	return b[0], err
-}
-
-func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
 }
 
 func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
@@ -187,16 +195,6 @@ func (radio *nrf204l01) flushRx() {
 
 func (radio *nrf204l01) flushTx() {
 	radio.writeRegisterByte(FLUSH_TX, 0xFF)
-}
-
-func (radio *nrf204l01) Read(len byte) {
-
-	// Fetch the payload
-	// radio.readPayload(buf, len)
-
-	//Clear the only applicable interrupt flags
-	radio.writeRegisterByte(NRF_STATUS, 72)
-
 }
 
 func initPin(pinName string) gpio.PinIO {
