@@ -79,47 +79,42 @@ func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 func (radio *nrf204l01) Init() {
 	radio.ce.Out(gpio.Low)
 	time.Sleep(time.Millisecond * 10)
-	radio.setRetries(5, 15)
+	radio.initRadio()
 }
 
-func (radio *nrf204l01) setRetries(delay byte, count byte) {
-	retry := utils.Min(delay, 15)<<4 | utils.Min(count, 15)
-	radio.writeRegisterByte(SETUP_RETR, retry)
-	radio.serDataSize()
+func (radio *nrf204l01) initRadio() {
+	radio.setRetries()
+	radio.setDataRate()
 	radio.writeRegisterByte(DYNPD, 0)
-	radio.writeRegisterByte(EN_AA, 0x3F)  // enable auto-ack on all pipes
-	radio.writeRegisterByte(EN_RXADDR, 3) // only open RX pipes 0 & 1
-	radio.setPayloadSize(32)              // set static payload size to 32 (max) bytes by default
-	radio.setAddressWidth(5)              // set default address length to (max) 5 bytes
-
-	// Set up default configuration.  Callers can always change it later.
-	// This channel should be universally safe and not bleed over into adjacent
-	// spectrum.
-	radio.setChannel(76)
-
-	// Reset current status
-	// Notice reset and flush is the last thing we do
+	radio.writeRegisterByte(EN_AA, 0x3F)
+	radio.writeRegisterByte(EN_RXADDR, 3)
+	radio.setPayloadSize()
+	radio.setAddressWidth()
+	radio.setChannel()
 	radio.writeRegisterByte(NRF_STATUS, 112)
-
-	// Flush buffers
-	radio.flushRx()
-	radio.flushTx()
-
-	// Clear CONFIG register:
-	//      Reflect all IRQ events on IRQ pin
-	//      Enable PTX
-	//      Power Up
-	//      16-bit CRC (CRC required by auto-ack)
-	// Do not write CE high so radio will remain in standby I mode
-	// PTX should use only 22uA of power
-	radio.writeRegisterByte(NRF_CONFIG, 12)
-	configReg, _ := radio.readRegisterByte(NRF_CONFIG)
-	fmt.Println("config reg: ", configReg)
-
-	radio.powerUp()
 }
 
-func (radio *nrf204l01) serDataSize() {
+func (radio *nrf204l01) setRetries() {
+	radio.writeRegisterByte(SETUP_RETR, 95)
+
+	// radio.flushRx()
+	// radio.flushTx()
+
+	// // Clear CONFIG register:
+	// //      Reflect all IRQ events on IRQ pin
+	// //      Enable PTX
+	// //      Power Up
+	// //      16-bit CRC (CRC required by auto-ack)
+	// // Do not write CE high so radio will remain in standby I mode
+	// // PTX should use only 22uA of power
+	// radio.writeRegisterByte(NRF_CONFIG, 12)
+	// configReg, _ := radio.readRegisterByte(NRF_CONFIG)
+	// fmt.Println("config reg: ", configReg)
+
+	// radio.powerUp()
+}
+
+func (radio *nrf204l01) setDataRate() {
 	radio.writeRegisterByte(RF_SETUP, 1)
 }
 
@@ -195,19 +190,19 @@ func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, erro
 	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
 }
 
-func (radio *nrf204l01) setPayloadSize(size byte) {
+func (radio *nrf204l01) setPayloadSize() {
 	var i byte
 	for i = 0; i < 6; i++ {
-		radio.writeRegisterByte(RX_PW_P0+i, size)
+		radio.writeRegisterByte(RX_PW_P0+i, 32)
 	}
 }
 
-func (radio *nrf204l01) setAddressWidth(addressWidth byte) {
-	radio.writeRegisterByte(SETUP_AW, addressWidth%4)
+func (radio *nrf204l01) setAddressWidth() {
+	radio.writeRegisterByte(SETUP_AW, 3)
 }
 
-func (radio *nrf204l01) setChannel(channel byte) {
-	radio.writeRegisterByte(RF_CH, channel)
+func (radio *nrf204l01) setChannel() {
+	radio.writeRegisterByte(RF_CH, 76)
 }
 
 func (radio *nrf204l01) flushRx() {
