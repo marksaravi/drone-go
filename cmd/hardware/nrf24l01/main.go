@@ -39,10 +39,11 @@ func main() {
 	receiver.OpenReadingPipe(config.RxAddress)
 	receiver.SetPALevel()
 	receiver.StartListening()
+	fmt.Println(receiver.ReadPayload())
 	for {
 		if receiver.IsAvailable(0) {
 			fmt.Println("Data Ready")
-			// fmt.Println(receiver.ReadPayload())
+			fmt.Println(receiver.ReadPayload())
 		}
 	}
 

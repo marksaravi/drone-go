@@ -156,7 +156,7 @@ func (radio *nrf204l01) getStatus() byte {
 }
 
 func (radio *nrf204l01) ReadPayload() []byte {
-	payload, _ := radio.readRegister(R_RX_PAYLOAD, 32)
+	payload, _ := utils.ReadSPI(R_RX_PAYLOAD, 32, radio.conn)
 	radio.writeRegisterByte(NRF_STATUS, 64)
 	return payload
 }
@@ -198,11 +198,11 @@ func (radio *nrf204l01) setChannel() {
 }
 
 func (radio *nrf204l01) flushRx() {
-	radio.writeRegisterByte(FLUSH_RX, 0xFF)
+	utils.WriteSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
 }
 
 func (radio *nrf204l01) flushTx() {
-	radio.writeRegisterByte(FLUSH_TX, 0xFF)
+	utils.WriteSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
 }
 
 func initPin(pinName string) gpio.PinIO {
