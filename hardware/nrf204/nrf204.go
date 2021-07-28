@@ -23,20 +23,21 @@ const (
 )
 
 const (
-	NRF_CONFIG byte = 0x00
-	EN_AA      byte = 0x01
-	EN_RXADDR  byte = 0x02
-	SETUP_AW   byte = 0x03
-	SETUP_RETR byte = 0x04
-	RF_CH      byte = 0x5
-	RF_SETUP   byte = 0x06
-	NRF_STATUS byte = 0x07
-	RX_PW_P0   byte = 0x11
-	RX_ADDR_P0 byte = 0x0A
-	DYNPD      byte = 0x1C
-	FEATURE    byte = 0x1D
-	FLUSH_TX   byte = 0xE1
-	FLUSH_RX   byte = 0xE2
+	NRF_CONFIG   byte = 0x00
+	EN_AA        byte = 0x01
+	EN_RXADDR    byte = 0x02
+	SETUP_AW     byte = 0x03
+	SETUP_RETR   byte = 0x04
+	RF_CH        byte = 0x5
+	RF_SETUP     byte = 0x06
+	NRF_STATUS   byte = 0x07
+	RX_PW_P0     byte = 0x11
+	RX_ADDR_P0   byte = 0x0A
+	DYNPD        byte = 0x1C
+	FEATURE      byte = 0x1D
+	R_RX_PAYLOAD byte = 0x61
+	FLUSH_TX     byte = 0xE1
+	FLUSH_RX     byte = 0xE2
 )
 
 const (
@@ -133,40 +134,48 @@ func (radio *nrf204l01) StartListening() {
 	time.Sleep(250 * time.Millisecond)
 	fmt.Println("NRF_STATUS: ", d)
 	radio.ce.Out(gpio.High)
-	var offset byte
-	for offset = 0; int(offset) < len(radio.address); offset++ {
-		radio.writeRegisterByte(RX_ADDR_P0+offset, radio.address[offset])
-	}
+	radio.writeRegister(RX_ADDR_P0, radio.address)
 
 	fmt.Println(radio.address)
-	var i byte
-	for i = 0; i < 5; i++ {
-		d, _ = radio.readRegisterByte(RX_ADDR_P0 + i)
-		fmt.Println("add", i, " :", d)
-	}
+	data, _ := radio.readRegister(RX_ADDR_P0, 5)
+	fmt.Println("add:", data)
 }
 
 func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
+	// fmt.Println("Status: ", status)
 	pipe := (status >> 1) & 0x07
-
-	return pipe <= 5
+	dr := status & 0b01000000
+	return pipe <= 5 && dr == 64
 }
 
 func (radio *nrf204l01) getStatus() byte {
 	status, _ := radio.writeRegisterByte(0xFF, 0xFF)
-
 	return status[0]
+}
+
+func (radio *nrf204l01) ReadPayload() []byte {
+	payload, _ := radio.readRegister(R_RX_PAYLOAD, 32)
+	radio.writeRegisterByte(NRF_STATUS, 64)
+	return payload
 }
 
 func (radio *nrf204l01) powerUp() {
 	radio.writeRegisterByte(NRF_CONFIG, 14)
 }
+func (radio *nrf204l01) readRegister(address byte, len int) ([]byte, error) {
+	b, err := utils.ReadSPI(address&R_REGISTER, len, radio.conn)
+	return b, err
+}
 
 func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
 	b, err := utils.ReadSPI(address&R_REGISTER, 1, radio.conn)
 	return b[0], err
+}
+
+func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
+	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
 }
 
 func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
