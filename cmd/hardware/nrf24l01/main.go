@@ -37,7 +37,7 @@ func main() {
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
 	receiver.OpenReadingPipe(config.RxAddress)
-	receiver.SetPALevel(0, 1)
+	receiver.SetPALevel()
 	receiver.StartListening()
 	receiver.Read(32)
 	for {

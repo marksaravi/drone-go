@@ -119,18 +119,8 @@ func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
 	fmt.Println(radio.address)
 }
 
-func (radio *nrf204l01) SetPALevel(level byte, lnaEnable byte) {
-	reg, _ := radio.readRegisterByte(RF_SETUP)
-	setup := reg & 0xF8
-
-	if level > 3 { // If invalid level, go to max PA
-		level = (RF24_PA_MAX << 1) + lnaEnable // +1 to support the SI24R1 chip extra bit
-	} else {
-		level = (level << 1) + lnaEnable // Else set level as requested
-	}
-
-	nSetup := setup | level
-	radio.writeRegisterByte(RF_SETUP, nSetup)
+func (radio *nrf204l01) SetPALevel() {
+	radio.writeRegisterByte(RF_SETUP, 1)
 }
 
 func (radio *nrf204l01) StartListening() {
@@ -138,8 +128,6 @@ func (radio *nrf204l01) StartListening() {
 	radio.writeRegisterByte(NRF_CONFIG, 15)
 	radio.writeRegisterByte(NRF_STATUS, 112)
 	radio.ce.Out(gpio.High)
-
-	// Restore the pipe0 address, if exists
 	radio.writeRegister(RX_ADDR_P0, radio.address)
 }
 
