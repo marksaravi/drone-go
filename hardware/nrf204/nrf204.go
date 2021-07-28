@@ -149,16 +149,15 @@ func (radio *nrf204l01) StartListening() {
 func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
+	pipe := (status >> 1) & 0x07
 
-	return status == 64
+	return pipe <= 5
 }
 
 func (radio *nrf204l01) getStatus() byte {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	if status != 0 {
-		fmt.Println(status)
-	}
-	return status
+	status, _ := radio.writeRegisterByte(0xFF, 0xFF)
+
+	return status[0]
 }
 
 func (radio *nrf204l01) powerUp() {
