@@ -92,26 +92,14 @@ func (radio *nrf204l01) initRadio() {
 	radio.setAddressWidth()
 	radio.setChannel()
 	radio.writeRegisterByte(NRF_STATUS, 112)
+	radio.flushRx()
+	radio.flushTx()
+	radio.writeRegisterByte(NRF_CONFIG, 12)
+	radio.powerUp()
 }
 
 func (radio *nrf204l01) setRetries() {
 	radio.writeRegisterByte(SETUP_RETR, 95)
-
-	// radio.flushRx()
-	// radio.flushTx()
-
-	// // Clear CONFIG register:
-	// //      Reflect all IRQ events on IRQ pin
-	// //      Enable PTX
-	// //      Power Up
-	// //      16-bit CRC (CRC required by auto-ack)
-	// // Do not write CE high so radio will remain in standby I mode
-	// // PTX should use only 22uA of power
-	// radio.writeRegisterByte(NRF_CONFIG, 12)
-	// configReg, _ := radio.readRegisterByte(NRF_CONFIG)
-	// fmt.Println("config reg: ", configReg)
-
-	// radio.powerUp()
 }
 
 func (radio *nrf204l01) setDataRate() {
@@ -170,7 +158,7 @@ func (radio *nrf204l01) getStatus() byte {
 }
 
 func (radio *nrf204l01) powerUp() {
-	radio.writeRegisterByte(NRF_CONFIG, 12)
+	radio.writeRegisterByte(NRF_CONFIG, 14)
 }
 
 // func (radio *nrf204l01) readRegister(address byte, datalen int) ([]byte, error) {
