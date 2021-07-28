@@ -42,8 +42,7 @@ func main() {
 	fmt.Println(receiver.ReadPayload())
 	for {
 		if receiver.IsAvailable(0) {
-			fmt.Println("Data Ready")
-			fmt.Println(receiver.ReadPayload())
+			fmt.Println(string(receiver.ReadPayload()))
 		}
 	}
 
