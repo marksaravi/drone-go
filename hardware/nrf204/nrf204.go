@@ -33,6 +33,7 @@ const (
 	NRF_STATUS   byte = 0x07
 	RX_PW_P0     byte = 0x11
 	RX_ADDR_P0   byte = 0x0A
+	TX_ADDR      byte = 0x10
 	DYNPD        byte = 0x1C
 	FEATURE      byte = 0x1D
 	R_RX_PAYLOAD byte = 0x61
@@ -120,8 +121,21 @@ func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
 	fmt.Println(radio.address)
 }
 
+func (radio *nrf204l01) OpenWritingPipe() {
+	radio.writeRegister(RX_ADDR_P0, radio.address)
+	radio.writeRegister(TX_ADDR, radio.address)
+}
+
 func (radio *nrf204l01) SetPALevel() {
 	radio.writeRegisterByte(RF_SETUP, 1)
+}
+
+func (radio *nrf204l01) stopListening() {
+	radio.ce.Out(gpio.Low)
+	time.Sleep(10 * time.Millisecond)
+	radio.flushTx()
+	radio.writeRegisterByte(NRF_CONFIG, 14)
+	radio.writeRegisterByte(EN_RXADDR, 3)
 }
 
 func (radio *nrf204l01) StartListening() {
