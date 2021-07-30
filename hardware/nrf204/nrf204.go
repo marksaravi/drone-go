@@ -55,9 +55,8 @@ const (
 )
 
 const (
-	RF24_1MBPS byte = iota
-	RF24_2MBPS
-	RF24_250KBPS
+	DATA_RATE_1MBPS byte = iota
+	DATA_RATE_2MBPS
 )
 
 const addressSize int = 5
@@ -91,7 +90,7 @@ func (radio *nrf204l01) Init() {
 
 func (radio *nrf204l01) initRadio() {
 	radio.setRetries(5, 15)
-	radio.setDataRate()
+	radio.setDataRate(DATA_RATE_1MBPS)
 	radio.writeRegisterByte(DYNPD, 0)
 	radio.writeRegisterByte(EN_AA, 0x3F)
 	radio.writeRegisterByte(EN_RXADDR, 3)
@@ -118,8 +117,14 @@ func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
 	radio.writeRegisterByte(SETUP_RETR, setup)
 }
 
-func (radio *nrf204l01) setDataRate() {
-	radio.writeRegisterByte(RF_SETUP, 1)
+func (radio *nrf204l01) setDataRate(dataRate byte) {
+	dr := dataRate
+	if dr > DATA_RATE_2MBPS {
+		dr = DATA_RATE_2MBPS
+	}
+	setup, _ := radio.readRegisterByte(RF_SETUP)
+
+	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
 }
 
 func (radio *nrf204l01) saveAddress(rxAddress string) {
