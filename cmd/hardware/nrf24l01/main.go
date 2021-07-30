@@ -47,10 +47,9 @@ func main() {
 	fmt.Println("Start")
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
-	receiver.OpenReadingPipe(config.RxAddress)
+	receiver.SetAddress(config.RxAddress)
 	receiver.SetPALevel()
 	receiver.StartListening()
-	fmt.Println(receiver.ReadPayload())
 	for {
 		if receiver.IsAvailable(0) {
 			data := byteArrayToInt16Array(receiver.ReadPayload(), 32)

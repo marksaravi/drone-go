@@ -108,8 +108,7 @@ func (radio *nrf204l01) setDataRate() {
 	radio.writeRegisterByte(RF_SETUP, 1)
 }
 
-func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
-	// This implementation only supports the single pipe for now
+func (radio *nrf204l01) saveAddress(rxAddress string) {
 	b := []byte(rxAddress)
 	lenb := len(b)
 	if lenb != len(radio.address) {
@@ -121,7 +120,10 @@ func (radio *nrf204l01) OpenReadingPipe(rxAddress string) {
 	fmt.Println(radio.address)
 }
 
-func (radio *nrf204l01) OpenWritingPipe() {
+func (radio *nrf204l01) SetAddress(rxAddress string) {
+	radio.saveAddress(rxAddress)
+	radio.writeRegister(RX_ADDR_P0, []byte{0, 0, 0, 0, 0})
+	radio.writeRegister(TX_ADDR, []byte{0, 0, 0, 0, 0})
 	radio.writeRegister(RX_ADDR_P0, radio.address)
 	radio.writeRegister(TX_ADDR, radio.address)
 }
@@ -148,7 +150,6 @@ func (radio *nrf204l01) StartListening() {
 	time.Sleep(250 * time.Millisecond)
 	fmt.Println("NRF_STATUS: ", d)
 	radio.ce.Out(gpio.High)
-	radio.writeRegister(RX_ADDR_P0, radio.address)
 
 	fmt.Println(radio.address)
 	data, _ := radio.readRegister(RX_ADDR_P0, 5)
