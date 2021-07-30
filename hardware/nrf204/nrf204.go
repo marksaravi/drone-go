@@ -90,7 +90,7 @@ func (radio *nrf204l01) Init() {
 }
 
 func (radio *nrf204l01) initRadio() {
-	radio.setRetries()
+	radio.setRetries(5, 15)
 	radio.setDataRate()
 	radio.writeRegisterByte(DYNPD, 0)
 	radio.writeRegisterByte(EN_AA, 0x3F)
@@ -105,8 +105,17 @@ func (radio *nrf204l01) initRadio() {
 	radio.setPower(ON)
 }
 
-func (radio *nrf204l01) setRetries() {
-	radio.writeRegisterByte(SETUP_RETR, 95)
+func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
+	nr := numRetransmit
+	if nr > 15 {
+		nr = 15
+	}
+	d := delay
+	if d > 15 {
+		d = 5
+	}
+	setup := nr | (d >> 4)
+	radio.writeRegisterByte(SETUP_RETR, setup)
 }
 
 func (radio *nrf204l01) setDataRate() {
