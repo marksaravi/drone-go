@@ -151,12 +151,13 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 
 func (radio *nrf204l01) StartTransmitting() {
 	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
+	radio.setRetries(5, 0)
 	radio.clearStatus()
 	radio.setRx(OFF)
 	radio.flushRx()
 	radio.flushTx()
-	radio.ce.Out(gpio.High)
+	radio.setPower(ON)
+	radio.ce.Out(gpio.Low)
 }
 
 func (radio *nrf204l01) StartListening() {
@@ -190,10 +191,12 @@ func (radio *nrf204l01) ReadPayload() []byte {
 }
 
 func (radio *nrf204l01) WritePayload(payload []byte) error {
+	radio.ce.Out(gpio.Low)
 	if len(payload) < int(PAYLOAD_SIZE) {
 		return errors.New("payload size error")
 	}
 	_, err := utils.WriteSPI(W_TX_PAYLOAD, payload, radio.conn)
+	radio.ce.Out(gpio.High)
 	return err
 }
 
