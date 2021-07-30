@@ -16,6 +16,12 @@ const (
 	R_REGISTER byte = 0x1F
 	W_REGISTER byte = 0x20
 )
+
+const (
+	ON  bool = true
+	OFF bool = false
+)
+
 const (
 	CLEAR_CONFIG      = 0x00
 	EN_CRC       byte = 0b00001000
@@ -97,7 +103,7 @@ func (radio *nrf204l01) initRadio() {
 	radio.flushRx()
 	radio.flushTx()
 	radio.writeRegisterByte(NRF_CONFIG, 12)
-	radio.powerUp()
+	radio.setPower(ON)
 }
 
 func (radio *nrf204l01) setRetries() {
@@ -132,7 +138,7 @@ func (radio *nrf204l01) SetPALevel() {
 	radio.writeRegisterByte(RF_SETUP, 1)
 }
 
-func (radio *nrf204l01) stopListening() {
+func (radio *nrf204l01) startTransmitting() {
 	radio.ce.Out(gpio.Low)
 	time.Sleep(10 * time.Millisecond)
 	radio.flushTx()
@@ -141,7 +147,7 @@ func (radio *nrf204l01) stopListening() {
 }
 
 func (radio *nrf204l01) StartListening() {
-	radio.powerUp()
+	radio.setPower(ON)
 	radio.writeRegisterByte(NRF_CONFIG, 15)
 	d, _ := radio.readRegisterByte(NRF_CONFIG)
 	fmt.Println("NRF_CONFIG: ", d)
@@ -176,9 +182,23 @@ func (radio *nrf204l01) ReadPayload() []byte {
 	return payload
 }
 
-func (radio *nrf204l01) powerUp() {
-	radio.writeRegisterByte(NRF_CONFIG, 14)
+func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
+	config, _ := radio.readRegisterByte(NRF_CONFIG)
+	if on {
+		radio.writeRegisterByte(NRF_CONFIG, config|bitmask)
+	} else {
+		radio.writeRegisterByte(NRF_CONFIG, config&(^bitmask))
+	}
 }
+
+func (radio *nrf204l01) setPower(isOn bool) {
+	radio.configOnOff(isOn, 0b00000010)
+}
+
+func (radio *nrf204l01) setRx(isOn bool) {
+	radio.configOnOff(isOn, 0b00000001)
+}
+
 func (radio *nrf204l01) readRegister(address byte, len int) ([]byte, error) {
 	b, err := utils.ReadSPI(address&R_REGISTER, len, radio.conn)
 	return b, err
