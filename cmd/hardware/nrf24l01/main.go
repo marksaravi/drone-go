@@ -57,11 +57,13 @@ func main() {
 	// 	}
 	// }
 	receiver.StartTransmitting()
+	payload := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1}
 	for range time.Tick(time.Second) {
-		fmt.Println("send")
-		err := receiver.WritePayload([]byte("01234567890123456789012345678901"))
+		fmt.Println("send ", payload[0])
+		err := receiver.WritePayload(payload)
 		if err != nil {
 			fmt.Println(err)
 		}
+		payload[0] = payload[0] + 1
 	}
 }

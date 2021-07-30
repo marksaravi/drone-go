@@ -2,6 +2,7 @@ package nrf204
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -193,7 +194,7 @@ func (radio *nrf204l01) ReadPayload() []byte {
 func (radio *nrf204l01) WritePayload(payload []byte) error {
 	radio.ce.Out(gpio.Low)
 	if len(payload) < int(PAYLOAD_SIZE) {
-		return errors.New("payload size error")
+		return errors.New(fmt.Sprintf("payload size error %d", len(payload)))
 	}
 	_, err := utils.WriteSPI(W_TX_PAYLOAD, payload, radio.conn)
 	radio.ce.Out(gpio.High)
