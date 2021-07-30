@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -69,16 +68,24 @@ const (
 )
 
 type nrf204l01 struct {
-	ce      gpio.PinOut
-	address []byte
-	conn    spi.Conn
+	ce       gpio.PinOut
+	address  []byte
+	conn     spi.Conn
+	powerDBm byte
 }
 
 func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
+	address := []byte(config.RxAddress)
+	lenAddress := len(address)
+	if lenAddress != addressSize {
+		log.Fatal("Rx Address for Radio link is incorrect")
+	}
+
 	return &nrf204l01{
-		ce:      initPin(config.GPIO.CE),
-		address: make([]byte, addressSize),
-		conn:    conn,
+		ce:       initPin(config.GPIO.CE),
+		address:  address,
+		conn:     conn,
+		powerDBm: config.PowerDBm,
 	}
 }
 
@@ -91,6 +98,7 @@ func (radio *nrf204l01) Init() {
 func (radio *nrf204l01) initRadio() {
 	radio.setPower(OFF)
 	radio.setRetries(5, 15)
+	radio.setPALevel(radio.powerDBm)
 	radio.setDataRate(DATA_RATE_1MBPS)
 	radio.writeRegisterByte(EN_AA, 0x3F)
 	radio.writeRegisterByte(EN_RXADDR, 3)
@@ -99,6 +107,7 @@ func (radio *nrf204l01) initRadio() {
 	radio.setChannel()
 	radio.setCRCEncodingScheme()
 	radio.enableCRC()
+	radio.setAddress()
 }
 
 func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
@@ -124,27 +133,14 @@ func (radio *nrf204l01) setDataRate(dataRate byte) {
 	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
 }
 
-func (radio *nrf204l01) saveAddress(rxAddress string) {
-	b := []byte(rxAddress)
-	lenb := len(b)
-	if lenb != len(radio.address) {
-		log.Fatal("Rx Address for Radio link is incorrect")
-	}
-	for i := 0; i < lenb; i++ {
-		radio.address[i] = b[i]
-	}
-	fmt.Println(radio.address)
-}
-
-func (radio *nrf204l01) SetAddress(rxAddress string) {
-	radio.saveAddress(rxAddress)
+func (radio *nrf204l01) setAddress() {
 	radio.writeRegister(RX_ADDR_P0, []byte{0, 0, 0, 0, 0})
 	radio.writeRegister(TX_ADDR, []byte{0, 0, 0, 0, 0})
 	radio.writeRegister(RX_ADDR_P0, radio.address)
 	radio.writeRegister(TX_ADDR, radio.address)
 }
 
-func (radio *nrf204l01) SetPALevel(rfPower byte) {
+func (radio *nrf204l01) setPALevel(rfPower byte) {
 	setup, _ := radio.readRegisterByte(RF_SETUP)
 	setup = (setup & 0b11110001) | (rfPower << 1)
 	radio.writeRegisterByte(RF_SETUP, setup)
