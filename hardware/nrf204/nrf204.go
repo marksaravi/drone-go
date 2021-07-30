@@ -48,11 +48,10 @@ const (
 )
 
 const (
-	RF24_PA_MIN byte = iota
-	RF24_PA_LOW
-	RF24_PA_HIGH
-	RF24_PA_MAX
-	RF24_PA_ERROR
+	RF_POWER_MINUS_18dBm byte = iota // -18 dBm
+	RF_POWER_MINUS_12dBm             //-12 dBm
+	RF_POWER_MINUS_6dBm              // -6 dBm
+	RF_POWER_0dBm                    // 0 dBm
 )
 
 const (
@@ -134,8 +133,10 @@ func (radio *nrf204l01) SetAddress(rxAddress string) {
 	radio.writeRegister(TX_ADDR, radio.address)
 }
 
-func (radio *nrf204l01) SetPALevel() {
-	radio.writeRegisterByte(RF_SETUP, 1)
+func (radio *nrf204l01) SetPALevel(rfPower byte) {
+	setup, _ := radio.readRegisterByte(RF_SETUP)
+	setup = (setup & 0b11110001) | (rfPower << 1)
+	radio.writeRegisterByte(RF_SETUP, setup)
 }
 
 func (radio *nrf204l01) startTransmitting() {

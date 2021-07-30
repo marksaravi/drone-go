@@ -48,7 +48,7 @@ func main() {
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
 	receiver.SetAddress(config.RxAddress)
-	receiver.SetPALevel()
+	receiver.SetPALevel(nrf204.RF_POWER_MINUS_18dBm)
 	receiver.StartListening()
 	for {
 		if receiver.IsAvailable(0) {
