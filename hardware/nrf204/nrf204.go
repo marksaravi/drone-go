@@ -96,11 +96,8 @@ func (radio *nrf204l01) initRadio() {
 	radio.setPayloadSize()
 	radio.setAddressWidth()
 	radio.setChannel()
-	radio.writeRegisterByte(NRF_STATUS, 112)
-	radio.flushRx()
-	radio.flushTx()
-	radio.writeRegisterByte(NRF_CONFIG, 12)
-	radio.setPower(ON)
+	radio.setCRCEncodingScheme()
+	radio.enableCRC()
 }
 
 func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
@@ -162,18 +159,11 @@ func (radio *nrf204l01) startTransmitting() {
 
 func (radio *nrf204l01) StartListening() {
 	radio.setPower(ON)
-	radio.setRx(ON)
-	radio.setCRCEncodingScheme()
-	radio.enableCRC()
 	radio.clearStatus()
-	d, _ := radio.readRegisterByte(NRF_STATUS)
-	time.Sleep(250 * time.Millisecond)
-	fmt.Println("NRF_STATUS: ", d)
+	radio.setRx(ON)
+	radio.flushRx()
+	radio.flushTx()
 	radio.ce.Out(gpio.High)
-
-	fmt.Println(radio.address)
-	data, _ := radio.readRegister(RX_ADDR_P0, 5)
-	fmt.Println("add:", data)
 }
 
 func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
