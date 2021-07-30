@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
@@ -48,11 +49,19 @@ func main() {
 	fmt.Println("Start")
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
-	receiver.StartListening()
-	for {
-		if receiver.IsAvailable(0) {
-			data := byteArrayToInt16Array(receiver.ReadPayload(), 32)
-			fmt.Println(data)
+	// receiver.StartListening()
+	// for {
+	// 	if receiver.IsAvailable(0) {
+	// 		data := byteArrayToInt16Array(receiver.ReadPayload(), 32)
+	// 		fmt.Println(data)
+	// 	}
+	// }
+	receiver.StartTransmitting()
+	for range time.Tick(time.Second) {
+		fmt.Println("send")
+		err := receiver.WritePayload([]byte("01234567890123456789012345678901"))
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }

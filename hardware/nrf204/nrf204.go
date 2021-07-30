@@ -1,6 +1,7 @@
 package nrf204
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -42,6 +43,7 @@ const (
 	DYNPD        byte = 0x1C
 	FEATURE      byte = 0x1D
 	R_RX_PAYLOAD byte = 0x61
+	W_TX_PAYLOAD byte = 0xA0
 	FLUSH_TX     byte = 0xE1
 	FLUSH_RX     byte = 0xE2
 )
@@ -58,7 +60,8 @@ const (
 	DATA_RATE_2MBPS
 )
 
-const addressSize int = 5
+const ADDRESS_SIZE int = 5
+const PAYLOAD_SIZE byte = 32
 
 type RadioMode int
 
@@ -77,7 +80,7 @@ type nrf204l01 struct {
 func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 	address := []byte(config.RxAddress)
 	lenAddress := len(address)
-	if lenAddress != addressSize {
+	if lenAddress != ADDRESS_SIZE {
 		log.Fatal("Rx Address for Radio link is incorrect")
 	}
 
@@ -146,15 +149,18 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 	radio.writeRegisterByte(RF_SETUP, setup)
 }
 
-func (radio *nrf204l01) startTransmitting() {
+func (radio *nrf204l01) StartTransmitting() {
 	radio.ce.Out(gpio.Low)
-	time.Sleep(10 * time.Millisecond)
+	radio.setPower(ON)
+	radio.clearStatus()
+	radio.setRx(OFF)
+	radio.flushRx()
 	radio.flushTx()
-	radio.writeRegisterByte(NRF_CONFIG, 14)
-	radio.writeRegisterByte(EN_RXADDR, 3)
+	radio.ce.Out(gpio.High)
 }
 
 func (radio *nrf204l01) StartListening() {
+	radio.ce.Out(gpio.Low)
 	radio.setPower(ON)
 	radio.clearStatus()
 	radio.setRx(ON)
@@ -178,9 +184,17 @@ func (radio *nrf204l01) getStatus() byte {
 }
 
 func (radio *nrf204l01) ReadPayload() []byte {
-	payload, _ := utils.ReadSPI(R_RX_PAYLOAD, 32, radio.conn)
+	payload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.writeRegisterByte(NRF_STATUS, 64)
 	return payload
+}
+
+func (radio *nrf204l01) WritePayload(payload []byte) error {
+	if len(payload) < int(PAYLOAD_SIZE) {
+		return errors.New("payload size error")
+	}
+	_, err := utils.WriteSPI(W_TX_PAYLOAD, payload, radio.conn)
+	return err
 }
 
 func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
@@ -234,7 +248,7 @@ func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, erro
 func (radio *nrf204l01) setPayloadSize() {
 	var i byte
 	for i = 0; i < 6; i++ {
-		radio.writeRegisterByte(RX_PW_P0+i, 32)
+		radio.writeRegisterByte(RX_PW_P0+i, PAYLOAD_SIZE)
 	}
 }
 
