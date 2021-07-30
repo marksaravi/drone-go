@@ -89,6 +89,7 @@ func (radio *nrf204l01) Init() {
 }
 
 func (radio *nrf204l01) initRadio() {
+	radio.setPower(OFF)
 	radio.setRetries(5, 15)
 	radio.setDataRate(DATA_RATE_1MBPS)
 	radio.writeRegisterByte(EN_AA, 0x3F)
