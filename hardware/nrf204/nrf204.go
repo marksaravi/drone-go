@@ -91,7 +91,6 @@ func (radio *nrf204l01) Init() {
 func (radio *nrf204l01) initRadio() {
 	radio.setRetries(5, 15)
 	radio.setDataRate(DATA_RATE_1MBPS)
-	radio.writeRegisterByte(DYNPD, 0)
 	radio.writeRegisterByte(EN_AA, 0x3F)
 	radio.writeRegisterByte(EN_RXADDR, 3)
 	radio.setPayloadSize()
@@ -163,11 +162,11 @@ func (radio *nrf204l01) startTransmitting() {
 
 func (radio *nrf204l01) StartListening() {
 	radio.setPower(ON)
-	radio.writeRegisterByte(NRF_CONFIG, 15)
-	d, _ := radio.readRegisterByte(NRF_CONFIG)
-	fmt.Println("NRF_CONFIG: ", d)
+	radio.setRx(ON)
+	radio.setCRCEncodingScheme()
+	radio.EnableCRC()
 	radio.writeRegisterByte(NRF_STATUS, 112)
-	d, _ = radio.readRegisterByte(NRF_STATUS)
+	d, _ := radio.readRegisterByte(NRF_STATUS)
 	time.Sleep(250 * time.Millisecond)
 	fmt.Println("NRF_STATUS: ", d)
 	radio.ce.Out(gpio.High)
@@ -212,6 +211,14 @@ func (radio *nrf204l01) setPower(isOn bool) {
 
 func (radio *nrf204l01) setRx(isOn bool) {
 	radio.configOnOff(isOn, 0b00000001)
+}
+
+func (radio *nrf204l01) setCRCEncodingScheme() {
+	radio.configOnOff(ON, 0b00000100)
+}
+
+func (radio *nrf204l01) EnableCRC() {
+	radio.configOnOff(ON, 0b00001000)
 }
 
 func (radio *nrf204l01) readRegister(address byte, len int) ([]byte, error) {
