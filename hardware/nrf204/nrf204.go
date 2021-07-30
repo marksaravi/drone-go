@@ -164,8 +164,8 @@ func (radio *nrf204l01) StartListening() {
 	radio.setPower(ON)
 	radio.setRx(ON)
 	radio.setCRCEncodingScheme()
-	radio.EnableCRC()
-	radio.writeRegisterByte(NRF_STATUS, 112)
+	radio.enableCRC()
+	radio.clearStatus()
 	d, _ := radio.readRegisterByte(NRF_STATUS)
 	time.Sleep(250 * time.Millisecond)
 	fmt.Println("NRF_STATUS: ", d)
@@ -217,8 +217,13 @@ func (radio *nrf204l01) setCRCEncodingScheme() {
 	radio.configOnOff(ON, 0b00000100)
 }
 
-func (radio *nrf204l01) EnableCRC() {
+func (radio *nrf204l01) enableCRC() {
 	radio.configOnOff(ON, 0b00001000)
+}
+
+func (radio *nrf204l01) clearStatus() {
+	status, _ := radio.readRegisterByte(NRF_STATUS)
+	radio.writeRegisterByte(NRF_STATUS, status|0b01110000)
 }
 
 func (radio *nrf204l01) readRegister(address byte, len int) ([]byte, error) {
