@@ -284,7 +284,32 @@ func initPin(pinName string) gpio.PinIO {
 }
 
 func FlightDataToPayload(flightData types.FlightData) []byte {
-	payload := make([]byte, PAYLOAD_SIZE)
+	var status0 byte = 0
+	if flightData.MotorsEngaged {
+		status0 = 1
+	}
+	ba := utils.FloatArrayToByteArray(
+		[]float32{
+			flightData.Roll,
+			flightData.Pitch,
+			flightData.Yaw,
+			flightData.Throttle,
+			flightData.Altitude,
+			0,
+			0,
+		},
+	)
+	return append([]byte{status0, 0, 0, 0}, ba...)
+}
 
-	return payload
+func PayloadToFlightData(payload []byte) types.FlightData {
+	fa := utils.ByteArrayToFloat32Array(payload[4:])
+	return types.FlightData{
+		MotorsEngaged: (payload[0] & 0b00000001) != 0,
+		Roll:          fa[0],
+		Pitch:         fa[1],
+		Yaw:           fa[2],
+		Throttle:      fa[3],
+		Altitude:      fa[4],
+	}
 }

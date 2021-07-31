@@ -7,7 +7,6 @@ import (
 
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -15,11 +14,6 @@ import (
 )
 
 func main() {
-	fa := []float32{366.34, -180.24, 0, -144.32, 22.22}
-	ba := utils.FloatArrayToByteArray(fa)
-	fa2 := utils.ByteArrayToFloat32Array(ba)
-	fmt.Println(ba)
-	fmt.Println(fa2)
 	config := types.RadioLinkConfig{
 		GPIO: types.RadioLinkGPIOPins{
 			CE: "GPIO26",
@@ -45,13 +39,26 @@ func main() {
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
 	receiver.StartTransmitting()
-	payload := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1}
+	var roll float32 = 0
+	var altitude float32 = 0
+	var motorsEngaged bool = false
 	for range time.Tick(time.Millisecond * 1000) {
-		fmt.Println("send ", payload[0])
+		flightdata := types.FlightData{
+			Roll:          roll,
+			Pitch:         -34.53,
+			Yaw:           0,
+			Throttle:      13.45,
+			Altitude:      altitude,
+			MotorsEngaged: motorsEngaged,
+		}
+		payload := nrf204.FlightDataToPayload(flightdata)
+		fmt.Println("send (", flightdata, ")")
 		err := receiver.WritePayload(payload)
 		if err != nil {
 			fmt.Println(err)
 		}
-		payload[0] = payload[0] + 1
+		roll += 0.3
+		altitude += 1.34
+		motorsEngaged = !motorsEngaged
 	}
 }

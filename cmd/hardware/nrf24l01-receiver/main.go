@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/types"
@@ -12,16 +11,6 @@ import (
 	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
-
-func byteArrayToInt16Array(ba []byte, size int) []int16 {
-	type pInt16Array = *([]int16)
-	var pi16 pInt16Array = pInt16Array(unsafe.Pointer(&ba))
-	var ia []int16 = make([]int16, size/2)
-	for i := 0; i < size/2; i++ {
-		ia[i] = (*pi16)[i]
-	}
-	return ia
-}
 
 func main() {
 	config := types.RadioLinkConfig{
@@ -51,8 +40,8 @@ func main() {
 	receiver.StartListening()
 	for {
 		if receiver.IsAvailable(0) {
-			data := byteArrayToInt16Array(receiver.ReadPayload(), 32)
-			fmt.Println(data)
+			flightData := nrf204.PayloadToFlightData(receiver.ReadPayload())
+			fmt.Println(flightData)
 		}
 	}
 }
