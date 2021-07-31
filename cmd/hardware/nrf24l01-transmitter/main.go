@@ -42,7 +42,9 @@ func main() {
 	var roll float32 = 0
 	var altitude float32 = 0
 	var motorsEngaged bool = false
-	for range time.Tick(time.Millisecond * 1000) {
+	var numSend int = 0
+	start := time.Now()
+	for range time.Tick(time.Millisecond * 20) {
 		flightdata := types.FlightData{
 			Roll:          roll,
 			Pitch:         -34.53,
@@ -52,7 +54,6 @@ func main() {
 			MotorsEngaged: motorsEngaged,
 		}
 		payload := nrf204.FlightDataToPayload(flightdata)
-		fmt.Println("send (", flightdata, ")")
 		err := receiver.WritePayload(payload)
 		if err != nil {
 			fmt.Println(err)
@@ -60,5 +61,10 @@ func main() {
 		roll += 0.3
 		altitude += 1.34
 		motorsEngaged = !motorsEngaged
+		numSend++
+		if time.Since(start) >= time.Second {
+			start = time.Now()
+			fmt.Println("send ", numSend, " (", flightdata, ")")
+		}
 	}
 }

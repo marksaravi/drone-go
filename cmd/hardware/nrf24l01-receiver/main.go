@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/types"
@@ -38,10 +39,17 @@ func main() {
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
 	receiver.StartListening()
+	var numReceive int = 0
+	start := time.Now()
 	for {
 		if receiver.IsAvailable(0) {
-			flightData := nrf204.PayloadToFlightData(receiver.ReadPayload())
-			fmt.Println(flightData)
+			flightdata := nrf204.PayloadToFlightData(receiver.ReadPayload())
+			numReceive++
+			if time.Since(start) >= time.Second {
+				start = time.Now()
+				fmt.Println("received ", numReceive, " (", flightdata, ")")
+
+			}
 		}
 	}
 }
