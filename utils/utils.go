@@ -57,21 +57,23 @@ func int32ToFloat32(i int32) float32 {
 	return *pf
 }
 
-func int32ToByteArray(i int32) []byte {
+func int32ToByteArray(i32 int32) []byte {
 	ba := make([]byte, 4)
 	const mask = 0b00000000000000000000000011111111
-	ba[0] = byte(i & mask)
-	ba[1] = byte((i >> 8) & mask)
-	ba[2] = byte((i >> 16) & mask)
-	ba[3] = byte((i >> 24) & mask)
+	var shift int = 0
+	for i := 0; i < 4; i++ {
+		ba[i] = byte((i32 >> shift) & mask)
+		shift += 8
+	}
 	return ba
 }
 
 func byteArrayToInt32(ba []byte) int32 {
-	var i int32 = 0
-	i = i | int32(ba[0])
-	i = i | (int32(ba[1]) << 8)
-	i = i | (int32(ba[2]) << 16)
-	i = i | (int32(ba[3]) << 24)
-	return i
+	var i32 int32 = 0
+	var shift int = 0
+	for i := 0; i < 4; i++ {
+		i32 = i32 | (int32(ba[i]) << shift)
+		shift += 8
+	}
+	return i32
 }
