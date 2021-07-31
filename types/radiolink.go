@@ -11,3 +11,12 @@ type RadioLinkConfig struct {
 	BusNumber  int               `yaml:"bus_number"`
 	ChipSelect int               `yaml:"chip_select"`
 }
+
+type FlightData struct {
+	Roll          float32
+	Pitch         float32
+	Yaw           float32
+	Throttle      float32
+	Altitude      float32
+	MotorsEngaged bool
+}

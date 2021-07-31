@@ -282,3 +282,9 @@ func initPin(pinName string) gpio.PinIO {
 	}
 	return pin
 }
+
+func FlightDataToPayload(flightData types.FlightData) []byte {
+	payload := make([]byte, PAYLOAD_SIZE)
+
+	return payload
+}

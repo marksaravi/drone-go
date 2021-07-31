@@ -4,27 +4,22 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
 
-func byteArrayToInt16Array(ba []byte, size int) []int16 {
-	type pInt16Array = *([]int16)
-	var pi16 pInt16Array = pInt16Array(unsafe.Pointer(&ba))
-	var ia []int16 = make([]int16, size/2)
-	for i := 0; i < size/2; i++ {
-		ia[i] = (*pi16)[i]
-	}
-	return ia
-}
-
 func main() {
+	fa := []float32{366.34, -180.24, 0, -144.32, 22.22}
+	ba := utils.FloatArrayToByteArray(fa)
+	fa2 := utils.ByteArrayToFloat32Array(ba)
+	fmt.Println(ba)
+	fmt.Println(fa2)
 	config := types.RadioLinkConfig{
 		GPIO: types.RadioLinkGPIOPins{
 			CE: "GPIO26",
@@ -51,7 +46,7 @@ func main() {
 	receiver.Init()
 	receiver.StartTransmitting()
 	payload := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1}
-	for range time.Tick(time.Millisecond * 10) {
+	for range time.Tick(time.Millisecond * 1000) {
 		fmt.Println("send ", payload[0])
 		err := receiver.WritePayload(payload)
 		if err != nil {
