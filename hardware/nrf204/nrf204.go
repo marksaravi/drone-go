@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -95,7 +94,7 @@ func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 
 func (radio *nrf204l01) Init() {
 	radio.ce.Out(gpio.Low)
-	time.Sleep(time.Millisecond * 10)
+	// time.Sleep(time.Millisecond)
 	radio.initRadio()
 }
 
@@ -104,7 +103,8 @@ func (radio *nrf204l01) initRadio() {
 	radio.setRetries(5, 15)
 	radio.setPALevel(radio.powerDBm)
 	radio.setDataRate(DATA_RATE_1MBPS)
-	radio.writeRegisterByte(EN_AA, 0x3F)
+	// disabling auto acknowlegment
+	radio.writeRegisterByte(EN_AA, 0)
 	radio.writeRegisterByte(EN_RXADDR, 3)
 	radio.setPayloadSize()
 	radio.setAddressWidth()
@@ -181,23 +181,26 @@ func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
 }
 
 func (radio *nrf204l01) getStatus() byte {
-	status, _ := radio.writeRegisterByte(0xFF, 0xFF)
-	return status[0]
+	status, _ := radio.readRegisterByte(NRF_STATUS)
+	return status
 }
 
 func (radio *nrf204l01) ReadPayload() []byte {
 	payload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
-	radio.writeRegisterByte(NRF_STATUS, 64)
+	radio.resetDR()
 	return payload
 }
 
 func (radio *nrf204l01) WritePayload(payload []byte) error {
 	radio.ce.Out(gpio.Low)
+	radio.writeRegister(TX_ADDR, radio.address)
 	if len(payload) < int(PAYLOAD_SIZE) {
-		return errors.New(fmt.Sprintf("payload size error %d", len(payload)))
+		return fmt.Errorf("payload size error %d", len(payload))
 	}
 	_, err := utils.WriteSPI(W_TX_PAYLOAD, payload, radio.conn)
 	radio.ce.Out(gpio.High)
+	time.Sleep(time.Microsecond * 100)
+	radio.ce.Out(gpio.Low)
 	return err
 }
 
@@ -231,9 +234,9 @@ func (radio *nrf204l01) clearStatus() {
 	radio.writeRegisterByte(NRF_STATUS, status|0b01110000)
 }
 
-func (radio *nrf204l01) readRegister(address byte, len int) ([]byte, error) {
-	b, err := utils.ReadSPI(address&R_REGISTER, len, radio.conn)
-	return b, err
+func (radio *nrf204l01) resetDR() {
+	status, _ := radio.readRegisterByte(NRF_STATUS)
+	radio.writeRegisterByte(NRF_STATUS, status|0b01000000)
 }
 
 func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {

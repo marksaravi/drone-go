@@ -51,7 +51,7 @@ func main() {
 	receiver.Init()
 	receiver.StartTransmitting()
 	payload := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1}
-	for range time.Tick(time.Second) {
+	for range time.Tick(time.Millisecond * 10) {
 		fmt.Println("send ", payload[0])
 		err := receiver.WritePayload(payload)
 		if err != nil {
