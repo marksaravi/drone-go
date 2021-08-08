@@ -10,7 +10,7 @@ import (
 type flightControl struct {
 	imu              types.IMU
 	motorsController types.MotorsController
-	pid              types.PID
+	radio            types.RadioLink
 	logger           types.UdpLogger
 }
 
@@ -43,13 +43,13 @@ func (fc *flightControl) Start() {
 func CreateFlightControl(
 	imu types.IMU,
 	motorsController types.MotorsController,
-	pid types.PID,
+	radio types.RadioLink,
 	logger types.UdpLogger,
 ) *flightControl {
 	return &flightControl{
 		imu:              imu,
 		motorsController: motorsController,
-		pid:              pid,
+		radio:            radio,
 		logger:           logger,
 	}
 }

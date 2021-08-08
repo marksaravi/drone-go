@@ -15,8 +15,7 @@ func main() {
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(imuMems, appConfig.Flight.Imu)
 	motorsController := motors.NewMotorsControl(esc, powerBreaker)
-	pid := flightcontrol.CreatePidController()
-	flightControl := flightcontrol.CreateFlightControl(imu, motorsController, pid, udpLogger)
+	flightControl := flightcontrol.CreateFlightControl(imu, motorsController, nil, udpLogger)
 
 	flightControl.Start()
 }

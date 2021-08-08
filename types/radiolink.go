@@ -20,3 +20,11 @@ type FlightData struct {
 	Altitude      float32
 	MotorsEngaged bool
 }
+
+type RadioLink interface {
+	ReceiverOn()
+	TransmitterOn()
+	IsPayloadAvailable() bool
+	TransmitFlightData(FlightData)
+	ReceiveFlightData() FlightData
+}
