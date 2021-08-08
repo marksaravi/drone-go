@@ -117,11 +117,23 @@ func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
 func (dev *memsICM20948) initDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
+	if err != nil {
+		return err
+	}
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
+	if err != nil {
+		return err
+	}
 	// No low power mode, enabling everything with 20Mhz clock
 	err = dev.writeRegister(PWR_MGMT_1, 0b00000001, 0b00000000)
+	if err != nil {
+		return err
+	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitAccelerometer()
+	if err != nil {
+		return err
+	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	err = dev.InitGyroscope()
 	time.Sleep(50 * time.Millisecond) // wait for starting
@@ -160,4 +172,12 @@ func (dev *memsICM20948) ReadSensors() (
 		Data:  types.XYZ{X: 0, Y: 0, Z: 0},
 	}
 	return
+}
+
+// towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
+func towsComplementUint8ToInt16(h, l uint8) int16 {
+	var h16 uint16 = uint16(h)
+	var l16 uint16 = uint16(l)
+
+	return int16((h16 << 8) | l16)
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -198,9 +198,22 @@ func (radio *nrf204l01) getStatus() byte {
 }
 
 func (radio *nrf204l01) ReceiveFlightData() types.FlightData {
-	binarypayload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+	binarypayload, _ := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
 	return payloadToFlightData(binarypayload)
+}
+func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
+	datalen := len(data)
+	w := make([]byte, datalen+1)
+	r := make([]byte, datalen+1)
+	w[0] = address
+
+	for i := 0; i < datalen; i++ {
+		w[i+1] = data[i]
+	}
+
+	err := conn.Tx(w, r)
+	return r, err
 }
 
 func (radio *nrf204l01) TransmitFlightData(flightData types.FlightData) error {
@@ -210,7 +223,7 @@ func (radio *nrf204l01) TransmitFlightData(flightData types.FlightData) error {
 	if len(payload) < int(PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
-	_, err := utils.WriteSPI(W_TX_PAYLOAD, payload, radio.conn)
+	_, err := writeSPI(W_TX_PAYLOAD, payload, radio.conn)
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Microsecond * 100)
 	radio.ce.Out(gpio.Low)
@@ -252,17 +265,25 @@ func (radio *nrf204l01) resetDR() {
 	radio.writeRegisterByte(NRF_STATUS, status|0b01000000)
 }
 
+func readSPI(address byte, datalen int, conn spi.Conn) ([]byte, error) {
+	w := make([]byte, datalen+1)
+	r := make([]byte, datalen+1)
+	w[0] = address
+	err := conn.Tx(w, r)
+	return r[1:], err
+}
+
 func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
-	b, err := utils.ReadSPI(address&R_REGISTER, 1, radio.conn)
+	b, err := readSPI(address&R_REGISTER, 1, radio.conn)
 	return b[0], err
 }
 
 func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
+	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
 }
 
 func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
-	return utils.WriteSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
+	return writeSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
 }
 
 func (radio *nrf204l01) setPayloadSize() {
@@ -281,11 +302,11 @@ func (radio *nrf204l01) setChannel() {
 }
 
 func (radio *nrf204l01) flushRx() {
-	utils.WriteSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
+	writeSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
 }
 
 func (radio *nrf204l01) flushTx() {
-	utils.WriteSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
+	writeSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
 }
 
 func initPin(pinName string) gpio.PinIO {
@@ -301,7 +322,7 @@ func flightDataToPayload(flightData types.FlightData) []byte {
 	if flightData.MotorsEngaged {
 		status0 = 1
 	}
-	ba := utils.FloatArrayToByteArray(
+	ba := floatArrayToByteArray(
 		[]float32{
 			flightData.Roll,
 			flightData.Pitch,
@@ -316,7 +337,7 @@ func flightDataToPayload(flightData types.FlightData) []byte {
 }
 
 func payloadToFlightData(payload []byte) types.FlightData {
-	fa := utils.ByteArrayToFloat32Array(payload[4:])
+	fa := byteArrayToFloat32Array(payload[4:])
 	return types.FlightData{
 		MotorsEngaged: (payload[0] & 0b00000001) != 0,
 		Roll:          fa[0],
@@ -325,4 +346,58 @@ func payloadToFlightData(payload []byte) types.FlightData {
 		Throttle:      fa[3],
 		Altitude:      fa[4],
 	}
+}
+
+func floatArrayToByteArray(floatArray []float32) []byte {
+	faLen := len(floatArray)
+	byteArray := make([]byte, faLen*4)
+	for i := 0; i < faLen; i++ {
+		ba := int32ToByteArray(float32ToInt32(floatArray[i]))
+		for j := 0; j < 4; j++ {
+			byteArray[i*4+j] = ba[j]
+		}
+	}
+	return byteArray
+}
+
+func int32ToByteArray(i32 int32) []byte {
+	ba := make([]byte, 4)
+	const mask = 0b00000000000000000000000011111111
+	var shift int = 0
+	for i := 0; i < 4; i++ {
+		ba[i] = byte((i32 >> shift) & mask)
+		shift += 8
+	}
+	return ba
+}
+
+func float32ToInt32(f float32) int32 {
+	type pi32 = *int32
+	var pi pi32 = pi32(unsafe.Pointer(&f))
+	return *pi
+}
+
+func byteArrayToFloat32Array(byteArray []byte) []float32 {
+	baLen := len(byteArray)
+	floatArray := make([]float32, baLen/4)
+	for i := 0; i < baLen; i += 4 {
+		floatArray[i/4] = int32ToFloat32(byteArrayToInt32(byteArray[i : i+4]))
+	}
+	return floatArray
+}
+
+func int32ToFloat32(i int32) float32 {
+	type pf32 = *float32
+	var pf pf32 = pf32(unsafe.Pointer(&i))
+	return *pf
+}
+
+func byteArrayToInt32(ba []byte) int32 {
+	var i32 int32 = 0
+	var shift int = 0
+	for i := 0; i < 4; i++ {
+		i32 = i32 | (int32(ba[i]) << shift)
+		shift += 8
+	}
+	return i32
 }

@@ -1,17 +1,5 @@
 package types
 
-// type RadioLinkGPIOPins struct {
-// 	CE string `yaml:"ce"`
-// }
-
-// type RadioLinkConfig struct {
-// 	GPIO       RadioLinkGPIOPins
-// 	RxAddress  string
-// 	PowerDBm   byte
-// 	BusNumber  int
-// 	ChipSelect int
-// }
-
 type FlightData struct {
 	Roll          float32
 	Pitch         float32
