@@ -52,8 +52,7 @@ func main() {
 			Altitude:      altitude,
 			MotorsEngaged: motorsEngaged,
 		}
-		payload := nrf204.FlightDataToPayload(flightdata)
-		err := receiver.WritePayload(payload)
+		err := receiver.SendPayload(flightdata)
 		if err != nil {
 			fmt.Println(err)
 		}

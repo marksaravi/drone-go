@@ -188,7 +188,8 @@ func (radio *nrf204l01) ReadPayload() types.FlightData {
 	return payloadToFlightData(binarypayload)
 }
 
-func (radio *nrf204l01) WritePayload(payload []byte) error {
+func (radio *nrf204l01) SendPayload(flightData types.FlightData) error {
+	payload := flightDataToPayload(flightData)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
 	if len(payload) < int(PAYLOAD_SIZE) {
@@ -280,7 +281,7 @@ func initPin(pinName string) gpio.PinIO {
 	return pin
 }
 
-func FlightDataToPayload(flightData types.FlightData) []byte {
+func flightDataToPayload(flightData types.FlightData) []byte {
 	var status0 byte = 0
 	if flightData.MotorsEngaged {
 		status0 = 1
