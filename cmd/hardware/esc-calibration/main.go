@@ -7,5 +7,5 @@ import (
 
 func main() {
 	appConfig := utils.ReadConfigs()
-	pca9685.Calibrate(appConfig.Flight.Esc)
+	pca9685.Calibrate(appConfig.Hardware.PCA9685)
 }

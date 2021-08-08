@@ -29,12 +29,26 @@ type MagnetometerConfig struct {
 	SensitivityLevel string `yaml:"sensitivity_level"`
 }
 
-type Icm20948Config struct {
+type ICM20948Config struct {
 	BusNumber  int                 `yaml:"bus_number"`
 	ChipSelect int                 `yaml:"chip_select"`
 	AccConfig  AccelerometerConfig `yaml:"accelerometer"`
 	GyroConfig GyroscopeConfig     `yaml:"gyroscope"`
 	MagConfig  MagnetometerConfig  `yaml:"magnetometer"`
+}
+
+type PCA9685Config struct {
+	Device          string        `yaml:"device"`
+	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
+	Motors          map[int]Motor `yaml:"motors"`
+}
+
+type NRF204Config struct {
+	BusNumber   int    `yaml:"bus_number"`
+	ChipSelect  int    `yaml:"chip_select"`
+	CEGPIO      string `yaml:"ce_gpio"`
+	RxTxAddress string `yaml:"rx_tx_address"`
+	PowerDBm    string `yaml:"power_dbm"`
 }
 
 type ImuConfig struct {
@@ -55,11 +69,8 @@ type Motor struct {
 }
 
 type EscConfig struct {
-	UpdateFrequency int           `yaml:"update_frequency"`
-	MaxThrottle     float32       `yaml:"max_throttle"`
-	Device          string        `yaml:"device"`
-	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
-	Motors          map[int]Motor `yaml:"motors"`
+	UpdateFrequency int     `yaml:"update_frequency"`
+	MaxThrottle     float32 `yaml:"max_throttle"`
 }
 
 type FlightConfig struct {
@@ -69,7 +80,9 @@ type FlightConfig struct {
 }
 
 type HardwareConfig struct {
-	ICM20948 Icm20948Config `yaml:"icm20948"`
+	ICM20948 ICM20948Config `yaml:"icm20948"`
+	PCA9685  PCA9685Config  `yaml:"pca9685"`
+	NRF204   NRF204Config   `yaml:"nrf204"`
 }
 
 type UdpLoggerConfig struct {

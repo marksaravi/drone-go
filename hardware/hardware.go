@@ -19,14 +19,14 @@ func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, typ
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
-	pwmDev := newPwmDev(config.Flight.Esc)
-	powerbreaker := newPowerBreaker(config.Flight.Esc.PowerBrokerGPIO)
+	pwmDev := newPwmDev(config.Hardware.PCA9685)
+	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
 	imuMems := newImuMems(config.Hardware.ICM20948)
 	radio := newRadioLink()
 	return imuMems, pwmDev, radio, powerbreaker
 }
 
-func newImuMems(config types.Icm20948Config) types.ImuMems {
+func newImuMems(config types.ICM20948Config) types.ImuMems {
 	imuMems, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)
@@ -39,7 +39,7 @@ func newPowerBreaker(gpio string) types.PowerBreaker {
 
 }
 
-func newPwmDev(config types.EscConfig) types.ESC {
+func newPwmDev(config types.PCA9685Config) types.ESC {
 	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)

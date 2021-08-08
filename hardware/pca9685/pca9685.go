@@ -205,7 +205,7 @@ func (d *PCA9685) SetThrottle(motor int, throttle float32) {
 }
 
 //Calibrate
-func Calibrate(config types.EscConfig) {
+func Calibrate(config types.PCA9685Config) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}

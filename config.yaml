@@ -10,21 +10,6 @@ flight_control:
   esc:
     update_frequency: 50
     max_throttle: 15 # a float between 0 100
-    device: '/dev/i2c-1'
-    power_breaker_gpio: 'GPIO17'
-    motors:
-      0:
-        label: 'A'
-        esc_channel: 0
-      1: 
-        label: 'B'
-        esc_channel: 4
-      2:
-        label: 'C'
-        esc_channel: 8
-      3:
-        label: 'D'
-        esc_channel: 12
 
 devices:
   icm20948:
@@ -50,6 +35,28 @@ devices:
         Z: -8
     magnetometer:
       sensitivity_level: '0'
+  pca9685:
+    device: '/dev/i2c-1'
+    power_breaker_gpio: 'GPIO17'
+    motors:
+      0:
+        label: 'A'
+        esc_channel: 0
+      1: 
+        label: 'B'
+        esc_channel: 4
+      2:
+        label: 'C'
+        esc_channel: 8
+      3:
+        label: 'D'
+        esc_channel: 12
+  nrf204:
+    ce_gpio: 'GPIO26'
+    bus_number: 1
+    chip_select: 2
+    rx_tx_address: '03896'
+    power_dbm: '-18dbm'
 
 udp:
   enabled: true

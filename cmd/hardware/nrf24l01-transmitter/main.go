@@ -2,42 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/hardware/nrf204"
+	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/types"
-	"periph.io/x/periph/conn/physic"
-	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/host"
-	"periph.io/x/periph/host/sysfs"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	config := types.RadioLinkConfig{
-		GPIO: types.RadioLinkGPIOPins{
-			CE: "GPIO26",
-		},
-		BusNumber:  1,
-		ChipSelect: 2,
-		RxAddress:  "03896",
-		PowerDBm:   nrf204.RF_POWER_MINUS_18dBm,
-	}
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-	spibus, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
-	if err != nil {
-		log.Fatal(err)
-	}
-	spiconn, err := spibus.Connect(physic.MegaHertz, spi.Mode0, 8)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Start")
-	receiver := nrf204.NewNRF204(config, spiconn)
-	receiver.TransmitterOn()
+	config := utils.ReadConfigs()
+	_, _, radio, _ := hardware.InitHardware(config)
+	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
 	var motorsEngaged bool = false
@@ -52,7 +27,7 @@ func main() {
 			Altitude:      altitude,
 			MotorsEngaged: motorsEngaged,
 		}
-		err := receiver.TransmitFlightData(flightdata)
+		err := radio.TransmitFlightData(flightdata)
 		if err != nil {
 			fmt.Println(err)
 		}
