@@ -3,42 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/connectors/i2c"
-	"github.com/MarkSaravi/drone-go/hardware/pca9685"
+	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/motors"
-	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
-	"github.com/MarkSaravi/drone-go/types"
 	"github.com/MarkSaravi/drone-go/utils"
-	"periph.io/x/periph/host"
 )
-
-func initHardware(config types.EscConfig) (types.ESC, types.PowerBreaker) {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-	i2cConnection, err := i2c.Open(config.Device)
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil
-	}
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, config.Motors)
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil
-	}
-	powerbreaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
-	pwmDev.Start()
-	pwmDev.StopAll()
-	return pwmDev, powerbreaker
-}
 
 func main() {
 	appConfig := utils.ReadConfigs()
 
-	esc, powerbreaker := initHardware(appConfig.Flight.Esc)
+	_, esc, powerbreaker := hardware.InitHardware(appConfig)
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 

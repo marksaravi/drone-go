@@ -2,20 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
-	"periph.io/x/periph/host"
+	"github.com/MarkSaravi/drone-go/hardware"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
+	config := utils.ReadConfigs()
 	fmt.Println("Started")
-	breaker := powerbreaker.NewPowerBreaker("GPIO17")
-	breaker.Connect()
-	time.Sleep(5 * time.Second)
-	breaker.Disconnect()
+	_, _, powerbreaker := hardware.InitHardware(config)
+	powerbreaker.Connect()
+	time.Sleep(2 * time.Second)
+	powerbreaker.Disconnect()
 }
