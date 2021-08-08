@@ -182,13 +182,13 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReadPayload() types.FlightData {
+func (radio *nrf204l01) ReceiveFlightData() types.FlightData {
 	binarypayload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
 	return payloadToFlightData(binarypayload)
 }
 
-func (radio *nrf204l01) SendPayload(flightData types.FlightData) error {
+func (radio *nrf204l01) TransmitFlightData(flightData types.FlightData) error {
 	payload := flightDataToPayload(flightData)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)

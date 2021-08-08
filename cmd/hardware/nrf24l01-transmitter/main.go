@@ -52,7 +52,7 @@ func main() {
 			Altitude:      altitude,
 			MotorsEngaged: motorsEngaged,
 		}
-		err := receiver.SendPayload(flightdata)
+		err := receiver.TransmitFlightData(flightdata)
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -42,7 +42,7 @@ func main() {
 	start := time.Now()
 	for {
 		if receiver.IsPayloadAvailable(0) {
-			flightdata := receiver.ReadPayload()
+			flightdata := receiver.ReceiveFlightData()
 			numReceive++
 			if time.Since(start) >= time.Second {
 				start = time.Now()
