@@ -38,7 +38,7 @@ func main() {
 	fmt.Println("Start")
 	receiver := nrf204.CreateNRF204(config, spiconn)
 	receiver.Init()
-	receiver.StartTransmitting()
+	receiver.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
 	var motorsEngaged bool = false

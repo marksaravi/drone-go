@@ -94,11 +94,6 @@ func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 
 func (radio *nrf204l01) Init() {
 	radio.ce.Out(gpio.Low)
-	// time.Sleep(time.Millisecond)
-	radio.initRadio()
-}
-
-func (radio *nrf204l01) initRadio() {
 	radio.setPower(OFF)
 	radio.setRetries(5, 15)
 	radio.setPALevel(radio.powerDBm)
@@ -150,7 +145,7 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 	radio.writeRegisterByte(RF_SETUP, setup)
 }
 
-func (radio *nrf204l01) StartTransmitting() {
+func (radio *nrf204l01) TransmitterOn() {
 	radio.ce.Out(gpio.Low)
 	radio.setRetries(5, 0)
 	radio.clearStatus()
@@ -161,7 +156,7 @@ func (radio *nrf204l01) StartTransmitting() {
 	radio.ce.Out(gpio.Low)
 }
 
-func (radio *nrf204l01) StartListening() {
+func (radio *nrf204l01) ReceiverOn() {
 	radio.ce.Out(gpio.Low)
 	radio.setPower(ON)
 	radio.clearStatus()
@@ -171,7 +166,7 @@ func (radio *nrf204l01) StartListening() {
 	radio.ce.Out(gpio.High)
 }
 
-func (radio *nrf204l01) IsAvailable(pipeNum byte) bool {
+func (radio *nrf204l01) IsPayloadAvailable(pipeNum byte) bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
 	// fmt.Println("Status: ", status)
