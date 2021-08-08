@@ -77,21 +77,36 @@ type nrf204l01 struct {
 	powerDBm byte
 }
 
-func NewNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
-	address := []byte(config.RxAddress)
+func NewNRF204(config types.NRF204Config, conn spi.Conn) *nrf204l01 {
+	address := []byte(config.RxTxAddress)
 	lenAddress := len(address)
 	if lenAddress != ADDRESS_SIZE {
 		log.Fatal("Rx Address for Radio link is incorrect")
 	}
 
 	radio := nrf204l01{
-		ce:       initPin(config.GPIO.CE),
+		ce:       initPin(config.CEGPIO),
 		address:  address,
 		conn:     conn,
-		powerDBm: config.PowerDBm,
+		powerDBm: dbmStrToDBm(config.PowerDBm),
 	}
 	radio.init()
 	return &radio
+}
+
+func dbmStrToDBm(dbm string) byte {
+	switch dbm {
+	case "-18dbm":
+		return RF_POWER_MINUS_18dBm
+	case "-12dbm":
+		return RF_POWER_MINUS_12dBm
+	case "-6dbm":
+		return RF_POWER_MINUS_6dBm
+	case "0dbm":
+		return RF_POWER_0dBm
+	default:
+		return RF_POWER_MINUS_18dBm
+	}
 }
 
 func (radio *nrf204l01) init() {

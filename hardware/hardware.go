@@ -22,7 +22,7 @@ func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, typ
 	pwmDev := newPwmDev(config.Hardware.PCA9685)
 	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
 	imuMems := newImuMems(config.Hardware.ICM20948)
-	radio := newRadioLink()
+	radio := newRadioLink(config.Hardware.NRF204)
 	return imuMems, pwmDev, radio, powerbreaker
 }
 
@@ -53,16 +53,7 @@ func newPwmDev(config types.PCA9685Config) types.ESC {
 	return pwmDev
 }
 
-func newRadioLink() types.RadioLink {
-	config := types.RadioLinkConfig{
-		GPIO: types.RadioLinkGPIOPins{
-			CE: "GPIO26",
-		},
-		BusNumber:  1,
-		ChipSelect: 2,
-		RxAddress:  "03896",
-		PowerDBm:   nrf204.RF_POWER_MINUS_18dBm,
-	}
+func newRadioLink(config types.NRF204Config) types.RadioLink {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
