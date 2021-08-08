@@ -20,7 +20,7 @@ func main() {
 		return
 	}
 
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, map[int]int{0: 5, 1: 6, 2: 7, 3: 13})
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, map[int]int{0: 0, 1: 4, 2: 8, 3: 12})
 	if err != nil {
 		fmt.Println(err)
 		return
