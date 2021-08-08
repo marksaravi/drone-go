@@ -36,14 +36,13 @@ func main() {
 	}
 
 	fmt.Println("Start")
-	receiver := nrf204.CreateNRF204(config, spiconn)
-	receiver.Init()
+	receiver := nrf204.NewNRF204(config, spiconn)
 	receiver.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()
 	for {
 		if receiver.IsPayloadAvailable(0) {
-			flightdata := nrf204.PayloadToFlightData(receiver.ReadPayload())
+			flightdata := receiver.ReadPayload()
 			numReceive++
 			if time.Since(start) >= time.Second {
 				start = time.Now()

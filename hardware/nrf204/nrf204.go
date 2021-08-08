@@ -77,22 +77,24 @@ type nrf204l01 struct {
 	powerDBm byte
 }
 
-func CreateNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
+func NewNRF204(config types.RadioLinkConfig, conn spi.Conn) *nrf204l01 {
 	address := []byte(config.RxAddress)
 	lenAddress := len(address)
 	if lenAddress != ADDRESS_SIZE {
 		log.Fatal("Rx Address for Radio link is incorrect")
 	}
 
-	return &nrf204l01{
+	radio := nrf204l01{
 		ce:       initPin(config.GPIO.CE),
 		address:  address,
 		conn:     conn,
 		powerDBm: config.PowerDBm,
 	}
+	radio.init()
+	return &radio
 }
 
-func (radio *nrf204l01) Init() {
+func (radio *nrf204l01) init() {
 	radio.ce.Out(gpio.Low)
 	radio.setPower(OFF)
 	radio.setRetries(5, 15)
@@ -180,10 +182,10 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReadPayload() []byte {
-	payload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+func (radio *nrf204l01) ReadPayload() types.FlightData {
+	binarypayload, _ := utils.ReadSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
-	return payload
+	return payloadToFlightData(binarypayload)
 }
 
 func (radio *nrf204l01) WritePayload(payload []byte) error {
@@ -297,7 +299,7 @@ func FlightDataToPayload(flightData types.FlightData) []byte {
 	return append([]byte{status0, 0, 0, 0}, ba...)
 }
 
-func PayloadToFlightData(payload []byte) types.FlightData {
+func payloadToFlightData(payload []byte) types.FlightData {
 	fa := utils.ByteArrayToFloat32Array(payload[4:])
 	return types.FlightData{
 		MotorsEngaged: (payload[0] & 0b00000001) != 0,

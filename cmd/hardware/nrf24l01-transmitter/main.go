@@ -36,8 +36,7 @@ func main() {
 	}
 
 	fmt.Println("Start")
-	receiver := nrf204.CreateNRF204(config, spiconn)
-	receiver.Init()
+	receiver := nrf204.NewNRF204(config, spiconn)
 	receiver.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
