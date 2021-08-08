@@ -15,7 +15,7 @@ func main() {
 	}
 	fmt.Println("Started")
 	breaker := powerbreaker.NewPowerBreaker("GPIO17")
-	breaker.MotorsOn()
+	breaker.Connect()
 	time.Sleep(5 * time.Second)
-	breaker.MotorsOff()
+	breaker.Disconnect()
 }

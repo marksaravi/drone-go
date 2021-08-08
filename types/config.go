@@ -52,7 +52,7 @@ type PidConfig struct {
 type EscConfig struct {
 	UpdateFrequency int     `yaml:"update_frequency"`
 	MaxThrottle     float32 `yaml:"max_throttle"`
-	SPIDevice       string  `yaml:"spi_device"`
+	Device          string  `yaml:"device"`
 	PowerBrokerGPIO string  `yaml:"power_breaker_gpio"`
 }
 

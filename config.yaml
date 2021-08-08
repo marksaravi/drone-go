@@ -10,7 +10,7 @@ flight_control:
   esc:
     update_frequency: 50
     max_throttle: 15 # a float between 0 100
-    spi_device: '/dev/i2c-1'
+    device: '/dev/i2c-1'
     power_breaker_gpio: 'GPIO17'
 
 devices:

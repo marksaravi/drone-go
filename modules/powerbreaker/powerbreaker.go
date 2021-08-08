@@ -24,10 +24,10 @@ func NewPowerBreaker(pinName string) *powerBreaker {
 	}
 }
 
-func (pb *powerBreaker) MotorsOn() {
+func (pb *powerBreaker) Connect() {
 	pb.pin.Out(gpio.High)
 }
 
-func (pb *powerBreaker) MotorsOff() {
+func (pb *powerBreaker) Disconnect() {
 	pb.pin.Out(gpio.Low)
 }
