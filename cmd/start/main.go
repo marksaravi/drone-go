@@ -11,11 +11,11 @@ import (
 
 func main() {
 	appConfig := utils.ReadConfigs()
-	imuMems, esc, _, powerBreaker := hardware.InitHardware(appConfig)
+	imuMems, esc, radio, powerBreaker := hardware.InitHardware(appConfig)
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(imuMems, appConfig.Flight.Imu)
 	motorsController := motors.NewMotorsControl(esc, powerBreaker)
-	flightControl := flightcontrol.CreateFlightControl(imu, motorsController, nil, udpLogger)
+	flightControl := flightcontrol.CreateFlightControl(imu, motorsController, radio, udpLogger)
 
 	flightControl.Start()
 }
