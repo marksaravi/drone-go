@@ -11,7 +11,6 @@ import (
 type flightControl struct {
 	imu    types.IMU
 	pid    types.PID
-	esc    types.ESC
 	logger types.UdpLogger
 }
 
@@ -23,13 +22,10 @@ func (fc *flightControl) Start() {
 	fc.imu.ResetReadingTimes()
 	var running bool = true
 
-	fc.esc.MotorsOn()
 	for running {
 		if fc.imu.CanRead() {
 			rotations, err := fc.imu.GetRotations()
 			if err == nil {
-				throttles := fc.pid.Update(rotations)
-				fc.esc.SetThrottles(throttles)
 				fc.logger.Send(rotations)
 			}
 		}
@@ -37,7 +33,6 @@ func (fc *flightControl) Start() {
 		case command := <-commandChannel:
 			if command.Command == commands.COMMAND_END_PROGRAM {
 				wg.Wait()
-				fc.esc.MotorsOff()
 				running = false
 			}
 		default:
@@ -48,13 +43,11 @@ func (fc *flightControl) Start() {
 func CreateFlightControl(
 	imu types.IMU,
 	pid types.PID,
-	esc types.ESC,
 	logger types.UdpLogger,
 ) *flightControl {
 	return &flightControl{
 		imu:    imu,
 		pid:    pid,
-		esc:    esc,
 		logger: logger,
 	}
 }

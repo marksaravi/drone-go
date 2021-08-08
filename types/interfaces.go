@@ -8,12 +8,6 @@ type PID interface {
 	Update(ImuRotations) []Throttle
 }
 
-type ESC interface {
-	SetThrottles([]Throttle)
-	MotorsOn()
-	MotorsOff()
-}
-
 // Logger is interface for the udpLogger
 type UdpLogger interface {
 	Send(ImuRotations)
