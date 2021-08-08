@@ -59,12 +59,12 @@ func (h *escsHandler) SetThrottles(throttles []types.Throttle) {
 }
 
 func NewESCsHandler(config types.EscConfig) *escsHandler {
-	i2cConnection, err := i2c.Open("/dev/i2c-1")
+	i2cConnection, err := i2c.Open(config.SPIDevice)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	breaker := powerbreaker.NewPowerBreaker()
+	breaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

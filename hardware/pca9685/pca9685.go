@@ -218,7 +218,7 @@ func Calibrate() {
 		fmt.Println(err)
 		return
 	}
-	breaker := powerbreaker.NewPowerBreaker()
+	breaker := powerbreaker.NewPowerBreaker("GPIO17")
 	pwmDev.Start()
 	fmt.Println("setting max pulse width: ", MaxPW)
 	fmt.Println("turn on ESCs")
