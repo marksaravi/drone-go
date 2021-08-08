@@ -12,6 +12,19 @@ flight_control:
     max_throttle: 15 # a float between 0 100
     device: '/dev/i2c-1'
     power_breaker_gpio: 'GPIO17'
+    motors:
+      0:
+        label: 'A'
+        esc_channel: 0
+      1: 
+        label: 'B'
+        esc_channel: 4
+      2:
+        label: 'C'
+        esc_channel: 8
+      3:
+        label: 'D'
+        esc_channel: 12
 
 devices:
   icm20948:

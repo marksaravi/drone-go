@@ -15,21 +15,21 @@ import (
 	"periph.io/x/periph/host"
 )
 
-func initHardware(appConfig types.ApplicationConfig) (types.ESC, types.PowerBreaker) {
+func initHardware(config types.EscConfig) (types.ESC, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
-	i2cConnection, err := i2c.Open(appConfig.Flight.Esc.Device)
+	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
 	}
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, map[int]int{0: 0, 1: 4, 2: 8, 3: 12})
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, config.Motors)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
 	}
-	powerbreaker := powerbreaker.NewPowerBreaker("GPIO17")
+	powerbreaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
 	pwmDev.Start()
 	pwmDev.StopAll()
 	return pwmDev, powerbreaker
@@ -38,7 +38,7 @@ func initHardware(appConfig types.ApplicationConfig) (types.ESC, types.PowerBrea
 func main() {
 	appConfig := utils.ReadConfigs()
 
-	esc, powerbreaker := initHardware(appConfig)
+	esc, powerbreaker := initHardware(appConfig.Flight.Esc)
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 
@@ -48,6 +48,7 @@ func main() {
 	const steps int = 10
 	var dThrottle float32 = maxThrottle / float32(steps)
 	var throttle float32 = 0
+	motorsControl.On()
 	throttles := map[int]float32{0: 0, 1: 0, 2: 0, 3: 0}
 	for repeat := 0; repeat < 4; repeat++ {
 		for step := 0; step < steps; step++ {
@@ -59,5 +60,6 @@ func main() {
 		}
 		dThrottle = -dThrottle
 	}
+	motorsControl.Off()
 	fmt.Println("finished")
 }

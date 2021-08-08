@@ -2,6 +2,7 @@ package powerbreaker
 
 import (
 	"log"
+	"time"
 
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
@@ -26,6 +27,7 @@ func NewPowerBreaker(pinName string) *powerBreaker {
 
 func (pb *powerBreaker) Connect() {
 	pb.pin.Out(gpio.High)
+	time.Sleep(4 * time.Second)
 }
 
 func (pb *powerBreaker) Disconnect() {

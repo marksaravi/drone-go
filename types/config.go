@@ -49,11 +49,17 @@ type PidConfig struct {
 	DerivativeGain   float32 `yaml:"derivative-gain"`
 }
 
+type Motor struct {
+	Label      string `yaml:"label"`
+	ESCChannel int    `yaml:"esc_channel"`
+}
+
 type EscConfig struct {
-	UpdateFrequency int     `yaml:"update_frequency"`
-	MaxThrottle     float32 `yaml:"max_throttle"`
-	Device          string  `yaml:"device"`
-	PowerBrokerGPIO string  `yaml:"power_breaker_gpio"`
+	UpdateFrequency int           `yaml:"update_frequency"`
+	MaxThrottle     float32       `yaml:"max_throttle"`
+	Device          string        `yaml:"device"`
+	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
+	Motors          map[int]Motor `yaml:"motors"`
 }
 
 type FlightConfig struct {

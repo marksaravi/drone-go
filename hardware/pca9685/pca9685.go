@@ -2,10 +2,13 @@ package pca9685
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
+	"github.com/MarkSaravi/drone-go/types"
+	"periph.io/x/periph/host"
 )
 
 //PCA9685Address is i2c address of device
@@ -48,7 +51,7 @@ type PCA9685 struct {
 	connection     *i2c.Connection
 	frequency      float32
 	maxThrottle    float32
-	motorToChannel map[int]int
+	motorsMappings map[int]types.Motor
 }
 
 func (d *PCA9685) readByte(offset uint8) (b uint8, err error) {
@@ -198,12 +201,15 @@ func (d *PCA9685) SetThrottle(motor int, throttle float32) {
 	if throttle > 100 || throttle > d.maxThrottle || throttle < 0 {
 		return
 	}
-	d.setPWM(d.motorToChannel[motor], MinPW+throttle/100*(MaxPW-MinPW))
+	d.setPWM(d.motorsMappings[motor].ESCChannel, MinPW+throttle/100*(MaxPW-MinPW))
 }
 
 //Calibrate
-func Calibrate() {
-	i2cConnection, err := i2c.Open("/dev/i2c-1")
+func Calibrate(config types.EscConfig) {
+	if _, err := host.Init(); err != nil {
+		log.Fatal(err)
+	}
+	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -218,7 +224,7 @@ func Calibrate() {
 		fmt.Println(err)
 		return
 	}
-	breaker := powerbreaker.NewPowerBreaker("GPIO17")
+	breaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
 	pwmDev.Start()
 	fmt.Println("setting max pulse width: ", MaxPW)
 	fmt.Println("turn on ESCs")
@@ -253,19 +259,12 @@ func (d *PCA9685) StopAll() {
 }
 
 // NewPCA9685Driver creates new PCA9685 driver
-func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorToChannel map[int]int) (*PCA9685, error) {
-	mtc := motorToChannel
-	if mtc == nil {
-		mtc = make(map[int]int)
-		for ch := 0; ch < 16; ch++ {
-			mtc[ch] = ch
-		}
-	}
+func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorsMappings map[int]types.Motor) (*PCA9685, error) {
 	return &PCA9685{
 		name:           "PCA9685",
 		address:        address,
 		connection:     connection,
 		maxThrottle:    maxThrottle,
-		motorToChannel: mtc,
+		motorsMappings: motorsMappings,
 	}, nil
 }
