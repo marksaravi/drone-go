@@ -12,7 +12,7 @@ func main() {
 	appConfig := utils.ReadConfigs()
 	imuMems, _, _ := hardware.InitHardware(appConfig)
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
-	imu := imu.CreateIM(imuMems, appConfig)
+	imu := imu.CreateIM(imuMems, appConfig.Flight.Imu)
 	pid := flightcontrol.CreatePidController()
 	flightControl := flightcontrol.CreateFlightControl(imu, pid, udpLogger)
 

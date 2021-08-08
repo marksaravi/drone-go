@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -22,7 +21,7 @@ func CreateCommandChannel(wg *sync.WaitGroup) chan types.Command {
 			}
 		}
 		command <- types.Command{
-			Command: commands.COMMAND_END_PROGRAM,
+			Command: "COMMAND_END_PROGRAM",
 		}
 		close(command)
 		fmt.Println("Command stopped.")

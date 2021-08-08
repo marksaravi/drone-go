@@ -20,15 +20,10 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func CreateIM(imumems types.ImuMems, config types.ApplicationConfig) types.IMU {
-	imudevice := newIMU(imumems, config.Flight.Imu)
-	return &imudevice
-}
-
-func newIMU(imuMems types.ImuMems, config types.ImuConfig) imuModule {
+func CreateIM(imuMems types.ImuMems, config types.ImuConfig) types.IMU {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
-	return imuModule{
+	imudevice := imuModule{
 		dev:                         imuMems,
 		readTime:                    time.Time{},
 		readingInterval:             readingInterval,
@@ -38,6 +33,7 @@ func newIMU(imuMems types.ImuMems, config types.ImuConfig) imuModule {
 		rotations:                   types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyro:                        types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
+	return &imudevice
 }
 
 func (imu *imuModule) ResetReadingTimes() {

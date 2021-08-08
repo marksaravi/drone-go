@@ -3,7 +3,6 @@ package flightcontrol
 import (
 	"sync"
 
-	commands "github.com/MarkSaravi/drone-go/constants"
 	"github.com/MarkSaravi/drone-go/modules/command"
 	"github.com/MarkSaravi/drone-go/types"
 )
@@ -31,7 +30,7 @@ func (fc *flightControl) Start() {
 		}
 		select {
 		case command := <-commandChannel:
-			if command.Command == commands.COMMAND_END_PROGRAM {
+			if command.Command == "COMMAND_END_PROGRAM" {
 				wg.Wait()
 				running = false
 			}
