@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetGyro get accelerometer data
@@ -51,9 +50,9 @@ func (dev *memsICM20948) InitGyroscope() error {
 func (dev *memsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().Config.(types.GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
-	x := float64(utils.TowsComplementUint8ToInt16(data[0], data[1])) / scale
-	y := float64(utils.TowsComplementUint8ToInt16(data[2], data[3])) / scale
-	z := float64(utils.TowsComplementUint8ToInt16(data[4], data[5])) / scale
+	x := float64(towsComplementUint8ToInt16(data[0], data[1])) / scale
+	y := float64(towsComplementUint8ToInt16(data[2], data[3])) / scale
+	z := float64(towsComplementUint8ToInt16(data[4], data[5])) / scale
 	return types.XYZ{
 		X: x,
 		Y: y,

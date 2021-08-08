@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 // GetAcc get accelerometer data
@@ -47,9 +46,9 @@ func (dev *memsICM20948) InitAccelerometer() error {
 func (dev *memsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
 	config, _ := dev.GetAcc().Config.(types.AccelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
-	xRaw := utils.TowsComplementUint8ToInt16(data[0], data[1])
-	yRaw := utils.TowsComplementUint8ToInt16(data[2], data[3])
-	zRaw := utils.TowsComplementUint8ToInt16(data[4], data[5])
+	xRaw := towsComplementUint8ToInt16(data[0], data[1])
+	yRaw := towsComplementUint8ToInt16(data[2], data[3])
+	zRaw := towsComplementUint8ToInt16(data[4], data[5])
 	x := float64(xRaw) / accSens
 	y := float64(yRaw) / accSens
 	z := float64(zRaw) / accSens
