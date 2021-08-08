@@ -13,7 +13,7 @@ type motorsControl struct {
 	powerbreaker types.PowerBreaker
 }
 
-func NewMotorsControl(esc types.ESC, powerbreaker types.PowerBreaker) types.MotorsControl {
+func NewMotorsControl(esc types.ESC, powerbreaker types.PowerBreaker) types.MotorsController {
 	return &motorsControl{
 		esc:          esc,
 		powerbreaker: powerbreaker,

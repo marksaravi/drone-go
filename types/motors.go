@@ -14,7 +14,7 @@ type ESC interface {
 	SetThrottle(int, float32)
 }
 
-type MotorsControl interface {
+type MotorsController interface {
 	On()
 	Off()
 	SetThrottles(map[int]float32)
