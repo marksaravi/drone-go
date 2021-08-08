@@ -168,7 +168,7 @@ func (radio *nrf204l01) ReceiverOn() {
 	radio.ce.Out(gpio.High)
 }
 
-func (radio *nrf204l01) IsPayloadAvailable(pipeNum byte) bool {
+func (radio *nrf204l01) IsPayloadAvailable() bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
 	// fmt.Println("Status: ", status)

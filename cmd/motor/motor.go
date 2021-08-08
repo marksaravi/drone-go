@@ -13,7 +13,7 @@ import (
 func main() {
 	appConfig := utils.ReadConfigs()
 
-	_, esc, powerbreaker := hardware.InitHardware(appConfig)
+	_, esc, _, powerbreaker := hardware.InitHardware(appConfig)
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 

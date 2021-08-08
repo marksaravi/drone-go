@@ -25,6 +25,6 @@ type RadioLink interface {
 	ReceiverOn()
 	TransmitterOn()
 	IsPayloadAvailable() bool
-	TransmitFlightData(FlightData)
+	TransmitFlightData(FlightData) error
 	ReceiveFlightData() FlightData
 }

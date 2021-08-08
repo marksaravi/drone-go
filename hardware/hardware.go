@@ -5,30 +5,74 @@ import (
 
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/types"
+	"periph.io/x/periph/conn/physic"
+	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
+	"periph.io/x/periph/host/sysfs"
 )
 
-func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.PowerBreaker) {
+func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
-	i2cConnection, err := i2c.Open(config.Flight.Esc.Device)
+	pwmDev := newPwmDev(config.Flight.Esc)
+	powerbreaker := newPowerBreaker(config.Flight.Esc.PowerBrokerGPIO)
+	imuMems := newImuMems(config.Hardware.ICM20948)
+	radio := newRadioLink()
+	return imuMems, pwmDev, radio, powerbreaker
+}
+
+func newImuMems(config types.Icm20948Config) types.ImuMems {
+	imuMems, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, config.Flight.Esc.Motors)
+	return imuMems
+}
+
+func newPowerBreaker(gpio string) types.PowerBreaker {
+	return powerbreaker.NewPowerBreaker(gpio)
+
+}
+
+func newPwmDev(config types.EscConfig) types.ESC {
+	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)
 	}
-	powerbreaker := powerbreaker.NewPowerBreaker(config.Flight.Esc.PowerBrokerGPIO)
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, config.Motors)
+	if err != nil {
+		log.Fatal(err)
+	}
 	pwmDev.Start()
 	pwmDev.StopAll()
-	imuMems, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
+	return pwmDev
+}
+
+func newRadioLink() types.RadioLink {
+	config := types.RadioLinkConfig{
+		GPIO: types.RadioLinkGPIOPins{
+			CE: "GPIO26",
+		},
+		BusNumber:  1,
+		ChipSelect: 2,
+		RxAddress:  "03896",
+		PowerDBm:   nrf204.RF_POWER_MINUS_18dBm,
+	}
+	if _, err := host.Init(); err != nil {
+		log.Fatal(err)
+	}
+	spibus, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return imuMems, pwmDev, powerbreaker
+	spiconn, err := spibus.Connect(physic.MegaHertz, spi.Mode0, 8)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nrf204.NewNRF204(config, spiconn)
 }

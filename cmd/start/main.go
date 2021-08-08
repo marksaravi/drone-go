@@ -11,7 +11,7 @@ import (
 
 func main() {
 	appConfig := utils.ReadConfigs()
-	imuMems, esc, powerBreaker := hardware.InitHardware(appConfig)
+	imuMems, esc, _, powerBreaker := hardware.InitHardware(appConfig)
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(imuMems, appConfig.Flight.Imu)
 	motorsController := motors.NewMotorsControl(esc, powerBreaker)
