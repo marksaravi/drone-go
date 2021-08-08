@@ -31,3 +31,18 @@ type ImuRotations struct {
 	ReadTime      int64
 	ReadInterval  int64
 }
+
+type ImuMems interface {
+	ReadSensors() (
+		SensorData,
+		SensorData,
+		SensorData,
+		error)
+}
+
+// IMU is interface to imu mems
+type IMU interface {
+	GetRotations() (ImuRotations, error)
+	ResetReadingTimes()
+	CanRead() bool
+}

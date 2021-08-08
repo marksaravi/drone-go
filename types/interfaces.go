@@ -12,11 +12,3 @@ type PID interface {
 type UdpLogger interface {
 	Send(ImuRotations)
 }
-
-// IMU is interface to imu mems
-type IMU interface {
-	Close()
-	GetRotations() (ImuRotations, error)
-	ResetReadingTimes()
-	CanRead() bool
-}

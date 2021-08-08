@@ -3,24 +3,13 @@ package imu
 import (
 	"fmt"
 	"math"
-	"os"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
-// imuHardware is interface for the imu mems
-type imuHardware interface {
-	Close()
-	InitDevice() error
-	ReadSensorsRawData() ([]byte, error)
-	ReadSensors() (acc types.SensorData, gyro types.SensorData, mag types.SensorData, err error)
-	WhoAmI() (string, byte, error)
-}
-
 type imuModule struct {
-	dev                         imuHardware
+	dev                         types.ImuMems
 	accData                     types.SensorData
 	rotations                   types.Rotations
 	gyro                        types.Rotations
@@ -31,20 +20,12 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func CreateIM(config types.ApplicationConfig) types.IMU {
-	dev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
-	if err != nil {
-		os.Exit(1)
-	}
-	dev.InitDevice()
-	if err != nil {
-		os.Exit(1)
-	}
-	imudevice := newIMU(dev, config.Flight.Imu)
+func CreateIM(imumems types.ImuMems, config types.ApplicationConfig) types.IMU {
+	imudevice := newIMU(imumems, config.Flight.Imu)
 	return &imudevice
 }
 
-func newIMU(imuMems imuHardware, config types.ImuConfig) imuModule {
+func newIMU(imuMems types.ImuMems, config types.ImuConfig) imuModule {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
 	return imuModule{
@@ -57,10 +38,6 @@ func newIMU(imuMems imuHardware, config types.ImuConfig) imuModule {
 		rotations:                   types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyro:                        types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
-}
-
-func (imu imuModule) Close() {
-	imu.dev.Close()
 }
 
 func (imu *imuModule) ResetReadingTimes() {

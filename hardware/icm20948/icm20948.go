@@ -1,13 +1,11 @@
 package icm20948
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
 
@@ -42,8 +40,6 @@ func init() {
 	gyroFullScale["500dps"] = GYRO_SCALE_500DPS
 	gyroFullScale["1000dps"] = GYRO_SCALE_1000DPS
 	gyroFullScale["2000dps"] = GYRO_SCALE_2000DPS
-
-	host.Init()
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
@@ -56,6 +52,7 @@ func NewICM20948Driver(config types.Icm20948Config) (*memsICM20948, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	dev := memsICM20948{
 		Name:    "ICM20948",
 		SPI:     d,
@@ -73,12 +70,8 @@ func NewICM20948Driver(config types.Icm20948Config) (*memsICM20948, error) {
 			Type: MAGNETOMETER,
 		},
 	}
+	dev.initDevice()
 	return &dev, nil
-}
-
-func (dev *memsICM20948) Close() {
-	dev.SPI.Close()
-	fmt.Println("Closing ", dev.Name)
 }
 
 func (dev *memsICM20948) readReg(address uint8, len int) ([]uint8, error) {
@@ -121,16 +114,7 @@ func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
 	return dev.writeReg(reg.Address, data...)
 }
 
-// WhoAmI return value for ICM-20948 is 0xEA
-func (dev *memsICM20948) WhoAmI() (name string, id uint8, err error) {
-	name = "ICM-20948"
-	data, err := dev.readRegister(WHO_AM_I, 1)
-	id = data[0]
-	return
-}
-
-// InitDevice applies initial configurations to device
-func (dev *memsICM20948) InitDevice() error {
+func (dev *memsICM20948) initDevice() error {
 	// Reset settings to default
 	err := dev.writeRegister(PWR_MGMT_1, 0b10000000)
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
@@ -144,8 +128,8 @@ func (dev *memsICM20948) InitDevice() error {
 	return err
 }
 
-// ReadSensorsRawData reads all Accl and Gyro data
-func (dev *memsICM20948) ReadSensorsRawData() ([]uint8, error) {
+// readSensorsRawData reads all Accl and Gyro data
+func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 	return dev.readRegister(ACCEL_XOUT_H, 12)
 }
 
@@ -155,7 +139,7 @@ func (dev *memsICM20948) ReadSensors() (
 	gyro types.SensorData,
 	mag types.SensorData,
 	err error) {
-	data, err := dev.ReadSensorsRawData()
+	data, err := dev.readSensorsRawData()
 
 	if err != nil {
 		return
