@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	config := utils.ReadConfigs()
+	config := config.ReadConfigs()
 	_, _, radio, _ := hardware.InitDroneHardware(config)
 	radio.TransmitterOn()
 	var roll float32 = 0

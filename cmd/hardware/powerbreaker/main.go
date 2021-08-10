@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	config := utils.ReadConfigs()
+	config := config.ReadConfigs()
 	fmt.Println("Started")
 	_, _, _, powerbreaker := hardware.InitDroneHardware(config)
 	powerbreaker.Connect()

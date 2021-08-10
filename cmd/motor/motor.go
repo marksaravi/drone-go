@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/motors"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	appConfig := utils.ReadConfigs()
+	appConfig := config.ReadConfigs()
 
 	_, esc, _, powerbreaker := hardware.InitDroneHardware(appConfig)
 	motor := flag.Int("motor", 0, "motor")
