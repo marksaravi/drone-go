@@ -78,7 +78,7 @@ func newPwmDev(config pca9685.PCA9685Config) motors.ESC {
 	return pwmDev
 }
 
-func newRadioLink(config config.NRF204Config) radiolink.RadioLink {
+func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}

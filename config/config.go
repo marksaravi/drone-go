@@ -7,19 +7,12 @@ import (
 	"os"
 
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
 	"gopkg.in/yaml.v3"
 )
-
-type NRF204Config struct {
-	BusNumber   int    `yaml:"bus_number"`
-	ChipSelect  int    `yaml:"chip_select"`
-	CEGPIO      string `yaml:"ce_gpio"`
-	RxTxAddress string `yaml:"rx_tx_address"`
-	PowerDBm    string `yaml:"power_dbm"`
-}
 
 type PidConfig struct {
 	ProportionalGain float32 `yaml:"proportional–gain"`
@@ -41,7 +34,7 @@ type FlightConfig struct {
 type HardwareConfig struct {
 	ICM20948 icm20948.ICM20948Config `yaml:"icm20948"`
 	PCA9685  pca9685.PCA9685Config   `yaml:"pca9685"`
-	NRF204   NRF204Config            `yaml:"nrf204"`
+	NRF204   nrf204.NRF204Config     `yaml:"nrf204"`
 }
 
 type UdpLoggerConfig struct {

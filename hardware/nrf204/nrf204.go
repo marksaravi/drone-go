@@ -6,7 +6,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
@@ -66,6 +65,14 @@ const PAYLOAD_SIZE byte = 32
 
 type RadioMode int
 
+type NRF204Config struct {
+	BusNumber   int    `yaml:"bus_number"`
+	ChipSelect  int    `yaml:"chip_select"`
+	CEGPIO      string `yaml:"ce_gpio"`
+	RxTxAddress string `yaml:"rx_tx_address"`
+	PowerDBm    string `yaml:"power_dbm"`
+}
+
 const (
 	Receiver RadioMode = iota
 	Transmitter
@@ -78,7 +85,7 @@ type nrf204l01 struct {
 	powerDBm byte
 }
 
-func NewNRF204(config config.NRF204Config, conn spi.Conn) *nrf204l01 {
+func NewNRF204(config NRF204Config, conn spi.Conn) *nrf204l01 {
 	address := []byte(config.RxTxAddress)
 	lenAddress := len(address)
 	if lenAddress != ADDRESS_SIZE {
