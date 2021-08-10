@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/MarkSaravi/drone-go/config"
+	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
@@ -32,8 +33,15 @@ func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC
 
 func InitRemoteHardware(config config.ApplicationConfig) (adc adcconverter.AnalogToDigitalDevice, radio types.RadioLink) {
 	fmt.Println(config)
-	spibus, _ := sysfs.NewSPI(config.RemoteControl.MCP3008.SPI.BusNumber, config.RemoteControl.MCP3008.SPI.ChipSelect)
-	spiconn, err := spibus.Connect(physic.MegaHertz, spi.Mode0, 8)
+	spibus, _ := sysfs.NewSPI(
+		config.RemoteControl.MCP3008.SPI.BusNumber,
+		config.RemoteControl.MCP3008.SPI.ChipSelect,
+	)
+	spiconn, err := spibus.Connect(
+		physic.Frequency(config.RemoteControl.MCP3008.SPI.SpeedMegaHz)*physic.MegaHertz,
+		connectors.ConfigToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
+		8,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

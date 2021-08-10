@@ -69,6 +69,8 @@ remote-control:
     spi:
       bus_number: 1
       chip_select: 0
+      mode: 0
+      speed-mega-hz: 1
   x-channel: 0
   y-channel: 1
   z-channel: 2
