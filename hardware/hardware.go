@@ -13,6 +13,7 @@ import (
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
@@ -21,7 +22,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -63,7 +64,7 @@ func newPowerBreaker(gpio string) types.PowerBreaker {
 
 }
 
-func newPwmDev(config types.PCA9685Config) types.ESC {
+func newPwmDev(config types.PCA9685Config) motors.ESC {
 	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)

@@ -8,12 +8,22 @@ const (
 	NUM_OF_MOTORS int = 4
 )
 
+type ESC interface {
+	SetThrottle(int, float32)
+}
+
+type MotorsController interface {
+	On()
+	Off()
+	SetThrottles(map[int]float32)
+}
+
 type motorsControl struct {
-	esc          types.ESC
+	esc          ESC
 	powerbreaker types.PowerBreaker
 }
 
-func NewMotorsControl(esc types.ESC, powerbreaker types.PowerBreaker) types.MotorsController {
+func NewMotorsControl(esc ESC, powerbreaker types.PowerBreaker) MotorsController {
 	return &motorsControl{
 		esc:          esc,
 		powerbreaker: powerbreaker,
