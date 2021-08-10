@@ -67,7 +67,7 @@ udp:
 remote-control:
   mcp3008:
     spi:
-      bus_number: 1
+      bus_number: 0
       chip_select: 0
       mode: 0
       speed-mega-hz: 1
@@ -78,3 +78,4 @@ remote-control:
   ready-light-gpio: 'GPIO05'
   emergency-stop-light-gpio: 'GPIO06'
   emergency-stop-button-gpio: 'GPIO13'
+  v-ref: 5

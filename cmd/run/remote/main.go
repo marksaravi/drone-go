@@ -6,19 +6,18 @@ import (
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
 )
 
 func main() {
 	fmt.Println("Starting Remote Control")
 	config := config.ReadConfigs()
-	adcDev, _ := hardware.InitRemoteHardware(config)
-	adcConverter := adcconverter.NewADCConverter(adcDev)
-	remoteControl := remotecontrol.NewRemoteControl(adcConverter)
+	adcConverter, _ := hardware.InitRemoteHardware(config)
+	remoteControl := remotecontrol.NewRemoteControl(adcConverter, config.RemoteControl)
 
 	for {
-		remoteControl.ReadInputs()
+		rd := remoteControl.ReadInputs()
+		fmt.Println(rd)
 		time.Sleep(time.Millisecond * 1000)
 	}
 }

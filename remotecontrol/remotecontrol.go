@@ -22,6 +22,7 @@ type RemoteControlConfig struct {
 	ReadyLight          string                `yaml:"ready-light-gpio"`
 	EmergencyStopLight  string                `yaml:"emergency-stop-light-gpio"`
 	EmergencyStopButton string                `yaml:"emergency-stop-button-gpio"`
+	VRef                float32               `yaml:"v-ref"`
 }
 
 type RemoteData struct {
@@ -37,22 +38,35 @@ type RemoteControl interface {
 }
 
 type remoteControl struct {
-	adc adcconverter.AnalogToDigitalConverter
+	adc             adcconverter.AnalogToDigitalConverter
+	vRef            float32
+	xChannel        int
+	yChannel        int
+	zChannel        int
+	throttleChannel int
 }
 
-func NewRemoteControl(adc adcconverter.AnalogToDigitalConverter) RemoteControl {
+func NewRemoteControl(adc adcconverter.AnalogToDigitalConverter, config RemoteControlConfig) RemoteControl {
 	return &remoteControl{
-		adc: adc,
+		adc:             adc,
+		vRef:            config.VRef,
+		xChannel:        config.XChannel,
+		yChannel:        config.YChannel,
+		zChannel:        config.ZChannel,
+		throttleChannel: config.ThrottleChannel,
 	}
 }
 
 func (rc *remoteControl) ReadInputs() RemoteData {
-	rc.adc.ReadInputVoltage(0)
+	x, _ := rc.adc.ReadInputVoltage(rc.xChannel, rc.vRef)
+	y, _ := rc.adc.ReadInputVoltage(rc.yChannel, rc.vRef)
+	z, _ := rc.adc.ReadInputVoltage(rc.zChannel, rc.vRef)
+	throttle, _ := rc.adc.ReadInputVoltage(rc.throttleChannel, rc.vRef)
 	return RemoteData{
-		Throttle:    0,
-		X:           0,
-		Y:           0,
-		Z:           0,
+		Throttle:    throttle,
+		X:           x,
+		Y:           y,
+		Z:           z,
 		MotorsState: Off,
 	}
 }

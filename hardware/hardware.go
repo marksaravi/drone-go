@@ -31,7 +31,7 @@ func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC
 	return imuMems, pwmDev, radio, powerbreaker
 }
 
-func InitRemoteHardware(config config.ApplicationConfig) (adc adcconverter.AnalogToDigitalDevice, radio types.RadioLink) {
+func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, types.RadioLink) {
 	fmt.Println(config)
 	spibus, _ := sysfs.NewSPI(
 		config.RemoteControl.MCP3008.SPI.BusNumber,
@@ -45,8 +45,8 @@ func InitRemoteHardware(config config.ApplicationConfig) (adc adcconverter.Analo
 	if err != nil {
 		log.Fatal(err)
 	}
-	adcDev := mcp3008.NewMCP3008(spiconn)
-	return adcDev, nil
+	adc := mcp3008.NewMCP3008(spiconn)
+	return adc, nil
 }
 
 func newImuMems(config types.ICM20948Config) types.ImuMems {
