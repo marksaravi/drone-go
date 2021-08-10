@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/radiolink"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
@@ -19,7 +19,7 @@ func main() {
 	var numSend int = 0
 	start := time.Now()
 	for range time.Tick(time.Millisecond * 20) {
-		flightdata := types.FlightData{
+		flightdata := radiolink.FlightData{
 			Roll:          roll,
 			Pitch:         -34.53,
 			Yaw:           0,

@@ -15,6 +15,7 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
+	"github.com/MarkSaravi/drone-go/modules/radiolink"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
@@ -22,7 +23,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, types.RadioLink, powerbreaker.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +34,7 @@ func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ES
 	return imuDev, pwmDev, radio, powerbreaker
 }
 
-func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, types.RadioLink) {
+func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, radiolink.RadioLink) {
 	fmt.Println(config)
 	spibus, _ := sysfs.NewSPI(
 		config.RemoteControl.MCP3008.SPI.BusNumber,
@@ -78,7 +79,7 @@ func newPwmDev(config types.PCA9685Config) motors.ESC {
 	return pwmDev
 }
 
-func newRadioLink(config types.NRF204Config) types.RadioLink {
+func newRadioLink(config types.NRF204Config) radiolink.RadioLink {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}

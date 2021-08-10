@@ -6,6 +6,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/MarkSaravi/drone-go/modules/radiolink"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
@@ -197,7 +198,7 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReceiveFlightData() types.FlightData {
+func (radio *nrf204l01) ReceiveFlightData() radiolink.FlightData {
 	binarypayload, _ := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
 	return payloadToFlightData(binarypayload)
@@ -216,7 +217,7 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) TransmitFlightData(flightData types.FlightData) error {
+func (radio *nrf204l01) TransmitFlightData(flightData radiolink.FlightData) error {
 	payload := flightDataToPayload(flightData)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
@@ -317,7 +318,7 @@ func initPin(pinName string) gpio.PinIO {
 	return pin
 }
 
-func flightDataToPayload(flightData types.FlightData) []byte {
+func flightDataToPayload(flightData radiolink.FlightData) []byte {
 	var status0 byte = 0
 	if flightData.MotorsEngaged {
 		status0 = 1
@@ -336,9 +337,9 @@ func flightDataToPayload(flightData types.FlightData) []byte {
 	return append([]byte{status0, 0, 0, 0}, ba...)
 }
 
-func payloadToFlightData(payload []byte) types.FlightData {
+func payloadToFlightData(payload []byte) radiolink.FlightData {
 	fa := byteArrayToFloat32Array(payload[4:])
-	return types.FlightData{
+	return radiolink.FlightData{
 		MotorsEngaged: (payload[0] & 0b00000001) != 0,
 		Roll:          fa[0],
 		Pitch:         fa[1],
