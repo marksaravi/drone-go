@@ -17,7 +17,7 @@ type AccelerometerConfig struct {
 }
 
 // GetAcc get accelerometer data
-func (dev *memsICM20948) GetAcc() *Sensor {
+func (dev *memsICM20948) GetAcc() *sensor {
 	return &(dev.acc)
 }
 

@@ -17,7 +17,7 @@ type GyroscopeConfig struct {
 }
 
 // GetGyro get accelerometer data
-func (dev *memsICM20948) GetGyro() *Sensor {
+func (dev *memsICM20948) GetGyro() *sensor {
 	return &(dev.gyro)
 }
 

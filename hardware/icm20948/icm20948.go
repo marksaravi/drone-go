@@ -19,14 +19,13 @@ type Offsets struct {
 type Config interface {
 }
 
-// Sensor is devices that read data in x, y, z format
-type Sensor struct {
+type sensor struct {
 	Type   string
 	Config Config
 }
 
-// Register is the address and bank of the Register
-type Register struct {
+// register is the address and bank of the register
+type register struct {
 	Address uint8
 	Bank    uint8
 }
@@ -44,13 +43,13 @@ type memsICM20948 struct {
 	*sysfs.SPI
 	spi.Conn
 	regbank uint8
-	acc     Sensor
-	gyro    Sensor
-	mag     Sensor
+	acc     sensor
+	gyro    sensor
+	mag     sensor
 }
 
-func reg(reg uint16) *Register {
-	return &Register{
+func reg(reg uint16) *register {
+	return &register{
 		Address: uint8(reg),
 		Bank:    uint8(reg >> 8),
 	}
@@ -87,15 +86,15 @@ func NewICM20948Driver(config ICM20948Config) (*memsICM20948, error) {
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
-		acc: Sensor{
+		acc: sensor{
 			Type:   ACCELEROMETER,
 			Config: config.AccConfig,
 		},
-		gyro: Sensor{
+		gyro: sensor{
 			Type:   GYROSCOPE,
 			Config: config.GyroConfig,
 		},
-		mag: Sensor{
+		mag: sensor{
 			Type: MAGNETOMETER,
 		},
 	}
@@ -128,17 +127,17 @@ func (dev *memsICM20948) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *memsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
-	reg := reg(register)
+func (dev *memsICM20948) readRegister(address uint16, len int) ([]uint8, error) {
+	reg := reg(address)
 	dev.selRegisterBank(reg.Bank)
 	return dev.readReg(reg.Address, len)
 }
 
-func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
+func (dev *memsICM20948) writeRegister(address uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
-	reg := reg(register)
+	reg := reg(address)
 	dev.selRegisterBank(reg.Bank)
 	return dev.writeReg(reg.Address, data...)
 }

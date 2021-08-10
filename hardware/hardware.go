@@ -21,15 +21,15 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (imu.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, types.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
 	pwmDev := newPwmDev(config.Hardware.PCA9685)
 	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
-	imuMems := newImuMems(config.Hardware.ICM20948)
+	imuDev := newImuMems(config.Hardware.ICM20948)
 	radio := newRadioLink(config.Hardware.NRF204)
-	return imuMems, pwmDev, radio, powerbreaker
+	return imuDev, pwmDev, radio, powerbreaker
 }
 
 func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, types.RadioLink) {
@@ -50,12 +50,12 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	return adc, nil
 }
 
-func newImuMems(config icm20948.ICM20948Config) imu.ImuMems {
-	imuMems, err := icm20948.NewICM20948Driver(config)
+func newImuMems(config icm20948.ICM20948Config) imu.ImuDevice {
+	imuDev, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return imuMems
+	return imuDev
 }
 
 func newPowerBreaker(gpio string) types.PowerBreaker {

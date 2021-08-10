@@ -32,7 +32,7 @@ type RotationsChanges struct {
 	DRoll, DPitch, DYaw float64
 }
 
-type ImuMems interface {
+type ImuDevice interface {
 	ReadSensors() (
 		SensorData,
 		SensorData,
@@ -54,7 +54,7 @@ type ImuConfig struct {
 }
 
 type imuModule struct {
-	dev                         ImuMems
+	dev                         ImuDevice
 	accData                     SensorData
 	rotations                   Rotations
 	gyro                        Rotations
@@ -65,11 +65,11 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func CreateIM(imuMems ImuMems, config ImuConfig) IMU {
+func CreateIM(imuDev ImuDevice, config ImuConfig) IMU {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
 	imudevice := imuModule{
-		dev:                         imuMems,
+		dev:                         imuDev,
 		readTime:                    time.Time{},
 		readingInterval:             readingInterval,
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
