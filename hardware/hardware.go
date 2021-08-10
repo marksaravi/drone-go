@@ -1,12 +1,17 @@
 package hardware
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/MarkSaravi/drone-go/config"
+	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
+	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
@@ -15,7 +20,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -24,6 +29,24 @@ func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, typ
 	imuMems := newImuMems(config.Hardware.ICM20948)
 	radio := newRadioLink(config.Hardware.NRF204)
 	return imuMems, pwmDev, radio, powerbreaker
+}
+
+func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, types.RadioLink) {
+	fmt.Println(config)
+	spibus, _ := sysfs.NewSPI(
+		config.RemoteControl.MCP3008.SPI.BusNumber,
+		config.RemoteControl.MCP3008.SPI.ChipSelect,
+	)
+	spiconn, err := spibus.Connect(
+		physic.Frequency(config.RemoteControl.MCP3008.SPI.SpeedMegaHz)*physic.MegaHertz,
+		connectors.ConfigToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
+		8,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	adc := mcp3008.NewMCP3008(spiconn)
+	return adc, nil
 }
 
 func newImuMems(config types.ICM20948Config) types.ImuMems {

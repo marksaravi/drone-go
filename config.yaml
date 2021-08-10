@@ -57,10 +57,25 @@ devices:
     chip_select: 2
     rx_tx_address: '03896'
     power_dbm: '-18dbm'
-
 udp:
   enabled: true
   ip: 192.168.1.103
   port: 6431
   packets_per_second: 20 # set to zero for disabling udp send
   max_data_per_packet: 20
+
+remote-control:
+  mcp3008:
+    spi:
+      bus_number: 0
+      chip_select: 0
+      mode: 0
+      speed-mega-hz: 1
+  x-channel: 0
+  y-channel: 1
+  z-channel: 2
+  throttle-channel: 3
+  ready-light-gpio: 'GPIO05'
+  emergency-stop-light-gpio: 'GPIO06'
+  emergency-stop-button-gpio: 'GPIO13'
+  v-ref: 5
