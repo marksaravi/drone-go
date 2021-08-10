@@ -22,7 +22,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, types.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func newImuMems(config icm20948.ICM20948Config) imu.ImuDevice {
 	return imuDev
 }
 
-func newPowerBreaker(gpio string) types.PowerBreaker {
+func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 	return powerbreaker.NewPowerBreaker(gpio)
 
 }

@@ -1,12 +1,17 @@
 package motors
 
 import (
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 )
 
 const (
 	NUM_OF_MOTORS int = 4
 )
+
+type Throttle struct {
+	Motor int
+	Value float32
+}
 
 type ESC interface {
 	SetThrottle(int, float32)
@@ -20,10 +25,10 @@ type MotorsController interface {
 
 type motorsControl struct {
 	esc          ESC
-	powerbreaker types.PowerBreaker
+	powerbreaker powerbreaker.PowerBreaker
 }
 
-func NewMotorsControl(esc ESC, powerbreaker types.PowerBreaker) MotorsController {
+func NewMotorsControl(esc ESC, powerbreaker powerbreaker.PowerBreaker) MotorsController {
 	return &motorsControl{
 		esc:          esc,
 		powerbreaker: powerbreaker,
