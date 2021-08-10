@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/apps/remotecontrol"
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/remotecontrol"
 )
 
 func main() {

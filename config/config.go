@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/MarkSaravi/drone-go/flightcontrol"
+	"github.com/MarkSaravi/drone-go/apps/flightcontrol"
+	"github.com/MarkSaravi/drone-go/apps/remotecontrol"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
-	"github.com/MarkSaravi/drone-go/remotecontrol"
 	"gopkg.in/yaml.v3"
 )
 

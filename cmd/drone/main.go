@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/MarkSaravi/drone-go/apps/flightcontrol"
 	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/flightcontrol"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/motors"
