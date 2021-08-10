@@ -1,6 +1,7 @@
 package hardware
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/MarkSaravi/drone-go/config"
@@ -30,7 +31,8 @@ func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC
 }
 
 func InitRemoteHardware(config config.ApplicationConfig) (adc adcconverter.AnalogToDigitalDevice, radio types.RadioLink) {
-	spibus, err := sysfs.NewSPI(config.RemoteControl.SPI.BusNumber, config.RemoteControl.SPI.ChipSelect)
+	fmt.Println(config)
+	spibus, err := sysfs.NewSPI(config.RemoteControl.MCP3008.SPI.BusNumber, config.RemoteControl.MCP3008.SPI.ChipSelect)
 	if err != nil {
 		log.Fatal(err)
 	}

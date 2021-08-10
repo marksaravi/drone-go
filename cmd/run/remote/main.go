@@ -19,6 +19,6 @@ func main() {
 
 	for {
 		remoteControl.ReadInputs()
-		time.Sleep(time.Millisecond * 250)
+		time.Sleep(time.Millisecond * 1000)
 	}
 }

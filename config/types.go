@@ -1,11 +1,7 @@
 package config
 
-import "github.com/MarkSaravi/drone-go/connectors"
-
-type RemoteControlConfig struct {
-	SPI connectors.SPIConfig `yaml:"spi"`
-}
+import "github.com/MarkSaravi/drone-go/remotecontrol"
 
 type ApplicationConfig struct {
-	RemoteControl RemoteControlConfig `yaml:"remote-control"`
+	RemoteControl remotecontrol.RemoteControlConfig `yaml:"remote-control"`
 }

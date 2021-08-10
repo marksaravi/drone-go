@@ -3,9 +3,14 @@ package mcp3008
 import (
 	"fmt"
 
+	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"periph.io/x/periph/host/sysfs"
 )
+
+type MCP3008Config struct {
+	SPI connectors.SPIConfig `yaml:"spi"`
+}
 
 type mcp3008dev struct {
 	spibus *sysfs.SPI

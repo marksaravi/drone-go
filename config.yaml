@@ -69,3 +69,10 @@ remote-control:
     spi:
       bus_number: 1
       chip_select: 0
+  x-channel: 0
+  y-channel: 1
+  z-channel: 2
+  throttle-channel: 3
+  ready-light-gpio: 'GPIO05'
+  emergency-stop-light-gpio: 'GPIO06'
+  emergency-stop-button-gpio: 'GPIO13'

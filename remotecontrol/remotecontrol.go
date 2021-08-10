@@ -1,6 +1,9 @@
 package remotecontrol
 
-import "github.com/MarkSaravi/drone-go/modules/adcconverter"
+import (
+	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
+	"github.com/MarkSaravi/drone-go/modules/adcconverter"
+)
 
 type MotorsState int
 
@@ -9,6 +12,17 @@ const (
 	On
 	EmergencyOff
 )
+
+type RemoteControlConfig struct {
+	MCP3008             mcp3008.MCP3008Config `yaml:"mcp3008"`
+	XChannel            int                   `yaml:"x-channel"`
+	YChannel            int                   `yaml:"y-channel"`
+	ZChannel            int                   `yaml:"z-channel"`
+	ThrottleChannel     int                   `yaml:"throttle-channel"`
+	ReadyLight          string                `yaml:"ready-light-gpio"`
+	EmergencyStopLight  string                `yaml:"emergency-stop-light-gpio"`
+	EmergencyStopButton string                `yaml:"emergency-stop-button-gpio"`
+}
 
 type RemoteData struct {
 	Throttle    float32
