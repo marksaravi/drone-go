@@ -11,7 +11,7 @@ import (
 func main() {
 	config := utils.ReadConfigs()
 	fmt.Println("Started")
-	_, _, _, powerbreaker := hardware.InitHardware(config)
+	_, _, _, powerbreaker := hardware.InitDroneHardware(config)
 	powerbreaker.Connect()
 	time.Sleep(2 * time.Second)
 	powerbreaker.Disconnect()

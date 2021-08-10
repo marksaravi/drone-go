@@ -10,7 +10,7 @@ import (
 
 func main() {
 	config := utils.ReadConfigs()
-	_, _, radio, _ := hardware.InitHardware(config)
+	_, _, radio, _ := hardware.InitDroneHardware(config)
 	radio.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()

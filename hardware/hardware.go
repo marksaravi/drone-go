@@ -15,7 +15,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}

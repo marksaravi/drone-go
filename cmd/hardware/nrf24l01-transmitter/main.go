@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config := utils.ReadConfigs()
-	_, _, radio, _ := hardware.InitHardware(config)
+	_, _, radio, _ := hardware.InitDroneHardware(config)
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
