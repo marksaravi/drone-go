@@ -3,15 +3,11 @@ package icm20948
 import (
 	"time"
 
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host/sysfs"
 )
-
-// XYZ is X, Y, Z data
-type XYZ struct {
-	X, Y, Z float64
-}
 
 type Offsets struct {
 	X int16 `yaml:"X"`
@@ -33,11 +29,6 @@ type Sensor struct {
 type Register struct {
 	Address uint8
 	Bank    uint8
-}
-
-type SensorData struct {
-	Error error
-	Data  XYZ
 }
 
 type ICM20948Config struct {
@@ -185,9 +176,9 @@ func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 
 // ReadSensors reads Accelerometer and Gyro data
 func (dev *memsICM20948) ReadSensors() (
-	acc SensorData,
-	gyro SensorData,
-	mag SensorData,
+	acc imu.SensorData,
+	gyro imu.SensorData,
+	mag imu.SensorData,
 	err error) {
 	data, err := dev.readSensorsRawData()
 
@@ -197,17 +188,17 @@ func (dev *memsICM20948) ReadSensors() (
 	accData, accErr := dev.processAccelerometerData(data)
 	gyroData, gyroErr := dev.processGyroscopeData(data[6:])
 
-	acc = SensorData{
+	acc = imu.SensorData{
 		Error: accErr,
 		Data:  accData,
 	}
-	gyro = SensorData{
+	gyro = imu.SensorData{
 		Error: gyroErr,
 		Data:  gyroData,
 	}
-	mag = SensorData{
+	mag = imu.SensorData{
 		Error: nil,
-		Data:  XYZ{X: 0, Y: 0, Z: 0},
+		Data:  imu.XYZ{X: 0, Y: 0, Z: 0},
 	}
 	return
 }

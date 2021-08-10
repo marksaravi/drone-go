@@ -3,6 +3,8 @@ package icm20948
 import (
 	"fmt"
 	"log"
+
+	"github.com/MarkSaravi/drone-go/modules/imu"
 )
 
 // GyroscopeConfig is the configuration for Gyroscope
@@ -54,13 +56,13 @@ func (dev *memsICM20948) InitGyroscope() error {
 	return err
 }
 
-func (dev *memsICM20948) processGyroscopeData(data []uint8) (XYZ, error) {
+func (dev *memsICM20948) processGyroscopeData(data []uint8) (imu.XYZ, error) {
 	gyroConfig, _ := dev.GetGyro().Config.(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	x := float64(towsComplementUint8ToInt16(data[0], data[1])) / scale
 	y := float64(towsComplementUint8ToInt16(data[2], data[3])) / scale
 	z := float64(towsComplementUint8ToInt16(data[4], data[5])) / scale
-	return XYZ{
+	return imu.XYZ{
 		X: x,
 		Y: y,
 		Z: z,

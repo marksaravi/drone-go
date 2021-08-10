@@ -3,6 +3,8 @@ package icm20948
 import (
 	"log"
 	"time"
+
+	"github.com/MarkSaravi/drone-go/modules/imu"
 )
 
 // AccelerometerConfig is the configurations for Accelerometer
@@ -50,7 +52,7 @@ func (dev *memsICM20948) InitAccelerometer() error {
 	return err
 }
 
-func (dev *memsICM20948) processAccelerometerData(data []byte) (XYZ, error) {
+func (dev *memsICM20948) processAccelerometerData(data []byte) (imu.XYZ, error) {
 	config, _ := dev.GetAcc().Config.(AccelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
 	xRaw := towsComplementUint8ToInt16(data[0], data[1])
@@ -60,7 +62,7 @@ func (dev *memsICM20948) processAccelerometerData(data []byte) (XYZ, error) {
 	y := float64(yRaw) / accSens
 	z := float64(zRaw) / accSens
 
-	return XYZ{
+	return imu.XYZ{
 		X: x,
 		Y: y,
 		Z: z,

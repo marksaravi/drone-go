@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 )
+
+// XYZ is X, Y, Z data
+type XYZ struct {
+	X, Y, Z float64
+}
+
+type SensorData struct {
+	Error error
+	Data  XYZ
+}
 
 type Rotations struct {
 	Roll, Pitch, Yaw float64
@@ -26,9 +34,9 @@ type RotationsChanges struct {
 
 type ImuMems interface {
 	ReadSensors() (
-		icm20948.SensorData,
-		icm20948.SensorData,
-		icm20948.SensorData,
+		SensorData,
+		SensorData,
+		SensorData,
 		error)
 }
 
@@ -47,7 +55,7 @@ type ImuConfig struct {
 
 type imuModule struct {
 	dev                         ImuMems
-	accData                     icm20948.SensorData
+	accData                     SensorData
 	rotations                   Rotations
 	gyro                        Rotations
 	startTime                   time.Time
@@ -66,7 +74,7 @@ func CreateIM(imuMems ImuMems, config ImuConfig) IMU {
 		readingInterval:             readingInterval,
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
-		accData:                     icm20948.SensorData{Data: icm20948.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
+		accData:                     SensorData{Data: XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
 		rotations:                   Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyro:                        Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
@@ -92,7 +100,7 @@ func (imu *imuModule) GetRotations() (ImuRotations, error) {
 	diff := now.Sub(imu.readTime)
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
-	imu.accData.Data = icm20948.XYZ{
+	imu.accData.Data = XYZ{
 		X: lowPassFilter(imu.accData.Data.X, accData.Data.X, imu.accLowPassFilterCoefficient),
 		Y: lowPassFilter(imu.accData.Data.Y, accData.Data.Y, imu.accLowPassFilterCoefficient),
 		Z: lowPassFilter(imu.accData.Data.Z, accData.Data.Z, imu.accLowPassFilterCoefficient),
@@ -116,7 +124,7 @@ func (imu *imuModule) GetRotations() (ImuRotations, error) {
 	}, devErr
 }
 
-func gyroChanges(gyro icm20948.XYZ, timeInterval int64) RotationsChanges {
+func gyroChanges(gyro XYZ, timeInterval int64) RotationsChanges {
 	dt := goDurToDt(timeInterval)
 	return RotationsChanges{
 		DRoll:  gyro.X * dt,
@@ -133,7 +141,7 @@ func calcGyroRotations(dGyro RotationsChanges, gyro Rotations) Rotations {
 	}
 }
 
-func calcaAcelerometerRotations(data icm20948.XYZ) Rotations {
+func calcaAcelerometerRotations(data XYZ) Rotations {
 	roll := radToDeg(math.Atan2(data.Y, data.Z))
 	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
 	return Rotations{
