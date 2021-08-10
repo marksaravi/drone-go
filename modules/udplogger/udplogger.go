@@ -10,6 +10,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
@@ -75,7 +76,7 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) type
 	}
 }
 
-func (l *udpLogger) appendData(imuRotations types.ImuRotations) {
+func (l *udpLogger) appendData(imuRotations imu.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -86,7 +87,7 @@ func (l *udpLogger) appendData(imuRotations types.ImuRotations) {
 	}
 }
 
-func (l *udpLogger) Send(imuRotations types.ImuRotations) {
+func (l *udpLogger) Send(imuRotations imu.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -109,7 +110,7 @@ func (l *udpLogger) sendData() {
 	}
 }
 
-func imuDataToJson(imuRotations types.ImuRotations) string {
+func imuDataToJson(imuRotations imu.ImuRotations) string {
 	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
 		imuRotations.Accelerometer.Roll,
 		imuRotations.Accelerometer.Pitch,

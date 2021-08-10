@@ -1,6 +1,9 @@
 package types
 
-import "github.com/MarkSaravi/drone-go/hardware/icm20948"
+import (
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/modules/imu"
+)
 
 type PCA9685Config struct {
 	Device          string        `yaml:"device"`
@@ -14,12 +17,6 @@ type NRF204Config struct {
 	CEGPIO      string `yaml:"ce_gpio"`
 	RxTxAddress string `yaml:"rx_tx_address"`
 	PowerDBm    string `yaml:"power_dbm"`
-}
-
-type ImuConfig struct {
-	ImuDataPerSecond            int     `yaml:"imu_data_per_second"`
-	AccLowPassFilterCoefficient float64 `yaml:"acc_lowpass_filter_coefficient"`
-	LowPassFilterCoefficient    float64 `yaml:"lowpass_filter_coefficient"`
 }
 
 type PidConfig struct {
@@ -39,9 +36,9 @@ type EscConfig struct {
 }
 
 type FlightConfig struct {
-	PID PidConfig `yaml:"pid"`
-	Imu ImuConfig `yaml:"imu"`
-	Esc EscConfig `yaml:"esc"`
+	PID PidConfig     `yaml:"pid"`
+	Imu imu.ImuConfig `yaml:"imu"`
+	Esc EscConfig     `yaml:"esc"`
 }
 
 type HardwareConfig struct {

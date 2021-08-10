@@ -6,14 +6,50 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
-	"github.com/MarkSaravi/drone-go/types"
 )
 
+type Rotations struct {
+	Roll, Pitch, Yaw float64
+}
+
+type ImuRotations struct {
+	Accelerometer Rotations
+	Gyroscope     Rotations
+	Rotations     Rotations
+	ReadTime      int64
+	ReadInterval  int64
+}
+
+type RotationsChanges struct {
+	DRoll, DPitch, DYaw float64
+}
+
+type ImuMems interface {
+	ReadSensors() (
+		icm20948.SensorData,
+		icm20948.SensorData,
+		icm20948.SensorData,
+		error)
+}
+
+// IMU is interface to imu mems
+type IMU interface {
+	GetRotations() (ImuRotations, error)
+	ResetReadingTimes()
+	CanRead() bool
+}
+
+type ImuConfig struct {
+	ImuDataPerSecond            int     `yaml:"imu_data_per_second"`
+	AccLowPassFilterCoefficient float64 `yaml:"acc_lowpass_filter_coefficient"`
+	LowPassFilterCoefficient    float64 `yaml:"lowpass_filter_coefficient"`
+}
+
 type imuModule struct {
-	dev                         types.ImuMems
+	dev                         ImuMems
 	accData                     icm20948.SensorData
-	rotations                   types.Rotations
-	gyro                        types.Rotations
+	rotations                   Rotations
+	gyro                        Rotations
 	startTime                   time.Time
 	readTime                    time.Time
 	readingInterval             time.Duration
@@ -21,7 +57,7 @@ type imuModule struct {
 	lowPassFilterCoefficient    float64
 }
 
-func CreateIM(imuMems types.ImuMems, config types.ImuConfig) types.IMU {
+func CreateIM(imuMems ImuMems, config ImuConfig) IMU {
 	readingInterval := time.Duration(int64(time.Second) / int64(config.ImuDataPerSecond))
 	fmt.Println("reading interval: ", readingInterval)
 	imudevice := imuModule{
@@ -31,8 +67,8 @@ func CreateIM(imuMems types.ImuMems, config types.ImuConfig) types.IMU {
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
 		accData:                     icm20948.SensorData{Data: icm20948.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
-		rotations:                   types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyro:                        types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		rotations:                   Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyro:                        Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
 	return &imudevice
 }
@@ -40,8 +76,8 @@ func CreateIM(imuMems types.ImuMems, config types.ImuConfig) types.IMU {
 func (imu *imuModule) ResetReadingTimes() {
 	imu.startTime = time.Now()
 	imu.readTime = imu.startTime
-	imu.rotations = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
-	imu.gyro = types.Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.rotations = Rotations{Roll: 0, Pitch: 0, Yaw: 0}
+	imu.gyro = Rotations{Roll: 0, Pitch: 0, Yaw: 0}
 }
 
 func (imu *imuModule) CanRead() bool {
@@ -51,7 +87,7 @@ func (imu *imuModule) CanRead() bool {
 	return false
 }
 
-func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
+func (imu *imuModule) GetRotations() (ImuRotations, error) {
 	now := time.Now()
 	diff := now.Sub(imu.readTime)
 	imu.readTime = now
@@ -65,13 +101,13 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	dg := gyroChanges(gyroData.Data, diff.Nanoseconds())
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	rotations := calcGyroRotations(dg, imu.rotations)
-	imu.rotations = types.Rotations{
+	imu.rotations = Rotations{
 		Roll:  lowPassFilter(rotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
 		Pitch: lowPassFilter(rotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
 
-	return types.ImuRotations{
+	return ImuRotations{
 		Accelerometer: accRotations,
 		Gyroscope:     imu.gyro,
 		Rotations:     imu.rotations,
@@ -80,27 +116,27 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	}, devErr
 }
 
-func gyroChanges(gyro icm20948.XYZ, timeInterval int64) types.RotationsChanges {
+func gyroChanges(gyro icm20948.XYZ, timeInterval int64) RotationsChanges {
 	dt := goDurToDt(timeInterval)
-	return types.RotationsChanges{
+	return RotationsChanges{
 		DRoll:  gyro.X * dt,
 		DPitch: gyro.Y * dt,
 		DYaw:   gyro.Z * dt,
 	}
 }
 
-func calcGyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types.Rotations {
-	return types.Rotations{
+func calcGyroRotations(dGyro RotationsChanges, gyro Rotations) Rotations {
+	return Rotations{
 		Roll:  math.Mod(gyro.Roll+dGyro.DRoll, 360),
 		Pitch: math.Mod(gyro.Pitch+dGyro.DPitch, 360),
 		Yaw:   math.Mod(gyro.Yaw+dGyro.DYaw, 360),
 	}
 }
 
-func calcaAcelerometerRotations(data icm20948.XYZ) types.Rotations {
+func calcaAcelerometerRotations(data icm20948.XYZ) Rotations {
 	roll := radToDeg(math.Atan2(data.Y, data.Z))
 	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
-	return types.Rotations{
+	return Rotations{
 		Roll:  roll,
 		Pitch: pitch,
 		Yaw:   0,

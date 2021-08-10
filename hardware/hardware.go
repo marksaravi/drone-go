@@ -12,6 +12,7 @@ import (
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
@@ -20,7 +21,7 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config types.ApplicationConfig) (imu.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -49,7 +50,7 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	return adc, nil
 }
 
-func newImuMems(config icm20948.ICM20948Config) types.ImuMems {
+func newImuMems(config icm20948.ICM20948Config) imu.ImuMems {
 	imuMems, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)

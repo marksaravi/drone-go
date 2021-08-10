@@ -4,11 +4,12 @@ import (
 	"sync"
 
 	"github.com/MarkSaravi/drone-go/modules/command"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
 type flightControl struct {
-	imu              types.IMU
+	imu              imu.IMU
 	motorsController types.MotorsController
 	radio            types.RadioLink
 	logger           types.UdpLogger
@@ -41,7 +42,7 @@ func (fc *flightControl) Start() {
 }
 
 func CreateFlightControl(
-	imu types.IMU,
+	imu imu.IMU,
 	motorsController types.MotorsController,
 	radio types.RadioLink,
 	logger types.UdpLogger,
