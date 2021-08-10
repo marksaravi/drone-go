@@ -2,6 +2,13 @@ package connectors
 
 import "periph.io/x/periph/conn/spi"
 
+type SPIConfig struct {
+	BusNumber   int `yaml:"bus_number"`
+	ChipSelect  int `yaml:"chip_select"`
+	Mode        int `yaml:"mode"`
+	SpeedMegaHz int `yaml:"speed-mega-hz"`
+}
+
 func ConfigToSPIMode(configValue int) spi.Mode {
 	switch configValue {
 	case 0:
