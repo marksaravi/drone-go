@@ -10,6 +10,23 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
 )
 
+type EscConfig struct {
+	UpdateFrequency int     `yaml:"update_frequency"`
+	MaxThrottle     float32 `yaml:"max_throttle"`
+}
+
+type PidConfig struct {
+	ProportionalGain float32 `yaml:"proportional–gain"`
+	IntegralGain     float32 `yaml:"integral-gain"`
+	DerivativeGain   float32 `yaml:"derivative-gain"`
+}
+
+type FlightConfig struct {
+	PID PidConfig     `yaml:"pid"`
+	Imu imu.ImuConfig `yaml:"imu"`
+	Esc EscConfig     `yaml:"esc"`
+}
+
 type flightControl struct {
 	imu              imu.IMU
 	motorsController motors.MotorsController
