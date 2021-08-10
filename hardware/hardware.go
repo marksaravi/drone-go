@@ -64,7 +64,7 @@ func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 
 }
 
-func newPwmDev(config config.PCA9685Config) motors.ESC {
+func newPwmDev(config pca9685.PCA9685Config) motors.ESC {
 	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)

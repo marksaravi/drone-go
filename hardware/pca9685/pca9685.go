@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"periph.io/x/periph/host"
@@ -44,6 +43,17 @@ const (
 	MaxPW     float32 = 0.002
 )
 
+type Motor struct {
+	Label      string `yaml:"label"`
+	ESCChannel int    `yaml:"esc_channel"`
+}
+
+type PCA9685Config struct {
+	Device          string        `yaml:"device"`
+	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
+	Motors          map[int]Motor `yaml:"motors"`
+}
+
 //PCA9685 is struct for PCA9685
 type PCA9685 struct {
 	name           string
@@ -51,7 +61,7 @@ type PCA9685 struct {
 	connection     *i2c.Connection
 	frequency      float32
 	maxThrottle    float32
-	motorsMappings map[int]config.Motor
+	motorsMappings map[int]Motor
 }
 
 func (d *PCA9685) readByte(offset uint8) (b uint8, err error) {
@@ -205,7 +215,7 @@ func (d *PCA9685) SetThrottle(motor int, throttle float32) {
 }
 
 //Calibrate
-func Calibrate(config config.PCA9685Config) {
+func Calibrate(config PCA9685Config) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -259,7 +269,7 @@ func (d *PCA9685) StopAll() {
 }
 
 // NewPCA9685Driver creates new PCA9685 driver
-func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorsMappings map[int]config.Motor) (*PCA9685, error) {
+func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorsMappings map[int]Motor) (*PCA9685, error) {
 	return &PCA9685{
 		name:           "PCA9685",
 		address:        address,

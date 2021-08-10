@@ -7,16 +7,11 @@ import (
 	"os"
 
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
 	"gopkg.in/yaml.v3"
 )
-
-type PCA9685Config struct {
-	Device          string        `yaml:"device"`
-	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
-	Motors          map[int]Motor `yaml:"motors"`
-}
 
 type NRF204Config struct {
 	BusNumber   int    `yaml:"bus_number"`
@@ -32,11 +27,6 @@ type PidConfig struct {
 	DerivativeGain   float32 `yaml:"derivative-gain"`
 }
 
-type Motor struct {
-	Label      string `yaml:"label"`
-	ESCChannel int    `yaml:"esc_channel"`
-}
-
 type EscConfig struct {
 	UpdateFrequency int     `yaml:"update_frequency"`
 	MaxThrottle     float32 `yaml:"max_throttle"`
@@ -50,7 +40,7 @@ type FlightConfig struct {
 
 type HardwareConfig struct {
 	ICM20948 icm20948.ICM20948Config `yaml:"icm20948"`
-	PCA9685  PCA9685Config           `yaml:"pca9685"`
+	PCA9685  pca9685.PCA9685Config   `yaml:"pca9685"`
 	NRF204   NRF204Config            `yaml:"nrf204"`
 }
 
