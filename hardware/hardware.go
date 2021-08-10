@@ -32,11 +32,12 @@ func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC
 
 func InitRemoteHardware(config config.ApplicationConfig) (adc adcconverter.AnalogToDigitalDevice, radio types.RadioLink) {
 	fmt.Println(config)
-	spibus, err := sysfs.NewSPI(config.RemoteControl.MCP3008.SPI.BusNumber, config.RemoteControl.MCP3008.SPI.ChipSelect)
+	spibus, _ := sysfs.NewSPI(config.RemoteControl.MCP3008.SPI.BusNumber, config.RemoteControl.MCP3008.SPI.ChipSelect)
+	spiconn, err := spibus.Connect(physic.MegaHertz, spi.Mode0, 8)
 	if err != nil {
 		log.Fatal(err)
 	}
-	adcDev := mcp3008.NewMCP3008(spibus)
+	adcDev := mcp3008.NewMCP3008(spiconn)
 	return adcDev, nil
 }
 

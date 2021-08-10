@@ -5,7 +5,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
-	"periph.io/x/periph/host/sysfs"
+	"periph.io/x/periph/conn/spi"
 )
 
 type MCP3008Config struct {
@@ -13,16 +13,17 @@ type MCP3008Config struct {
 }
 
 type mcp3008dev struct {
-	spibus *sysfs.SPI
+	spiConn spi.Conn
 }
 
-func NewMCP3008(spibus *sysfs.SPI) adcconverter.AnalogToDigitalDevice {
+func NewMCP3008(spiConn spi.Conn) adcconverter.AnalogToDigitalDevice {
 	return &mcp3008dev{
-		spibus: spibus,
+		spiConn: spiConn,
 	}
 }
 
 func (dev *mcp3008dev) ReadInput(channel int) int {
+	//dev.spiConn.Tx()
 	fmt.Println("READ INPUT")
 	return 0
 }
