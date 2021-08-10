@@ -1,16 +1,16 @@
 package main
 
 import (
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/udplogger"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	appConfig := utils.ReadConfigs()
+	appConfig := config.ReadConfigs()
 	imuDev, esc, radio, powerBreaker := hardware.InitDroneHardware(appConfig)
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(imuDev, appConfig.Flight.Imu)

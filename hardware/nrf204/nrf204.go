@@ -6,8 +6,8 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
-	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -78,7 +78,7 @@ type nrf204l01 struct {
 	powerDBm byte
 }
 
-func NewNRF204(config types.NRF204Config, conn spi.Conn) *nrf204l01 {
+func NewNRF204(config config.NRF204Config, conn spi.Conn) *nrf204l01 {
 	address := []byte(config.RxTxAddress)
 	lenAddress := len(address)
 	if lenAddress != ADDRESS_SIZE {

@@ -16,14 +16,13 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
-	"github.com/MarkSaravi/drone-go/types"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
+func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
@@ -65,7 +64,7 @@ func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 
 }
 
-func newPwmDev(config types.PCA9685Config) motors.ESC {
+func newPwmDev(config config.PCA9685Config) motors.ESC {
 	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)
@@ -79,7 +78,7 @@ func newPwmDev(config types.PCA9685Config) motors.ESC {
 	return pwmDev
 }
 
-func newRadioLink(config types.NRF204Config) radiolink.RadioLink {
+func newRadioLink(config config.NRF204Config) radiolink.RadioLink {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}

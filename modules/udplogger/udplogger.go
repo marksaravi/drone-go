@@ -10,8 +10,8 @@ import (
 	"net"
 	"strings"
 
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/modules/imu"
-	"github.com/MarkSaravi/drone-go/types"
 )
 
 // Logger is interface for the udpLogger
@@ -32,7 +32,7 @@ type udpLogger struct {
 	bufferCounter        int
 }
 
-func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) UdpLogger {
+func CreateUdpLogger(udpConfig config.UdpLoggerConfig, imuDataPerSecond int) UdpLogger {
 	if !udpConfig.Enabled {
 		return &udpLogger{
 			enabled: false,
