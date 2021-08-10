@@ -3,11 +3,39 @@ package icm20948
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host/sysfs"
 )
+
+type Offsets struct {
+	X int16 `yaml:"X"`
+	Y int16 `yaml:"Y"`
+	Z int16 `yaml:"Z"`
+}
+
+// Config is the generic configuration
+type Config interface {
+}
+
+type sensor struct {
+	Type   string
+	Config Config
+}
+
+// register is the address and bank of the register
+type register struct {
+	Address uint8
+	Bank    uint8
+}
+
+type ICM20948Config struct {
+	BusNumber  int                 `yaml:"bus_number"`
+	ChipSelect int                 `yaml:"chip_select"`
+	AccConfig  AccelerometerConfig `yaml:"accelerometer"`
+	GyroConfig GyroscopeConfig     `yaml:"gyroscope"`
+}
 
 // memsICM20948 is icm20948 mems
 type memsICM20948 struct {
@@ -15,13 +43,13 @@ type memsICM20948 struct {
 	*sysfs.SPI
 	spi.Conn
 	regbank uint8
-	acc     types.Sensor
-	gyro    types.Sensor
-	mag     types.Sensor
+	acc     sensor
+	gyro    sensor
+	mag     sensor
 }
 
-func reg(reg uint16) *types.Register {
-	return &types.Register{
+func reg(reg uint16) *register {
+	return &register{
 		Address: uint8(reg),
 		Bank:    uint8(reg >> 8),
 	}
@@ -43,7 +71,7 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config types.ICM20948Config) (*memsICM20948, error) {
+func NewICM20948Driver(config ICM20948Config) (*memsICM20948, error) {
 	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
 	if err != nil {
 		return nil, err
@@ -58,15 +86,15 @@ func NewICM20948Driver(config types.ICM20948Config) (*memsICM20948, error) {
 		SPI:     d,
 		Conn:    conn,
 		regbank: 0xFF,
-		acc: types.Sensor{
+		acc: sensor{
 			Type:   ACCELEROMETER,
 			Config: config.AccConfig,
 		},
-		gyro: types.Sensor{
+		gyro: sensor{
 			Type:   GYROSCOPE,
 			Config: config.GyroConfig,
 		},
-		mag: types.Sensor{
+		mag: sensor{
 			Type: MAGNETOMETER,
 		},
 	}
@@ -99,17 +127,17 @@ func (dev *memsICM20948) selRegisterBank(regbank uint8) error {
 	return dev.writeReg(REG_BANK_SEL, regbank<<4)
 }
 
-func (dev *memsICM20948) readRegister(register uint16, len int) ([]uint8, error) {
-	reg := reg(register)
+func (dev *memsICM20948) readRegister(address uint16, len int) ([]uint8, error) {
+	reg := reg(address)
 	dev.selRegisterBank(reg.Bank)
 	return dev.readReg(reg.Address, len)
 }
 
-func (dev *memsICM20948) writeRegister(register uint16, data ...uint8) error {
+func (dev *memsICM20948) writeRegister(address uint16, data ...uint8) error {
 	if len(data) == 0 {
 		return nil
 	}
-	reg := reg(register)
+	reg := reg(address)
 	dev.selRegisterBank(reg.Bank)
 	return dev.writeReg(reg.Address, data...)
 }
@@ -147,9 +175,9 @@ func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 
 // ReadSensors reads Accelerometer and Gyro data
 func (dev *memsICM20948) ReadSensors() (
-	acc types.SensorData,
-	gyro types.SensorData,
-	mag types.SensorData,
+	acc imu.SensorData,
+	gyro imu.SensorData,
+	mag imu.SensorData,
 	err error) {
 	data, err := dev.readSensorsRawData()
 
@@ -159,17 +187,17 @@ func (dev *memsICM20948) ReadSensors() (
 	accData, accErr := dev.processAccelerometerData(data)
 	gyroData, gyroErr := dev.processGyroscopeData(data[6:])
 
-	acc = types.SensorData{
+	acc = imu.SensorData{
 		Error: accErr,
 		Data:  accData,
 	}
-	gyro = types.SensorData{
+	gyro = imu.SensorData{
 		Error: gyroErr,
 		Data:  gyroData,
 	}
-	mag = types.SensorData{
+	mag = imu.SensorData{
 		Error: nil,
-		Data:  types.XYZ{X: 0, Y: 0, Z: 0},
+		Data:  imu.XYZ{X: 0, Y: 0, Z: 0},
 	}
 	return
 }

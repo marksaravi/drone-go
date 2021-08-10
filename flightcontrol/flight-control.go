@@ -4,14 +4,34 @@ import (
 	"sync"
 
 	"github.com/MarkSaravi/drone-go/modules/command"
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/modules/motors"
+	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"github.com/MarkSaravi/drone-go/modules/udplogger"
 )
 
+type EscConfig struct {
+	UpdateFrequency int     `yaml:"update_frequency"`
+	MaxThrottle     float32 `yaml:"max_throttle"`
+}
+
+type PidConfig struct {
+	ProportionalGain float32 `yaml:"proportional–gain"`
+	IntegralGain     float32 `yaml:"integral-gain"`
+	DerivativeGain   float32 `yaml:"derivative-gain"`
+}
+
+type FlightConfig struct {
+	PID PidConfig     `yaml:"pid"`
+	Imu imu.ImuConfig `yaml:"imu"`
+	Esc EscConfig     `yaml:"esc"`
+}
+
 type flightControl struct {
-	imu              types.IMU
-	motorsController types.MotorsController
-	radio            types.RadioLink
-	logger           types.UdpLogger
+	imu              imu.IMU
+	motorsController motors.MotorsController
+	radio            radiolink.RadioLink
+	logger           udplogger.UdpLogger
 }
 
 func (fc *flightControl) Start() {
@@ -41,10 +61,10 @@ func (fc *flightControl) Start() {
 }
 
 func CreateFlightControl(
-	imu types.IMU,
-	motorsController types.MotorsController,
-	radio types.RadioLink,
-	logger types.UdpLogger,
+	imu imu.IMU,
+	motorsController motors.MotorsController,
+	radio radiolink.RadioLink,
+	logger udplogger.UdpLogger,
 ) *flightControl {
 	return &flightControl{
 		imu:              imu,

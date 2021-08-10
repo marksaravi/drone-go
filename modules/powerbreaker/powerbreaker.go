@@ -8,6 +8,11 @@ import (
 	"periph.io/x/periph/conn/gpio/gpioreg"
 )
 
+type PowerBreaker interface {
+	Connect()
+	Disconnect()
+}
+
 //powerBreaker is the safty power breaker
 type powerBreaker struct {
 	pin gpio.PinOut

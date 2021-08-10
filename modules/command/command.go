@@ -5,12 +5,14 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/MarkSaravi/drone-go/types"
 )
 
-func CreateCommandChannel(wg *sync.WaitGroup) chan types.Command {
-	command := make(chan types.Command, 1)
+type Command struct {
+	Command string
+}
+
+func CreateCommandChannel(wg *sync.WaitGroup) chan Command {
+	command := make(chan Command, 1)
 	go func() {
 		wg.Add(1)
 		var b []byte = make([]byte, 1)
@@ -20,7 +22,7 @@ func CreateCommandChannel(wg *sync.WaitGroup) chan types.Command {
 				break
 			}
 		}
-		command <- types.Command{
+		command <- Command{
 			Command: "COMMAND_END_PROGRAM",
 		}
 		close(command)

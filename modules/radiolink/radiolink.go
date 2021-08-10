@@ -1,4 +1,4 @@
-package types
+package radiolink
 
 type FlightData struct {
 	Roll          float32

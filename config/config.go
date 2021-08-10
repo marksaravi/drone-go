@@ -6,8 +6,27 @@ import (
 	"log"
 	"os"
 
+	"github.com/MarkSaravi/drone-go/flightcontrol"
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
+	"github.com/MarkSaravi/drone-go/hardware/nrf204"
+	"github.com/MarkSaravi/drone-go/hardware/pca9685"
+	"github.com/MarkSaravi/drone-go/modules/udplogger"
+	"github.com/MarkSaravi/drone-go/remotecontrol"
 	"gopkg.in/yaml.v3"
 )
+
+type HardwareConfig struct {
+	ICM20948 icm20948.ICM20948Config `yaml:"icm20948"`
+	PCA9685  pca9685.PCA9685Config   `yaml:"pca9685"`
+	NRF204   nrf204.NRF204Config     `yaml:"nrf204"`
+}
+
+type ApplicationConfig struct {
+	Flight        flightcontrol.FlightConfig        `yaml:"flight_control"`
+	Hardware      HardwareConfig                    `yaml:"devices"`
+	UDP           udplogger.UdpLoggerConfig         `yaml:"udp"`
+	RemoteControl remotecontrol.RemoteControlConfig `yaml:"remote-control"`
+}
 
 func ReadConfigs() ApplicationConfig {
 	var config ApplicationConfig

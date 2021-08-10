@@ -10,8 +10,21 @@ import (
 	"net"
 	"strings"
 
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/imu"
 )
+
+type UdpLoggerConfig struct {
+	Enabled          bool   `yaml:"enabled"`
+	IP               string `yaml:"ip"`
+	Port             int    `yaml:"port"`
+	PacketsPerSecond int    `yaml:"packets_per_second"`
+	MaxDataPerPacket int    `yaml:"max_data_per_packet"`
+}
+
+// Logger is interface for the udpLogger
+type UdpLogger interface {
+	Send(imu.ImuRotations)
+}
 
 type udpLogger struct {
 	conn                 *net.UDPConn
@@ -26,7 +39,7 @@ type udpLogger struct {
 	bufferCounter        int
 }
 
-func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) types.UdpLogger {
+func CreateUdpLogger(udpConfig UdpLoggerConfig, imuDataPerSecond int) UdpLogger {
 	if !udpConfig.Enabled {
 		return &udpLogger{
 			enabled: false,
@@ -75,7 +88,7 @@ func CreateUdpLogger(udpConfig types.UdpLoggerConfig, imuDataPerSecond int) type
 	}
 }
 
-func (l *udpLogger) appendData(imuRotations types.ImuRotations) {
+func (l *udpLogger) appendData(imuRotations imu.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -86,7 +99,7 @@ func (l *udpLogger) appendData(imuRotations types.ImuRotations) {
 	}
 }
 
-func (l *udpLogger) Send(imuRotations types.ImuRotations) {
+func (l *udpLogger) Send(imuRotations imu.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -109,7 +122,7 @@ func (l *udpLogger) sendData() {
 	}
 }
 
-func imuDataToJson(imuRotations types.ImuRotations) string {
+func imuDataToJson(imuRotations imu.ImuRotations) string {
 	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
 		imuRotations.Accelerometer.Roll,
 		imuRotations.Accelerometer.Pitch,

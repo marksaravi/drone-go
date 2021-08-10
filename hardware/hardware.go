@@ -12,26 +12,28 @@ import (
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
+	"github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
-	"github.com/MarkSaravi/drone-go/types"
+	"github.com/MarkSaravi/drone-go/modules/radiolink"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitDroneHardware(config types.ApplicationConfig) (types.ImuMems, types.ESC, types.RadioLink, types.PowerBreaker) {
+func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
 	pwmDev := newPwmDev(config.Hardware.PCA9685)
 	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
-	imuMems := newImuMems(config.Hardware.ICM20948)
+	imuDev := newImuMems(config.Hardware.ICM20948)
 	radio := newRadioLink(config.Hardware.NRF204)
-	return imuMems, pwmDev, radio, powerbreaker
+	return imuDev, pwmDev, radio, powerbreaker
 }
 
-func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, types.RadioLink) {
+func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, radiolink.RadioLink) {
 	fmt.Println(config)
 	spibus, _ := sysfs.NewSPI(
 		config.RemoteControl.MCP3008.SPI.BusNumber,
@@ -49,20 +51,20 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	return adc, nil
 }
 
-func newImuMems(config types.ICM20948Config) types.ImuMems {
-	imuMems, err := icm20948.NewICM20948Driver(config)
+func newImuMems(config icm20948.ICM20948Config) imu.ImuDevice {
+	imuDev, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return imuMems
+	return imuDev
 }
 
-func newPowerBreaker(gpio string) types.PowerBreaker {
+func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 	return powerbreaker.NewPowerBreaker(gpio)
 
 }
 
-func newPwmDev(config types.PCA9685Config) types.ESC {
+func newPwmDev(config pca9685.PCA9685Config) motors.ESC {
 	i2cConnection, err := i2c.Open(config.Device)
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +78,7 @@ func newPwmDev(config types.PCA9685Config) types.ESC {
 	return pwmDev
 }
 
-func newRadioLink(config types.NRF204Config) types.RadioLink {
+func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
