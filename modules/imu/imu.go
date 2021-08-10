@@ -5,12 +5,13 @@ import (
 	"math"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/types"
 )
 
 type imuModule struct {
 	dev                         types.ImuMems
-	accData                     types.SensorData
+	accData                     icm20948.SensorData
 	rotations                   types.Rotations
 	gyro                        types.Rotations
 	startTime                   time.Time
@@ -29,7 +30,7 @@ func CreateIM(imuMems types.ImuMems, config types.ImuConfig) types.IMU {
 		readingInterval:             readingInterval,
 		accLowPassFilterCoefficient: config.AccLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    config.LowPassFilterCoefficient,
-		accData:                     types.SensorData{Data: types.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
+		accData:                     icm20948.SensorData{Data: icm20948.XYZ{X: 0, Y: 0, Z: 1}, Error: nil},
 		rotations:                   types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyro:                        types.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
@@ -55,7 +56,7 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	diff := now.Sub(imu.readTime)
 	imu.readTime = now
 	accData, gyroData, _, devErr := imu.dev.ReadSensors()
-	imu.accData.Data = types.XYZ{
+	imu.accData.Data = icm20948.XYZ{
 		X: lowPassFilter(imu.accData.Data.X, accData.Data.X, imu.accLowPassFilterCoefficient),
 		Y: lowPassFilter(imu.accData.Data.Y, accData.Data.Y, imu.accLowPassFilterCoefficient),
 		Z: lowPassFilter(imu.accData.Data.Z, accData.Data.Z, imu.accLowPassFilterCoefficient),
@@ -79,7 +80,7 @@ func (imu *imuModule) GetRotations() (types.ImuRotations, error) {
 	}, devErr
 }
 
-func gyroChanges(gyro types.XYZ, timeInterval int64) types.RotationsChanges {
+func gyroChanges(gyro icm20948.XYZ, timeInterval int64) types.RotationsChanges {
 	dt := goDurToDt(timeInterval)
 	return types.RotationsChanges{
 		DRoll:  gyro.X * dt,
@@ -96,7 +97,7 @@ func calcGyroRotations(dGyro types.RotationsChanges, gyro types.Rotations) types
 	}
 }
 
-func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
+func calcaAcelerometerRotations(data icm20948.XYZ) types.Rotations {
 	roll := radToDeg(math.Atan2(data.Y, data.Z))
 	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
 	return types.Rotations{

@@ -3,18 +3,25 @@ package icm20948
 import (
 	"fmt"
 	"log"
-
-	"github.com/MarkSaravi/drone-go/types"
 )
 
+// GyroscopeConfig is the configuration for Gyroscope
+type GyroscopeConfig struct {
+	SensitivityLevel     string  `yaml:"sensitivity_level"`
+	LowPassFilterEnabled bool    `yaml:"lowpass_filter_enabled"`
+	LowPassFilterConfig  int     `yaml:"lowpass_filter_config"`
+	Averaging            int     `yaml:"averaging"`
+	Offsets              Offsets `yaml:"offsets"`
+}
+
 // GetGyro get accelerometer data
-func (dev *memsICM20948) GetGyro() *types.Sensor {
+func (dev *memsICM20948) GetGyro() *Sensor {
 	return &(dev.gyro)
 }
 
 // InitGyroscope initialise the Gyroscope
 func (dev *memsICM20948) InitGyroscope() error {
-	config, ok := dev.GetGyro().Config.(types.GyroscopeConfig)
+	config, ok := dev.GetGyro().Config.(GyroscopeConfig)
 	if !ok {
 		log.Fatal("Gyro config mismatch")
 	}
@@ -47,13 +54,13 @@ func (dev *memsICM20948) InitGyroscope() error {
 	return err
 }
 
-func (dev *memsICM20948) processGyroscopeData(data []uint8) (types.XYZ, error) {
-	gyroConfig, _ := dev.GetGyro().Config.(types.GyroscopeConfig)
+func (dev *memsICM20948) processGyroscopeData(data []uint8) (XYZ, error) {
+	gyroConfig, _ := dev.GetGyro().Config.(GyroscopeConfig)
 	scale := gyroFullScale[gyroConfig.SensitivityLevel]
 	x := float64(towsComplementUint8ToInt16(data[0], data[1])) / scale
 	y := float64(towsComplementUint8ToInt16(data[2], data[3])) / scale
 	z := float64(towsComplementUint8ToInt16(data[4], data[5])) / scale
-	return types.XYZ{
+	return XYZ{
 		X: x,
 		Y: y,
 		Z: z,

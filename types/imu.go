@@ -1,23 +1,9 @@
 package types
 
-// Register is the address and bank of the Register
-type Register struct {
-	Address uint8
-	Bank    uint8
-}
-
-// XYZ is X, Y, Z data
-type XYZ struct {
-	X, Y, Z float64
-}
+import "github.com/MarkSaravi/drone-go/hardware/icm20948"
 
 type RotationsChanges struct {
 	DRoll, DPitch, DYaw float64
-}
-
-type SensorData struct {
-	Error error
-	Data  XYZ
 }
 
 type Rotations struct {
@@ -34,9 +20,9 @@ type ImuRotations struct {
 
 type ImuMems interface {
 	ReadSensors() (
-		SensorData,
-		SensorData,
-		SensorData,
+		icm20948.SensorData,
+		icm20948.SensorData,
+		icm20948.SensorData,
 		error)
 }
 

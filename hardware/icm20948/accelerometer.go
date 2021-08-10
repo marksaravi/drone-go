@@ -3,18 +3,25 @@ package icm20948
 import (
 	"log"
 	"time"
-
-	"github.com/MarkSaravi/drone-go/types"
 )
 
+// AccelerometerConfig is the configurations for Accelerometer
+type AccelerometerConfig struct {
+	SensitivityLevel     string  `yaml:"sensitivity_level"`
+	LowPassFilterEnabled bool    `yaml:"lowpass_filter_enabled"`
+	LowPassFilterConfig  int     `yaml:"lowpass_filter_config"`
+	Averaging            int     `yaml:"averaging"`
+	Offsets              Offsets `yaml:"offsets"`
+}
+
 // GetAcc get accelerometer data
-func (dev *memsICM20948) GetAcc() *types.Sensor {
+func (dev *memsICM20948) GetAcc() *Sensor {
 	return &(dev.acc)
 }
 
 // InitAccelerometer initialise the Accelerometer
 func (dev *memsICM20948) InitAccelerometer() error {
-	config, ok := dev.GetAcc().Config.(types.AccelerometerConfig)
+	config, ok := dev.GetAcc().Config.(AccelerometerConfig)
 	if !ok {
 		log.Fatal("Accelerometer config mismatch")
 	}
@@ -43,8 +50,8 @@ func (dev *memsICM20948) InitAccelerometer() error {
 	return err
 }
 
-func (dev *memsICM20948) processAccelerometerData(data []byte) (types.XYZ, error) {
-	config, _ := dev.GetAcc().Config.(types.AccelerometerConfig)
+func (dev *memsICM20948) processAccelerometerData(data []byte) (XYZ, error) {
+	config, _ := dev.GetAcc().Config.(AccelerometerConfig)
 	accSens := accelerometerSensitivity[config.SensitivityLevel]
 	xRaw := towsComplementUint8ToInt16(data[0], data[1])
 	yRaw := towsComplementUint8ToInt16(data[2], data[3])
@@ -53,7 +60,7 @@ func (dev *memsICM20948) processAccelerometerData(data []byte) (types.XYZ, error
 	y := float64(yRaw) / accSens
 	z := float64(zRaw) / accSens
 
-	return types.XYZ{
+	return XYZ{
 		X: x,
 		Y: y,
 		Z: z,

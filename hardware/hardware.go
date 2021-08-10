@@ -49,7 +49,7 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	return adc, nil
 }
 
-func newImuMems(config types.ICM20948Config) types.ImuMems {
+func newImuMems(config icm20948.ICM20948Config) types.ImuMems {
 	imuMems, err := icm20948.NewICM20948Driver(config)
 	if err != nil {
 		log.Fatal(err)
