@@ -6,8 +6,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/MarkSaravi/drone-go/remotecontrol"
 	"gopkg.in/yaml.v3"
 )
+
+type ApplicationConfig struct {
+	RemoteControl remotecontrol.RemoteControlConfig `yaml:"remote-control"`
+}
 
 func ReadConfigs() ApplicationConfig {
 	var config ApplicationConfig
