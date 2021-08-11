@@ -28,7 +28,10 @@ func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.E
 	}
 	pwmDev := newPwmDev(config.Hardware.PCA9685)
 	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
-	imuDev := newImuMems(config.Hardware.ICM20948)
+	imuDev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
+	if err != nil {
+		log.Fatal(err)
+	}
 	radio := newRadioLink(config.Hardware.NRF204)
 	return imuDev, pwmDev, radio, powerbreaker
 }
@@ -51,17 +54,8 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	return adc, nil
 }
 
-func newImuMems(config icm20948.ICM20948Config) imu.ImuDevice {
-	imuDev, err := icm20948.NewICM20948Driver(config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return imuDev
-}
-
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 	return powerbreaker.NewPowerBreaker(gpio)
-
 }
 
 func newPwmDev(config pca9685.PCA9685Config) motors.ESC {

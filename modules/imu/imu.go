@@ -28,7 +28,7 @@ type ImuRotations struct {
 	ReadInterval  int64
 }
 
-type RotationsChanges struct {
+type rotationsChanges struct {
 	DRoll, DPitch, DYaw float64
 }
 
@@ -89,10 +89,7 @@ func (imu *imuModule) ResetReadingTimes() {
 }
 
 func (imu *imuModule) CanRead() bool {
-	if time.Since(imu.readTime) >= imu.readingInterval {
-		return true
-	}
-	return false
+	return time.Since(imu.readTime) >= imu.readingInterval
 }
 
 func (imu *imuModule) GetRotations() (ImuRotations, error) {
@@ -124,16 +121,16 @@ func (imu *imuModule) GetRotations() (ImuRotations, error) {
 	}, devErr
 }
 
-func gyroChanges(gyro XYZ, timeInterval int64) RotationsChanges {
+func gyroChanges(gyro XYZ, timeInterval int64) rotationsChanges {
 	dt := goDurToDt(timeInterval)
-	return RotationsChanges{
+	return rotationsChanges{
 		DRoll:  gyro.X * dt,
 		DPitch: gyro.Y * dt,
 		DYaw:   gyro.Z * dt,
 	}
 }
 
-func calcGyroRotations(dGyro RotationsChanges, gyro Rotations) Rotations {
+func calcGyroRotations(dGyro rotationsChanges, gyro Rotations) Rotations {
 	return Rotations{
 		Roll:  math.Mod(gyro.Roll+dGyro.DRoll, 360),
 		Pitch: math.Mod(gyro.Pitch+dGyro.DPitch, 360),
