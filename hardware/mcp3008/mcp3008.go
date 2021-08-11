@@ -1,13 +1,19 @@
 package mcp3008
 
 import (
-	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"periph.io/x/periph/conn/spi"
 )
 
+type SPIConfig struct {
+	BusNumber   int `yaml:"bus_number"`
+	ChipSelect  int `yaml:"chip_select"`
+	Mode        int `yaml:"mode"`
+	SpeedMegaHz int `yaml:"speed-mega-hz"`
+}
+
 type MCP3008Config struct {
-	SPI connectors.SPIConfig `yaml:"spi"`
+	SPI SPIConfig `yaml:"spi"`
 }
 
 type mcp3008dev struct {

@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/connectors"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
@@ -37,6 +36,21 @@ func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.E
 	return imuDev, pwmDev, radio, powerbreaker
 }
 
+func configToSPIMode(configValue int) spi.Mode {
+	switch configValue {
+	case 0:
+		return spi.Mode0
+	case 1:
+		return spi.Mode1
+	case 2:
+		return spi.Mode2
+	case 3:
+		return spi.Mode3
+	default:
+		return spi.Mode0
+	}
+}
+
 func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, radiolink.RadioLink) {
 	fmt.Println(config)
 	spibus, _ := sysfs.NewSPI(
@@ -45,7 +59,7 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 	)
 	spiconn, err := spibus.Connect(
 		physic.Frequency(config.RemoteControl.MCP3008.SPI.SpeedMegaHz)*physic.MegaHertz,
-		connectors.ConfigToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
+		configToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
 		8,
 	)
 	if err != nil {
