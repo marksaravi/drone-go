@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
+	"periph.io/x/periph/conn/i2c"
+	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/host"
 )
 
@@ -58,22 +59,23 @@ type PCA9685Config struct {
 type PCA9685 struct {
 	name           string
 	address        uint8
-	connection     *i2c.Connection
+	connection     *i2c.Dev
 	frequency      float32
 	maxThrottle    float32
 	motorsMappings map[int]Motor
 }
 
-func (d *PCA9685) readByte(offset uint8) (b uint8, err error) {
-	return d.connection.ReadByte(d.address, offset)
+func (d *PCA9685) readByte(offset uint8) (uint8, error) {
+	read := make([]byte, 1)
+	write := []byte{offset}
+	err := d.connection.Tx(write, read)
+	return read[0], err
 }
 
-func (d *PCA9685) writeByte(offset uint8, b uint8) (err error) {
-	return d.connection.WriteByte(d.address, offset, b)
-}
-
-func (d *PCA9685) writeAddress(offset uint8) (err error) {
-	return d.connection.WriteBytes(d.address, offset)
+func (d *PCA9685) writeByte(offset uint8, b uint8) error {
+	write := []byte{offset, b}
+	err := d.connection.Tx(write, nil)
+	return err
 }
 
 func getOffTime(frequency float32, pulseWidth float32) (on uint16, off uint16) {
@@ -118,9 +120,6 @@ func (d *PCA9685) setFrequency(freq float32) error {
 	// Round value to nearest whole
 	prescale := byte(prescalevel)
 
-	if err := d.writeAddress(byte(PCA9685Mode1)); err != nil {
-		return err
-	}
 	oldmode, err := d.readByte(byte(PCA9685Mode1))
 	if err != nil {
 		return err
@@ -188,9 +187,6 @@ func (d *PCA9685) Start() error {
 
 	time.Sleep(5 * time.Millisecond)
 
-	if err := d.writeAddress(byte(PCA9685Mode1)); err != nil {
-		return err
-	}
 	oldmode, err := d.readByte(PCA9685Mode1)
 	if err != nil {
 		return err
@@ -214,17 +210,36 @@ func (d *PCA9685) SetThrottle(motor int, throttle float32) {
 	d.setPWM(d.motorsMappings[motor].ESCChannel, MinPW+throttle/100*(MaxPW-MinPW))
 }
 
+// Close closes the i2c connection
+func (d *PCA9685) Close() {
+}
+
+// Halt stops the device
+func (d *PCA9685) Halt() (err error) {
+	err = d.writeByte(PCA9685AlliedOffH, 0x10)
+	return
+}
+
+//StopAll stops all channels
+func (d *PCA9685) StopAll() {
+	d.setAllPWM(0)
+}
+
 //Calibrate
 func Calibrate(config PCA9685Config) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
-	i2cConnection, err := i2c.Open(config.Device)
+	b, err := i2creg.Open(config.Device)
+	d := &i2c.Dev{Addr: PCA9685Address, Bus: b}
+	if err != nil {
+		log.Fatal(err)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	pwmDev, err := NewPCA9685Driver(PCA9685Address, i2cConnection, 0, nil)
+	pwmDev, err := NewPCA9685Driver(PCA9685Address, d, 0, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -252,24 +267,8 @@ func Calibrate(config PCA9685Config) {
 	pwmDev.Close()
 }
 
-// Close closes the i2c connection
-func (d *PCA9685) Close() {
-	d.connection.Close()
-}
-
-// Halt stops the device
-func (d *PCA9685) Halt() (err error) {
-	err = d.writeByte(PCA9685AlliedOffH, 0x10)
-	return
-}
-
-//StopAll stops all channels
-func (d *PCA9685) StopAll() {
-	d.setAllPWM(0)
-}
-
 // NewPCA9685Driver creates new PCA9685 driver
-func NewPCA9685Driver(address uint8, connection *i2c.Connection, maxThrottle float32, motorsMappings map[int]Motor) (*PCA9685, error) {
+func NewPCA9685Driver(address uint8, connection *i2c.Dev, maxThrottle float32, motorsMappings map[int]Motor) (*PCA9685, error) {
 	return &PCA9685{
 		name:           "PCA9685",
 		address:        address,

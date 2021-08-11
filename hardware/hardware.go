@@ -6,7 +6,6 @@ import (
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/connectors"
-	"github.com/MarkSaravi/drone-go/connectors/i2c"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
@@ -16,6 +15,8 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"periph.io/x/periph/conn/i2c"
+	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"
@@ -59,11 +60,16 @@ func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 }
 
 func newPwmDev(config pca9685.PCA9685Config) motors.ESC {
-	i2cConnection, err := i2c.Open(config.Device)
+	b, err := i2creg.Open(config.Device)
+	d := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	if err != nil {
 		log.Fatal(err)
 	}
-	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, i2cConnection, 15, config.Motors)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	pwmDev, err := pca9685.NewPCA9685Driver(pca9685.PCA9685Address, d, 15, config.Motors)
 	if err != nil {
 		log.Fatal(err)
 	}
