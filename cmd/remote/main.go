@@ -18,6 +18,6 @@ func main() {
 	for {
 		rd := remoteControl.ReadInputs()
 		fmt.Printf("X: %4.1f, Y: %4.1f, Z: %4.1f, T: %4.1f\n", rd.X, rd.Y, rd.Z, rd.Throttle)
-		time.Sleep(time.Millisecond * 1000)
+		time.Sleep(time.Millisecond * 100)
 	}
 }
