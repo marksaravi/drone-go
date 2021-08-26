@@ -14,6 +14,8 @@ import (
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"periph.io/x/periph/conn/gpio"
+	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
@@ -51,7 +53,14 @@ func configToSPIMode(configValue int) spi.Mode {
 	}
 }
 
-func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToDigitalConverter, radiolink.RadioLink) {
+func InitRemoteHardware(config config.ApplicationConfig) (
+	adcconverter.AnalogToDigitalConverter,
+	radiolink.RadioLink,
+	gpio.PinIn,
+) {
+	if _, err := host.Init(); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(config)
 	spibus, _ := sysfs.NewSPI(
 		config.RemoteControl.MCP3008.SPI.BusNumber,
@@ -66,7 +75,8 @@ func InitRemoteHardware(config config.ApplicationConfig) (adcconverter.AnalogToD
 		log.Fatal(err)
 	}
 	adc := mcp3008.NewMCP3008(spiconn)
-	return adc, nil
+	buttonTopLeft := newButton(config.RemoteControl.ButtonTopLeft)
+	return adc, nil, buttonTopLeft
 }
 
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
@@ -105,4 +115,13 @@ func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 		log.Fatal(err)
 	}
 	return nrf204.NewNRF204(config, spiconn)
+}
+
+func newButton(pinName string) gpio.PinIn {
+	var pin gpio.PinIn = gpioreg.ByName(pinName)
+	if pin == nil {
+		log.Fatal("Failed to find ")
+	}
+	pin.In(gpio.PullUp, gpio.NoEdge)
+	return pin
 }
