@@ -57,6 +57,9 @@ func InitRemoteHardware(config config.ApplicationConfig) (
 	adcconverter.AnalogToDigitalConverter,
 	radiolink.RadioLink,
 	gpio.PinIn,
+	gpio.PinIn,
+	gpio.PinIn,
+	gpio.PinIn,
 ) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
@@ -75,8 +78,11 @@ func InitRemoteHardware(config config.ApplicationConfig) (
 		log.Fatal(err)
 	}
 	adc := mcp3008.NewMCP3008(spiconn)
+	buttonFrontLeft := newButton(config.RemoteControl.ButtonFrontLeft)
+	buttonFrontRight := newButton(config.RemoteControl.ButtonFrontRight)
 	buttonTopLeft := newButton(config.RemoteControl.ButtonTopLeft)
-	return adc, nil, buttonTopLeft
+	buttonTopRight := newButton(config.RemoteControl.ButtonTopRight)
+	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight
 }
 
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
@@ -120,7 +126,7 @@ func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 func newButton(pinName string) gpio.PinIn {
 	var pin gpio.PinIn = gpioreg.ByName(pinName)
 	if pin == nil {
-		log.Fatal("Failed to find ")
+		log.Fatal("Failed to find ", pinName)
 	}
 	pin.In(gpio.PullUp, gpio.NoEdge)
 	return pin

@@ -12,8 +12,8 @@ import (
 func main() {
 	fmt.Println("Starting Remote Control")
 	config := config.ReadConfigs()
-	adcConverter, _, buttonFrontLeft := hardware.InitRemoteHardware(config)
-	remoteControl := remotecontrol.NewRemoteControl(adcConverter, buttonFrontLeft, config.RemoteControl)
+	adcConverter, _, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight := hardware.InitRemoteHardware(config)
+	remoteControl := remotecontrol.NewRemoteControl(adcConverter, buttonTopLeft, buttonFrontLeft, buttonFrontRight, buttonTopRight, config.RemoteControl)
 
 	for {
 		rd := remoteControl.ReadInputs()
