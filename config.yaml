@@ -71,10 +71,10 @@ remote-control:
       chip_select: 0
       mode: 0
       speed-mega-hz: 1
-  x-channel: 0
-  y-channel: 1
-  z-channel: 2
-  throttle-channel: 3
+  x-channel: 2
+  y-channel: 4
+  z-channel: 3
+  throttle-channel: 5
   ready-light-gpio: 'GPIO05'
   emergency-stop-light-gpio: 'GPIO06'
   emergency-stop-button-gpio: 'GPIO13'
