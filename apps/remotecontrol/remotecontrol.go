@@ -3,6 +3,7 @@ package remotecontrol
 import (
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
+	"periph.io/x/periph/conn/gpio"
 )
 
 type MotorsState int
@@ -14,23 +15,21 @@ const (
 )
 
 type RemoteControlConfig struct {
-	MCP3008             mcp3008.MCP3008Config `yaml:"mcp3008"`
-	XChannel            int                   `yaml:"x-channel"`
-	YChannel            int                   `yaml:"y-channel"`
-	ZChannel            int                   `yaml:"z-channel"`
-	ThrottleChannel     int                   `yaml:"throttle-channel"`
-	ReadyLight          string                `yaml:"ready-light-gpio"`
-	EmergencyStopLight  string                `yaml:"emergency-stop-light-gpio"`
-	EmergencyStopButton string                `yaml:"emergency-stop-button-gpio"`
-	VRef                float32               `yaml:"v-ref"`
+	MCP3008         mcp3008.MCP3008Config `yaml:"mcp3008"`
+	XChannel        int                   `yaml:"x-channel"`
+	YChannel        int                   `yaml:"y-channel"`
+	ZChannel        int                   `yaml:"z-channel"`
+	ThrottleChannel int                   `yaml:"throttle-channel"`
+	ButtonTopLeft   string                `yaml:"button-top-left"`
+	VRef            float32               `yaml:"v-ref"`
 }
 
 type RemoteData struct {
-	Throttle    float32
-	X           float32
-	Y           float32
-	Z           float32
-	MotorsState MotorsState
+	Throttle float32
+	X        float32
+	Y        float32
+	Z        float32
+	Stop     bool
 }
 
 type RemoteControl interface {
@@ -38,22 +37,28 @@ type RemoteControl interface {
 }
 
 type remoteControl struct {
-	adc             adcconverter.AnalogToDigitalConverter
-	vRef            float32
-	xChannel        int
-	yChannel        int
-	zChannel        int
-	throttleChannel int
+	adc                     adcconverter.AnalogToDigitalConverter
+	vRef                    float32
+	xChannel                int
+	yChannel                int
+	zChannel                int
+	throttleChannel         int
+	buttonEmergencyStopLeft gpio.PinIn
 }
 
-func NewRemoteControl(adc adcconverter.AnalogToDigitalConverter, config RemoteControlConfig) RemoteControl {
+func NewRemoteControl(
+	adc adcconverter.AnalogToDigitalConverter,
+	buttonTopLeft gpio.PinIn,
+	config RemoteControlConfig,
+) RemoteControl {
 	return &remoteControl{
-		adc:             adc,
-		vRef:            config.VRef,
-		xChannel:        config.XChannel,
-		yChannel:        config.YChannel,
-		zChannel:        config.ZChannel,
-		throttleChannel: config.ThrottleChannel,
+		adc:                     adc,
+		vRef:                    config.VRef,
+		xChannel:                config.XChannel,
+		yChannel:                config.YChannel,
+		zChannel:                config.ZChannel,
+		throttleChannel:         config.ThrottleChannel,
+		buttonEmergencyStopLeft: buttonTopLeft,
 	}
 }
 
@@ -62,11 +67,13 @@ func (rc *remoteControl) ReadInputs() RemoteData {
 	y, _ := rc.adc.ReadInputVoltage(rc.yChannel, rc.vRef)
 	z, _ := rc.adc.ReadInputVoltage(rc.zChannel, rc.vRef)
 	throttle, _ := rc.adc.ReadInputVoltage(rc.throttleChannel, rc.vRef)
+	stopLeft := rc.buttonEmergencyStopLeft.Read() == gpio.Low
+
 	return RemoteData{
-		Throttle:    throttle,
-		X:           x,
-		Y:           y,
-		Z:           z,
-		MotorsState: Off,
+		X:        x,
+		Y:        y,
+		Z:        z,
+		Throttle: throttle,
+		Stop:     stopLeft,
 	}
 }

@@ -75,7 +75,5 @@ remote-control:
   y-channel: 4
   z-channel: 3
   throttle-channel: 5
-  ready-light-gpio: 'GPIO05'
-  emergency-stop-light-gpio: 'GPIO06'
-  emergency-stop-button-gpio: 'GPIO13'
+  button-top-left: 'GPIO22'
   v-ref: 5

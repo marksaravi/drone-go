@@ -14,7 +14,7 @@ func main() {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
-	var pin gpio.PinIn = gpioreg.ByName("GPIO26")
+	var pin gpio.PinIn = gpioreg.ByName("GPIO0")
 	pin.In(gpio.PullUp, gpio.NoEdge)
 	if pin == nil {
 		log.Fatal("Failed to find ")
