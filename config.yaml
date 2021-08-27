@@ -75,10 +75,10 @@ remote-control:
   y-channel: 4
   z-channel: 3
   throttle-channel: 5
-  button-front-left: 'GPIO17'
-  button-front-right: 'GPIO14'
-  button-top-left: 'GPIO22'
-  button-top-right: 'GPIO6'
-  button-down-left: 'GPIO2'
-  button-down-right: 'GPIO15'
+  button-front-left: 'GPIO27'
+  button-front-right: 'GPIO17'
+  button-top-left: 'GPIO15'
+  button-top-right: 'GPIO22'
+  button-down-left: 'GPIO18'
+  button-down-right: 'GPIO23'
   v-ref: 5
