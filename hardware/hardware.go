@@ -24,6 +24,12 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
+func InitHost() {
+	if _, err := host.Init(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
@@ -80,12 +86,12 @@ func InitRemoteHardware(config config.ApplicationConfig) (
 		log.Fatal(err)
 	}
 	adc := mcp3008.NewMCP3008(spiconn)
-	buttonFrontLeft := newButton(config.RemoteControl.ButtonFrontLeft)
-	buttonFrontRight := newButton(config.RemoteControl.ButtonFrontRight)
-	buttonTopLeft := newButton(config.RemoteControl.ButtonTopLeft)
-	buttonTopRight := newButton(config.RemoteControl.ButtonTopRight)
-	buttonDownLeft := newButton(config.RemoteControl.ButtonDownLeft)
-	buttonDownRight := newButton(config.RemoteControl.ButtonDownRight)
+	buttonFrontLeft := NewButton(config.RemoteControl.ButtonFrontLeft)
+	buttonFrontRight := NewButton(config.RemoteControl.ButtonFrontRight)
+	buttonTopLeft := NewButton(config.RemoteControl.ButtonTopLeft)
+	buttonTopRight := NewButton(config.RemoteControl.ButtonTopRight)
+	buttonDownLeft := NewButton(config.RemoteControl.ButtonDownLeft)
+	buttonDownRight := NewButton(config.RemoteControl.ButtonDownRight)
 	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight
 }
 
@@ -127,7 +133,7 @@ func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 	return nrf204.NewNRF204(config, spiconn)
 }
 
-func newButton(pinName string) gpio.PinIn {
+func NewButton(pinName string) gpio.PinIn {
 	var pin gpio.PinIn = gpioreg.ByName(pinName)
 	if pin == nil {
 		log.Fatal("Failed to find ", pinName)
