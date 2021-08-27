@@ -6,14 +6,6 @@ import (
 	"periph.io/x/periph/conn/gpio"
 )
 
-type MotorsState int
-
-const (
-	Off MotorsState = iota
-	On
-	EmergencyOff
-)
-
 type RemoteControlConfig struct {
 	MCP3008          mcp3008.MCP3008Config `yaml:"mcp3008"`
 	XChannel         int                   `yaml:"x-channel"`
@@ -29,7 +21,7 @@ type RemoteControlConfig struct {
 	VRef             float32               `yaml:"v-ref"`
 }
 
-type RemoteData struct {
+type remoteData struct {
 	Throttle         float32
 	X                float32
 	Y                float32
@@ -40,10 +32,6 @@ type RemoteData struct {
 	ButtonTopRight   bool
 	ButtonDownLeft   bool
 	ButtonDownRight  bool
-}
-
-type RemoteControl interface {
-	ReadInputs() RemoteData
 }
 
 type remoteControl struct {
@@ -70,7 +58,7 @@ func NewRemoteControl(
 	buttonDownLeft gpio.PinIn,
 	buttonDownRight gpio.PinIn,
 	config RemoteControlConfig,
-) RemoteControl {
+) *remoteControl {
 	return &remoteControl{
 		adc:              adc,
 		vRef:             config.VRef,
@@ -87,7 +75,7 @@ func NewRemoteControl(
 	}
 }
 
-func (rc *remoteControl) ReadInputs() RemoteData {
+func (rc *remoteControl) ReadInputs() remoteData {
 	x, _ := rc.adc.ReadInputVoltage(rc.xChannel, rc.vRef)
 	y, _ := rc.adc.ReadInputVoltage(rc.yChannel, rc.vRef)
 	z, _ := rc.adc.ReadInputVoltage(rc.zChannel, rc.vRef)
@@ -98,7 +86,7 @@ func (rc *remoteControl) ReadInputs() RemoteData {
 	topRight := rc.buttonTopRight.Read() == gpio.Low
 	downLeft := rc.buttonDownLeft.Read() == gpio.Low
 	downRight := rc.buttonDownRight.Read() == gpio.Low
-	return RemoteData{
+	return remoteData{
 		X:                x,
 		Y:                y,
 		Z:                z,
