@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/apps/remotecontrol"
+	"github.com/MarkSaravi/drone-go/apps/oldremotecontrol"
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
 )
@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("Starting Remote Control")
 	config := config.ReadConfigs()
 	adcConverter, _, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight := hardware.InitRemoteHardware(config)
-	remoteControl := remotecontrol.NewRemoteControl(adcConverter, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight, config.RemoteControl)
+	remoteControl := oldremotecontrol.NewRemoteControl(adcConverter, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight, config.RemoteControl)
 
 	var topl bool = false
 	var frontl bool = false
