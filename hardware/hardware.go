@@ -132,6 +132,6 @@ func newButton(pinName string) gpio.PinIn {
 	if pin == nil {
 		log.Fatal("Failed to find ", pinName)
 	}
-	pin.In(gpio.PullUp, gpio.NoEdge)
+	pin.In(gpio.Float, gpio.NoEdge)
 	return pin
 }

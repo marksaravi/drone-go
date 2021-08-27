@@ -30,13 +30,16 @@ type RemoteControlConfig struct {
 }
 
 type RemoteData struct {
-	Throttle float32
-	X        float32
-	Y        float32
-	Z        float32
-	Front    bool
-	Top      bool
-	Down     bool
+	Throttle   float32
+	X          float32
+	Y          float32
+	Z          float32
+	FrontLeft  bool
+	TopLeft    bool
+	DownLeft   bool
+	FrontRight bool
+	TopRight   bool
+	DownRight  bool
 }
 
 type RemoteControl interface {
@@ -96,12 +99,15 @@ func (rc *remoteControl) ReadInputs() RemoteData {
 	downLeft := rc.buttonDownLeft.Read() == gpio.Low
 	downRight := rc.buttonDownRight.Read() == gpio.Low
 	return RemoteData{
-		X:        x,
-		Y:        y,
-		Z:        z,
-		Throttle: throttle,
-		Front:    frontLeft || frontRight,
-		Top:      topLeft || topRight,
-		Down:     downLeft || downRight,
+		X:          x,
+		Y:          y,
+		Z:          z,
+		Throttle:   throttle,
+		FrontLeft:  frontLeft,
+		FrontRight: frontRight,
+		TopLeft:    topLeft,
+		TopRight:   topRight,
+		DownLeft:   downLeft,
+		DownRight:  downRight,
 	}
 }
