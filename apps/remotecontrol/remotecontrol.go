@@ -1,8 +1,6 @@
 package remotecontrol
 
 import (
-	"fmt"
-
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"periph.io/x/periph/conn/gpio"
@@ -26,6 +24,8 @@ type RemoteControlConfig struct {
 	ButtonFrontRight string                `yaml:"button-front-right"`
 	ButtonTopLeft    string                `yaml:"button-top-left"`
 	ButtonTopRight   string                `yaml:"button-top-right"`
+	ButtonDownLeft   string                `yaml:"button-down-left"`
+	ButtonDownRight  string                `yaml:"button-down-right"`
 	VRef             float32               `yaml:"v-ref"`
 }
 
@@ -34,8 +34,9 @@ type RemoteData struct {
 	X        float32
 	Y        float32
 	Z        float32
-	Stop     bool
 	Front    bool
+	Top      bool
+	Down     bool
 }
 
 type RemoteControl interface {
@@ -53,6 +54,8 @@ type remoteControl struct {
 	buttonFrontRight gpio.PinIn
 	buttonTopLeft    gpio.PinIn
 	buttonTopRight   gpio.PinIn
+	buttonDownLeft   gpio.PinIn
+	buttonDownRight  gpio.PinIn
 }
 
 func NewRemoteControl(
@@ -61,6 +64,8 @@ func NewRemoteControl(
 	buttonFrontRight gpio.PinIn,
 	buttonTopLeft gpio.PinIn,
 	buttonTopRight gpio.PinIn,
+	buttonDownLeft gpio.PinIn,
+	buttonDownRight gpio.PinIn,
 	config RemoteControlConfig,
 ) RemoteControl {
 	return &remoteControl{
@@ -74,6 +79,8 @@ func NewRemoteControl(
 		buttonFrontRight: buttonFrontRight,
 		buttonTopLeft:    buttonTopLeft,
 		buttonTopRight:   buttonTopRight,
+		buttonDownLeft:   buttonDownLeft,
+		buttonDownRight:  buttonDownRight,
 	}
 }
 
@@ -82,17 +89,19 @@ func (rc *remoteControl) ReadInputs() RemoteData {
 	y, _ := rc.adc.ReadInputVoltage(rc.yChannel, rc.vRef)
 	z, _ := rc.adc.ReadInputVoltage(rc.zChannel, rc.vRef)
 	throttle, _ := rc.adc.ReadInputVoltage(rc.throttleChannel, rc.vRef)
-	topLeft := rc.buttonTopLeft.Read() == gpio.Low
-	topRight := rc.buttonTopRight.Read() == gpio.Low
 	frontLeft := rc.buttonFrontLeft.Read() == gpio.Low
 	frontRight := rc.buttonFrontRight.Read() == gpio.Low
-	fmt.Println(topLeft, topRight, frontLeft, frontRight)
+	topLeft := rc.buttonTopLeft.Read() == gpio.Low
+	topRight := rc.buttonTopRight.Read() == gpio.Low
+	downLeft := rc.buttonDownLeft.Read() == gpio.Low
+	downRight := rc.buttonDownRight.Read() == gpio.Low
 	return RemoteData{
 		X:        x,
 		Y:        y,
 		Z:        z,
 		Throttle: throttle,
-		Stop:     topLeft || topRight,
 		Front:    frontLeft || frontRight,
+		Top:      topLeft || topRight,
+		Down:     downLeft || downRight,
 	}
 }

@@ -79,4 +79,6 @@ remote-control:
   button-front-right: 'GPIO17'
   button-top-left: 'GPIO22'
   button-top-right: 'GPIO6'
+  button-down-left: 'GPIO2'
+  button-down-right: 'GPIO15'
   v-ref: 5

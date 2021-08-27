@@ -60,6 +60,8 @@ func InitRemoteHardware(config config.ApplicationConfig) (
 	gpio.PinIn,
 	gpio.PinIn,
 	gpio.PinIn,
+	gpio.PinIn,
+	gpio.PinIn,
 ) {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
@@ -82,7 +84,9 @@ func InitRemoteHardware(config config.ApplicationConfig) (
 	buttonFrontRight := newButton(config.RemoteControl.ButtonFrontRight)
 	buttonTopLeft := newButton(config.RemoteControl.ButtonTopLeft)
 	buttonTopRight := newButton(config.RemoteControl.ButtonTopRight)
-	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight
+	buttonDownLeft := newButton(config.RemoteControl.ButtonDownLeft)
+	buttonDownRight := newButton(config.RemoteControl.ButtonDownRight)
+	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight
 }
 
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
