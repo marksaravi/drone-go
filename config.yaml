@@ -77,8 +77,8 @@ remote-control:
   throttle-channel: 5
   button-front-left: 'GPIO27'
   button-front-right: 'GPIO17'
-  button-top-left: 'GPIO15'
-  button-top-right: 'GPIO22'
+  button-top-left: 'GPIO22'
+  button-top-right: 'GPIO15'
   button-down-left: 'GPIO18'
   button-down-right: 'GPIO23'
   v-ref: 5
