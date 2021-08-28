@@ -1,21 +1,16 @@
 package hardware
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
-	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
-	"github.com/MarkSaravi/drone-go/modules/adcconverter"
 	"github.com/MarkSaravi/drone-go/modules/imu"
 	"github.com/MarkSaravi/drone-go/modules/motors"
 	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"github.com/MarkSaravi/drone-go/modules/radiolink"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
@@ -23,6 +18,12 @@ import (
 	"periph.io/x/periph/host"
 	"periph.io/x/periph/host/sysfs"
 )
+
+func InitHost() {
+	if _, err := host.Init(); err != nil {
+		log.Fatal(err)
+	}
+}
 
 func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
 	if _, err := host.Init(); err != nil {
@@ -36,57 +37,6 @@ func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.E
 	}
 	radio := newRadioLink(config.Hardware.NRF204)
 	return imuDev, pwmDev, radio, powerbreaker
-}
-
-func configToSPIMode(configValue int) spi.Mode {
-	switch configValue {
-	case 0:
-		return spi.Mode0
-	case 1:
-		return spi.Mode1
-	case 2:
-		return spi.Mode2
-	case 3:
-		return spi.Mode3
-	default:
-		return spi.Mode0
-	}
-}
-
-func InitRemoteHardware(config config.ApplicationConfig) (
-	adcconverter.AnalogToDigitalConverter,
-	radiolink.RadioLink,
-	gpio.PinIn,
-	gpio.PinIn,
-	gpio.PinIn,
-	gpio.PinIn,
-	gpio.PinIn,
-	gpio.PinIn,
-) {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(config)
-	spibus, _ := sysfs.NewSPI(
-		config.RemoteControl.MCP3008.SPI.BusNumber,
-		config.RemoteControl.MCP3008.SPI.ChipSelect,
-	)
-	spiconn, err := spibus.Connect(
-		physic.Frequency(config.RemoteControl.MCP3008.SPI.SpeedMegaHz)*physic.MegaHertz,
-		configToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
-		8,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	adc := mcp3008.NewMCP3008(spiconn)
-	buttonFrontLeft := newButton(config.RemoteControl.ButtonFrontLeft)
-	buttonFrontRight := newButton(config.RemoteControl.ButtonFrontRight)
-	buttonTopLeft := newButton(config.RemoteControl.ButtonTopLeft)
-	buttonTopRight := newButton(config.RemoteControl.ButtonTopRight)
-	buttonDownLeft := newButton(config.RemoteControl.ButtonDownLeft)
-	buttonDownRight := newButton(config.RemoteControl.ButtonDownRight)
-	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight
 }
 
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
@@ -125,13 +75,4 @@ func newRadioLink(config nrf204.NRF204Config) radiolink.RadioLink {
 		log.Fatal(err)
 	}
 	return nrf204.NewNRF204(config, spiconn)
-}
-
-func newButton(pinName string) gpio.PinIn {
-	var pin gpio.PinIn = gpioreg.ByName(pinName)
-	if pin == nil {
-		log.Fatal("Failed to find ", pinName)
-	}
-	pin.In(gpio.Float, gpio.NoEdge)
-	return pin
 }
