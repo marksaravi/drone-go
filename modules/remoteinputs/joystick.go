@@ -1,19 +1,20 @@
 package remoteinputs
 
+import "github.com/MarkSaravi/drone-go/models"
+
 type joystick interface {
 	Read() float32
 }
 
 type joystickInput struct {
-	input     joystick
-	value     float32
-	isChanged bool
+	input joystick
+	data  models.JoystickData
 }
 
 func (js *joystickInput) read() {
-	pv := js.value
-	js.value = js.input.Read()
-	js.isChanged = js.value != pv
+	pv := js.data.Value
+	js.data.Value = js.input.Read()
+	js.data.IsChanged = js.data.Value != pv
 }
 
 func (ri *remoteInputs) readJoysticks() {

@@ -2,10 +2,12 @@ package remotecontrol
 
 import (
 	"time"
+
+	"github.com/MarkSaravi/drone-go/models"
 )
 
 type inputs interface {
-	ReadInputs()
+	ReadInputs() models.RemoteControlData
 	PrintData()
 }
 

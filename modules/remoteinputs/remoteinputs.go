@@ -1,6 +1,10 @@
 package remoteinputs
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/MarkSaravi/drone-go/models"
+)
 
 type remoteInputs struct {
 	roll            *joystickInput
@@ -14,33 +18,35 @@ func NewRemoteInputs(roll joystick, pitch joystick, yaw joystick, inputButtonFro
 	return &remoteInputs{
 		roll: &joystickInput{
 			input: roll,
-			value: 0,
 		},
 		pitch: &joystickInput{
 			input: pitch,
-			value: 0,
 		},
 		yaw: &joystickInput{
 			input: yaw,
-			value: 0,
 		},
 		buttonFrontLeft: &buttonInput{
 			input: inputButtonFrontLeft,
-			value: false,
 		},
 		stopped: false,
 	}
 }
 
-func (ri *remoteInputs) ReadInputs() {
+func (ri *remoteInputs) ReadInputs() models.RemoteControlData {
 	ri.readStopButtons()
 	ri.readJoysticks()
+	return models.RemoteControlData{
+		Roll:            ri.roll.data,
+		Pitch:           ri.pitch.data,
+		Yaw:             ri.yaw.data,
+		ButtonFrontLeft: ri.buttonFrontLeft.data,
+	}
 }
 
 func (ri *remoteInputs) PrintData() {
-	fmt.Printf("Button-Front-Left: %t, ", ri.buttonFrontLeft.value)
-	fmt.Printf("roll: %5.2f, ", ri.roll.value)
-	fmt.Printf("pitch: %5.2f, ", ri.pitch.value)
-	fmt.Printf("yaw: %5.2f", ri.yaw.value)
+	fmt.Printf("Button-Front-Left: %t, ", ri.buttonFrontLeft.data.Value)
+	fmt.Printf("roll: %5.2f, ", ri.roll.data.Value)
+	fmt.Printf("pitch: %5.2f, ", ri.pitch.data.Value)
+	fmt.Printf("yaw: %5.2f", ri.yaw.data.Value)
 	fmt.Println()
 }
