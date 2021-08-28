@@ -85,6 +85,12 @@ remote-control:
     yaw:
       channel: 3
       zero-value: 2.4
+    v-ref: 5
+    spi:
+      bus-number: 0
+      chip-select: 0
+      mode: 0
+      speed-mega-hz: 1
   throttle:
     channel: 5
   buttons:

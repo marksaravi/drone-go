@@ -22,10 +22,8 @@ func NewRemoteControl(inputs inputs) *remoteControl {
 
 func (rc *remoteControl) Start() {
 	for {
-		isStopChanged := rc.inputs.RefreshInputs()
-		if isStopChanged {
-			rc.inputs.PrintData()
-		}
+		rc.inputs.RefreshInputs()
+		rc.inputs.PrintData()
 		time.Sleep(250 * time.Millisecond)
 	}
 }

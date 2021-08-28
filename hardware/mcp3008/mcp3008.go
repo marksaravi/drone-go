@@ -1,8 +1,11 @@
 package mcp3008
 
 import (
-	"github.com/MarkSaravi/drone-go/modules/adcconverter"
+	"log"
+
+	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
+	"periph.io/x/periph/host/sysfs"
 )
 
 type SPIConfig struct {
@@ -20,13 +23,25 @@ type mcp3008dev struct {
 	spiConn spi.Conn
 }
 
-func NewMCP3008(spiConn spi.Conn) adcconverter.AnalogToDigitalConverter {
+func NewMCP3008(busNumber int, chipSelect int, mode spi.Mode, speedMHz int) *mcp3008dev {
+	spibus, _ := sysfs.NewSPI(
+		busNumber,
+		chipSelect,
+	)
+	spiConn, err := spibus.Connect(
+		physic.Frequency(speedMHz)*physic.MegaHertz,
+		mode,
+		8,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &mcp3008dev{
 		spiConn: spiConn,
 	}
 }
 
-func (dev *mcp3008dev) ReadInputVoltage(channel int, vRef float32) (float32, error) {
+func (dev *mcp3008dev) ReadInputVoltage(channel int, vRef float32, zeroValue float32) (float32, error) {
 	ch := byte(channel)
 	if ch > 7 {
 		ch = 0
@@ -35,5 +50,5 @@ func (dev *mcp3008dev) ReadInputVoltage(channel int, vRef float32) (float32, err
 	r := []byte{0, 0, 0}
 	err := dev.spiConn.Tx(w, r)
 	var digitalValue uint16 = uint16(r[2]) | (uint16(r[1]) << 8 & 0b0000001100000000)
-	return float32(digitalValue) / 1024 * vRef, err
+	return (float32(digitalValue) / 1024 * vRef) - zeroValue, err
 }

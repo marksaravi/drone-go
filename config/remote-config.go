@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"gopkg.in/yaml.v3"
+	"periph.io/x/periph/conn/spi"
 )
 
 type Throttle struct {
@@ -15,10 +16,19 @@ type Joystick struct {
 	ZeroValue float32 `yaml:"zero-value"`
 }
 
+type SPI struct {
+	BusNumber  int      `yaml:"bus-number"`
+	ChipSelect int      `yaml:"chip-select"`
+	Mode       spi.Mode `yaml:"mode"`
+	Speed      int      `yaml:"speed-mega-hz"`
+}
+
 type Joysticks struct {
 	Roll  Joystick `yaml:"roll"`
 	Pitch Joystick `yaml:"pitch"`
 	Yaw   Joystick `yaml:"yaw"`
+	VRef  float32  `yaml:"v-ref"`
+	SPI   SPI      `yaml:"spi"`
 }
 
 type Buttons struct {
