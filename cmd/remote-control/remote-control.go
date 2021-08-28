@@ -7,6 +7,7 @@ import (
 	"github.com/MarkSaravi/drone-go/devices"
 	devcices "github.com/MarkSaravi/drone-go/devices"
 	"github.com/MarkSaravi/drone-go/drivers"
+	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
 )
@@ -21,19 +22,19 @@ func main() {
 		config.RemoteControlConfig.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfig.Joysticks.SPI.ChipSelect,
 	)
-	xAxisanalogToDigitalConvertor := drivers.NewMCP3008(
+	xAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		config.RemoteControlConfig.Joysticks.VRef,
 		config.RemoteControlConfig.Joysticks.Roll.Channel,
 		config.RemoteControlConfig.Joysticks.Roll.ZeroValue,
 	)
-	yAxisanalogToDigitalConvertor := drivers.NewMCP3008(
+	yAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		config.RemoteControlConfig.Joysticks.VRef,
 		config.RemoteControlConfig.Joysticks.Pitch.Channel,
 		config.RemoteControlConfig.Joysticks.Pitch.ZeroValue,
 	)
-	zAxisanalogToDigitalConvertor := drivers.NewMCP3008(
+	zAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		config.RemoteControlConfig.Joysticks.VRef,
 		config.RemoteControlConfig.Joysticks.Yaw.Channel,
