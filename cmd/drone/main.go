@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/config"
+	"github.com/MarkSaravi/drone-go/devices"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
 )
 
@@ -13,9 +15,12 @@ func main() {
 	// udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	// imu := imu.CreateIM(imuDev, appConfig.Flight.Imu)
 	// motorsController := motors.NewMotorsControl(esc, powerBreaker)
-	flightControlConfig := config.ReadFlightControlConfig()
-	fmt.Println(flightControlConfig)
-	flightControl := flightcontrol.NewFlightControl()
+
+	config := config.ReadFlightControlConfig()
+	fmt.Println(config)
+	readingInterval := time.Second / time.Duration(config.Configs.Devices.ImuConfig.ImuDataPerSecond)
+	imu := devices.NewIMU(readingInterval)
+	flightControl := flightcontrol.NewFlightControl(imu)
 
 	flightControl.Start()
 }

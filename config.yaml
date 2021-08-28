@@ -27,7 +27,7 @@ flight-control:
         sensitivity-level: '0'
   devices:
     imu:
-      imu-data-per-second: 3200
+      imu-data-per-second: 4
       acc-lowpass-filter-coefficient: 0.005
       lowpass-filter-coefficient: 0.01
 
@@ -89,12 +89,7 @@ devices:
     chip_select: 2
     rx_tx_address: '03896'
     power_dbm: '-18dbm'
-udp:
-  enabled: true
-  ip: 192.168.1.103
-  port: 6431
-  packets_per_second: 20 # set to zero for disabling udp send
-  max_data_per_packet: 20
+
 
 remote-control:
   mcp3008:
@@ -133,3 +128,10 @@ remote-control:
     down-left: 'GPIO18'
     down-right: 'GPIO23'
   v-ref: 5
+
+udp-logger:
+  enabled: true
+  ip: 192.168.1.103
+  port: 6431
+  packets-per-second: 20 # set to zero for disabling udp send
+  max-data-per-packet: 20
