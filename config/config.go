@@ -44,3 +44,17 @@ func ReadConfigs() ApplicationConfig {
 	fmt.Println(config)
 	return config
 }
+
+func readConfig(out interface{}) interface{} {
+	content, err := ioutil.ReadFile("./config.yaml")
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+	err = yaml.Unmarshal([]byte(content), out)
+	if err != nil {
+		log.Fatalf("cannot unmarshal config: %v", err)
+		os.Exit(1)
+	}
+	return out
+}
