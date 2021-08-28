@@ -20,8 +20,6 @@ func main() {
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
 		config.RemoteControlConfig.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfig.Joysticks.SPI.ChipSelect,
-		config.RemoteControlConfig.Joysticks.SPI.Speed,
-		config.RemoteControlConfig.Joysticks.SPI.Mode,
 	)
 	xAxisanalogToDigitalConvertor := drivers.NewMCP3008(
 		analogToDigitalSPIConn,
