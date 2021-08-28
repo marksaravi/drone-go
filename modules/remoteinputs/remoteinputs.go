@@ -17,16 +17,26 @@ type joystickInput struct {
 
 type remoteInputs struct {
 	roll                 *joystickInput
+	pitch                *joystickInput
+	yaw                  *joystickInput
 	inputButtonFrontLeft button
 
 	valueButtonFrontLeft bool
 	stopped              bool
 }
 
-func NewRemoteInputs(roll joystick, inputButtonFrontLeft button) *remoteInputs {
+func NewRemoteInputs(roll joystick, pitch joystick, yaw joystick, inputButtonFrontLeft button) *remoteInputs {
 	return &remoteInputs{
 		roll: &joystickInput{
 			input: roll,
+			value: 0,
+		},
+		pitch: &joystickInput{
+			input: pitch,
+			value: 0,
+		},
+		yaw: &joystickInput{
+			input: yaw,
 			value: 0,
 		},
 		inputButtonFrontLeft: inputButtonFrontLeft,
@@ -50,7 +60,9 @@ func readJoystick(js *joystickInput) (isChanged bool) {
 
 func (ri *remoteInputs) readJoysticks() (isChanged bool) {
 	rollChanged := readJoystick(ri.roll)
-	return rollChanged
+	pitchChanged := readJoystick(ri.pitch)
+	yawChanged := readJoystick(ri.yaw)
+	return rollChanged || pitchChanged || yawChanged
 }
 
 func (ri *remoteInputs) readStopButtons() (isChanged bool) {
@@ -71,6 +83,8 @@ func (ri *remoteInputs) IsStopped() bool {
 
 func (ri *remoteInputs) PrintData() {
 	fmt.Printf("Button-Front-Left: %t, ", ri.valueButtonFrontLeft)
-	fmt.Printf("roll: %f", ri.roll.value)
+	fmt.Printf("roll: %5.2f, ", ri.roll.value)
+	fmt.Printf("pitch: %5.2f, ", ri.pitch.value)
+	fmt.Printf("yaw: %5.2f", ri.yaw.value)
 	fmt.Println()
 }

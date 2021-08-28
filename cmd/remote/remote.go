@@ -28,7 +28,19 @@ func main() {
 		config.RemoteConfig.Joysticks.Roll.ZeroValue,
 		config.RemoteConfig.Joysticks.VRef,
 	)
-	inputs := remoteinputs.NewRemoteInputs(roll, btnFrontLeft)
+	pitch := hardware.NewJoystick(
+		analogToDigitalConvertor,
+		config.RemoteConfig.Joysticks.Pitch.Channel,
+		config.RemoteConfig.Joysticks.Pitch.ZeroValue,
+		config.RemoteConfig.Joysticks.VRef,
+	)
+	yaw := hardware.NewJoystick(
+		analogToDigitalConvertor,
+		config.RemoteConfig.Joysticks.Yaw.Channel,
+		config.RemoteConfig.Joysticks.Yaw.ZeroValue,
+		config.RemoteConfig.Joysticks.VRef,
+	)
+	inputs := remoteinputs.NewRemoteInputs(roll, pitch, yaw, btnFrontLeft)
 	remoteControl := remotecontrol.NewRemoteControl(inputs)
 	remoteControl.Start()
 }
