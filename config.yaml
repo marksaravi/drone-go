@@ -23,8 +23,6 @@ flight-control:
           X: -12
           Y: -6
           Z: -8
-      magnetometer:
-        sensitivity-level: '0'
   devices:
     imu:
       imu-data-per-second: 4

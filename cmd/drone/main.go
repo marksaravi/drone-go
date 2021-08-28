@@ -35,13 +35,13 @@ func main() {
 		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.X,
 		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Y,
 		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Z,
-		config.Configs.Drivers.ImuMemes.Accelerometer.SensitivityLevel,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Averaging,
-		config.Configs.Drivers.ImuMemes.Accelerometer.LowPassFilterEnabled,
-		config.Configs.Drivers.ImuMemes.Accelerometer.LowPassFilterConfig,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.X,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Y,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Z,
+		config.Configs.Drivers.ImuMemes.Gyroscope.SensitivityLevel,
+		config.Configs.Drivers.ImuMemes.Gyroscope.Averaging,
+		config.Configs.Drivers.ImuMemes.Gyroscope.LowPassFilterEnabled,
+		config.Configs.Drivers.ImuMemes.Gyroscope.LowPassFilterConfig,
+		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.X,
+		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.Y,
+		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.Z,
 	)
 	readingInterval := time.Second / time.Duration(config.Configs.Devices.ImuConfig.ImuDataPerSecond)
 	imu := devices.NewIMU(imuMems, readingInterval)
