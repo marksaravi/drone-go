@@ -8,16 +8,11 @@ import (
 )
 
 type button struct {
-	pin   gpio.PinIn
-	value bool
+	pin gpio.PinIn
 }
 
 func (b *button) Read() bool {
 	return b.pin.Read() == gpio.Low
-}
-
-func (b *button) Value() bool {
-	return b.value
 }
 
 func NewButton(pinName string) *button {
@@ -27,7 +22,6 @@ func NewButton(pinName string) *button {
 	}
 	pin.In(gpio.Float, gpio.NoEdge)
 	return &button{
-		pin:   pin,
-		value: false,
+		pin: pin,
 	}
 }

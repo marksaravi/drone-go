@@ -1,18 +1,21 @@
 package remoteinputs
 
+import "fmt"
+
 type button interface {
 	Read() bool
-	Value() bool
 }
 
 type remoteInputs struct {
-	buttonFrontLeft button
-	stopped         bool
+	buttonFrontLeft      button
+	buttonFrontLeftValue bool
+	stopped              bool
 }
 
 func NewRemoteInputs(buttonFrontLeft button) *remoteInputs {
 	return &remoteInputs{
 		buttonFrontLeft: buttonFrontLeft,
+		stopped:         false,
 	}
 }
 
@@ -23,8 +26,8 @@ func (ri *remoteInputs) RefreshInputs() (isStopChanged bool) {
 
 func (ri *remoteInputs) readStopButtons() bool {
 	var isChanged bool = false
-	ri.buttonFrontLeft.Read()
-	if ri.buttonFrontLeft.Value() {
+	ri.buttonFrontLeftValue = ri.buttonFrontLeft.Read()
+	if ri.buttonFrontLeftValue {
 		if !ri.stopped {
 			isChanged = true
 		}
@@ -38,5 +41,6 @@ func (ri *remoteInputs) IsStopped() bool {
 }
 
 func (ri *remoteInputs) PrintData() {
-
+	fmt.Printf("Button-Front-Left: %t", ri.buttonFrontLeftValue)
+	fmt.Println()
 }
