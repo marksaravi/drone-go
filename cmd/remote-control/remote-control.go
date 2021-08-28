@@ -5,7 +5,6 @@ import (
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/devices"
-	devcices "github.com/MarkSaravi/drone-go/devices"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
 	"github.com/MarkSaravi/drone-go/hardware"
@@ -44,7 +43,7 @@ func main() {
 	pitch := devices.NewJoystick(yAxisanalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisanalogToDigitalConvertor)
 	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfig.Buttons.FrontLeft)
-	input := devcices.NewButton(gpioinput)
+	input := devices.NewButton(gpioinput)
 	remoteControl := remotecontrol.NewRemoteControl(roll, pitch, yaw, input)
 	remoteControl.Start()
 }
