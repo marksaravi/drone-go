@@ -39,43 +39,6 @@ func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.E
 	return imuDev, pwmDev, radio, powerbreaker
 }
 
-
-// func InitRemoteHardware(config config.ApplicationConfig) (
-// 	adcconverter.AnalogToDigitalConverter,
-// 	radiolink.RadioLink,
-// 	gpio.PinIn,
-// 	gpio.PinIn,
-// 	gpio.PinIn,
-// 	gpio.PinIn,
-// 	gpio.PinIn,
-// 	gpio.PinIn,
-// ) {
-// 	if _, err := host.Init(); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Println(config)
-// 	spibus, _ := sysfs.NewSPI(
-// 		config.RemoteControl.MCP3008.SPI.BusNumber,
-// 		config.RemoteControl.MCP3008.SPI.ChipSelect,
-// 	)
-// 	spiconn, err := spibus.Connect(
-// 		physic.Frequency(config.RemoteControl.MCP3008.SPI.SpeedMegaHz)*physic.MegaHertz,
-// 		configToSPIMode(config.RemoteControl.MCP3008.SPI.Mode),
-// 		8,
-// 	)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	adc := mcp3008.NewMCP3008(spiconn)
-// 	buttonFrontLeft := NewButton(config.RemoteControl.ButtonFrontLeft)
-// 	buttonFrontRight := NewButton(config.RemoteControl.ButtonFrontRight)
-// 	buttonTopLeft := NewButton(config.RemoteControl.ButtonTopLeft)
-// 	buttonTopRight := NewButton(config.RemoteControl.ButtonTopRight)
-// 	buttonDownLeft := NewButton(config.RemoteControl.ButtonDownLeft)
-// 	buttonDownRight := NewButton(config.RemoteControl.ButtonDownRight)
-// 	return adc, nil, buttonFrontLeft, buttonFrontRight, buttonTopLeft, buttonTopRight, buttonDownLeft, buttonDownRight
-// }
-
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 	return powerbreaker.NewPowerBreaker(gpio)
 }

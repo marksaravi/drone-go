@@ -1,13 +1,13 @@
-package devcices
+package devices
 
 import "github.com/MarkSaravi/drone-go/models"
 
-type input interface {
+type gpioswitch interface {
 	Read() bool
 }
 
 type button struct {
-	input input
+	input gpioswitch
 	data  models.ButtonData
 }
 
@@ -18,7 +18,7 @@ func (btn *button) Read() models.ButtonData {
 	return btn.data
 }
 
-func NewButton(input input) *button {
+func NewButton(input gpioswitch) *button {
 	return &button{
 		input: input,
 	}
