@@ -43,7 +43,7 @@ func ReadConfigs() ApplicationConfig {
 	return config
 }
 
-func readYamlConfig() []byte {
+func ReadYamlConfig() []byte {
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(err)

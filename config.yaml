@@ -1,4 +1,36 @@
-flight_control:
+flight-control:
+  drivers:
+    imu-mems:
+      name: 'icm20948'
+      spi:
+        bus-number: 0
+        chip-select: 0
+      accelerometer:
+        sensitivity-level: '8g'
+        lowpass-filter-enabled: true
+        lowpass-filter-config: 3
+        averaging: 7
+        offsets:
+          X: -65
+          Y: 831
+          Z: -790
+      gyroscope:
+        sensitivity-level: '250dps'
+        lowpass-filter-enabled: true
+        lowpass-filter-config: 3
+        averaging: 7
+        offsets:
+          X: -12
+          Y: -6
+          Z: -8
+      magnetometer:
+        sensitivity-level: '0'
+  devices:
+    imu:
+      imu-data-per-second: 3200
+      acc-lowpass-filter-coefficient: 0.005
+      lowpass-filter-coefficient: 0.01
+
   pid:
     proportional–gain: 1
     integral-gain: 0

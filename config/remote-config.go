@@ -52,7 +52,7 @@ type remoteConfig struct {
 
 func ReadRemoteConfig() remoteConfig {
 	var config remoteConfig
-	content := readYamlConfig()
+	content := ReadYamlConfig()
 	err := yaml.Unmarshal([]byte(content), &config)
 	if err != nil {
 		log.Fatalf("cannot unmarshal config: %v", err)
