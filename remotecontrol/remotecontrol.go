@@ -1,30 +1,41 @@
 package remotecontrol
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
 )
 
-type inputs interface {
-	ReadInputs() models.RemoteControlData
-	PrintData()
+type button interface {
+	Read() models.ButtonData
 }
 
 type remoteControl struct {
-	inputs inputs
+	btnFrontLeft button
+	data         models.RemoteControlData
 }
 
-func NewRemoteControl(inputs inputs) *remoteControl {
+func NewRemoteControl(btnFrontLeft button) *remoteControl {
 	return &remoteControl{
-		inputs: inputs,
+		btnFrontLeft: btnFrontLeft,
 	}
 }
 
 func (rc *remoteControl) Start() {
 	for {
-		rc.inputs.ReadInputs()
-		rc.inputs.PrintData()
+		rc.read()
+		rc.showData()
 		time.Sleep(250 * time.Millisecond)
 	}
+}
+
+func (rc *remoteControl) read() {
+	rc.data = models.RemoteControlData{
+		ButtonFrontLeft: rc.btnFrontLeft.Read(),
+	}
+}
+
+func (rc *remoteControl) showData() {
+	fmt.Println(rc.data)
 }
