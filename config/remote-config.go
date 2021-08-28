@@ -6,6 +6,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Throttle struct {
+	Channel int
+}
+
 type Joystick struct {
 	Channel   int     `yaml:"channel"`
 	ZeroValue float32 `yaml:"zero-value"`
@@ -29,6 +33,7 @@ type Buttons struct {
 type RemoteConfig struct {
 	Joysticks Joysticks `yaml:"joysticks"`
 	Buttons   Buttons   `yaml:"buttons"`
+	Throttle  Throttle  `yaml:"throttle"`
 }
 
 type remoteConfig struct {

@@ -85,6 +85,8 @@ remote-control:
     yaw:
       channel: 3
       zero-value: 2.4
+  throttle:
+    channel: 5
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'
