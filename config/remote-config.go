@@ -6,6 +6,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Joystick struct {
+	Channel   int     `yaml:"channel"`
+	ZeroValue float32 `yaml:"zero-value"`
+}
+
+type Joysticks struct {
+	Roll  Joystick `yaml:"roll"`
+	Pitch Joystick `yaml:"pitch"`
+	Yaw   Joystick `yaml:"yaw"`
+}
+
 type Buttons struct {
 	FrontLeft   string `yaml:"front-left"`
 	FrontRight  string `yaml:"front-right"`
@@ -16,7 +27,8 @@ type Buttons struct {
 }
 
 type RemoteConfig struct {
-	Buttons Buttons `yaml:"buttons"`
+	Joysticks Joysticks `yaml:"joysticks"`
+	Buttons   Buttons   `yaml:"buttons"`
 }
 
 type remoteConfig struct {

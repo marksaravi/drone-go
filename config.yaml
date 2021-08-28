@@ -75,6 +75,16 @@ remote-control:
   y-channel: 4
   z-channel: 3
   throttle-channel: 5
+  joysticks:
+    roll:
+      channel: 2
+      zero-value: 2.5
+    pitch:
+      channel: 4
+      zero-value: 2.6
+    yaw:
+      channel: 3
+      zero-value: 2.4
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'
