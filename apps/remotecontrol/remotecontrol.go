@@ -5,8 +5,7 @@ import (
 )
 
 type inputs interface {
-	ReadInputs() (isStopChanged bool)
-	IsStopped() bool
+	ReadInputs()
 	PrintData()
 }
 

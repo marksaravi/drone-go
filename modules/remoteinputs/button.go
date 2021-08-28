@@ -5,19 +5,18 @@ type button interface {
 }
 
 type buttonInput struct {
-	input button
-	value bool
+	input     button
+	value     bool
+	isChanged bool
 }
 
-func (btn *buttonInput) read() (isChanged bool) {
-	isChanged = false
+func (btn *buttonInput) read() {
 	pv := btn.value
 	btn.value = btn.input.Read()
-	isChanged = btn.value != pv
+	btn.isChanged = btn.value != pv
 	return
 }
 
-func (ri *remoteInputs) readStopButtons() (isChanged bool) {
-	isLeftChanged := ri.buttonFrontLeft.read()
-	return isLeftChanged
+func (ri *remoteInputs) readStopButtons() {
+	ri.buttonFrontLeft.read()
 }

@@ -32,14 +32,9 @@ func NewRemoteInputs(roll joystick, pitch joystick, yaw joystick, inputButtonFro
 	}
 }
 
-func (ri *remoteInputs) ReadInputs() (isStopChanged bool) {
-	isStopChanged = ri.readStopButtons()
+func (ri *remoteInputs) ReadInputs() {
+	ri.readStopButtons()
 	ri.readJoysticks()
-	return
-}
-
-func (ri *remoteInputs) IsStopped() bool {
-	return ri.stopped
 }
 
 func (ri *remoteInputs) PrintData() {

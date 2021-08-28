@@ -5,21 +5,19 @@ type joystick interface {
 }
 
 type joystickInput struct {
-	input joystick
-	value float32
+	input     joystick
+	value     float32
+	isChanged bool
 }
 
-func (js *joystickInput) read() (isChanged bool) {
-	isChanged = false
+func (js *joystickInput) read() {
 	pv := js.value
 	js.value = js.input.Read()
-	isChanged = js.value != pv
-	return
+	js.isChanged = js.value != pv
 }
 
-func (ri *remoteInputs) readJoysticks() (isChanged bool) {
-	rollChanged := ri.roll.read()
-	pitchChanged := ri.pitch.read()
-	yawChanged := ri.yaw.read()
-	return rollChanged || pitchChanged || yawChanged
+func (ri *remoteInputs) readJoysticks() {
+	ri.roll.read()
+	ri.pitch.read()
+	ri.yaw.read()
 }
