@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/MarkSaravi/drone-go/apps/remotecontrol"
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/hardware/mcp3008"
-	"github.com/MarkSaravi/drone-go/modules/remoteinputs"
+	"github.com/MarkSaravi/drone-go/remotecontrol"
+	"github.com/MarkSaravi/drone-go/remoteinputs"
 )
 
 func main() {
