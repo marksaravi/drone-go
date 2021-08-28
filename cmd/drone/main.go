@@ -44,7 +44,12 @@ func main() {
 		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.Z,
 	)
 	readingInterval := time.Second / time.Duration(config.Configs.Devices.ImuConfig.ImuDataPerSecond)
-	imu := devices.NewIMU(imuMems, readingInterval)
+	imu := devices.NewIMU(
+		imuMems,
+		readingInterval,
+		config.Configs.Devices.ImuConfig.AccLowPassFilterCoefficient,
+		config.Configs.Devices.ImuConfig.LowPassFilterCoefficient,
+	)
 	flightControl := flightcontrol.NewFlightControl(imu)
 
 	flightControl.Start()

@@ -2,10 +2,12 @@ package flightcontrol
 
 import (
 	"fmt"
+
+	"github.com/MarkSaravi/drone-go/models"
 )
 
 type imu interface {
-	Read() (canRead bool)
+	Read() (models.ImuRotations, bool)
 }
 
 type flightControl struct {
