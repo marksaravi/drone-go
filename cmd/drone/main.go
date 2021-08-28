@@ -6,6 +6,7 @@ import (
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/devices"
+	"github.com/MarkSaravi/drone-go/devices/udplogger"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/icm20948"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
@@ -50,7 +51,15 @@ func main() {
 		config.Configs.Devices.ImuConfig.AccLowPassFilterCoefficient,
 		config.Configs.Devices.ImuConfig.LowPassFilterCoefficient,
 	)
-	flightControl := flightcontrol.NewFlightControl(imu)
+	udplogger := udplogger.NewUdpLogger(
+		true,
+		"192.168.1.101",
+		6431,
+		20,
+		20,
+		config.Configs.Devices.ImuConfig.ImuDataPerSecond,
+	)
+	flightControl := flightcontrol.NewFlightControl(imu, udplogger)
 
 	flightControl.Start()
 }

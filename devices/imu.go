@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -71,7 +70,7 @@ func (imu *imudevice) Read() (data models.ImuRotations, canRead bool) {
 		ReadTime:      now.UnixNano(),
 		ReadInterval:  diff.Nanoseconds(),
 	}
-	fmt.Println(data.Rotations)
+	// fmt.Println(data.Rotations)
 	imu.readTime = time.Now()
 	canRead = true
 	return
