@@ -14,7 +14,6 @@ func (btn *buttonInput) read() {
 	pv := btn.value
 	btn.value = btn.input.Read()
 	btn.isChanged = btn.value != pv
-	return
 }
 
 func (ri *remoteInputs) readStopButtons() {
