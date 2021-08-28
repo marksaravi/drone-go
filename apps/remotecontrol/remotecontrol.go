@@ -1,23 +1,20 @@
 package remotecontrol
 
-import "github.com/MarkSaravi/drone-go/modules/remoteinputs"
-
-type RemoteConfig struct {
-	ButtonFrontEndGPIO string
-}
+import (
+	"time"
+)
 
 type inputs interface {
-	ReadInputs()
+	RefreshInputs() (isStopChanged bool)
+	IsStopped() bool
+	PrintData()
 }
 
 type remoteControl struct {
 	inputs inputs
 }
 
-func NewRemoteControl(config RemoteConfig) *remoteControl {
-	inputs := remoteinputs.NewRemoteInputs(remoteinputs.RemoteInputsConfig{
-		ButtonFrontEndGPIO: config.ButtonFrontEndGPIO,
-	})
+func NewRemoteControl(inputs inputs) *remoteControl {
 	return &remoteControl{
 		inputs: inputs,
 	}
@@ -25,6 +22,10 @@ func NewRemoteControl(config RemoteConfig) *remoteControl {
 
 func (rc *remoteControl) Start() {
 	for {
-		rc.inputs.ReadInputs()
+		isStopChanged := rc.inputs.RefreshInputs()
+		if isStopChanged {
+			rc.inputs.PrintData()
+		}
+		time.Sleep(250 * time.Millisecond)
 	}
 }
