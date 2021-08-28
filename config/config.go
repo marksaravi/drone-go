@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/MarkSaravi/drone-go/apps/flightcontrol"
+	oldflightcontrol "github.com/MarkSaravi/drone-go/apps/flightcontrol"
 	"github.com/MarkSaravi/drone-go/hardware/icm20948"
 	"github.com/MarkSaravi/drone-go/hardware/nrf204"
 	"github.com/MarkSaravi/drone-go/hardware/pca9685"
@@ -21,9 +21,9 @@ type HardwareConfig struct {
 }
 
 type ApplicationConfig struct {
-	Flight   flightcontrol.FlightConfig `yaml:"flight_control"`
-	Hardware HardwareConfig             `yaml:"devices"`
-	UDP      udplogger.UdpLoggerConfig  `yaml:"udp"`
+	Flight   oldflightcontrol.FlightConfig `yaml:"flight_control"`
+	Hardware HardwareConfig                `yaml:"devices"`
+	UDP      udplogger.UdpLoggerConfig     `yaml:"udp"`
 }
 
 func ReadConfigs() ApplicationConfig {

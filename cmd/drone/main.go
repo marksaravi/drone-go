@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MarkSaravi/drone-go/apps/flightcontrol"
+	oldflightcontrol "github.com/MarkSaravi/drone-go/apps/flightcontrol"
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/modules/imu"
@@ -15,7 +15,7 @@ func main() {
 	udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
 	imu := imu.CreateIM(imuDev, appConfig.Flight.Imu)
 	motorsController := motors.NewMotorsControl(esc, powerBreaker)
-	flightControl := flightcontrol.CreateFlightControl(imu, motorsController, radio, udpLogger)
+	flightControl := oldflightcontrol.CreateFlightControl(imu, motorsController, radio, udpLogger)
 
 	flightControl.Start()
 }
