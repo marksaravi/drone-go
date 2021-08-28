@@ -21,9 +21,6 @@ func NewFlightControl(imu imu) *flightControl {
 func (fc *flightControl) Start() {
 	fmt.Println("Starting Flight Control")
 	for {
-		canRead := fc.imu.Read()
-		if canRead {
-			fmt.Println("Reading Data")
-		}
+		fc.imu.Read()
 	}
 }

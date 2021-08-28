@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
@@ -29,6 +30,8 @@ func (imu *imudevice) Read() (canRead bool) {
 		canRead = false
 		return
 	}
+	acc, gyro := imu.imuMems.Read()
+	fmt.Println(acc, gyro)
 	imu.readTime = time.Now()
 	canRead = true
 	return
