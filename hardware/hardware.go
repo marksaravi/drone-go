@@ -16,26 +16,6 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func InitHost() {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// func InitDroneHardware(config config.ApplicationConfig) (imu.ImuDevice, motors.ESC, radiolink.RadioLink, powerbreaker.PowerBreaker) {
-// 	if _, err := host.Init(); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	pwmDev := newPwmDev(config.Hardware.PCA9685)
-// 	powerbreaker := newPowerBreaker(config.Hardware.PCA9685.PowerBrokerGPIO)
-// 	imuDev, err := icm20948.NewICM20948Driver(config.Hardware.ICM20948)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	radio := newRadioLink(config.Hardware.NRF204)
-// 	return imuDev, pwmDev, radio, powerbreaker
-// }
-
 func newPowerBreaker(gpio string) powerbreaker.PowerBreaker {
 	return powerbreaker.NewPowerBreaker(gpio)
 }

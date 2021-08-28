@@ -10,7 +10,6 @@ import (
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/icm20948"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
-	"github.com/MarkSaravi/drone-go/hardware"
 )
 
 func main() {
@@ -22,7 +21,7 @@ func main() {
 
 	config := config.ReadFlightControlConfig()
 	fmt.Println(config)
-	hardware.InitHost()
+	drivers.InitHost()
 	imuSPIConn := drivers.NewSPIConnection(
 		config.Configs.Drivers.ImuMemes.SPI.BusNumber,
 		config.Configs.Drivers.ImuMemes.SPI.ChipSelect,

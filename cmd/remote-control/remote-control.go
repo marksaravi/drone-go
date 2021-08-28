@@ -7,7 +7,6 @@ import (
 	"github.com/MarkSaravi/drone-go/devices"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
-	"github.com/MarkSaravi/drone-go/hardware"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
 )
 
@@ -15,7 +14,7 @@ func main() {
 	fmt.Println("Starting RemoteControl")
 	config := config.ReadRemoteControlConfig()
 	fmt.Println(config)
-	hardware.InitHost()
+	drivers.InitHost()
 
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
 		config.RemoteControlConfig.Joysticks.SPI.BusNumber,
