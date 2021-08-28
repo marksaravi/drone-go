@@ -5,7 +5,7 @@ import (
 )
 
 type inputs interface {
-	RefreshInputs() (isStopChanged bool)
+	ReadInputs() (isStopChanged bool)
 	IsStopped() bool
 	PrintData()
 }
@@ -22,7 +22,7 @@ func NewRemoteControl(inputs inputs) *remoteControl {
 
 func (rc *remoteControl) Start() {
 	for {
-		rc.inputs.RefreshInputs()
+		rc.inputs.ReadInputs()
 		rc.inputs.PrintData()
 		time.Sleep(250 * time.Millisecond)
 	}
