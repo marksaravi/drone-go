@@ -1,49 +1,20 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 
-	oldflightcontrol "github.com/MarkSaravi/drone-go/apps/flightcontrol"
-	"github.com/MarkSaravi/drone-go/hardware/icm20948"
-	"github.com/MarkSaravi/drone-go/hardware/nrf204"
-	"github.com/MarkSaravi/drone-go/hardware/pca9685"
-	"github.com/MarkSaravi/drone-go/modules/udplogger"
-	"gopkg.in/yaml.v3"
+	"periph.io/x/periph/conn/spi"
 )
 
-type HardwareConfig struct {
-	ICM20948 icm20948.ICM20948Config `yaml:"icm20948"`
-	PCA9685  pca9685.PCA9685Config   `yaml:"pca9685"`
-	NRF204   nrf204.NRF204Config     `yaml:"nrf204"`
+type SPI struct {
+	BusNumber  int      `yaml:"bus-number"`
+	ChipSelect int      `yaml:"chip-select"`
+	Mode       spi.Mode `yaml:"mode"`
+	Speed      int      `yaml:"speed-mega-hz"`
 }
 
-type ApplicationConfig struct {
-	Flight   oldflightcontrol.FlightConfig `yaml:"flight_control"`
-	Hardware HardwareConfig                `yaml:"devices"`
-	UDP      udplogger.UdpLoggerConfig     `yaml:"udp"`
-}
-
-func ReadConfigs() ApplicationConfig {
-	var config ApplicationConfig
-
-	content, err := ioutil.ReadFile("./config.yaml")
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-	err = yaml.Unmarshal([]byte(content), &config)
-	if err != nil {
-		log.Fatalf("cannot unmarshal config: %v", err)
-		os.Exit(1)
-	}
-	fmt.Println(config)
-	return config
-}
-
-func ReadYamlConfig() []byte {
+func readYamlConfig() []byte {
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(err)

@@ -1,9 +1,8 @@
-package flightcontrolconfig
+package config
 
 import (
 	"log"
 
-	"github.com/MarkSaravi/drone-go/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,13 +33,13 @@ type MagnetometerConfig struct {
 
 type ImuMemes struct {
 	Name          string              `yaml:"name"`
-	SPI           config.SPI          `yaml:"spi"`
+	SPI           SPI                 `yaml:"spi"`
 	Accelerometer AccelerometerConfig `yaml:"accelerometer"`
 	Gyroscope     GyroscopeConfig     `yaml:"gyroscope"`
 	Magnetometer  MagnetometerConfig  `yaml:"magnetometer"`
 }
 
-type Drivers struct {
+type FlightControlDrivers struct {
 	ImuMemes ImuMemes `yaml:"imu-mems"`
 }
 
@@ -50,22 +49,22 @@ type ImuConfig struct {
 	LowPassFilterCoefficient    float64 `yaml:"lowpass-filter-coefficient"`
 }
 
-type Devices struct {
+type FlightControlDevices struct {
 	ImuConfig ImuConfig `yaml:"imu"`
 }
 
-type Configs struct {
-	Drivers Drivers `yaml:"drivers"`
-	Devices Devices `yaml:"devices"`
+type FlightControlConfigs struct {
+	Drivers FlightControlDrivers `yaml:"drivers"`
+	Devices FlightControlDevices `yaml:"devices"`
 }
 
-type configs struct {
-	Configs Configs `yaml:"flight-control"`
+type flightControlConfigs struct {
+	Configs FlightControlConfigs `yaml:"flight-control"`
 }
 
-func ReadFlightControlConfig() configs {
-	var flightcontrolconfig configs
-	content := config.ReadYamlConfig()
+func ReadFlightControlConfig() flightControlConfigs {
+	var flightcontrolconfig flightControlConfigs
+	content := readYamlConfig()
 	err := yaml.Unmarshal([]byte(content), &flightcontrolconfig)
 	if err != nil {
 		log.Fatalf("cannot unmarshal config: %v", err)

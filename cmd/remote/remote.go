@@ -13,38 +13,38 @@ import (
 
 func main() {
 	fmt.Println("Starting RemoteControl")
-	config := config.ReadRemoteConfig()
+	config := config.ReadRemoteControlConfig()
 	fmt.Println(config)
 	hardware.InitHost()
 
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
-		config.RemoteConfig.Joysticks.SPI.BusNumber,
-		config.RemoteConfig.Joysticks.SPI.ChipSelect,
-		config.RemoteConfig.Joysticks.SPI.Speed,
-		config.RemoteConfig.Joysticks.SPI.Mode,
+		config.RemoteControlConfig.Joysticks.SPI.BusNumber,
+		config.RemoteControlConfig.Joysticks.SPI.ChipSelect,
+		config.RemoteControlConfig.Joysticks.SPI.Speed,
+		config.RemoteControlConfig.Joysticks.SPI.Mode,
 	)
 	xAxisanalogToDigitalConvertor := drivers.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteConfig.Joysticks.VRef,
-		config.RemoteConfig.Joysticks.Roll.Channel,
-		config.RemoteConfig.Joysticks.Roll.ZeroValue,
+		config.RemoteControlConfig.Joysticks.VRef,
+		config.RemoteControlConfig.Joysticks.Roll.Channel,
+		config.RemoteControlConfig.Joysticks.Roll.ZeroValue,
 	)
 	yAxisanalogToDigitalConvertor := drivers.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteConfig.Joysticks.VRef,
-		config.RemoteConfig.Joysticks.Pitch.Channel,
-		config.RemoteConfig.Joysticks.Pitch.ZeroValue,
+		config.RemoteControlConfig.Joysticks.VRef,
+		config.RemoteControlConfig.Joysticks.Pitch.Channel,
+		config.RemoteControlConfig.Joysticks.Pitch.ZeroValue,
 	)
 	zAxisanalogToDigitalConvertor := drivers.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteConfig.Joysticks.VRef,
-		config.RemoteConfig.Joysticks.Yaw.Channel,
-		config.RemoteConfig.Joysticks.Yaw.ZeroValue,
+		config.RemoteControlConfig.Joysticks.VRef,
+		config.RemoteControlConfig.Joysticks.Yaw.Channel,
+		config.RemoteControlConfig.Joysticks.Yaw.ZeroValue,
 	)
 	roll := devices.NewJoystick(xAxisanalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisanalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisanalogToDigitalConvertor)
-	gpioinput := drivers.NewGPIOSwitch(config.RemoteConfig.Buttons.FrontLeft)
+	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfig.Buttons.FrontLeft)
 	input := devcices.NewButton(gpioinput)
 	remoteControl := remotecontrol.NewRemoteControl(roll, pitch, yaw, input)
 	remoteControl.Start()
