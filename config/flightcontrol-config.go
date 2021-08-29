@@ -37,7 +37,8 @@ type ImuMemes struct {
 }
 
 type ESC struct {
-	Dev              string      `yaml:"i2c-dev"`
+	I2CDev           string      `yaml:"i2c-dev"`
+	MaxThrottle      float32     `yaml:"max-throttle"`
 	MotorESCMappings map[int]int `yaml:"motors-esc-mappings"`
 }
 

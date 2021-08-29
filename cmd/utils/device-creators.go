@@ -2,14 +2,19 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/devices"
+	"github.com/MarkSaravi/drone-go/devices/motors"
 	"github.com/MarkSaravi/drone-go/devices/udplogger"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/icm20948"
+	"github.com/MarkSaravi/drone-go/drivers/pca9685"
 	"github.com/MarkSaravi/drone-go/models"
+	"periph.io/x/periph/conn/i2c"
+	"periph.io/x/periph/conn/i2c/i2creg"
 )
 
 func NewImu() interface {
@@ -76,4 +81,22 @@ func NewPowerBreaker() interface {
 	flightControlConfig := config.ReadFlightControlConfig()
 	powerbreaker := drivers.NewGPIOOutput(flightControlConfig.Configs.PowerBreaker)
 	return powerbreaker
+}
+
+func NewESC() interface {
+	On()
+	Off()
+	SetThrottle(int, float32)
+} {
+	flightControlConfigs := config.ReadFlightControlConfig()
+	escConfigs := flightControlConfigs.Configs.ESC
+	powerbreaker := drivers.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
+	b, _ := i2creg.Open(escConfigs.I2CDev)
+	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
+	pwmDev, err := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, escConfigs.MaxThrottle)
+	if err != nil {
+		log.Fatal(err)
+	}
+	esc := motors.NewMotorsControl(pwmDev, powerbreaker, escConfigs.MotorESCMappings)
+	return esc
 }
