@@ -36,11 +36,23 @@ type ImuMemes struct {
 	LowPassFilterCoefficient    float64             `yaml:"lowpass-filter-coefficient"`
 }
 
-type ImuConfig struct {
+type ESC struct {
+	Dev              string      `yaml:"i2c-dev"`
+	MotorESCMappings map[int]int `yaml:"motors-esc-mappings"`
+}
+
+type Radio struct {
+	CE          string `yaml:"ce-gpio"`
+	RxTxAddress string `yaml:"rx-tx-address"`
+	PowerDBm    string `yaml:"power-dbm"`
+	SPI         SPI    `yaml:"spi"`
 }
 
 type FlightControlConfigs struct {
-	Imu ImuMemes `yaml:"imu"`
+	Imu          ImuMemes `yaml:"imu"`
+	ESC          ESC      `yaml:"esc"`
+	Radio        Radio    `yaml:"radio"`
+	PowerBreaker string   `yaml:"power-breaker"`
 }
 
 type flightControlConfigs struct {

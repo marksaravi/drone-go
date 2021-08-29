@@ -24,12 +24,27 @@ flight-control:
     spi:
       bus-number: 0
       chip-select: 0
+  esc:
+    i2c-dev: '/dev/i2c-1'
+    motors-esc-mappings:
+      0: 0
+      1: 4
+      2: 8
+      3: 12
+  radio:
+    ce-gpio: 'GPIO26'
+    rx-tx-address: '03896'
+    power-dbm: '-18dbm'
+    spi:
+      bus-number: 1
+      chip-select: 2
+  power-breaker: 'GPIO17'
 
 remote-control:
   mcp3008:
     spi:
-      bus_number: 0
-      chip_select: 0
+      bus-number: 0
+      chip-select: 0
       mode: 0
       speed-mega-hz: 1
   x-channel: 2
