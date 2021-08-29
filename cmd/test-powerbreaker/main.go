@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/hardware"
+	"github.com/MarkSaravi/drone-go/drivers"
 )
 
 func main() {
-	config := config.ReadConfigs()
 	fmt.Println("Started")
-	_, _, _, powerbreaker := hardware.InitDroneHardware(config)
-	powerbreaker.Connect()
+	drivers.InitHost()
+	powerbreaker := drivers.NewGPIOOutput("GPIO17")
+	powerbreaker.SetHigh()
 	time.Sleep(2 * time.Second)
-	powerbreaker.Disconnect()
+	powerbreaker.SetLow()
 }

@@ -3,8 +3,8 @@ package hardware
 import (
 	"log"
 
-	"github.com/MarkSaravi/drone-go/hardware/nrf204"
-	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"github.com/MarkSaravi/drone-go/devices/radiolink"
+	"github.com/MarkSaravi/drone-go/drivers/nrf204"
 	"periph.io/x/periph/conn/physic"
 	"periph.io/x/periph/conn/spi"
 	"periph.io/x/periph/host"

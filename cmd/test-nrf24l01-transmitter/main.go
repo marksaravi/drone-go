@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"github.com/MarkSaravi/drone-go/drivers"
+	"github.com/MarkSaravi/drone-go/drivers/nrf204"
 )
 
 func main() {
-	config := config.ReadConfigs()
-	_, _, radio, _ := hardware.InitDroneHardware(config)
+	drivers.InitHost()
+	radioSPIConn := drivers.NewSPIConnection(
+		1,
+		2,
+	)
+	radio := nrf204.NewNRF204("03896", "GPIO26", "-18dbm", radioSPIConn)
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
@@ -19,7 +22,7 @@ func main() {
 	var numSend int = 0
 	start := time.Now()
 	for range time.Tick(time.Millisecond * 20) {
-		flightdata := radiolink.FlightData{
+		flightdata := nrf204.FlightData{
 			Roll:          roll,
 			Pitch:         -34.53,
 			Yaw:           0,
