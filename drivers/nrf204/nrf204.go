@@ -6,6 +6,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/MarkSaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -62,32 +63,7 @@ const (
 const ADDRESS_SIZE int = 5
 const PAYLOAD_SIZE byte = 32
 
-type FlightData struct {
-	Roll          float32
-	Pitch         float32
-	Yaw           float32
-	Throttle      float32
-	Altitude      float32
-	MotorsEngaged bool
-}
-
-type RadioLink interface {
-	ReceiverOn()
-	TransmitterOn()
-	IsDataAvailable() bool
-	TransmitFlightData(FlightData) error
-	ReceiveFlightData() FlightData
-}
-
 type radioMode int
-
-// type NRF204Config struct {
-// 	BusNumber   int    `yaml:"bus_number"`
-// 	ChipSelect  int    `yaml:"chip_select"`
-// 	CEGPIO      string `yaml:"ce_gpio"`
-// 	RxTxAddress string `yaml:"rx_tx_address"`
-// 	PowerDBm    string `yaml:"power_dbm"`
-// }
 
 const (
 	Receiver radioMode = iota
@@ -221,7 +197,7 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReceiveFlightData() FlightData {
+func (radio *nrf204l01) ReceiveFlightData() models.FlightData {
 	binarypayload, _ := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
 	return payloadToFlightData(binarypayload)
@@ -240,7 +216,7 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) TransmitFlightData(flightData FlightData) error {
+func (radio *nrf204l01) TransmitFlightData(flightData models.FlightData) error {
 	payload := flightDataToPayload(flightData)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
@@ -341,7 +317,7 @@ func initPin(pinName string) gpio.PinIO {
 	return pin
 }
 
-func flightDataToPayload(flightData FlightData) []byte {
+func flightDataToPayload(flightData models.FlightData) []byte {
 	var status0 byte = 0
 	if flightData.MotorsEngaged {
 		status0 = 1
@@ -360,9 +336,9 @@ func flightDataToPayload(flightData FlightData) []byte {
 	return append([]byte{status0, 0, 0, 0}, ba...)
 }
 
-func payloadToFlightData(payload []byte) FlightData {
+func payloadToFlightData(payload []byte) models.FlightData {
 	fa := byteArrayToFloat32Array(payload[4:])
-	return FlightData{
+	return models.FlightData{
 		MotorsEngaged: (payload[0] & 0b00000001) != 0,
 		Roll:          fa[0],
 		Pitch:         fa[1],

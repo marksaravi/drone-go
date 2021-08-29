@@ -6,8 +6,8 @@ import (
 	"github.com/MarkSaravi/drone-go/models"
 )
 
-// InitAccelerometer initialise the Accelerometer
-func (dev *memsICM20948) InitAccelerometer() error {
+// initAccelerometer initialise the Accelerometer
+func (dev *memsICM20948) initAccelerometer() error {
 	var sensitivity uint8 = 0
 	switch dev.accConfig.sensitivityLevel {
 	case "2g":

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/MarkSaravi/drone-go/cmd/utils"
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/pca9685"
+	"github.com/MarkSaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 )

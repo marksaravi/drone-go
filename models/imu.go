@@ -17,3 +17,12 @@ type ImuRotations struct {
 	ReadTime      int64
 	ReadInterval  int64
 }
+
+type FlightData struct {
+	Roll          float32
+	Pitch         float32
+	Yaw           float32
+	Throttle      float32
+	Altitude      float32
+	MotorsEngaged bool
+}

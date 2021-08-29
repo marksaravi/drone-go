@@ -6,8 +6,8 @@ import (
 	"github.com/MarkSaravi/drone-go/models"
 )
 
-// InitGyroscope initialise the Gyroscope
-func (dev *memsICM20948) InitGyroscope() error {
+// initGyroscope initialise the Gyroscope
+func (dev *memsICM20948) initGyroscope() error {
 	var gyroConfig1 uint8 = 0b00000000
 	var gyroConfig2 uint8 = uint8(dev.gyroConfig.averaging)
 

@@ -105,9 +105,9 @@ func NewESC() interface {
 func newRadio() interface {
 	IsDataAvailable() bool
 	ReceiverOn()
-	ReceiveFlightData() nrf204.FlightData
+	ReceiveFlightData() models.FlightData
 	TransmitterOn()
-	TransmitFlightData(nrf204.FlightData) error
+	TransmitFlightData(models.FlightData) error
 } {
 	flightControlConfig := config.ReadFlightControlConfig()
 	radioConfig := flightControlConfig.Configs.Radio
@@ -122,13 +122,13 @@ func newRadio() interface {
 func NewReceiverRadio() interface {
 	IsDataAvailable() bool
 	ReceiverOn()
-	ReceiveFlightData() nrf204.FlightData
+	ReceiveFlightData() models.FlightData
 } {
 	return newRadio()
 }
 func NewTransmitterRadio() interface {
 	TransmitterOn()
-	TransmitFlightData(nrf204.FlightData) error
+	TransmitFlightData(models.FlightData) error
 } {
 	return newRadio()
 }

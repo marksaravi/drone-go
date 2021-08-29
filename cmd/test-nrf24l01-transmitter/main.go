@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/cmd/utils"
 	"github.com/MarkSaravi/drone-go/drivers"
-	"github.com/MarkSaravi/drone-go/drivers/nrf204"
+	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 	var numSend int = 0
 	start := time.Now()
 	for range time.Tick(time.Millisecond * 20) {
-		flightdata := nrf204.FlightData{
+		flightdata := models.FlightData{
 			Roll:          roll,
 			Pitch:         -34.53,
 			Yaw:           0,

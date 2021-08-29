@@ -157,12 +157,12 @@ func (dev *memsICM20948) initDevice() error {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
-	err = dev.InitAccelerometer()
+	err = dev.initAccelerometer()
 	if err != nil {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
-	err = dev.InitGyroscope()
+	err = dev.initGyroscope()
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	return err
 }
