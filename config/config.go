@@ -15,14 +15,6 @@ type SPI struct {
 	Speed      int      `yaml:"speed-mega-hz"`
 }
 
-type UdpLogger struct {
-	Enabled          bool   `yaml:"enabled"`
-	IP               string `yaml:"ip"`
-	Port             int    `yaml:"port"`
-	PacketsPerSecond int    `yaml:"packets-per-second"`
-	MaxDataPerPacket int    `yaml:"max-data-per-packet"`
-}
-
 func readConfig(config interface{}) interface{} {
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
@@ -33,6 +25,9 @@ func readConfig(config interface{}) interface{} {
 		yaml.Unmarshal([]byte(content), &typedConfig)
 		return typedConfig
 	case remoteControlConfigs:
+		yaml.Unmarshal([]byte(content), &typedConfig)
+		return typedConfig
+	case udpLoggerConfigs:
 		yaml.Unmarshal([]byte(content), &typedConfig)
 		return typedConfig
 	default:

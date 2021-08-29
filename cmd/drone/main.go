@@ -66,13 +66,16 @@ func newImu() interface {
 func newLogger() interface {
 	Send(models.ImuRotations)
 } {
+	flightControlConfig := config.ReadFlightControlConfig()
+	loggerConfig := config.ReadLoggerConfig()
+	loggerConfigs := loggerConfig.UdpLoggerConfigs
 	udplogger := udplogger.NewUdpLogger(
-		true,
-		"192.168.1.101",
-		6431,
-		20,
-		20,
-		3200,
+		loggerConfigs.Enabled,
+		loggerConfigs.IP,
+		loggerConfigs.Port,
+		loggerConfigs.PacketsPerSecond,
+		loggerConfigs.MaxDataPerPacket,
+		flightControlConfig.Configs.Imu.ImuDataPerSecond,
 	)
 	return udplogger
 }

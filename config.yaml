@@ -63,9 +63,9 @@ remote-control:
     down-right: 'GPIO23'
   v-ref: 5
 
-udp-logger:
+logger:
   enabled: true
-  ip: 192.168.1.103
+  ip: 192.168.1.101
   port: 6431
   packets-per-second: 20 # set to zero for disabling udp send
   max-data-per-packet: 20

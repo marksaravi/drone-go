@@ -5,6 +5,7 @@ type Offsets struct {
 	Y int16 `yaml:"Y"`
 	Z int16 `yaml:"Z"`
 }
+
 type AccelerometerConfig struct {
 	SensitivityLevel     string  `yaml:"sensitivity-level"`
 	LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`

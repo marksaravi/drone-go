@@ -13,16 +13,6 @@ import (
 	"github.com/MarkSaravi/drone-go/models"
 )
 
-// type UdpLoggerConfig struct {
-// 	Enabled          bool   `yaml:"enabled"`
-// 	IP               string `yaml:"ip"`
-// 	Port             int    `yaml:"port"`
-// 	PacketsPerSecond int    `yaml:"packets_per_second"`
-// 	MaxDataPerPacket int    `yaml:"max_data_per_packet"`
-// }
-
-// Logger is interface for the udpLogger
-
 type udpLogger struct {
 	conn                 *net.UDPConn
 	address              *net.UDPAddr
@@ -32,11 +22,18 @@ type udpLogger struct {
 	dataPerPacket        int
 	dataPerPacketCounter int
 	skipOffset           int
-	maxDataPerPacket     int
-	bufferCounter        int
+	// maxDataPerPacket     int
+	bufferCounter int
 }
 
-func NewUdpLogger(enabled bool, ip string, port int, packetsPerSecond int, configMaxDataPerPacket int, imuDataPerSecond int) *udpLogger {
+func NewUdpLogger(
+	enabled bool,
+	ip string,
+	port int,
+	packetsPerSecond int,
+	maxDataPerPacket int,
+	imuDataPerSecond int,
+) *udpLogger {
 	if !enabled {
 		return &udpLogger{
 			enabled: false,
@@ -62,26 +59,25 @@ func NewUdpLogger(enabled bool, ip string, port int, packetsPerSecond int, confi
 			enabled: false,
 		}
 	}
-	dataPerPacket := imuDataPerSecond / packetsPerSecond
+	wantedDataPerPacket := imuDataPerSecond / packetsPerSecond
 	var skipOffset int = 1
-	var maxDataPerPacket = dataPerPacket
-	if dataPerPacket > configMaxDataPerPacket {
-		maxDataPerPacket = configMaxDataPerPacket
-		skipOffset = int(math.Ceil(float64(dataPerPacket) / float64(configMaxDataPerPacket)))
+	var actualDataPerPacket = wantedDataPerPacket
+	if wantedDataPerPacket > maxDataPerPacket {
+		actualDataPerPacket = maxDataPerPacket
+		skipOffset = int(math.Ceil(float64(wantedDataPerPacket) / float64(maxDataPerPacket)))
 	}
-	fmt.Println("DPP: ", imuDataPerSecond, dataPerPacket, maxDataPerPacket, skipOffset)
+	fmt.Println("DPP: ", imuDataPerSecond, wantedDataPerPacket, actualDataPerPacket, skipOffset)
 
 	return &udpLogger{
 		conn:                 conn,
 		address:              address,
 		enabled:              true,
 		imuDataPerSecond:     imuDataPerSecond,
-		dataPerPacket:        dataPerPacket,
+		dataPerPacket:        actualDataPerPacket,
 		dataPerPacketCounter: 0,
 		bufferCounter:        0,
 		skipOffset:           skipOffset,
-		maxDataPerPacket:     maxDataPerPacket,
-		buffer:               make([]string, maxDataPerPacket),
+		buffer:               make([]string, actualDataPerPacket),
 	}
 }
 
