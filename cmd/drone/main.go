@@ -10,12 +10,25 @@ import (
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/icm20948"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
+	"github.com/MarkSaravi/drone-go/models"
 )
 
 func main() {
-	config := config.ReadFlightControlConfig()
-	imuConfig := config.Configs.Imu
-	fmt.Println(config)
+
+	flightControl := flightcontrol.NewFlightControl(
+		newImu(),
+		newLogger(),
+	)
+
+	flightControl.Start()
+}
+
+func newImu() interface {
+	Read() (models.ImuRotations, bool)
+} {
+	appconfig := config.ReadFlightControlConfig()
+	imuConfig := appconfig.Configs.Imu
+	fmt.Println(appconfig)
 	drivers.InitHost()
 	imuSPIConn := drivers.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
@@ -47,15 +60,19 @@ func main() {
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
+	return imu
+}
+
+func newLogger() interface {
+	Send(models.ImuRotations)
+} {
 	udplogger := udplogger.NewUdpLogger(
 		true,
 		"192.168.1.101",
 		6431,
 		20,
 		20,
-		imuConfig.ImuDataPerSecond,
+		3200,
 	)
-	flightControl := flightcontrol.NewFlightControl(imu, udplogger)
-
-	flightControl.Start()
+	return udplogger
 }

@@ -1,11 +1,5 @@
 package config
 
-import (
-	"log"
-
-	"gopkg.in/yaml.v3"
-)
-
 type Throttle struct {
 	Channel int
 }
@@ -32,22 +26,16 @@ type Buttons struct {
 	BottomRight string `yaml:"bottom-right"`
 }
 
-type RemoteControlConfig struct {
+type RemoteControlConfigs struct {
 	Joysticks Joysticks `yaml:"joysticks"`
 	Buttons   Buttons   `yaml:"buttons"`
 	Throttle  Throttle  `yaml:"throttle"`
 }
 
-type remoteControlConfig struct {
-	RemoteControlConfig RemoteControlConfig `yaml:"remote-control"`
+type remoteControlConfigs struct {
+	RemoteControlConfigs RemoteControlConfigs `yaml:"remote-control"`
 }
 
-func ReadRemoteControlConfig() remoteControlConfig {
-	var config remoteControlConfig
-	content := readYamlConfig()
-	err := yaml.Unmarshal([]byte(content), &config)
-	if err != nil {
-		log.Fatalf("cannot unmarshal config: %v", err)
-	}
-	return config
+func ReadRemoteControlConfig() remoteControlConfigs {
+	return readConfig(remoteControlConfigs{}).(remoteControlConfigs)
 }

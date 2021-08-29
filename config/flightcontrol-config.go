@@ -1,11 +1,5 @@
 package config
 
-import (
-	"log"
-
-	"gopkg.in/yaml.v3"
-)
-
 type Offsets struct {
 	X int16 `yaml:"X"`
 	Y int16 `yaml:"Y"`
@@ -53,11 +47,5 @@ type flightControlConfigs struct {
 }
 
 func ReadFlightControlConfig() flightControlConfigs {
-	var flightcontrolconfig flightControlConfigs
-	content := readYamlConfig()
-	err := yaml.Unmarshal([]byte(content), &flightcontrolconfig)
-	if err != nil {
-		log.Fatalf("cannot unmarshal config: %v", err)
-	}
-	return flightcontrolconfig
+	return readConfig(flightControlConfigs{}).(flightControlConfigs)
 }

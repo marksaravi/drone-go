@@ -17,31 +17,31 @@ func main() {
 	drivers.InitHost()
 
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
-		config.RemoteControlConfig.Joysticks.SPI.BusNumber,
-		config.RemoteControlConfig.Joysticks.SPI.ChipSelect,
+		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
+		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
 	)
 	xAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfig.Joysticks.VRef,
-		config.RemoteControlConfig.Joysticks.Roll.Channel,
-		config.RemoteControlConfig.Joysticks.Roll.ZeroValue,
+		config.RemoteControlConfigs.Joysticks.VRef,
+		config.RemoteControlConfigs.Joysticks.Roll.Channel,
+		config.RemoteControlConfigs.Joysticks.Roll.ZeroValue,
 	)
 	yAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfig.Joysticks.VRef,
-		config.RemoteControlConfig.Joysticks.Pitch.Channel,
-		config.RemoteControlConfig.Joysticks.Pitch.ZeroValue,
+		config.RemoteControlConfigs.Joysticks.VRef,
+		config.RemoteControlConfigs.Joysticks.Pitch.Channel,
+		config.RemoteControlConfigs.Joysticks.Pitch.ZeroValue,
 	)
 	zAxisanalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfig.Joysticks.VRef,
-		config.RemoteControlConfig.Joysticks.Yaw.Channel,
-		config.RemoteControlConfig.Joysticks.Yaw.ZeroValue,
+		config.RemoteControlConfigs.Joysticks.VRef,
+		config.RemoteControlConfigs.Joysticks.Yaw.Channel,
+		config.RemoteControlConfigs.Joysticks.Yaw.ZeroValue,
 	)
 	roll := devices.NewJoystick(xAxisanalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisanalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisanalogToDigitalConvertor)
-	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfig.Buttons.FrontLeft)
+	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
 	remoteControl := remotecontrol.NewRemoteControl(roll, pitch, yaw, input)
 	remoteControl.Start()
