@@ -11,6 +11,7 @@ import (
 	"github.com/MarkSaravi/drone-go/devices/udplogger"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/icm20948"
+	"github.com/MarkSaravi/drone-go/drivers/nrf204"
 	"github.com/MarkSaravi/drone-go/drivers/pca9685"
 	"github.com/MarkSaravi/drone-go/models"
 	"periph.io/x/periph/conn/i2c"
@@ -99,4 +100,35 @@ func NewESC() interface {
 	}
 	esc := motors.NewMotorsControl(pwmDev, powerbreaker, escConfigs.MotorESCMappings)
 	return esc
+}
+
+func newRadio() interface {
+	IsDataAvailable() bool
+	ReceiverOn()
+	ReceiveFlightData() nrf204.FlightData
+	TransmitterOn()
+	TransmitFlightData(nrf204.FlightData) error
+} {
+	flightControlConfig := config.ReadFlightControlConfig()
+	radioConfig := flightControlConfig.Configs.Radio
+	radioSPIConn := drivers.NewSPIConnection(
+		radioConfig.SPI.BusNumber,
+		radioConfig.SPI.ChipSelect,
+	)
+	radio := nrf204.NewNRF204(radioConfig.RxTxAddress, radioConfig.CE, radioConfig.PowerDBm, radioSPIConn)
+	return radio
+}
+
+func NewReceiverRadio() interface {
+	IsDataAvailable() bool
+	ReceiverOn()
+	ReceiveFlightData() nrf204.FlightData
+} {
+	return newRadio()
+}
+func NewTransmitterRadio() interface {
+	TransmitterOn()
+	TransmitFlightData(nrf204.FlightData) error
+} {
+	return newRadio()
 }

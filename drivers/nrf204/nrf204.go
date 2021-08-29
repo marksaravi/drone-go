@@ -74,7 +74,7 @@ type FlightData struct {
 type RadioLink interface {
 	ReceiverOn()
 	TransmitterOn()
-	IsPayloadAvailable() bool
+	IsDataAvailable() bool
 	TransmitFlightData(FlightData) error
 	ReceiveFlightData() FlightData
 }
@@ -207,7 +207,7 @@ func (radio *nrf204l01) ReceiverOn() {
 	radio.ce.Out(gpio.High)
 }
 
-func (radio *nrf204l01) IsPayloadAvailable() bool {
+func (radio *nrf204l01) IsDataAvailable() bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
 	// fmt.Println("Status: ", status)

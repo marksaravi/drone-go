@@ -4,17 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MarkSaravi/drone-go/cmd/utils"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/nrf204"
 )
 
 func main() {
 	drivers.InitHost()
-	radioSPIConn := drivers.NewSPIConnection(
-		1,
-		2,
-	)
-	radio := nrf204.NewNRF204("03896", "GPIO26", "-18dbm", radioSPIConn)
+	radio := utils.NewTransmitterRadio()
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0

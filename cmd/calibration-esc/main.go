@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/MarkSaravi/drone-go/cmd/utils"
+	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/pca9685"
 	"periph.io/x/periph/conn/i2c"
@@ -9,8 +11,9 @@ import (
 
 func main() {
 	drivers.InitHost()
-	b, _ := i2creg.Open("/dev/i2c-1")
+	flightControlConfigs := config.ReadFlightControlConfig()
+	b, _ := i2creg.Open(flightControlConfigs.Configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	powerbreaker := drivers.NewGPIOOutput("GPIO17")
+	powerbreaker := utils.NewPowerBreaker()
 	pca9685.Calibrate(i2cConn, powerbreaker)
 }
