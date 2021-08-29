@@ -1,74 +1,51 @@
-flight_control:
-  pid:
-    proportional–gain: 1
-    integral-gain: 0
-    derivative-gain: 0 
+flight-control:
   imu:
-    imu_data_per_second: 3200
-    acc_lowpass_filter_coefficient: 0.005
-    lowpass_filter_coefficient: 0.01
-  esc:
-    update_frequency: 50
-    max_throttle: 15 # a float between 0 100
-
-devices:
-  icm20948:
-    bus_number: 0
-    chip_select: 0
+    data-per-second: 3200
+    acc-lowpass-filter-coefficient: 0.005
+    lowpass-filter-coefficient: 0.01
     accelerometer:
-      sensitivity_level: '8g'
-      lowpass_filter_enabled: true
-      lowpass_filter_config: 3
+      sensitivity-level: '8g'
+      lowpass-filter-enabled: true
+      lowpass-filter-config: 3
       averaging: 7
       offsets:
         X: -65
         Y: 831
         Z: -790
     gyroscope:
-      sensitivity_level: '250dps'
-      lowpass_filter_enabled: true
-      lowpass_filter_config: 3
+      sensitivity-level: '250dps'
+      lowpass-filter-enabled: true
+      lowpass-filter-config: 3
       averaging: 7
       offsets:
         X: -12
         Y: -6
         Z: -8
-    magnetometer:
-      sensitivity_level: '0'
-  pca9685:
-    device: '/dev/i2c-1'
-    power_breaker_gpio: 'GPIO17'
-    motors:
-      0:
-        label: 'A'
-        esc_channel: 0
-      1: 
-        label: 'B'
-        esc_channel: 4
-      2:
-        label: 'C'
-        esc_channel: 8
-      3:
-        label: 'D'
-        esc_channel: 12
-  nrf204:
-    ce_gpio: 'GPIO26'
-    bus_number: 1
-    chip_select: 2
-    rx_tx_address: '03896'
-    power_dbm: '-18dbm'
-udp:
-  enabled: true
-  ip: 192.168.1.103
-  port: 6431
-  packets_per_second: 20 # set to zero for disabling udp send
-  max_data_per_packet: 20
+    spi:
+      bus-number: 0
+      chip-select: 0
+  esc:
+    i2c-dev: '/dev/i2c-1'
+    max-throttle: 15
+    motors-esc-mappings:
+      0: 0
+      1: 4
+      2: 8
+      3: 12
+  radio:
+    ce-gpio: 'GPIO26'
+    rx-tx-address: '03896'
+    power-dbm: '-18dbm'
+    spi:
+      bus-number: 1
+      chip-select: 2
+  power-breaker: 'GPIO17'
 
 remote-control:
   mcp3008:
     spi:
-      bus_number: 0
-      chip_select: 0
+      bus-number: 0
+      chip-select: 0
       mode: 0
       speed-mega-hz: 1
   x-channel: 2
@@ -101,3 +78,10 @@ remote-control:
     down-left: 'GPIO18'
     down-right: 'GPIO23'
   v-ref: 5
+
+logger:
+  enabled: true
+  ip: 192.168.1.101
+  port: 6431
+  packets-per-second: 20 # set to zero for disabling udp send
+  max-data-per-packet: 20

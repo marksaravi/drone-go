@@ -10,21 +10,8 @@ import (
 	"net"
 	"strings"
 
-	"github.com/MarkSaravi/drone-go/modules/imu"
+	"github.com/MarkSaravi/drone-go/models"
 )
-
-type UdpLoggerConfig struct {
-	Enabled          bool   `yaml:"enabled"`
-	IP               string `yaml:"ip"`
-	Port             int    `yaml:"port"`
-	PacketsPerSecond int    `yaml:"packets_per_second"`
-	MaxDataPerPacket int    `yaml:"max_data_per_packet"`
-}
-
-// Logger is interface for the udpLogger
-type UdpLogger interface {
-	Send(imu.ImuRotations)
-}
 
 type udpLogger struct {
 	conn                 *net.UDPConn
@@ -35,12 +22,19 @@ type udpLogger struct {
 	dataPerPacket        int
 	dataPerPacketCounter int
 	skipOffset           int
-	maxDataPerPacket     int
-	bufferCounter        int
+	// maxDataPerPacket     int
+	bufferCounter int
 }
 
-func CreateUdpLogger(udpConfig UdpLoggerConfig, imuDataPerSecond int) UdpLogger {
-	if !udpConfig.Enabled {
+func NewUdpLogger(
+	enabled bool,
+	ip string,
+	port int,
+	packetsPerSecond int,
+	maxDataPerPacket int,
+	imuDataPerSecond int,
+) *udpLogger {
+	if !enabled {
 		return &udpLogger{
 			enabled: false,
 		}
@@ -52,7 +46,7 @@ func CreateUdpLogger(udpConfig UdpLoggerConfig, imuDataPerSecond int) UdpLogger 
 			enabled: false,
 		}
 	}
-	address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", udpConfig.IP, udpConfig.Port))
+	address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
 		fmt.Println("UDP initialization error: ", err)
 		return &udpLogger{
@@ -60,35 +54,34 @@ func CreateUdpLogger(udpConfig UdpLoggerConfig, imuDataPerSecond int) UdpLogger 
 		}
 	}
 
-	if udpConfig.PacketsPerSecond <= 0 {
+	if packetsPerSecond <= 0 {
 		return &udpLogger{
 			enabled: false,
 		}
 	}
-	dataPerPacket := imuDataPerSecond / udpConfig.PacketsPerSecond
+	wantedDataPerPacket := imuDataPerSecond / packetsPerSecond
 	var skipOffset int = 1
-	var maxDataPerPacket = dataPerPacket
-	if dataPerPacket > udpConfig.MaxDataPerPacket {
-		maxDataPerPacket = udpConfig.MaxDataPerPacket
-		skipOffset = int(math.Ceil(float64(dataPerPacket) / float64(udpConfig.MaxDataPerPacket)))
+	var actualDataPerPacket = wantedDataPerPacket
+	if wantedDataPerPacket > maxDataPerPacket {
+		actualDataPerPacket = maxDataPerPacket
+		skipOffset = int(math.Ceil(float64(wantedDataPerPacket) / float64(maxDataPerPacket)))
 	}
-	fmt.Println("DPP: ", imuDataPerSecond, dataPerPacket, maxDataPerPacket, skipOffset)
+	fmt.Println("DPP: ", imuDataPerSecond, wantedDataPerPacket, actualDataPerPacket, skipOffset)
 
 	return &udpLogger{
 		conn:                 conn,
 		address:              address,
 		enabled:              true,
 		imuDataPerSecond:     imuDataPerSecond,
-		dataPerPacket:        dataPerPacket,
+		dataPerPacket:        actualDataPerPacket,
 		dataPerPacketCounter: 0,
 		bufferCounter:        0,
 		skipOffset:           skipOffset,
-		maxDataPerPacket:     maxDataPerPacket,
-		buffer:               make([]string, maxDataPerPacket),
+		buffer:               make([]string, actualDataPerPacket),
 	}
 }
 
-func (l *udpLogger) appendData(imuRotations imu.ImuRotations) {
+func (l *udpLogger) appendData(imuRotations models.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -99,7 +92,7 @@ func (l *udpLogger) appendData(imuRotations imu.ImuRotations) {
 	}
 }
 
-func (l *udpLogger) Send(imuRotations imu.ImuRotations) {
+func (l *udpLogger) Send(imuRotations models.ImuRotations) {
 	if !l.enabled {
 		return
 	}
@@ -122,7 +115,7 @@ func (l *udpLogger) sendData() {
 	}
 }
 
-func imuDataToJson(imuRotations imu.ImuRotations) string {
+func imuDataToJson(imuRotations models.ImuRotations) string {
 	return fmt.Sprintf(`{"a":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"g":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"r":{"r":%0.2f,"p":%0.2f,"y":%0.2f},"t":%d,"dt":%d}`,
 		imuRotations.Accelerometer.Roll,
 		imuRotations.Accelerometer.Pitch,

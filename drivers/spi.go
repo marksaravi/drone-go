@@ -8,14 +8,14 @@ import (
 	"periph.io/x/periph/host/sysfs"
 )
 
-func NewSPIConnection(busNumber int, chipSelect int, speed int, mode spi.Mode) spi.Conn {
+func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
 	spibus, _ := sysfs.NewSPI(
 		busNumber,
 		chipSelect,
 	)
 	spiConn, err := spibus.Connect(
-		physic.Frequency(speed)*physic.MegaHertz,
-		mode,
+		physic.Frequency(1)*physic.MegaHertz,
+		spi.Mode0,
 		8,
 	)
 	if err != nil {

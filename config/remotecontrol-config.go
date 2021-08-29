@@ -1,12 +1,5 @@
 package config
 
-import (
-	"log"
-
-	"gopkg.in/yaml.v3"
-	"periph.io/x/periph/conn/spi"
-)
-
 type Throttle struct {
 	Channel int
 }
@@ -14,13 +7,6 @@ type Throttle struct {
 type Joystick struct {
 	Channel   int     `yaml:"channel"`
 	ZeroValue float32 `yaml:"zero-value"`
-}
-
-type SPI struct {
-	BusNumber  int      `yaml:"bus-number"`
-	ChipSelect int      `yaml:"chip-select"`
-	Mode       spi.Mode `yaml:"mode"`
-	Speed      int      `yaml:"speed-mega-hz"`
 }
 
 type Joysticks struct {
@@ -40,22 +26,16 @@ type Buttons struct {
 	BottomRight string `yaml:"bottom-right"`
 }
 
-type RemoteConfig struct {
+type RemoteControlConfigs struct {
 	Joysticks Joysticks `yaml:"joysticks"`
 	Buttons   Buttons   `yaml:"buttons"`
 	Throttle  Throttle  `yaml:"throttle"`
 }
 
-type remoteConfig struct {
-	RemoteConfig RemoteConfig `yaml:"remote-control"`
+type remoteControlConfigs struct {
+	RemoteControlConfigs RemoteControlConfigs `yaml:"remote-control"`
 }
 
-func ReadRemoteConfig() remoteConfig {
-	var config remoteConfig
-	content := readYamlConfig()
-	err := yaml.Unmarshal([]byte(content), &config)
-	if err != nil {
-		log.Fatalf("cannot unmarshal config: %v", err)
-	}
-	return config
+func ReadRemoteControlConfig() remoteControlConfigs {
+	return readConfig(remoteControlConfigs{}).(remoteControlConfigs)
 }

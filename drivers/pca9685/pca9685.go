@@ -2,14 +2,15 @@ package pca9685
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/powerbreaker"
 	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
-	"periph.io/x/periph/host"
 )
+
+type powerbreaker interface {
+	SetHigh()
+	SetLow()
+}
 
 //PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
@@ -44,35 +45,22 @@ const (
 	MaxPW     float32 = 0.002
 )
 
-type Motor struct {
-	Label      string `yaml:"label"`
-	ESCChannel int    `yaml:"esc_channel"`
+type pca9685Dev struct {
+	name        string
+	address     uint8
+	connection  *i2c.Dev
+	frequency   float32
+	maxThrottle float32
 }
 
-type PCA9685Config struct {
-	Device          string        `yaml:"device"`
-	PowerBrokerGPIO string        `yaml:"power_breaker_gpio"`
-	Motors          map[int]Motor `yaml:"motors"`
-}
-
-//PCA9685 is struct for PCA9685
-type PCA9685 struct {
-	name           string
-	address        uint8
-	connection     *i2c.Dev
-	frequency      float32
-	maxThrottle    float32
-	motorsMappings map[int]Motor
-}
-
-func (d *PCA9685) readByte(offset uint8) (uint8, error) {
+func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
 	read := make([]byte, 1)
 	write := []byte{offset}
 	err := d.connection.Tx(write, read)
 	return read[0], err
 }
 
-func (d *PCA9685) writeByte(offset uint8, b uint8) error {
+func (d *pca9685Dev) writeByte(offset uint8, b uint8) error {
 	write := []byte{offset, b}
 	err := d.connection.Tx(write, nil)
 	return err
@@ -85,7 +73,7 @@ func getOffTime(frequency float32, pulseWidth float32) (on uint16, off uint16) {
 	return
 }
 
-func (d *PCA9685) setPWM(channel int, pulseWidth float32) (err error) {
+func (d *pca9685Dev) setPWM(channel int, pulseWidth float32) (err error) {
 	on, off := getOffTime(d.frequency, pulseWidth)
 
 	if err := d.writeByte(byte(PCA9685LED0OnL+4*channel), byte(on)&0xFF); err != nil {
@@ -108,7 +96,7 @@ func (d *PCA9685) setPWM(channel int, pulseWidth float32) (err error) {
 }
 
 // SetPWMFreq sets the PWM frequency in Hz
-func (d *PCA9685) setFrequency(freq float32) error {
+func (d *pca9685Dev) setFrequency(freq float32) error {
 	d.frequency = freq
 	// IC oscillator frequency is 25 MHz
 	var prescalevel float32 = 24576000
@@ -150,7 +138,7 @@ func (d *PCA9685) setFrequency(freq float32) error {
 	return nil
 }
 
-func (d *PCA9685) setAllPWM(pulseWidth float32) (err error) {
+func (d *pca9685Dev) setAllPWM(pulseWidth float32) (err error) {
 	on, off := getOffTime(d.frequency, pulseWidth)
 	if err := d.writeByte(byte(PCA9685AlliedOnL), byte(on)&0xFF); err != nil {
 		return err
@@ -172,7 +160,7 @@ func (d *PCA9685) setAllPWM(pulseWidth float32) (err error) {
 }
 
 //Start starts the device with a frequency
-func (d *PCA9685) Start() error {
+func (d *pca9685Dev) init() error {
 	if err := d.setAllPWM(0); err != nil {
 		return err
 	}
@@ -203,43 +191,16 @@ func (d *PCA9685) Start() error {
 }
 
 //SetThrottle sets PWM for a channel
-func (d *PCA9685) SetThrottle(motor int, throttle float32) {
+func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
 	if throttle > 100 || throttle > d.maxThrottle || throttle < 0 {
 		return
 	}
-	d.setPWM(d.motorsMappings[motor].ESCChannel, MinPW+throttle/100*(MaxPW-MinPW))
-}
-
-// Close closes the i2c connection
-func (d *PCA9685) Close() {
-}
-
-// Halt stops the device
-func (d *PCA9685) Halt() (err error) {
-	err = d.writeByte(PCA9685AlliedOffH, 0x10)
-	return
-}
-
-//StopAll stops all channels
-func (d *PCA9685) StopAll() {
-	d.setAllPWM(0)
+	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
 }
 
 //Calibrate
-func Calibrate(config PCA9685Config) {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-	b, err := i2creg.Open(config.Device)
-	d := &i2c.Dev{Addr: PCA9685Address, Bus: b}
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	pwmDev, err := NewPCA9685Driver(PCA9685Address, d, 0, nil)
+func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
+	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -249,31 +210,29 @@ func Calibrate(config PCA9685Config) {
 		fmt.Println(err)
 		return
 	}
-	breaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
-	pwmDev.Start()
 	fmt.Println("setting max pulse width: ", MaxPW)
 	fmt.Println("turn on ESCs")
 	pwmDev.setAllPWM(MaxPW)
 	time.Sleep(1 * time.Second)
-	breaker.Connect()
+	powerbreaker.SetHigh()
 	time.Sleep(12 * time.Second)
 	fmt.Println("setting min pulse width: ", MinPW)
 	pwmDev.setAllPWM(MinPW)
 	time.Sleep(12 * time.Second)
 	fmt.Println("turn off ESCs")
-	breaker.Disconnect()
+	powerbreaker.SetLow()
 	time.Sleep(1 * time.Second)
 	pwmDev.setAllPWM(0)
-	pwmDev.Close()
 }
 
-// NewPCA9685Driver creates new PCA9685 driver
-func NewPCA9685Driver(address uint8, connection *i2c.Dev, maxThrottle float32, motorsMappings map[int]Motor) (*PCA9685, error) {
-	return &PCA9685{
-		name:           "PCA9685",
-		address:        address,
-		connection:     connection,
-		maxThrottle:    maxThrottle,
-		motorsMappings: motorsMappings,
-	}, nil
+// NewPCA9685Driver creates new pca9685Dev driver
+func NewPCA9685(address uint8, connection *i2c.Dev, maxThrottle float32) (*pca9685Dev, error) {
+	dev := &pca9685Dev{
+		name:        "pca9685Dev",
+		address:     address,
+		connection:  connection,
+		maxThrottle: maxThrottle,
+	}
+	dev.init()
+	return dev, nil
 }

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/hardware"
-	"github.com/MarkSaravi/drone-go/modules/radiolink"
+	"github.com/MarkSaravi/drone-go/drivers"
+	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
-	config := config.ReadConfigs()
-	_, _, radio, _ := hardware.InitDroneHardware(config)
+	drivers.InitHost()
+	radio := utils.NewTransmitterRadio()
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
@@ -19,7 +19,7 @@ func main() {
 	var numSend int = 0
 	start := time.Now()
 	for range time.Tick(time.Millisecond * 20) {
-		flightdata := radiolink.FlightData{
+		flightdata := models.FlightData{
 			Roll:          roll,
 			Pitch:         -34.53,
 			Yaw:           0,

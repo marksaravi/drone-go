@@ -1,4 +1,4 @@
-package drivers
+package mcp3008
 
 import (
 	"periph.io/x/periph/conn/spi"

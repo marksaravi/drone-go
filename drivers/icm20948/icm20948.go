@@ -1,51 +1,35 @@
 package icm20948
 
 import (
+	"log"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/modules/imu"
-	"periph.io/x/periph/conn/physic"
+	"github.com/MarkSaravi/drone-go/models"
 	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/host/sysfs"
 )
 
-type Offsets struct {
-	X int16 `yaml:"X"`
-	Y int16 `yaml:"Y"`
-	Z int16 `yaml:"Z"`
-}
-
-// Config is the generic configuration
-type Config interface {
-}
-
-type sensor struct {
-	Type   string
-	Config Config
-}
-
-// register is the address and bank of the register
 type register struct {
 	Address uint8
 	Bank    uint8
 }
 
-type ICM20948Config struct {
-	BusNumber  int                 `yaml:"bus_number"`
-	ChipSelect int                 `yaml:"chip_select"`
-	AccConfig  AccelerometerConfig `yaml:"accelerometer"`
-	GyroConfig GyroscopeConfig     `yaml:"gyroscope"`
+type sensorConfig struct {
+	sensitivityLevel     string
+	averaging            int
+	lowPassFilterEnabled bool
+	lowPassFilterConfig  int
+	offsetX              int16
+	offsetY              int16
+	offsetZ              int16
 }
 
-// memsICM20948 is icm20948 mems
 type memsICM20948 struct {
-	Name string
-	*sysfs.SPI
-	spi.Conn
-	regbank uint8
-	acc     sensor
-	gyro    sensor
-	mag     sensor
+	spiConn    spi.Conn
+	regbank    uint8
+	accConfig  sensorConfig
+	gyroConfig sensorConfig
+	accData    models.XYZ
+	gyroData   models.XYZ
 }
 
 func reg(reg uint16) *register {
@@ -71,42 +55,57 @@ func init() {
 }
 
 // NewICM20948Driver creates ICM20948 driver for raspberry pi
-func NewICM20948Driver(config ICM20948Config) (*memsICM20948, error) {
-	d, err := sysfs.NewSPI(config.BusNumber, config.ChipSelect)
-	if err != nil {
-		return nil, err
-	}
-	conn, err := d.Connect(7*physic.MegaHertz, spi.Mode3, 8)
-	if err != nil {
-		return nil, err
-	}
-
+func NewICM20948Driver(
+	spiConn spi.Conn,
+	accSensitivityLevel string,
+	accAveraging int,
+	accLowPassFilterEnabled bool,
+	accLowPassFilterConfig int,
+	accOffsetX int16,
+	accOffsetY int16,
+	accOffsetZ int16,
+	gyroSensitivityLevel string,
+	gyroAveraging int,
+	gyroLowPassFilterEnabled bool,
+	gyroLowPassFilterConfig int,
+	gyroOffsetX int16,
+	gyroOffsetY int16,
+	gyroOffsetZ int16,
+) *memsICM20948 {
 	dev := memsICM20948{
-		Name:    "ICM20948",
-		SPI:     d,
-		Conn:    conn,
+		spiConn: spiConn,
 		regbank: 0xFF,
-		acc: sensor{
-			Type:   ACCELEROMETER,
-			Config: config.AccConfig,
+		accConfig: sensorConfig{
+			sensitivityLevel:     accSensitivityLevel,
+			averaging:            accAveraging,
+			lowPassFilterEnabled: accLowPassFilterEnabled,
+			lowPassFilterConfig:  accLowPassFilterConfig,
+			offsetX:              accOffsetX,
+			offsetY:              accOffsetY,
+			offsetZ:              accOffsetZ,
 		},
-		gyro: sensor{
-			Type:   GYROSCOPE,
-			Config: config.GyroConfig,
-		},
-		mag: sensor{
-			Type: MAGNETOMETER,
+		gyroConfig: sensorConfig{
+			sensitivityLevel:     gyroSensitivityLevel,
+			averaging:            gyroAveraging,
+			lowPassFilterEnabled: gyroLowPassFilterEnabled,
+			lowPassFilterConfig:  gyroLowPassFilterConfig,
+			offsetX:              gyroOffsetX,
+			offsetY:              gyroOffsetY,
+			offsetZ:              gyroOffsetZ,
 		},
 	}
-	dev.initDevice()
-	return &dev, nil
+	err := dev.initDevice()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &dev
 }
 
 func (dev *memsICM20948) readReg(address uint8, len int) ([]uint8, error) {
 	w := make([]uint8, len+1)
 	r := make([]uint8, len+1)
 	w[0] = (address & 0x7F) | 0x80
-	err := dev.Conn.Tx(w, r)
+	err := dev.spiConn.Tx(w, r)
 	return r[1:], err
 }
 
@@ -115,7 +114,7 @@ func (dev *memsICM20948) writeReg(address uint8, data ...uint8) error {
 		return nil
 	}
 	w := append([]uint8{address & 0x7F}, data...)
-	err := dev.Conn.Tx(w, nil)
+	err := dev.spiConn.Tx(w, nil)
 	return err
 }
 
@@ -158,12 +157,12 @@ func (dev *memsICM20948) initDevice() error {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
-	err = dev.InitAccelerometer()
+	err = dev.initAccelerometer()
 	if err != nil {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond) // wait for starting
-	err = dev.InitGyroscope()
+	err = dev.initGyroscope()
 	time.Sleep(50 * time.Millisecond) // wait for starting
 	return err
 }
@@ -174,32 +173,24 @@ func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 }
 
 // ReadSensors reads Accelerometer and Gyro data
-func (dev *memsICM20948) ReadSensors() (
-	acc imu.SensorData,
-	gyro imu.SensorData,
-	mag imu.SensorData,
-	err error) {
+func (dev *memsICM20948) Read() (
+	acc models.XYZ,
+	gyro models.XYZ,
+) {
 	data, err := dev.readSensorsRawData()
 
 	if err != nil {
 		return
 	}
-	accData, accErr := dev.processAccelerometerData(data)
-	gyroData, gyroErr := dev.processGyroscopeData(data[6:])
-
-	acc = imu.SensorData{
-		Error: accErr,
-		Data:  accData,
+	nacc, accErr := dev.processAccelerometerData(data)
+	ngyro, gyroErr := dev.processGyroscopeData(data[6:])
+	if accErr == nil {
+		dev.accData = nacc
 	}
-	gyro = imu.SensorData{
-		Error: gyroErr,
-		Data:  gyroData,
+	if gyroErr == nil {
+		dev.gyroData = ngyro
 	}
-	mag = imu.SensorData{
-		Error: nil,
-		Data:  imu.XYZ{X: 0, Y: 0, Z: 0},
-	}
-	return
+	return dev.accData, dev.gyroData
 }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
