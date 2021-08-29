@@ -1,10 +1,16 @@
 package pca9685
 
 import (
+	"fmt"
 	"time"
 
 	"periph.io/x/periph/conn/i2c"
 )
+
+type powerbreaker interface {
+	SetHigh()
+	SetLow()
+}
 
 //PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
@@ -192,47 +198,32 @@ func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
 	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
 }
 
-// //Calibrate
-// func Calibrate(config PCA9685Config) {
-// 	if _, err := host.Init(); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	b, err := i2creg.Open(config.Device)
-// 	d := &i2c.Dev{Addr: PCA9685Address, Bus: b}
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	pwmDev, err := NewPCA9685Driver(PCA9685Address, d, 0, nil)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+//Calibrate
+func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
+	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	breaker := powerbreaker.NewPowerBreaker(config.PowerBrokerGPIO)
-// 	pwmDev.Start()
-// 	fmt.Println("setting max pulse width: ", MaxPW)
-// 	fmt.Println("turn on ESCs")
-// 	pwmDev.setAllPWM(MaxPW)
-// 	time.Sleep(1 * time.Second)
-// 	breaker.Connect()
-// 	time.Sleep(12 * time.Second)
-// 	fmt.Println("setting min pulse width: ", MinPW)
-// 	pwmDev.setAllPWM(MinPW)
-// 	time.Sleep(12 * time.Second)
-// 	fmt.Println("turn off ESCs")
-// 	breaker.Disconnect()
-// 	time.Sleep(1 * time.Second)
-// 	pwmDev.setAllPWM(0)
-// 	pwmDev.Close()
-// }
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("setting max pulse width: ", MaxPW)
+	fmt.Println("turn on ESCs")
+	pwmDev.setAllPWM(MaxPW)
+	time.Sleep(1 * time.Second)
+	powerbreaker.SetHigh()
+	time.Sleep(12 * time.Second)
+	fmt.Println("setting min pulse width: ", MinPW)
+	pwmDev.setAllPWM(MinPW)
+	time.Sleep(12 * time.Second)
+	fmt.Println("turn off ESCs")
+	powerbreaker.SetLow()
+	time.Sleep(1 * time.Second)
+	pwmDev.setAllPWM(0)
+}
 
 // NewPCA9685Driver creates new pca9685Dev driver
 func NewPCA9685(address uint8, connection *i2c.Dev, maxThrottle float32) (*pca9685Dev, error) {
