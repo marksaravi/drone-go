@@ -13,42 +13,39 @@ import (
 )
 
 func main() {
-	// appConfig := config.ReadConfigs()
-	// imuDev, esc, radio, powerBreaker := hardware.InitDroneHardware(appConfig)
-	// udpLogger := udplogger.CreateUdpLogger(appConfig.UDP, appConfig.Flight.Imu.ImuDataPerSecond)
-	// imu := imu.CreateIM(imuDev, appConfig.Flight.Imu)
-	// motorsController := motors.NewMotorsControl(esc, powerBreaker)
-
 	config := config.ReadFlightControlConfig()
+	imuConfig := config.Configs.Imu
 	fmt.Println(config)
 	drivers.InitHost()
 	imuSPIConn := drivers.NewSPIConnection(
-		config.Configs.Drivers.ImuMemes.SPI.BusNumber,
-		config.Configs.Drivers.ImuMemes.SPI.ChipSelect,
+		imuConfig.SPI.BusNumber,
+		imuConfig.SPI.ChipSelect,
 	)
+	accConfig := imuConfig.Accelerometer
+	gyroConfig := imuConfig.Gyroscope
 	imuMems := icm20948.NewICM20948Driver(
 		imuSPIConn,
-		config.Configs.Drivers.ImuMemes.Accelerometer.SensitivityLevel,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Averaging,
-		config.Configs.Drivers.ImuMemes.Accelerometer.LowPassFilterEnabled,
-		config.Configs.Drivers.ImuMemes.Accelerometer.LowPassFilterConfig,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.X,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Y,
-		config.Configs.Drivers.ImuMemes.Accelerometer.Offsets.Z,
-		config.Configs.Drivers.ImuMemes.Gyroscope.SensitivityLevel,
-		config.Configs.Drivers.ImuMemes.Gyroscope.Averaging,
-		config.Configs.Drivers.ImuMemes.Gyroscope.LowPassFilterEnabled,
-		config.Configs.Drivers.ImuMemes.Gyroscope.LowPassFilterConfig,
-		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.X,
-		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.Y,
-		config.Configs.Drivers.ImuMemes.Gyroscope.Offsets.Z,
+		accConfig.SensitivityLevel,
+		accConfig.Averaging,
+		accConfig.LowPassFilterEnabled,
+		accConfig.LowPassFilterConfig,
+		accConfig.Offsets.X,
+		accConfig.Offsets.Y,
+		accConfig.Offsets.Z,
+		gyroConfig.SensitivityLevel,
+		gyroConfig.Averaging,
+		gyroConfig.LowPassFilterEnabled,
+		gyroConfig.LowPassFilterConfig,
+		gyroConfig.Offsets.X,
+		gyroConfig.Offsets.Y,
+		gyroConfig.Offsets.Z,
 	)
-	readingInterval := time.Second / time.Duration(config.Configs.Devices.ImuConfig.ImuDataPerSecond)
+	readingInterval := time.Second / time.Duration(imuConfig.ImuDataPerSecond)
 	imu := devices.NewIMU(
 		imuMems,
 		readingInterval,
-		config.Configs.Devices.ImuConfig.AccLowPassFilterCoefficient,
-		config.Configs.Devices.ImuConfig.LowPassFilterCoefficient,
+		imuConfig.AccLowPassFilterCoefficient,
+		imuConfig.LowPassFilterCoefficient,
 	)
 	udplogger := udplogger.NewUdpLogger(
 		true,
@@ -56,7 +53,7 @@ func main() {
 		6431,
 		20,
 		20,
-		config.Configs.Devices.ImuConfig.ImuDataPerSecond,
+		imuConfig.ImuDataPerSecond,
 	)
 	flightControl := flightcontrol.NewFlightControl(imu, udplogger)
 

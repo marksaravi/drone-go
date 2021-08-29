@@ -32,30 +32,20 @@ type MagnetometerConfig struct {
 }
 
 type ImuMemes struct {
-	Name          string              `yaml:"name"`
-	SPI           SPI                 `yaml:"spi"`
-	Accelerometer AccelerometerConfig `yaml:"accelerometer"`
-	Gyroscope     GyroscopeConfig     `yaml:"gyroscope"`
-	Magnetometer  MagnetometerConfig  `yaml:"magnetometer"`
-}
-
-type FlightControlDrivers struct {
-	ImuMemes ImuMemes `yaml:"imu-mems"`
+	SPI                         SPI                 `yaml:"spi"`
+	Accelerometer               AccelerometerConfig `yaml:"accelerometer"`
+	Gyroscope                   GyroscopeConfig     `yaml:"gyroscope"`
+	Magnetometer                MagnetometerConfig  `yaml:"magnetometer"`
+	ImuDataPerSecond            int                 `yaml:"data-per-second"`
+	AccLowPassFilterCoefficient float64             `yaml:"acc-lowpass-filter-coefficient"`
+	LowPassFilterCoefficient    float64             `yaml:"lowpass-filter-coefficient"`
 }
 
 type ImuConfig struct {
-	ImuDataPerSecond            int     `yaml:"imu-data-per-second"`
-	AccLowPassFilterCoefficient float64 `yaml:"acc-lowpass-filter-coefficient"`
-	LowPassFilterCoefficient    float64 `yaml:"lowpass-filter-coefficient"`
-}
-
-type FlightControlDevices struct {
-	ImuConfig ImuConfig `yaml:"imu"`
 }
 
 type FlightControlConfigs struct {
-	Drivers FlightControlDrivers `yaml:"drivers"`
-	Devices FlightControlDevices `yaml:"devices"`
+	Imu ImuMemes `yaml:"imu"`
 }
 
 type flightControlConfigs struct {
