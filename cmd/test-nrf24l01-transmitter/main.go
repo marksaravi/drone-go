@@ -11,7 +11,7 @@ import (
 
 func main() {
 	drivers.InitHost()
-	radio := utils.NewTransmitterRadio()
+	radio := utils.NewRadio()
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0

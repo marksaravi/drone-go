@@ -14,5 +14,6 @@ type RemoteControlData struct {
 	Roll            JoystickData
 	Pitch           JoystickData
 	Yaw             JoystickData
+	Throttle        JoystickData
 	ButtonFrontLeft ButtonData
 }

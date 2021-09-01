@@ -19,15 +19,17 @@ type remoteControl struct {
 	roll         joystick
 	pitch        joystick
 	yaw          joystick
+	throttle     joystick
 	btnFrontLeft button
 	data         models.RemoteControlData
 }
 
-func NewRemoteControl(roll joystick, pitch joystick, yaw joystick, btnFrontLeft button) *remoteControl {
+func NewRemoteControl(roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
 	return &remoteControl{
 		roll:         roll,
 		pitch:        pitch,
 		yaw:          yaw,
+		throttle:     throttle,
 		btnFrontLeft: btnFrontLeft,
 	}
 }
@@ -45,6 +47,7 @@ func (rc *remoteControl) read() {
 		Roll:            rc.roll.Read(),
 		Pitch:           rc.pitch.Read(),
 		Yaw:             rc.yaw.Read(),
+		Throttle:        rc.throttle.Read(),
 		ButtonFrontLeft: rc.btnFrontLeft.Read(),
 	}
 }
