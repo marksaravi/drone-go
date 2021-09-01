@@ -41,8 +41,8 @@ func main() {
 	throttleAlogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		config.RemoteControlConfigs.Joysticks.VRef,
-		config.RemoteControlConfigs.Joysticks.Yaw.Channel,
-		config.RemoteControlConfigs.Joysticks.Yaw.ZeroValue,
+		config.RemoteControlConfigs.Joysticks.Throttle.Channel,
+		config.RemoteControlConfigs.Joysticks.Throttle.ZeroValue,
 	)
 	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)

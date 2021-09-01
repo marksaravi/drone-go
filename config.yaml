@@ -61,8 +61,6 @@ remote-control:
       chip-select: 0
       mode: 0
       speed-mega-hz: 1
-  throttle:
-    channel: 5
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'
