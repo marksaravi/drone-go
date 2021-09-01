@@ -18,15 +18,17 @@ func main() {
 	var motorsEngaged bool = false
 	var numSend int = 0
 	start := time.Now()
+	var id uint32 = 0
 	for range time.Tick(time.Millisecond * 20) {
 		flightdata := models.FlightData{
-			Roll:          roll,
-			Pitch:         -34.53,
-			Yaw:           0,
-			Throttle:      13.45,
-			Altitude:      altitude,
-			MotorsEngaged: motorsEngaged,
+			Id:       id,
+			Roll:     roll,
+			Pitch:    -34.53,
+			Yaw:      0,
+			Throttle: 13.45,
+			Altitude: altitude,
 		}
+		id++
 		err := radio.TransmitFlightData(flightdata)
 		if err != nil {
 			fmt.Println(err)

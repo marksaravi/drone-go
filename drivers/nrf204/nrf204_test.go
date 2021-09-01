@@ -1,18 +1,51 @@
-package nrf204
+package nrf204_test
 
-import "testing"
+import (
+	"testing"
 
-func TestFloatArrayToByteArrayAndReverse(t *testing.T) {
-	fa1 := []float32{366.34, -180.24, 0, -144.32, 22.22}
-	ba := floatArrayToByteArray(fa1)
-	fa2 := byteArrayToFloat32Array(ba)
-	var equal bool = true
-	for i := 0; i < len(fa1); i++ {
-		if fa1[i] != fa2[i] {
-			equal = false
+	"github.com/MarkSaravi/drone-go/drivers/nrf204"
+)
+
+func compareByteArrays(ba1, ba2 []byte) bool {
+	l1 := len(ba1)
+	if l1 != len(ba2) {
+		return false
+	}
+	for i := 0; i < l1; i++ {
+		if ba1[i] != ba2[i] {
+			return false
 		}
 	}
-	if !equal {
-		t.Errorf("got %v, want %v", fa1, fa2)
+	return true
+}
+func TestPositiveFloat32ToBytes(t *testing.T) {
+	got := nrf204.Float32ToBytes(1324.456)
+	want := []byte{152, 142, 165, 68}
+	if !compareByteArrays(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestBytesToPositiveFloat32(t *testing.T) {
+	got := nrf204.Float32fromBytes([]byte{152, 142, 165, 68})
+	var want float32 = 1324.456
+	if want != got {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestNegativeFloat32ToBytes(t *testing.T) {
+	got := nrf204.Float32ToBytes(-360.742)
+	want := []byte{250, 94, 180, 195}
+	if !compareByteArrays(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestBytesToNetagiveFloat32(t *testing.T) {
+	got := nrf204.Float32fromBytes([]byte{250, 94, 180, 195})
+	var want float32 = -360.742
+	if want != got {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }

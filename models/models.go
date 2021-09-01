@@ -19,10 +19,28 @@ type ImuRotations struct {
 }
 
 type FlightData struct {
-	Roll          float32
-	Pitch         float32
-	Yaw           float32
-	Throttle      float32
-	Altitude      float32
-	MotorsEngaged bool
+	Id       uint32
+	Roll     float32
+	Pitch    float32
+	Yaw      float32
+	Throttle float32
+	Altitude float32
+}
+
+type JoystickData struct {
+	Value     float32
+	IsChanged bool
+}
+
+type ButtonData struct {
+	Value     bool
+	IsChanged bool
+}
+
+type RemoteControlData struct {
+	Roll            JoystickData
+	Pitch           JoystickData
+	Yaw             JoystickData
+	Throttle        JoystickData
+	ButtonFrontLeft ButtonData
 }
