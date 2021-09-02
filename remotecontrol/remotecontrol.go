@@ -50,7 +50,7 @@ func (rc *remoteControl) Start() {
 	var id uint32 = 0
 	for range sendTimer {
 		rc.read()
-		rc.showData()
+		rc.showData(id)
 		rc.radio.TransmitterOn()
 		rc.radio.TransmitFlightData(models.FlightData{
 			Id:              id,
@@ -63,6 +63,7 @@ func (rc *remoteControl) Start() {
 			IsDrone:         false,
 			IsMotorsEngaged: false,
 		})
+		id++
 	}
 }
 
@@ -78,10 +79,10 @@ func (rc *remoteControl) read() {
 
 var lastPrint time.Time = time.Now()
 
-func (rc *remoteControl) showData() {
+func (rc *remoteControl) showData(id uint32) {
 	if time.Since(lastPrint) < time.Second/4 {
 		return
 	}
 	lastPrint = time.Now()
-	fmt.Println(rc.data)
+	fmt.Println(id, rc.data)
 }

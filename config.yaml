@@ -35,7 +35,7 @@ flight-control:
   radio:
     ce-gpio: 'GPIO26'
     rx-tx-address: '03896'
-    power-dbm: '-18dbm'
+    power-dbm: '-12dbm'
     spi:
       bus-number: 1
       chip-select: 2
