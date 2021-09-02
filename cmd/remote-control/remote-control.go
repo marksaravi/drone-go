@@ -8,6 +8,7 @@ import (
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 	fmt.Println(config)
 	drivers.InitHost()
 
+	radio := utils.NewRadio()
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
 		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
@@ -50,6 +52,6 @@ func main() {
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
 	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
-	remoteControl := remotecontrol.NewRemoteControl(roll, pitch, yaw, throttle, input)
+	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
 	remoteControl.Start()
 }
