@@ -45,10 +45,8 @@ func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFront
 }
 
 func (rc *remoteControl) Start() {
-	sendTimer := time.Tick(time.Second / 25)
 	rc.radio.ReceiverOn()
 	acknowleg := make(chan models.FlightData)
-
 	go func(ack chan<- models.FlightData, r radio) {
 		for {
 			if r.IsDataAvailable() {
@@ -58,10 +56,15 @@ func (rc *remoteControl) Start() {
 		}
 	}(acknowleg, rc.radio)
 
+	sendTimer := time.NewTicker(time.Second / 25)
 	var id uint32 = 0
+	lastAcknowleged := time.Now()
+	var flightData models.FlightData = models.FlightData{
+		Id: 0,
+	}
 	for {
 		select {
-		case <-sendTimer:
+		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
 			rc.radio.TransmitFlightData(models.FlightData{
@@ -77,10 +80,13 @@ func (rc *remoteControl) Start() {
 			})
 			rc.radio.ReceiverOn()
 			id++
-		case flightData := <-acknowleg:
-			fmt.Println("ACK: ", flightData.Id)
+		case flightData = <-acknowleg:
+			lastAcknowleged = time.Now()
 		default:
 			time.Sleep(time.Millisecond)
+			if time.Since(lastAcknowleged) > time.Millisecond*200 {
+				fmt.Println("Connection Error ", flightData.Id)
+			}
 		}
 	}
 }
