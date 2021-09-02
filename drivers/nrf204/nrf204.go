@@ -353,21 +353,21 @@ func payloadToFlightData(payload []byte) models.FlightData {
 	return models.FlightData{
 		Id:       UInt32fromBytes(payload[0:4]),
 		Roll:     Float32fromBytes(payload[4:8]),
-		Pitch:    Float32fromBytes(payload[8:8]),
+		Pitch:    Float32fromBytes(payload[8:12]),
 		Yaw:      Float32fromBytes(payload[12:16]),
 		Throttle: Float32fromBytes(payload[16:20]),
 		Altitude: Float32fromBytes(payload[20:24]),
 	}
 }
 
-func UInt32ToBytes(f uint32) []byte {
-	var buf bytes.Buffer
-	binary.Write(&buf, binary.LittleEndian, f)
-	return buf.Bytes()
+func UInt32ToBytes(i uint32) []byte {
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, i)
+	return buf
 }
 
 func UInt32fromBytes(bytes []byte) uint32 {
-	return binary.BigEndian.Uint32(bytes)
+	return binary.LittleEndian.Uint32(bytes)
 }
 
 func Float32ToBytes(f float32) []byte {
