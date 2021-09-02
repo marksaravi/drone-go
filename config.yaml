@@ -35,23 +35,13 @@ flight-control:
   radio:
     ce-gpio: 'GPIO26'
     rx-tx-address: '03896'
-    power-dbm: '-18dbm'
+    power-dbm: '-12dbm'
     spi:
       bus-number: 1
       chip-select: 2
   power-breaker: 'GPIO17'
 
 remote-control:
-  mcp3008:
-    spi:
-      bus-number: 0
-      chip-select: 0
-      mode: 0
-      speed-mega-hz: 1
-  x-channel: 2
-  y-channel: 4
-  z-channel: 3
-  throttle-channel: 5
   joysticks:
     roll:
       channel: 2
@@ -62,14 +52,15 @@ remote-control:
     yaw:
       channel: 3
       zero-value: 2.4
+    throttle:
+      channel: 5
+      zero-value: 0
     v-ref: 5
     spi:
       bus-number: 0
       chip-select: 0
       mode: 0
       speed-mega-hz: 1
-  throttle:
-    channel: 5
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'

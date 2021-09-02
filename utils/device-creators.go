@@ -102,7 +102,7 @@ func NewESC() interface {
 	return esc
 }
 
-func newRadio() interface {
+func NewRadio() interface {
 	IsDataAvailable() bool
 	ReceiverOn()
 	ReceiveFlightData() models.FlightData
@@ -117,18 +117,4 @@ func newRadio() interface {
 	)
 	radio := nrf204.NewNRF204(radioConfig.RxTxAddress, radioConfig.CE, radioConfig.PowerDBm, radioSPIConn)
 	return radio
-}
-
-func NewReceiverRadio() interface {
-	IsDataAvailable() bool
-	ReceiverOn()
-	ReceiveFlightData() models.FlightData
-} {
-	return newRadio()
-}
-func NewTransmitterRadio() interface {
-	TransmitterOn()
-	TransmitFlightData(models.FlightData) error
-} {
-	return newRadio()
 }

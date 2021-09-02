@@ -1,10 +1,12 @@
 package nrf204
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"math"
 	"time"
-	"unsafe"
 
 	"github.com/MarkSaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
@@ -317,87 +319,65 @@ func initPin(pinName string) gpio.PinIO {
 	return pin
 }
 
-func flightDataToPayload(flightData models.FlightData) []byte {
-	var status0 byte = 0
-	if flightData.MotorsEngaged {
-		status0 = 1
+func BoolToShiftedByte(b bool, bitPosition int) byte {
+	if !b {
+		return 0
 	}
-	ba := floatArrayToByteArray(
-		[]float32{
-			flightData.Roll,
-			flightData.Pitch,
-			flightData.Yaw,
-			flightData.Throttle,
-			flightData.Altitude,
-			0,
-			0,
-		},
-	)
-	return append([]byte{status0, 0, 0, 0}, ba...)
+	var r byte = 1
+	return r << byte(bitPosition)
+}
+
+func FlightStatusToBytes(flightData models.FlightData) []byte {
+	isRemote := BoolToShiftedByte(flightData.IsRemoteControl, 0)
+	isDrone := BoolToShiftedByte(flightData.IsDrone, 1)
+	isMotorsEngaged := BoolToShiftedByte(flightData.IsMotorsEngaged, 2)
+	return []byte{
+		isRemote | isDrone | isMotorsEngaged,
+		0,
+	}
+}
+
+func flightDataToPayload(flightData models.FlightData) []byte {
+	payload := append([]byte{}, UInt32ToBytes(flightData.Id)...)
+	payload = append(payload, Float32ToBytes(flightData.Roll)...)
+	payload = append(payload, Float32ToBytes(flightData.Pitch)...)
+	payload = append(payload, Float32ToBytes(flightData.Yaw)...)
+	payload = append(payload, Float32ToBytes(flightData.Throttle)...)
+	payload = append(payload, Float32ToBytes(flightData.Altitude)...)
+	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0})...)
+	payload = append(payload, FlightStatusToBytes(flightData)...)
+	return payload
 }
 
 func payloadToFlightData(payload []byte) models.FlightData {
-	fa := byteArrayToFloat32Array(payload[4:])
 	return models.FlightData{
-		MotorsEngaged: (payload[0] & 0b00000001) != 0,
-		Roll:          fa[0],
-		Pitch:         fa[1],
-		Yaw:           fa[2],
-		Throttle:      fa[3],
-		Altitude:      fa[4],
+		Id:       UInt32fromBytes(payload[0:4]),
+		Roll:     Float32fromBytes(payload[4:8]),
+		Pitch:    Float32fromBytes(payload[8:12]),
+		Yaw:      Float32fromBytes(payload[12:16]),
+		Throttle: Float32fromBytes(payload[16:20]),
+		Altitude: Float32fromBytes(payload[20:24]),
 	}
 }
 
-func floatArrayToByteArray(floatArray []float32) []byte {
-	faLen := len(floatArray)
-	byteArray := make([]byte, faLen*4)
-	for i := 0; i < faLen; i++ {
-		ba := int32ToByteArray(float32ToInt32(floatArray[i]))
-		for j := 0; j < 4; j++ {
-			byteArray[i*4+j] = ba[j]
-		}
-	}
-	return byteArray
+func UInt32ToBytes(i uint32) []byte {
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, i)
+	return buf
 }
 
-func int32ToByteArray(i32 int32) []byte {
-	ba := make([]byte, 4)
-	const mask = 0b00000000000000000000000011111111
-	var shift int = 0
-	for i := 0; i < 4; i++ {
-		ba[i] = byte((i32 >> shift) & mask)
-		shift += 8
-	}
-	return ba
+func UInt32fromBytes(bytes []byte) uint32 {
+	return binary.LittleEndian.Uint32(bytes)
 }
 
-func float32ToInt32(f float32) int32 {
-	type pi32 = *int32
-	var pi pi32 = pi32(unsafe.Pointer(&f))
-	return *pi
+func Float32ToBytes(f float32) []byte {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, f)
+	return buf.Bytes()
 }
 
-func byteArrayToFloat32Array(byteArray []byte) []float32 {
-	baLen := len(byteArray)
-	floatArray := make([]float32, baLen/4)
-	for i := 0; i < baLen; i += 4 {
-		floatArray[i/4] = int32ToFloat32(byteArrayToInt32(byteArray[i : i+4]))
-	}
-	return floatArray
-}
-
-func int32ToFloat32(i int32) float32 {
-	type pf32 = *float32
-	var pf pf32 = pf32(unsafe.Pointer(&i))
-	return *pf
-}
-
-func byteArrayToInt32(ba []byte) int32 {
-	var i32 int32 = 0
-	var shift int = 0
-	for i := 0; i < 4; i++ {
-		i32 = i32 | (int32(ba[i]) << shift)
-		shift += 8
-	}
-	return i32
+func Float32fromBytes(bytes []byte) float32 {
+	bits := binary.LittleEndian.Uint32(bytes)
+	float := math.Float32frombits(bits)
+	return float
 }

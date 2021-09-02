@@ -1,20 +1,17 @@
 package config
 
-type Throttle struct {
-	Channel int
-}
-
 type Joystick struct {
 	Channel   int     `yaml:"channel"`
 	ZeroValue float32 `yaml:"zero-value"`
 }
 
 type Joysticks struct {
-	Roll  Joystick `yaml:"roll"`
-	Pitch Joystick `yaml:"pitch"`
-	Yaw   Joystick `yaml:"yaw"`
-	VRef  float32  `yaml:"v-ref"`
-	SPI   SPI      `yaml:"spi"`
+	Roll     Joystick `yaml:"roll"`
+	Pitch    Joystick `yaml:"pitch"`
+	Yaw      Joystick `yaml:"yaw"`
+	Throttle Joystick `yaml:"throttle"`
+	VRef     float32  `yaml:"v-ref"`
+	SPI      SPI      `yaml:"spi"`
 }
 
 type Buttons struct {
@@ -29,7 +26,6 @@ type Buttons struct {
 type RemoteControlConfigs struct {
 	Joysticks Joysticks `yaml:"joysticks"`
 	Buttons   Buttons   `yaml:"buttons"`
-	Throttle  Throttle  `yaml:"throttle"`
 }
 
 type remoteControlConfigs struct {

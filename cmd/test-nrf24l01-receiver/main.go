@@ -10,7 +10,7 @@ import (
 
 func main() {
 	drivers.InitHost()
-	radio := utils.NewReceiverRadio()
+	radio := utils.NewRadio()
 	radio.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()
