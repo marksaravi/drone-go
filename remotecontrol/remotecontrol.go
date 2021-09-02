@@ -47,23 +47,41 @@ func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFront
 func (rc *remoteControl) Start() {
 	sendTimer := time.Tick(time.Second / 25)
 	rc.radio.ReceiverOn()
+	acknowleg := make(chan models.FlightData)
+
+	go func(ack chan<- models.FlightData, r radio) {
+		for {
+			if r.IsDataAvailable() {
+				ack <- r.ReceiveFlightData()
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}(acknowleg, rc.radio)
+
 	var id uint32 = 0
-	for range sendTimer {
-		rc.read()
-		rc.showData(id)
-		rc.radio.TransmitterOn()
-		rc.radio.TransmitFlightData(models.FlightData{
-			Id:              id,
-			Roll:            rc.data.Roll.Value,
-			Pitch:           rc.data.Pitch.Value,
-			Yaw:             rc.data.Yaw.Value,
-			Throttle:        rc.data.Throttle.Value,
-			Altitude:        0,
-			IsRemoteControl: true,
-			IsDrone:         false,
-			IsMotorsEngaged: false,
-		})
-		id++
+	for {
+		select {
+		case <-sendTimer:
+			rc.read()
+			rc.radio.TransmitterOn()
+			rc.radio.TransmitFlightData(models.FlightData{
+				Id:              id,
+				Roll:            rc.data.Roll.Value,
+				Pitch:           rc.data.Pitch.Value,
+				Yaw:             rc.data.Yaw.Value,
+				Throttle:        rc.data.Throttle.Value,
+				Altitude:        0,
+				IsRemoteControl: true,
+				IsDrone:         false,
+				IsMotorsEngaged: false,
+			})
+			rc.radio.ReceiverOn()
+			id++
+		case flightData := <-acknowleg:
+			fmt.Println("ACK: ", flightData.Id)
+		default:
+			time.Sleep(time.Millisecond)
+		}
 	}
 }
 
