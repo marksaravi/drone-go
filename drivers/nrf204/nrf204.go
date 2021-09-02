@@ -319,6 +319,24 @@ func initPin(pinName string) gpio.PinIO {
 	return pin
 }
 
+func BoolToShiftedByte(b bool, bitPosition int) byte {
+	if !b {
+		return 0
+	}
+	var r byte = 1
+	return r << byte(bitPosition)
+}
+
+func FlightStatusToBytes(flightData models.FlightData) []byte {
+	isRemote := BoolToShiftedByte(flightData.IsRemoteControl, 0)
+	isDrone := BoolToShiftedByte(flightData.IsDrone, 1)
+	isMotorsEngaged := BoolToShiftedByte(flightData.IsMotorsEngaged, 2)
+	return []byte{
+		isRemote | isDrone | isMotorsEngaged,
+		0,
+	}
+}
+
 func flightDataToPayload(flightData models.FlightData) []byte {
 	payload := append([]byte{}, UInt32ToBytes(flightData.Id)...)
 	payload = append(payload, Float32ToBytes(flightData.Roll)...)
@@ -326,7 +344,8 @@ func flightDataToPayload(flightData models.FlightData) []byte {
 	payload = append(payload, Float32ToBytes(flightData.Yaw)...)
 	payload = append(payload, Float32ToBytes(flightData.Throttle)...)
 	payload = append(payload, Float32ToBytes(flightData.Altitude)...)
-	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0, 0, 0})...)
+	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0})...)
+	payload = append(payload, FlightStatusToBytes(flightData)...)
 	return payload
 }
 
