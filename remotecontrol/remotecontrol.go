@@ -7,6 +7,14 @@ import (
 	"github.com/MarkSaravi/drone-go/models"
 )
 
+type radio interface {
+	IsDataAvailable() bool
+	ReceiverOn()
+	ReceiveFlightData() models.FlightData
+	TransmitterOn()
+	TransmitFlightData(models.FlightData) error
+}
+
 type button interface {
 	Read() models.ButtonData
 }
@@ -16,6 +24,7 @@ type joystick interface {
 }
 
 type remoteControl struct {
+	radio        radio
 	roll         joystick
 	pitch        joystick
 	yaw          joystick
@@ -24,8 +33,9 @@ type remoteControl struct {
 	data         models.RemoteControlData
 }
 
-func NewRemoteControl(roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
+func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
 	return &remoteControl{
+		radio:        radio,
 		roll:         roll,
 		pitch:        pitch,
 		yaw:          yaw,
@@ -35,10 +45,49 @@ func NewRemoteControl(roll, pitch, yaw, throttle joystick, btnFrontLeft button) 
 }
 
 func (rc *remoteControl) Start() {
-	sendTimer := time.Tick(time.Second / 25)
-	for range sendTimer {
-		rc.read()
-		rc.showData()
+	rc.radio.ReceiverOn()
+	acknowleg := make(chan models.FlightData)
+	go func(ack chan<- models.FlightData, r radio) {
+		for {
+			if r.IsDataAvailable() {
+				ack <- r.ReceiveFlightData()
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}(acknowleg, rc.radio)
+
+	sendTimer := time.NewTicker(time.Second / 25)
+	var id uint32 = 0
+	lastAcknowleged := time.Now()
+	var flightData models.FlightData = models.FlightData{
+		Id: 0,
+	}
+	for {
+		select {
+		case <-sendTimer.C:
+			rc.read()
+			rc.radio.TransmitterOn()
+			rc.radio.TransmitFlightData(models.FlightData{
+				Id:              id,
+				Roll:            rc.data.Roll.Value,
+				Pitch:           rc.data.Pitch.Value,
+				Yaw:             rc.data.Yaw.Value,
+				Throttle:        rc.data.Throttle.Value,
+				Altitude:        0,
+				IsRemoteControl: true,
+				IsDrone:         false,
+				IsMotorsEngaged: false,
+			})
+			rc.radio.ReceiverOn()
+			id++
+		case flightData = <-acknowleg:
+			lastAcknowleged = time.Now()
+		default:
+			time.Sleep(time.Millisecond)
+			if time.Since(lastAcknowleged) > time.Millisecond*200 {
+				fmt.Println("Connection Error ", flightData.Id)
+			}
+		}
 	}
 }
 
@@ -52,6 +101,12 @@ func (rc *remoteControl) read() {
 	}
 }
 
-func (rc *remoteControl) showData() {
-	fmt.Println(rc.data)
+var lastPrint time.Time = time.Now()
+
+func (rc *remoteControl) showData(id uint32) {
+	if time.Since(lastPrint) < time.Second/4 {
+		return
+	}
+	lastPrint = time.Now()
+	fmt.Println(id, rc.data)
 }
