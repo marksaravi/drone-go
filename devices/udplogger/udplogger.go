@@ -82,9 +82,6 @@ func NewUdpLogger(
 }
 
 func (l *udpLogger) appendData(imuRotations models.ImuRotations) {
-	if !l.enabled {
-		return
-	}
 	l.dataPerPacketCounter++
 	if l.dataPerPacketCounter%l.skipOffset == 0 {
 		l.buffer[l.bufferCounter] = imuDataToJson(imuRotations)
