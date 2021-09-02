@@ -2,6 +2,7 @@ package flightcontrol
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
 )
@@ -45,7 +46,25 @@ func (fc *flightControl) Start() {
 			fc.udpLogger.Send(data)
 		}
 		if fc.radio.IsDataAvailable() {
-			fmt.Println(fc.radio.ReceiveFlightData())
+			flightData := fc.radio.ReceiveFlightData()
+			printFlightData(flightData)
+			fc.radio.TransmitterOn()
+			fc.radio.TransmitFlightData(models.FlightData{
+				Id:              flightData.Id,
+				IsRemoteControl: false,
+				IsDrone:         true,
+			})
+			fc.radio.ReceiverOn()
 		}
 	}
+}
+
+var lastPrint time.Time = time.Now()
+
+func printFlightData(flightData models.FlightData) {
+	if time.Since(lastPrint) < time.Second/4 {
+		return
+	}
+	lastPrint = time.Now()
+	fmt.Println(flightData)
 }
