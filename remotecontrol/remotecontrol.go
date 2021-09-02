@@ -35,10 +35,10 @@ func NewRemoteControl(roll, pitch, yaw, throttle joystick, btnFrontLeft button) 
 }
 
 func (rc *remoteControl) Start() {
-	for {
+	sendTimer := time.Tick(time.Second / 25)
+	for range sendTimer {
 		rc.read()
 		rc.showData()
-		time.Sleep(250 * time.Millisecond)
 	}
 }
 
