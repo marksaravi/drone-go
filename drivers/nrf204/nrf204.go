@@ -3,6 +3,7 @@ package nrf204
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -73,10 +74,11 @@ const (
 )
 
 type nrf204l01 struct {
-	ce       gpio.PinOut
-	address  []byte
-	conn     spi.Conn
-	powerDBm byte
+	ce         gpio.PinOut
+	address    []byte
+	conn       spi.Conn
+	powerDBm   byte
+	isReceiver bool
 }
 
 func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *nrf204l01 {
@@ -87,10 +89,11 @@ func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *n
 	}
 
 	radio := nrf204l01{
-		ce:       initPin(CE),
-		address:  address,
-		conn:     conn,
-		powerDBm: dbmStrToDBm(powerDBm),
+		ce:         initPin(CE),
+		address:    address,
+		conn:       conn,
+		powerDBm:   dbmStrToDBm(powerDBm),
+		isReceiver: true,
 	}
 	radio.init()
 	return &radio
@@ -165,6 +168,7 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 }
 
 func (radio *nrf204l01) TransmitterOn() {
+	radio.isReceiver = false
 	radio.ce.Out(gpio.Low)
 	radio.setRetries(5, 0)
 	radio.clearStatus()
@@ -176,6 +180,7 @@ func (radio *nrf204l01) TransmitterOn() {
 }
 
 func (radio *nrf204l01) ReceiverOn() {
+	radio.isReceiver = true
 	radio.ce.Out(gpio.Low)
 	radio.setPower(ON)
 	radio.clearStatus()
@@ -185,7 +190,7 @@ func (radio *nrf204l01) ReceiverOn() {
 	radio.ce.Out(gpio.High)
 }
 
-func (radio *nrf204l01) IsDataAvailable() bool {
+func (radio *nrf204l01) isDataAvailable() bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
 	// fmt.Println("Status: ", status)
@@ -199,10 +204,19 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReceiveFlightData() models.FlightData {
-	binarypayload, _ := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+func (radio *nrf204l01) ReceiveFlightData() (payload models.FlightData, isAvailable bool) {
+	isAvailable = false
+	if !radio.isDataAvailable() {
+		return
+	}
+	binarypayload, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
-	return payloadToFlightData(binarypayload)
+	if err != nil {
+		return
+	}
+	payload = payloadToFlightData(binarypayload)
+	isAvailable = true
+	return
 }
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
@@ -219,6 +233,9 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 }
 
 func (radio *nrf204l01) TransmitFlightData(flightData models.FlightData) error {
+	if radio.isReceiver {
+		return errors.New("not in transmit mode")
+	}
 	payload := flightDataToPayload(flightData)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)

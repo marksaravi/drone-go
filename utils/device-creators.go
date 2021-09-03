@@ -103,9 +103,8 @@ func NewESC() interface {
 }
 
 func NewRadio() interface {
-	IsDataAvailable() bool
 	ReceiverOn()
-	ReceiveFlightData() models.FlightData
+	ReceiveFlightData() (models.FlightData, bool)
 	TransmitterOn()
 	TransmitFlightData(models.FlightData) error
 } {

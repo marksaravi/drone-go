@@ -8,9 +8,8 @@ import (
 )
 
 type radio interface {
-	IsDataAvailable() bool
 	ReceiverOn()
-	ReceiveFlightData() models.FlightData
+	ReceiveFlightData() (models.FlightData, bool)
 	TransmitterOn()
 	TransmitFlightData(models.FlightData) error
 }
@@ -45,8 +44,9 @@ func (fc *flightControl) Start() {
 		if canRead {
 			fc.udpLogger.Send(data)
 		}
-		if fc.radio.IsDataAvailable() {
-			flightData := fc.radio.ReceiveFlightData()
+
+		flightData, isAvalable := fc.radio.ReceiveFlightData()
+		if isAvalable {
 			printFlightData(flightData)
 			fc.radio.TransmitterOn()
 			fc.radio.TransmitFlightData(models.FlightData{
