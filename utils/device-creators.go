@@ -19,7 +19,8 @@ import (
 )
 
 func NewImu() interface {
-	Read() (models.ImuRotations, bool)
+	ReadRotations() models.ImuRotations
+	ResetTime()
 } {
 	appconfig := config.ReadFlightControlConfig()
 	imuConfig := appconfig.Configs.Imu

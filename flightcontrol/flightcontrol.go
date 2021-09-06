@@ -15,7 +15,8 @@ type radio interface {
 }
 
 type imu interface {
-	Read() (models.ImuRotations, bool)
+	ReadRotations() models.ImuRotations
+	ResetTime()
 }
 
 type udpLogger interface {
@@ -38,30 +39,36 @@ func NewFlightControl(imu imu, radio radio, udpLogger udpLogger) *flightControl 
 
 func (fc *flightControl) Start() {
 	fmt.Println("Starting Flight Control")
-	fc.radio.ReceiverOn()
+	var dataPerSecond int = 3200
+	readingInterval := time.Second / time.Duration(dataPerSecond)
+	// fc.radio.ReceiverOn()
+	fc.imu.ResetTime()
+	lastReadingTime := time.Now()
 	for {
-		data, canRead := fc.imu.Read()
-		if canRead {
-			fc.udpLogger.Send(data)
+		now := time.Now()
+		if now.Sub(lastReadingTime) >= readingInterval {
+			rotations := fc.imu.ReadRotations()
+			fc.udpLogger.Send(rotations)
+			printFlightData(rotations)
+			lastReadingTime = now
 		}
-
-		flightData, isAvalable := fc.radio.ReceiveFlightData()
-		if isAvalable {
-			printFlightData(flightData)
-			fc.radio.TransmitterOn()
-			fc.radio.TransmitFlightData(models.FlightData{
-				Id:              flightData.Id,
-				IsRemoteControl: false,
-				IsDrone:         true,
-			})
-			fc.radio.ReceiverOn()
-		}
+		// flightData, isAvalable := fc.radio.ReceiveFlightData()
+		// if isAvalable {
+		// 	printFlightData(flightData)
+		// 	fc.radio.TransmitterOn()
+		// 	fc.radio.TransmitFlightData(models.FlightData{
+		// 		Id:              flightData.Id,
+		// 		IsRemoteControl: false,
+		// 		IsDrone:         true,
+		// 	})
+		// 	fc.radio.ReceiverOn()
+		// }
 	}
 }
 
 var lastPrint time.Time = time.Now()
 
-func printFlightData(flightData models.FlightData) {
+func printFlightData(flightData models.ImuRotations) {
 	if time.Since(lastPrint) < time.Second/4 {
 		return
 	}
