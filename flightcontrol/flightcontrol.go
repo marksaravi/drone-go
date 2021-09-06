@@ -48,6 +48,8 @@ func (fc *flightControl) Start() {
 	lastReadingTime := time.Now()
 	var flightCommand models.FlightData
 
+	var counter int = 0
+	sampleStart := time.Now()
 	for {
 		now := time.Now()
 		select {
@@ -58,6 +60,12 @@ func (fc *flightControl) Start() {
 				rotations := fc.imu.ReadRotations()
 				fc.udpLogger.Send(rotations)
 				lastReadingTime = now
+				counter++
+				if counter == fc.imuDataPerSecond {
+					fmt.Println(time.Since(sampleStart))
+					sampleStart = time.Now()
+					counter = 0
+				}
 			}
 		}
 	}
