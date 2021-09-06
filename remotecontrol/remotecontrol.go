@@ -8,9 +8,8 @@ import (
 )
 
 type radio interface {
-	IsDataAvailable() bool
 	ReceiverOn()
-	ReceiveFlightData() models.FlightData
+	ReceiveFlightData() (models.FlightData, bool)
 	TransmitterOn()
 	TransmitFlightData(models.FlightData) error
 }
@@ -33,28 +32,9 @@ type remoteControl struct {
 	data         models.RemoteControlData
 }
 
-func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
-	return &remoteControl{
-		radio:        radio,
-		roll:         roll,
-		pitch:        pitch,
-		yaw:          yaw,
-		throttle:     throttle,
-		btnFrontLeft: btnFrontLeft,
-	}
-}
-
 func (rc *remoteControl) Start() {
 	rc.radio.ReceiverOn()
-	acknowleg := make(chan models.FlightData)
-	go func(ack chan<- models.FlightData, r radio) {
-		for {
-			if r.IsDataAvailable() {
-				ack <- r.ReceiveFlightData()
-			}
-			time.Sleep(time.Millisecond)
-		}
-	}(acknowleg, rc.radio)
+	acknowleg := createAckReceiver(rc.radio)
 
 	sendTimer := time.NewTicker(time.Second / 25)
 	var id uint32 = 0
@@ -83,12 +63,25 @@ func (rc *remoteControl) Start() {
 		case flightData = <-acknowleg:
 			lastAcknowleged = time.Now()
 		default:
-			time.Sleep(time.Millisecond)
 			if time.Since(lastAcknowleged) > time.Millisecond*200 {
 				fmt.Println("Connection Error ", flightData.Id)
 			}
 		}
 	}
+}
+
+func createAckReceiver(receiver radio) <-chan models.FlightData {
+	acknowlegChannel := make(chan models.FlightData)
+	go func(receiver radio, ackChannell chan models.FlightData) {
+		for {
+			ack, isavailable := receiver.ReceiveFlightData()
+			if isavailable {
+				ackChannell <- ack
+			}
+
+		}
+	}(receiver, acknowlegChannel)
+	return acknowlegChannel
 }
 
 func (rc *remoteControl) read() {
@@ -109,4 +102,15 @@ func (rc *remoteControl) showData(id uint32) {
 	}
 	lastPrint = time.Now()
 	fmt.Println(id, rc.data)
+}
+
+func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
+	return &remoteControl{
+		radio:        radio,
+		roll:         roll,
+		pitch:        pitch,
+		yaw:          yaw,
+		throttle:     throttle,
+		btnFrontLeft: btnFrontLeft,
+	}
 }
