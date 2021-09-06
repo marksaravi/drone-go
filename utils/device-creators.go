@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/MarkSaravi/drone-go/config"
 	"github.com/MarkSaravi/drone-go/devices"
@@ -18,9 +17,10 @@ import (
 	"periph.io/x/periph/conn/i2c/i2creg"
 )
 
-func NewImu() interface {
-	Read() (models.ImuRotations, bool)
-} {
+func NewImu() (interface {
+	ReadRotations() models.ImuRotations
+	ResetTime()
+}, int) {
 	appconfig := config.ReadFlightControlConfig()
 	imuConfig := appconfig.Configs.Imu
 	fmt.Println(appconfig)
@@ -48,20 +48,18 @@ func NewImu() interface {
 		gyroConfig.Offsets.Y,
 		gyroConfig.Offsets.Z,
 	)
-	readingInterval := time.Second / time.Duration(imuConfig.ImuDataPerSecond)
 	imu := devices.NewIMU(
 		imuMems,
-		readingInterval,
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	return imu
+	return imu, appconfig.Configs.ImuDataPerSecond
 }
 
 func NewLogger() interface {
 	Send(models.ImuRotations)
 } {
-	flightControlConfig := config.ReadFlightControlConfig()
+	flightControl := config.ReadFlightControlConfig()
 	loggerConfig := config.ReadLoggerConfig()
 	loggerConfigs := loggerConfig.UdpLoggerConfigs
 	udplogger := udplogger.NewUdpLogger(
@@ -70,7 +68,7 @@ func NewLogger() interface {
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
 		loggerConfigs.MaxDataPerPacket,
-		flightControlConfig.Configs.Imu.ImuDataPerSecond,
+		flightControl.Configs.ImuDataPerSecond,
 	)
 	return udplogger
 }

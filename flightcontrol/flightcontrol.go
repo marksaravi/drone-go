@@ -15,7 +15,8 @@ type radio interface {
 }
 
 type imu interface {
-	Read() (models.ImuRotations, bool)
+	ReadRotations() models.ImuRotations
+	ResetTime()
 }
 
 type udpLogger interface {
@@ -23,48 +24,74 @@ type udpLogger interface {
 }
 
 type flightControl struct {
-	imu       imu
-	radio     radio
-	udpLogger udpLogger
+	imuDataPerSecond int
+	imu              imu
+	radio            radio
+	udpLogger        udpLogger
 }
 
-func NewFlightControl(imu imu, radio radio, udpLogger udpLogger) *flightControl {
+func NewFlightControl(imuDataPerSecond int, imu imu, radio radio, udpLogger udpLogger) *flightControl {
 	return &flightControl{
-		imu:       imu,
-		radio:     radio,
-		udpLogger: udpLogger,
+		imuDataPerSecond: imuDataPerSecond,
+		imu:              imu,
+		radio:            radio,
+		udpLogger:        udpLogger,
 	}
 }
 
 func (fc *flightControl) Start() {
 	fmt.Println("Starting Flight Control")
+	readingInterval := time.Second / time.Duration(fc.imuDataPerSecond)
 	fc.radio.ReceiverOn()
-	for {
-		data, canRead := fc.imu.Read()
-		if canRead {
-			fc.udpLogger.Send(data)
-		}
+	commandChannel := NewCommandChannel(fc.radio)
+	fc.imu.ResetTime()
+	lastReadingTime := time.Now()
+	var flightCommand models.FlightData
 
-		flightData, isAvalable := fc.radio.ReceiveFlightData()
-		if isAvalable {
-			printFlightData(flightData)
-			fc.radio.TransmitterOn()
-			fc.radio.TransmitFlightData(models.FlightData{
-				Id:              flightData.Id,
-				IsRemoteControl: false,
-				IsDrone:         true,
-			})
-			fc.radio.ReceiverOn()
+	var counter int = 0
+	sampleStart := time.Now()
+	for {
+		now := time.Now()
+		select {
+		case flightCommand = <-commandChannel:
+			acknowledge(flightCommand, fc.radio)
+		default:
+			if now.Sub(lastReadingTime) >= readingInterval {
+				rotations := fc.imu.ReadRotations()
+				fc.udpLogger.Send(rotations)
+				lastReadingTime = now
+				counter++
+				if counter == fc.imuDataPerSecond {
+					fmt.Println(time.Since(sampleStart))
+					sampleStart = time.Now()
+					counter = 0
+				}
+			}
 		}
 	}
 }
 
-var lastPrint time.Time = time.Now()
+func NewCommandChannel(r radio) <-chan models.FlightData {
+	radioChannel := make(chan models.FlightData, 10)
+	go func(r radio, c chan models.FlightData) {
+		ticker := time.NewTicker(time.Second / 40)
+		for range ticker.C {
+			if d, isOk := r.ReceiveFlightData(); isOk {
+				c <- d
+			}
+		}
+	}(r, radioChannel)
+	return radioChannel
+}
 
-func printFlightData(flightData models.FlightData) {
-	if time.Since(lastPrint) < time.Second/4 {
-		return
+var lastCommandPrinted = time.Now()
+
+func acknowledge(fd models.FlightData, radio radio) {
+	if time.Since(lastCommandPrinted) >= time.Second {
+		lastCommandPrinted = time.Now()
+		fmt.Println(fd)
 	}
-	lastPrint = time.Now()
-	fmt.Println(flightData)
+	radio.TransmitterOn()
+	radio.TransmitFlightData(fd)
+	radio.ReceiverOn()
 }

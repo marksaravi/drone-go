@@ -1,6 +1,6 @@
 flight-control:
+  imu-data-per-second: 3200
   imu:
-    data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
@@ -59,8 +59,6 @@ remote-control:
     spi:
       bus-number: 0
       chip-select: 0
-      mode: 0
-      speed-mega-hz: 1
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'
@@ -71,7 +69,7 @@ remote-control:
   v-ref: 5
 
 logger:
-  enabled: false
+  enabled: true
   ip: 192.168.1.101
   port: 6431
   packets-per-second: 20 # set to zero for disabling udp send

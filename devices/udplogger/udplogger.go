@@ -22,8 +22,7 @@ type udpLogger struct {
 	dataPerPacket        int
 	dataPerPacketCounter int
 	skipOffset           int
-	// maxDataPerPacket     int
-	bufferCounter int
+	bufferCounter        int
 }
 
 func NewUdpLogger(
