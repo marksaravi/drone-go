@@ -46,14 +46,14 @@ func (imu *imudevice) ResetTime() {
 func (imu *imudevice) ReadRotations() models.ImuRotations {
 	now := time.Now()
 	acc, gyro := imu.imuMems.Read()
-	diff := now.Sub(imu.lastReading)
+	diff := now.Sub(imu.lastReading).Nanoseconds()
 	imu.accRawData = models.XYZ{
 		X: lowPassFilter(imu.accRawData.X, acc.X, imu.accLowPassFilterCoefficient),
 		Y: lowPassFilter(imu.accRawData.Y, acc.Y, imu.accLowPassFilterCoefficient),
 		Z: lowPassFilter(imu.accRawData.Z, acc.Z, imu.accLowPassFilterCoefficient),
 	}
 	accRotations := calcaAcelerometerRotations(imu.accRawData)
-	dg := gyroChanges(gyro, diff.Nanoseconds())
+	dg := gyroChanges(gyro, diff)
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	nrotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = models.Rotations{
@@ -67,7 +67,7 @@ func (imu *imudevice) ReadRotations() models.ImuRotations {
 		Gyroscope:     imu.gyro,
 		Rotations:     imu.rotations,
 		ReadTime:      now.UnixNano(),
-		ReadInterval:  diff.Nanoseconds(),
+		ReadInterval:  diff,
 	}
 }
 
