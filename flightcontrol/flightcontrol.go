@@ -99,7 +99,6 @@ func (fc *flightControl) Start() {
 				}
 			}
 		}
-		time.Sleep(time.Microsecond)
 	}
 }
 
