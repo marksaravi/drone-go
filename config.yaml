@@ -59,8 +59,6 @@ remote-control:
     spi:
       bus-number: 0
       chip-select: 0
-      mode: 0
-      speed-mega-hz: 1
   buttons:
     front-left: 'GPIO27'
     front-right: 'GPIO17'

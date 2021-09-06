@@ -5,14 +5,11 @@ import (
 	"log"
 
 	"gopkg.in/yaml.v3"
-	"periph.io/x/periph/conn/spi"
 )
 
 type SPI struct {
-	BusNumber  int      `yaml:"bus-number"`
-	ChipSelect int      `yaml:"chip-select"`
-	Mode       spi.Mode `yaml:"mode"`
-	Speed      int      `yaml:"speed-mega-hz"`
+	BusNumber  int `yaml:"bus-number"`
+	ChipSelect int `yaml:"chip-select"`
 }
 
 func readConfig(config interface{}) interface{} {
