@@ -31,7 +31,6 @@ type ImuMemes struct {
 	Accelerometer               AccelerometerConfig `yaml:"accelerometer"`
 	Gyroscope                   GyroscopeConfig     `yaml:"gyroscope"`
 	Magnetometer                MagnetometerConfig  `yaml:"magnetometer"`
-	ImuDataPerSecond            int                 `yaml:"data-per-second"`
 	AccLowPassFilterCoefficient float64             `yaml:"acc-lowpass-filter-coefficient"`
 	LowPassFilterCoefficient    float64             `yaml:"lowpass-filter-coefficient"`
 }
@@ -50,10 +49,11 @@ type Radio struct {
 }
 
 type FlightControlConfigs struct {
-	Imu          ImuMemes `yaml:"imu"`
-	ESC          ESC      `yaml:"esc"`
-	Radio        Radio    `yaml:"radio"`
-	PowerBreaker string   `yaml:"power-breaker"`
+	ImuDataPerSecond int      `yaml:"imu-data-per-second"`
+	Imu              ImuMemes `yaml:"imu"`
+	ESC              ESC      `yaml:"esc"`
+	Radio            Radio    `yaml:"radio"`
+	PowerBreaker     string   `yaml:"power-breaker"`
 }
 
 type flightControlConfigs struct {

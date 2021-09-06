@@ -24,23 +24,24 @@ type udpLogger interface {
 }
 
 type flightControl struct {
-	imu       imu
-	radio     radio
-	udpLogger udpLogger
+	imuDataPerSecond int
+	imu              imu
+	radio            radio
+	udpLogger        udpLogger
 }
 
-func NewFlightControl(imu imu, radio radio, udpLogger udpLogger) *flightControl {
+func NewFlightControl(imuDataPerSecond int, imu imu, radio radio, udpLogger udpLogger) *flightControl {
 	return &flightControl{
-		imu:       imu,
-		radio:     radio,
-		udpLogger: udpLogger,
+		imuDataPerSecond: imuDataPerSecond,
+		imu:              imu,
+		radio:            radio,
+		udpLogger:        udpLogger,
 	}
 }
 
 func (fc *flightControl) Start() {
 	fmt.Println("Starting Flight Control")
-	var dataPerSecond int = 3200
-	readingInterval := time.Second / time.Duration(dataPerSecond)
+	readingInterval := time.Second / time.Duration(fc.imuDataPerSecond)
 	// fc.radio.ReceiverOn()
 	fc.imu.ResetTime()
 	lastReadingTime := time.Now()

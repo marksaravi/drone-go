@@ -1,6 +1,6 @@
 flight-control:
+  imu-data-per-second: 3200
   imu:
-    data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:

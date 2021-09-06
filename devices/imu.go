@@ -27,7 +27,6 @@ type imudevice struct {
 
 func NewIMU(
 	imuMems imuMems,
-	readingInterval time.Duration,
 	accLowPassFilterCoefficient float64,
 	lowPassFilterCoefficient float64,
 ) *imudevice {
