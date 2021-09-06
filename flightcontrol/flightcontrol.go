@@ -42,37 +42,48 @@ func NewFlightControl(imuDataPerSecond int, imu imu, radio radio, udpLogger udpL
 func (fc *flightControl) Start() {
 	fmt.Println("Starting Flight Control")
 	readingInterval := time.Second / time.Duration(fc.imuDataPerSecond)
-	// fc.radio.ReceiverOn()
+	fc.radio.ReceiverOn()
+	commandChannel := NewCommandChannel(fc.radio)
 	fc.imu.ResetTime()
 	lastReadingTime := time.Now()
+	var flightCommand models.FlightData
+
 	for {
 		now := time.Now()
-		if now.Sub(lastReadingTime) >= readingInterval {
-			rotations := fc.imu.ReadRotations()
-			fc.udpLogger.Send(rotations)
-			printFlightData(rotations)
-			lastReadingTime = now
+		select {
+		case flightCommand = <-commandChannel:
+			acknowledge(flightCommand, fc.radio)
+		default:
+			if now.Sub(lastReadingTime) >= readingInterval {
+				rotations := fc.imu.ReadRotations()
+				fc.udpLogger.Send(rotations)
+				lastReadingTime = now
+			}
 		}
-		// flightData, isAvalable := fc.radio.ReceiveFlightData()
-		// if isAvalable {
-		// 	printFlightData(flightData)
-		// 	fc.radio.TransmitterOn()
-		// 	fc.radio.TransmitFlightData(models.FlightData{
-		// 		Id:              flightData.Id,
-		// 		IsRemoteControl: false,
-		// 		IsDrone:         true,
-		// 	})
-		// 	fc.radio.ReceiverOn()
-		// }
 	}
 }
 
-var lastPrint time.Time = time.Now()
+func NewCommandChannel(r radio) chan models.FlightData {
+	radioChannel := make(chan models.FlightData, 10)
+	go func(r radio, c chan models.FlightData) {
+		ticker := time.NewTicker(time.Second / 40)
+		for range ticker.C {
+			if d, isOk := r.ReceiveFlightData(); isOk {
+				c <- d
+			}
+		}
+	}(r, radioChannel)
+	return radioChannel
+}
 
-func printFlightData(flightData models.ImuRotations) {
-	if time.Since(lastPrint) < time.Second/4 {
-		return
+var lastCommandPrinted = time.Now()
+
+func acknowledge(fd models.FlightData, radio radio) {
+	if time.Since(lastCommandPrinted) >= time.Second {
+		lastCommandPrinted = time.Now()
+		fmt.Println(fd)
 	}
-	lastPrint = time.Now()
-	fmt.Println(flightData)
+	radio.TransmitterOn()
+	radio.TransmitFlightData(fd)
+	radio.ReceiverOn()
 }
