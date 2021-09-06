@@ -71,7 +71,7 @@ func (fc *flightControl) Start() {
 	}
 }
 
-func NewCommandChannel(r radio) chan models.FlightData {
+func NewCommandChannel(r radio) <-chan models.FlightData {
 	radioChannel := make(chan models.FlightData, 10)
 	go func(r radio, c chan models.FlightData) {
 		ticker := time.NewTicker(time.Second / 40)
