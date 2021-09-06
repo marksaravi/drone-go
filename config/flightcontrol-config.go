@@ -49,11 +49,12 @@ type Radio struct {
 }
 
 type FlightControlConfigs struct {
-	ImuDataPerSecond int      `yaml:"imu-data-per-second"`
-	Imu              ImuMemes `yaml:"imu"`
-	ESC              ESC      `yaml:"esc"`
-	Radio            Radio    `yaml:"radio"`
-	PowerBreaker     string   `yaml:"power-breaker"`
+	ImuDataPerSecond   int      `yaml:"imu-data-per-second"`
+	EscUpdatePerSecond int      `yaml:"esc-update-per-second"`
+	Imu                ImuMemes `yaml:"imu"`
+	ESC                ESC      `yaml:"esc"`
+	Radio              Radio    `yaml:"radio"`
+	PowerBreaker       string   `yaml:"power-breaker"`
 }
 
 type flightControlConfigs struct {

@@ -20,10 +20,10 @@ import (
 func NewImu() (interface {
 	ReadRotations() models.ImuRotations
 	ResetTime()
-}, int) {
-	appconfig := config.ReadFlightControlConfig()
-	imuConfig := appconfig.Configs.Imu
-	fmt.Println(appconfig)
+}, int, int) {
+	flightControlConfigs := config.ReadFlightControlConfig()
+	imuConfig := flightControlConfigs.Configs.Imu
+	fmt.Println(flightControlConfigs)
 	drivers.InitHost()
 	imuSPIConn := drivers.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
@@ -53,7 +53,7 @@ func NewImu() (interface {
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	return imu, appconfig.Configs.ImuDataPerSecond
+	return imu, flightControlConfigs.Configs.ImuDataPerSecond, flightControlConfigs.Configs.EscUpdatePerSecond
 }
 
 func NewLogger() interface {
