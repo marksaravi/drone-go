@@ -85,7 +85,7 @@ func NewPowerBreaker() interface {
 func NewESC() interface {
 	On()
 	Off()
-	SetThrottle(int, float32)
+	SetThrottles(map[uint8]float32)
 } {
 	flightControlConfigs := config.ReadFlightControlConfig()
 	escConfigs := flightControlConfigs.Configs.ESC

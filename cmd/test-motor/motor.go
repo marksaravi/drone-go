@@ -21,10 +21,12 @@ func main() {
 	esc := utils.NewESC()
 	esc.On()
 	time.Sleep(4 * time.Second)
+	throttles := map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0}
 	for repeat := 0; repeat < 4; repeat++ {
 		for step := 0; step < steps; step++ {
 			fmt.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			esc.SetThrottle(*motor, throttle)
+			throttles[uint8(*motor)] = throttle
+			esc.SetThrottles(throttles)
 			time.Sleep(250 * time.Millisecond)
 			throttle += dThrottle
 		}

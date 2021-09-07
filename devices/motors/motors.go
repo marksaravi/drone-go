@@ -1,7 +1,7 @@
 package motors
 
 const (
-	NUM_OF_MOTORS int = 4
+	NUM_OF_MOTORS uint8 = 4
 )
 
 type powerbreaker interface {
@@ -37,12 +37,21 @@ func (mc *motorsControl) Off() {
 	mc.powerbreaker.SetLow()
 }
 
-func (mc *motorsControl) SetThrottle(motor int, throttle float32) {
-	mc.esc.SetThrottle(mc.motorsEscMappings[motor], throttle)
+func (mc *motorsControl) SetThrottles(throttles map[uint8]float32) {
+	var motor uint8
+	for motor = 0; motor < NUM_OF_MOTORS; motor++ {
+		mc.setThrottle(motor, throttles[uint8(motor)])
+	}
+
+}
+
+func (mc *motorsControl) setThrottle(motor uint8, throttle float32) {
+	mc.esc.SetThrottle(mc.motorsEscMappings[int(motor)], throttle)
 }
 
 func (mc *motorsControl) allMotorsOff() {
-	for i := 0; i < NUM_OF_MOTORS; i++ {
-		mc.SetThrottle(i, 0)
+	var i uint8
+	for i = 0; i < NUM_OF_MOTORS; i++ {
+		mc.setThrottle(i, 0)
 	}
 }

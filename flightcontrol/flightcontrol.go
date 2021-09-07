@@ -22,7 +22,7 @@ type imu interface {
 type esc interface {
 	Off()
 	On()
-	SetThrottle(int, float32)
+	SetThrottles(map[uint8]float32)
 }
 
 type udpLogger interface {
