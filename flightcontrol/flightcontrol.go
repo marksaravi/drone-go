@@ -74,31 +74,26 @@ func (fc *flightControl) Start() {
 				escstart = time.Now()
 				esccounter = 0
 			}
-			escThrottleControlChannel <- 13425598
+			escThrottleControlChannel <- map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0}
 		default:
+			utils.Idle()
 		}
 	}
 }
 
-func newEscThrottleControlChannel(escdevice esc) chan int64 {
-	escChannel := make(chan int64, 10)
-	go func(escdev esc, ch chan int64) {
-		var throttles int64
-		start := time.Now()
+func newEscThrottleControlChannel(escdevice esc) chan map[uint8]float32 {
+	escChannel := make(chan map[uint8]float32, 10)
+	go func(escdev esc, ch chan map[uint8]float32) {
+		var throttles map[uint8]float32
 		for {
 			select {
 			case throttles = <-ch:
-				var motor uint8
-				for motor = 0; motor < 4; motor++ {
-					// escdev.SetThrottle(int(motor), throttles[motor])
-				}
-				if time.Since(start) >= time.Second {
-					fmt.Println(throttles)
-					start = time.Now()
-				}
+				go func(t map[uint8]float32) {
+					escdev.SetThrottles(t)
+				}(throttles)
 			default:
+				utils.Idle()
 			}
-			time.Sleep(time.Nanosecond)
 		}
 	}(escdevice, escChannel)
 	return escChannel

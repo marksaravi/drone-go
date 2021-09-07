@@ -15,8 +15,12 @@ func NewTicker(tickPerSecond int) <-chan int64 {
 				start = now
 				t <- now.UnixNano()
 			}
-			time.Sleep(time.Microsecond)
+			Idle()
 		}
 	}(ticker)
 	return ticker
+}
+
+func Idle() {
+	time.Sleep(time.Microsecond)
 }
