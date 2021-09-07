@@ -58,7 +58,13 @@ func (fc *flightControl) Start() {
 	imucounter := 0
 	escstart := time.Now()
 	esccounter := 0
-	for {
+	fc.esc.On()
+	defer fc.esc.Off()
+	time.Sleep(4 * time.Second)
+	start := time.Now()
+	var throttle float32 = 5
+	var dThrottle float32 = 1
+	for time.Since(start) < time.Second*20 {
 		select {
 		case <-imuDataChannel:
 			imucounter++
@@ -74,7 +80,12 @@ func (fc *flightControl) Start() {
 				escstart = time.Now()
 				esccounter = 0
 			}
-			escThrottleControlChannel <- map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0}
+			escThrottleControlChannel <- map[uint8]float32{0: throttle, 1: throttle, 2: throttle, 3: throttle}
+			next := throttle + dThrottle
+			if next < 5 || next > 15 {
+				dThrottle = -dThrottle
+			}
+			throttle += dThrottle
 		default:
 			utils.Idle()
 		}
@@ -88,9 +99,7 @@ func newEscThrottleControlChannel(escdevice esc) chan map[uint8]float32 {
 		for {
 			select {
 			case throttles = <-ch:
-				go func(t map[uint8]float32) {
-					escdev.SetThrottles(t)
-				}(throttles)
+				escdev.SetThrottles(throttles)
 			default:
 				utils.Idle()
 			}

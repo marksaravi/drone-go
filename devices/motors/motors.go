@@ -42,7 +42,6 @@ func (mc *motorsControl) SetThrottles(throttles map[uint8]float32) {
 	for motor = 0; motor < NUM_OF_MOTORS; motor++ {
 		mc.setThrottle(motor, throttles[uint8(motor)])
 	}
-
 }
 
 func (mc *motorsControl) setThrottle(motor uint8, throttle float32) {
