@@ -2,10 +2,10 @@ package flightcontrol
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type radio interface {
@@ -50,59 +50,72 @@ func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc
 }
 
 func (fc *flightControl) Start() {
-	readingInterval := time.Second / time.Duration(fc.imuDataPerSecond)
-	imuUpdatePerEscUpdate := fc.imuDataPerSecond / fc.escUpdatePerSecond
-	fmt.Printf("Starting Flight Control, imu dpr: %d, esc upeu: %d\n", fc.imuDataPerSecond, imuUpdatePerEscUpdate)
-	fc.radio.ReceiverOn()
-	commandChannel := NewCommandChannel(fc.radio)
-	lastReadingTime := time.Now()
-	var flightCommand models.FlightData
-	var imuCheckCounter int = 0
-	imuCheckTimer := time.Now()
-	var escCheckCounter int = 0
-	escCheckTimer := time.Now()
-	var escUpdateCounter int = 0
-	var escMutex sync.Mutex
-	fc.imu.ResetTime()
+	fmt.Printf("IMU data/s: %d, ESC refresh/s: %d\n", fc.imuDataPerSecond, fc.escUpdatePerSecond)
+	imuDataChannel := newImuDataChannel(fc.imu, fc.imuDataPerSecond)
+	escThrottleControlChannel := newEscThrottleControlChannel(fc.esc)
+	escRefresher := utils.NewTicker(fc.escUpdatePerSecond)
+	imustart := time.Now()
+	imucounter := 0
+	escstart := time.Now()
+	esccounter := 0
 	for {
-		now := time.Now()
 		select {
-		case flightCommand = <-commandChannel:
-			acknowledge(flightCommand, fc.radio)
-		default:
-			if now.Sub(lastReadingTime) >= readingInterval {
-				rotations := fc.imu.ReadRotations()
-				fc.udpLogger.Send(rotations)
-				lastReadingTime = now
-				escUpdateCounter++
-				imuCheckCounter++
-				if escUpdateCounter == imuUpdatePerEscUpdate {
-					escUpdateCounter = 0
-					go func(el *sync.Mutex) {
-						el.Lock()
-						escCheckCounter++
-						for i := 0; i < 4; i++ {
-							fc.esc.SetThrottle(i, 0)
-						}
-						el.Unlock()
-					}(&escMutex)
-				}
-				if imuCheckCounter == fc.imuDataPerSecond {
-					fmt.Println("imu: ", time.Since(imuCheckTimer))
-					imuCheckTimer = time.Now()
-					imuCheckCounter = 0
-				}
-				if escCheckCounter == fc.escUpdatePerSecond {
-					fmt.Println("esc: ", time.Since(escCheckTimer))
-					escCheckTimer = time.Now()
-					escCheckCounter = 0
-				}
+		case <-imuDataChannel:
+			imucounter++
+			if imucounter == fc.imuDataPerSecond {
+				fmt.Println("imu: ", time.Since(imustart))
+				imustart = time.Now()
+				imucounter = 0
 			}
+		case <-escRefresher:
+			esccounter++
+			if esccounter == fc.escUpdatePerSecond {
+				fmt.Println("esc: ", time.Since(escstart))
+				escstart = time.Now()
+				esccounter = 0
+			}
+			escThrottleControlChannel <- 13425598
+		default:
 		}
 	}
 }
 
-func NewCommandChannel(r radio) <-chan models.FlightData {
+func newEscThrottleControlChannel(escdevice esc) chan int64 {
+	escChannel := make(chan int64, 10)
+	go func(escdev esc, ch chan int64) {
+		var throttles int64
+		start := time.Now()
+		for {
+			select {
+			case throttles = <-ch:
+				var motor uint8
+				for motor = 0; motor < 4; motor++ {
+					// escdev.SetThrottle(int(motor), throttles[motor])
+				}
+				if time.Since(start) >= time.Second {
+					fmt.Println(throttles)
+					start = time.Now()
+				}
+			default:
+			}
+			time.Sleep(time.Nanosecond)
+		}
+	}(escdevice, escChannel)
+	return escChannel
+}
+
+func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations {
+	imuDataChannel := make(chan models.ImuRotations, 10)
+	go func(imudev imu, ch chan models.ImuRotations) {
+		ticker := utils.NewTicker(dataPerSecond)
+		for range ticker {
+			ch <- imudev.ReadRotations()
+		}
+	}(imudev, imuDataChannel)
+	return imuDataChannel
+}
+
+func newCommandChannel(r radio) <-chan models.FlightData {
 	radioChannel := make(chan models.FlightData, 10)
 	go func(r radio, c chan models.FlightData) {
 		ticker := time.NewTicker(time.Second / 40)
@@ -115,13 +128,7 @@ func NewCommandChannel(r radio) <-chan models.FlightData {
 	return radioChannel
 }
 
-var lastCommandPrinted = time.Now()
-
 func acknowledge(fd models.FlightData, radio radio) {
-	if time.Since(lastCommandPrinted) >= time.Second {
-		lastCommandPrinted = time.Now()
-		fmt.Println(fd)
-	}
 	radio.TransmitterOn()
 	radio.TransmitFlightData(fd)
 	radio.ReceiverOn()

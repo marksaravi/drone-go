@@ -22,7 +22,7 @@ func main() {
 	}
 }
 
-func createTicker(tickPerSecond int) chan int64 {
+func createTicker(tickPerSecond int) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
 		start := time.Now()
