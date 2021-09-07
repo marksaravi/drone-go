@@ -37,8 +37,8 @@ make sure that you have clear understanding about how to turn on and control a B
 
 get the latest version of precompiled package from [here](https://golang.org/dl/). I used *go1.15.2.linux-armv6l.tar.gz*  
 ```
-wget https://golang.org/dl/go1.16.6.linux-arm64.tar.gz  
-sudo tar -C /usr/local/ -xzf ./go1.16.6.linux-arm64.tar.gz   
+wget https://golang.org/dl/go1.17.linux-arm64.tar.gz  
+sudo tar -C /usr/local/ -xzf ./go1.17.linux-arm64.tar.gz   
 export PATH=$PATH:/usr/local/go/bin
 or
 add PATH=$PATH:/usr/local/go/bin to your shell profile

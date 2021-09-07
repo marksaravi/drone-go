@@ -7,10 +7,12 @@ import (
 
 func main() {
 
-	imu, imuDataPerSecond := utils.NewImu()
+	imu, imuDataPerSecond, escUpdatePerSecond := utils.NewImu()
 	flightControl := flightcontrol.NewFlightControl(
 		imuDataPerSecond,
+		escUpdatePerSecond,
 		imu,
+		utils.NewESC(),
 		utils.NewRadio(),
 		utils.NewLogger(),
 	)
