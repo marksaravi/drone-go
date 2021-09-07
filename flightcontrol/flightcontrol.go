@@ -69,7 +69,7 @@ func (fc *flightControl) Start() {
 		select {
 		case fd := <-commandChannel:
 			throttle = fd.Throttle / 5 * 10
-			if throttle > 8 {
+			if fd.IsMotorsEngaged {
 				running = false
 			}
 		case <-imuDataChannel:
@@ -131,6 +131,13 @@ func newCommandChannel(r radio) <-chan models.FlightData {
 			utils.Idle()
 		}
 	}(r, radioChannel)
+	go func(c chan models.FlightData) {
+		fmt.Scanln()
+		c <- models.FlightData{
+			IsMotorsEngaged: true,
+		}
+	}(radioChannel)
+
 	return radioChannel
 }
 
