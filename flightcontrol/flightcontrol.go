@@ -51,9 +51,11 @@ func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc
 
 func (fc *flightControl) Start() {
 	fmt.Printf("IMU data/s: %d, ESC refresh/s: %d\n", fc.imuDataPerSecond, fc.escUpdatePerSecond)
+	fc.radio.ReceiverOn()
 	imuDataChannel := newImuDataChannel(fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(fc.esc)
 	escRefresher := utils.NewTicker(fc.escUpdatePerSecond)
+	commandChannel := newCommandChannel(fc.radio)
 	imustart := time.Now()
 	imucounter := 0
 	escstart := time.Now()
@@ -61,11 +63,15 @@ func (fc *flightControl) Start() {
 	fc.esc.On()
 	defer fc.esc.Off()
 	time.Sleep(4 * time.Second)
-	start := time.Now()
-	var throttle float32 = 5
-	var dThrottle float32 = 1
-	for time.Since(start) < time.Second*20 {
+	var throttle float32 = 0
+	var running bool = true
+	for running {
 		select {
+		case fd := <-commandChannel:
+			throttle = fd.Throttle / 5 * 10
+			if throttle > 8 {
+				running = false
+			}
 		case <-imuDataChannel:
 			imucounter++
 			if imucounter == fc.imuDataPerSecond {
@@ -81,11 +87,6 @@ func (fc *flightControl) Start() {
 				esccounter = 0
 			}
 			escThrottleControlChannel <- map[uint8]float32{0: throttle, 1: throttle, 2: throttle, 3: throttle}
-			next := throttle + dThrottle
-			if next < 5 || next > 15 {
-				dThrottle = -dThrottle
-			}
-			throttle += dThrottle
 		default:
 			utils.Idle()
 		}
@@ -122,11 +123,12 @@ func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations
 func newCommandChannel(r radio) <-chan models.FlightData {
 	radioChannel := make(chan models.FlightData, 10)
 	go func(r radio, c chan models.FlightData) {
-		ticker := time.NewTicker(time.Second / 40)
-		for range ticker.C {
+		ticker := utils.NewTicker(40)
+		for range ticker {
 			if d, isOk := r.ReceiveFlightData(); isOk {
 				c <- d
 			}
+			utils.Idle()
 		}
 	}(r, radioChannel)
 	return radioChannel
