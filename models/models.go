@@ -19,15 +19,15 @@ type ImuRotations struct {
 }
 
 type FlightCommands struct {
-	Id               uint32
-	Roll             float32
-	Pitch            float32
-	Yaw              float32
-	Throttle         float32
-	ButtonFrontLeft  bool
-	ButtonFrontRight bool
-	ButtonTopLeft    bool
-	ButtonTopRight   bool
-	ButtonDownLeft   bool
-	ButtonDownRight  bool
+	Id                uint32
+	Roll              float32
+	Pitch             float32
+	Yaw               float32
+	Throttle          float32
+	ButtonFrontLeft   bool
+	ButtonFrontRight  bool
+	ButtonTopLeft     bool
+	ButtonTopRight    bool
+	ButtonBottomLeft  bool
+	ButtonBottomRight bool
 }

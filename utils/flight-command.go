@@ -14,35 +14,39 @@ func DeserializeFlightCommand(data []byte) models.FlightCommands {
 
 const RADIO_PAYLOAD_SIZE int = 32
 
-// func FlightStatusToBytes(flightCommands models.FlightCommands) []byte {
-// 	isRemote := BoolToShiftedByte(flightCommands.IsRemoteControl, 0)
-// 	isDrone := BoolToShiftedByte(flightCommands.IsDrone, 1)
-// 	isMotorsEngaged := BoolToShiftedByte(flightCommands.IsMotorsEngaged, 2)
-// 	return []byte{
-// 		isRemote | isDrone | isMotorsEngaged,
-// 		0,
-// 	}
-// }
+func flightCommandsToByteArray(flightCommands models.FlightCommands) []byte {
+	payload := append([]byte{}, UInt32ToBytes(flightCommands.Id)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Roll)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Yaw)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Throttle)...)
+	bottons := BoolArrayToByte([8]bool{
+		flightCommands.ButtonFrontLeft,
+		flightCommands.ButtonFrontRight,
+		flightCommands.ButtonTopLeft,
+		flightCommands.ButtonTopRight,
+		flightCommands.ButtonBottomLeft,
+		flightCommands.ButtonBottomRight,
+		false,
+		false,
+	})
+	payload = append(payload, ([]byte{bottons, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})...)
+	return payload[0:32]
+}
 
-// func flightDataToPayload(flightCommands models.FlightCommands) []byte {
-// 	payload := append([]byte{}, UInt32ToBytes(flightCommands.Id)...)
-// 	payload = append(payload, Float32ToBytes(flightCommands.Roll)...)
-// 	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
-// 	payload = append(payload, Float32ToBytes(flightCommands.Yaw)...)
-// 	payload = append(payload, Float32ToBytes(flightCommands.Throttle)...)
-// 	payload = append(payload, Float32ToBytes(flightCommands.Altitude)...)
-// 	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0})...)
-// 	payload = append(payload, FlightStatusToBytes(flightCommands)...)
-// 	return payload
-// }
-
-// func payloadToFlightData(payload []byte) models.FlightCommands {
-// 	return models.FlightCommands{
-// 		Id:       UInt32fromBytes(payload[0:4]),
-// 		Roll:     Float32fromBytes(payload[4:8]),
-// 		Pitch:    Float32fromBytes(payload[8:12]),
-// 		Yaw:      Float32fromBytes(payload[12:16]),
-// 		Throttle: Float32fromBytes(payload[16:20]),
-// 		Altitude: Float32fromBytes(payload[20:24]),
-// 	}
-// }
+func flightCommandsFromByteArray(payload []byte) models.FlightCommands {
+	buttons := BoolArrayFromByte(payload[20:21][0])
+	return models.FlightCommands{
+		Id:                UInt32FromBytes(payload[0:4]),
+		Roll:              Float32FromBytes(payload[4:8]),
+		Pitch:             Float32FromBytes(payload[8:12]),
+		Yaw:               Float32FromBytes(payload[12:16]),
+		Throttle:          Float32FromBytes(payload[16:20]),
+		ButtonFrontLeft:   buttons[0],
+		ButtonFrontRight:  buttons[1],
+		ButtonTopLeft:     buttons[2],
+		ButtonTopRight:    buttons[3],
+		ButtonBottomLeft:  buttons[4],
+		ButtonBottomRight: buttons[5],
+	}
+}
