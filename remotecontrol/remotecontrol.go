@@ -15,11 +15,11 @@ type radio interface {
 }
 
 type button interface {
-	Read() models.ButtonData
+	Read() bool
 }
 
 type joystick interface {
-	Read() models.JoystickData
+	Read() float32
 }
 
 type remoteControl struct {
@@ -49,10 +49,10 @@ func (rc *remoteControl) Start() {
 			rc.radio.TransmitterOn()
 			rc.radio.TransmitFlightData(models.FlightCommands{
 				Id:              id,
-				Roll:            rc.data.Roll.Value,
-				Pitch:           rc.data.Pitch.Value,
-				Yaw:             rc.data.Yaw.Value,
-				Throttle:        rc.data.Throttle.Value,
+				Roll:            rc.data.Roll,
+				Pitch:           rc.data.Pitch,
+				Yaw:             rc.data.Yaw,
+				Throttle:        rc.data.Throttle,
 				Altitude:        0,
 				IsRemoteControl: true,
 				IsDrone:         false,

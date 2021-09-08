@@ -30,21 +30,11 @@ type FlightCommands struct {
 	IsMotorsEngaged bool
 }
 
-type JoystickData struct {
-	Value     float32
-	IsChanged bool
-}
-
-type ButtonData struct {
-	Value     bool
-	IsChanged bool
-}
-
 type RemoteControlData struct {
 	Id              uint32
-	Roll            JoystickData
-	Pitch           JoystickData
-	Yaw             JoystickData
-	Throttle        JoystickData
-	ButtonFrontLeft ButtonData
+	Roll            float32
+	Pitch           float32
+	Yaw             float32
+	Throttle        float32
+	ButtonFrontLeft bool
 }
