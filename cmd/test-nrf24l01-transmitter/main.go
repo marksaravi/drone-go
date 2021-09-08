@@ -26,10 +26,9 @@ func main() {
 			Pitch:    -34.53,
 			Yaw:      0,
 			Throttle: 13.45,
-			Altitude: altitude,
 		}
 		id++
-		err := radio.TransmitFlightData(flightCommands)
+		err := radio.Transmit(flightCommands)
 		if err != nil {
 			fmt.Println(err)
 		}

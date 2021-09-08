@@ -17,7 +17,7 @@ func main() {
 	start := time.Now()
 	var flightCommands models.FlightCommands
 	for {
-		fd, ia := radio.ReceiveFlightData()
+		fd, ia := radio.Receive()
 		if ia {
 			flightCommands = fd
 			numReceive++

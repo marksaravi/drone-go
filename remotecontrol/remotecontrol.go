@@ -9,9 +9,9 @@ import (
 
 type radio interface {
 	ReceiverOn()
-	ReceiveFlightData() (models.FlightCommands, bool)
+	Receive() (models.FlightCommands, bool)
 	TransmitterOn()
-	TransmitFlightData(models.FlightCommands) error
+	Transmit(models.FlightCommands) error
 }
 
 type button interface {
@@ -29,7 +29,7 @@ type remoteControl struct {
 	yaw          joystick
 	throttle     joystick
 	btnFrontLeft button
-	data         models.RemoteControlData
+	data         models.FlightCommands
 }
 
 func (rc *remoteControl) Start() {
@@ -47,16 +47,12 @@ func (rc *remoteControl) Start() {
 		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
-			rc.radio.TransmitFlightData(models.FlightCommands{
-				Id:              id,
-				Roll:            rc.data.Roll,
-				Pitch:           rc.data.Pitch,
-				Yaw:             rc.data.Yaw,
-				Throttle:        rc.data.Throttle,
-				Altitude:        0,
-				IsRemoteControl: true,
-				IsDrone:         false,
-				IsMotorsEngaged: false,
+			rc.radio.Transmit(models.FlightCommands{
+				Id:       id,
+				Roll:     rc.data.Roll,
+				Pitch:    rc.data.Pitch,
+				Yaw:      rc.data.Yaw,
+				Throttle: rc.data.Throttle,
 			})
 			rc.radio.ReceiverOn()
 			id++
@@ -74,7 +70,7 @@ func createAckReceiver(receiver radio) <-chan models.FlightCommands {
 	acknowlegChannel := make(chan models.FlightCommands)
 	go func(receiver radio, ackChannell chan models.FlightCommands) {
 		for {
-			ack, isavailable := receiver.ReceiveFlightData()
+			ack, isavailable := receiver.Receive()
 			if isavailable {
 				ackChannell <- ack
 			}

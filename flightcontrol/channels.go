@@ -61,7 +61,7 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 				log.Printf("stoping command channel\n")
 				return
 			case <-ticker:
-				if d, isOk := r.ReceiveFlightData(); isOk {
+				if d, isOk := r.Receive(); isOk {
 					c <- d
 				}
 			default:
@@ -74,6 +74,6 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 
 // func acknowledge(fd models.FlightCommands, radio radio) {
 // 	radio.TransmitterOn()
-// 	radio.TransmitFlightData(fd)
+// 	radio.Transmit(fd)
 // 	radio.ReceiverOn()
 // }

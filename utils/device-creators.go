@@ -102,9 +102,9 @@ func NewESC() interface {
 
 func NewRadio() interface {
 	ReceiverOn()
-	ReceiveFlightData() (models.FlightCommands, bool)
+	Receive() ([]byte, bool)
 	TransmitterOn()
-	TransmitFlightData(models.FlightCommands) error
+	Transmit([]byte) error
 } {
 	flightControlConfig := config.ReadFlightControlConfig()
 	radioConfig := flightControlConfig.Configs.Radio
