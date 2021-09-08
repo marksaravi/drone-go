@@ -67,6 +67,7 @@ func (fc *flightControl) Start() {
 	time.Sleep(3 * time.Second)
 	var throttle float32 = 0
 	var running bool = true
+	var rotations models.ImuRotations
 	for running {
 		select {
 		case fd := <-commandChannel:
@@ -74,7 +75,8 @@ func (fc *flightControl) Start() {
 			if fd.IsMotorsEngaged {
 				running = false
 			}
-		case <-imuDataChannel:
+		case rotations = <-imuDataChannel:
+			fc.udpLogger.Send(rotations)
 		case <-escRefresher:
 			escThrottleControlChannel <- map[uint8]float32{
 				0: throttle,
