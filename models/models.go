@@ -41,6 +41,7 @@ type ButtonData struct {
 }
 
 type RemoteControlData struct {
+	Id              uint32
 	Roll            JoystickData
 	Pitch           JoystickData
 	Yaw             JoystickData

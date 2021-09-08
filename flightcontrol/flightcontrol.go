@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
+	pidcontrol "github.com/MarkSaravi/drone-go/pid-control"
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
@@ -59,40 +60,24 @@ func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc
 }
 
 func (fc *flightControl) Start() {
-	fmt.Printf("IMU data/s: %d, ESC refresh/s: %d\n", fc.imuDataPerSecond, fc.escUpdatePerSecond)
-	fc.radio.ReceiverOn()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
+	fc.warmUp(cancel)
 	imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
 	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, escTimeCorrectionPercent, true)
 	commandChannel := newCommandChannel(ctx, &wg, fc.radio)
-	fc.esc.On()
-	defer fc.esc.Off()
-	time.Sleep(3 * time.Second)
-	go func() {
-		fmt.Scanln()
-		cancel()
-	}()
-	var throttle float32 = 0
+	pidControl := pidcontrol.NewPIDControl()
 	var running bool = true
-	var rotations models.ImuRotations
 	for running {
 		select {
-		case fd := <-commandChannel:
-			throttle = fd.Throttle / 5 * 10
-			if fd.IsMotorsEngaged {
-				running = false
-			}
-		case rotations = <-imuDataChannel:
+		case fc := <-commandChannel:
+			pidControl.ApplyFlightCommands(fc)
+		case rotations := <-imuDataChannel:
+			pidControl.ApplyRotations(rotations)
 			fc.udpLogger.Send(rotations)
 		case <-escRefresher:
-			escThrottleControlChannel <- map[uint8]float32{
-				0: throttle,
-				1: throttle,
-				2: throttle,
-				3: throttle,
-			}
+			escThrottleControlChannel <- pidControl.Throttles()
 		case <-ctx.Done():
 			running = false
 		default:
@@ -101,4 +86,16 @@ func (fc *flightControl) Start() {
 	}
 	wg.Wait()
 	log.Printf("stopping flightcontrol\n")
+}
+
+func (fc *flightControl) warmUp(cancel context.CancelFunc) {
+	fmt.Printf("IMU data/s: %d, ESC refresh/s: %d\n", fc.imuDataPerSecond, fc.escUpdatePerSecond)
+	fc.radio.ReceiverOn()
+	fc.esc.On()
+	time.Sleep(3 * time.Second)
+	go func() {
+		fmt.Scanln()
+		fc.esc.Off()
+		cancel()
+	}()
 }
