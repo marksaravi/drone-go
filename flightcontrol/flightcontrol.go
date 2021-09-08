@@ -2,6 +2,7 @@ package flightcontrol
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
 	"github.com/MarkSaravi/drone-go/utils"
@@ -57,7 +58,7 @@ func (fc *flightControl) Start() {
 	commandChannel := newCommandChannel(fc.radio)
 	fc.esc.On()
 	defer fc.esc.Off()
-	// time.Sleep(4 * time.Second)
+	time.Sleep(3 * time.Second)
 	var throttle float32 = 0
 	var running bool = true
 	for running {

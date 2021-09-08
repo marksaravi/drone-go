@@ -8,7 +8,7 @@ import (
 func NewTicker(name string, tickPerSecond int, profile bool) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
-		acceptableProfileDur := time.Second + time.Second/10
+		acceptableProfileDur := time.Millisecond * 1100
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDurStart := time.Now()
 		tickProfilerStart := tickDurStart
@@ -24,7 +24,7 @@ func NewTicker(name string, tickPerSecond int, profile bool) <-chan int64 {
 					if profile {
 						profileDur := now.Sub(tickProfilerStart)
 						if profileDur > acceptableProfileDur {
-							fmt.Printf("%s: %v\n", name, time.Since(tickProfilerStart))
+							fmt.Printf("%s: %v, time: %v\n", name, time.Since(tickProfilerStart), now)
 						}
 						tickProfilerStart = now
 					}
