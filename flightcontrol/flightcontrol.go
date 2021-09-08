@@ -54,7 +54,7 @@ func (fc *flightControl) Start() {
 	fc.radio.ReceiverOn()
 	imuDataChannel := newImuDataChannel(fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(fc.esc)
-	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, true)
+	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, true, 5)
 	commandChannel := newCommandChannel(fc.radio)
 	fc.esc.On()
 	defer fc.esc.Off()
@@ -101,7 +101,7 @@ func newEscThrottleControlChannel(escdevice esc) chan map[uint8]float32 {
 func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations {
 	imuDataChannel := make(chan models.ImuRotations, 10)
 	go func(imudev imu, ch chan models.ImuRotations) {
-		ticker := utils.NewTicker("imu", dataPerSecond, true)
+		ticker := utils.NewTicker("imu", dataPerSecond, true, 10)
 		for range ticker {
 			ch <- imudev.ReadRotations()
 		}
@@ -112,7 +112,7 @@ func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations
 func newCommandChannel(r radio) <-chan models.FlightData {
 	radioChannel := make(chan models.FlightData, 10)
 	go func(r radio, c chan models.FlightData) {
-		ticker := utils.NewTicker("command", 40, true)
+		ticker := utils.NewTicker("command", 40, true, 5)
 		for range ticker {
 			if d, isOk := r.ReceiveFlightData(); isOk {
 				c <- d

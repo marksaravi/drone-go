@@ -5,10 +5,11 @@ import (
 	"time"
 )
 
-func NewTicker(name string, tickPerSecond int, profile bool) <-chan int64 {
+func NewTicker(name string, tickPerSecond int, profile bool, tolerancePercent int) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
-		acceptableProfileDur := time.Millisecond * 1100
+		acceptableProfileDur := time.Second + time.Second/100*time.Duration(tolerancePercent)
+		fmt.Printf("tolerance %s: %v\n", name, acceptableProfileDur)
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDurStart := time.Now()
 		tickProfilerStart := tickDurStart
