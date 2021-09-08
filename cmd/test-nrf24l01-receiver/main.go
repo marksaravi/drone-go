@@ -15,16 +15,16 @@ func main() {
 	radio.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()
-	var flightdata models.FlightData
+	var flightCommands models.FlightCommands
 	for {
 		fd, ia := radio.ReceiveFlightData()
 		if ia {
-			flightdata = fd
+			flightCommands = fd
 			numReceive++
 		}
 		if time.Since(start) >= time.Second {
 			start = time.Now()
-			fmt.Println("received ", numReceive, " (", flightdata, ")")
+			fmt.Println("received ", numReceive, " (", flightCommands, ")")
 		}
 	}
 }
