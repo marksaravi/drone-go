@@ -1,20 +1,20 @@
 package utils
 
 import (
-	"fmt"
+	"log"
 	"time"
 )
 
-func NewTicker(name string, tickPerSecond int, profile bool, tolerancePercent float32) <-chan int64 {
+func NewTicker(name string, tickPerSecond int, tolerancePercent float32, enableProfiling bool) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
 		acceptableProfileDurMax := time.Second + time.Second/100*time.Duration(tolerancePercent)
 		acceptableProfileDurMin := time.Second - time.Second/100*time.Duration(tolerancePercent)
-		fmt.Printf("tolerance %s: %v\n", name, acceptableProfileDurMax)
+		log.Printf("tolerance %s: %v\n", name, acceptableProfileDurMax)
 		tickDur := time.Second / time.Duration(tickPerSecond)
-		fmt.Printf("expected Tick Duration for %s: %v\n", name, tickDur)
+		log.Printf("expected Tick Duration for %s: %v\n", name, tickDur)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
-		fmt.Printf("Compensated Tick Duration for %s: %v\n", name, tickDur)
+		log.Printf("Compensated Tick Duration for %s: %v\n", name, tickDur)
 		tickDurStart := time.Now()
 		tickProfilerStart := tickDurStart
 		tickProfilerCounter := 0
@@ -23,13 +23,13 @@ func NewTicker(name string, tickPerSecond int, profile bool, tolerancePercent fl
 			if now.Sub(tickDurStart) >= tickDur {
 				tickDurStart = now
 				t <- now.UnixNano()
-				tickProfilerCounter++
-				if tickProfilerCounter == tickPerSecond {
-					tickProfilerCounter = 0
-					if profile {
+				if enableProfiling {
+					tickProfilerCounter++
+					if tickProfilerCounter == tickPerSecond {
+						tickProfilerCounter = 0
 						profileDur := now.Sub(tickProfilerStart)
 						if profileDur > acceptableProfileDurMax || profileDur < acceptableProfileDurMin {
-							fmt.Printf("%s: %v, time: %v\n", name, time.Since(tickProfilerStart), now)
+							log.Printf("%s: %v\n", name, time.Since(tickProfilerStart))
 						}
 						tickProfilerStart = now
 					}
