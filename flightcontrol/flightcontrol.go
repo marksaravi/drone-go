@@ -8,6 +8,12 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
+const (
+	commandTimeCorrectionPercent float32 = 2.5
+	escTimeCorrectionPercent     float32 = 3.5
+	imuTimeCorrectionPercent     float32 = 8.5
+)
+
 type radio interface {
 	ReceiverOn()
 	ReceiveFlightData() (models.FlightData, bool)
@@ -54,7 +60,7 @@ func (fc *flightControl) Start() {
 	fc.radio.ReceiverOn()
 	imuDataChannel := newImuDataChannel(fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(fc.esc)
-	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, true, 5)
+	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, true, escTimeCorrectionPercent)
 	commandChannel := newCommandChannel(fc.radio)
 	fc.esc.On()
 	defer fc.esc.Off()
@@ -101,7 +107,7 @@ func newEscThrottleControlChannel(escdevice esc) chan map[uint8]float32 {
 func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations {
 	imuDataChannel := make(chan models.ImuRotations, 10)
 	go func(imudev imu, ch chan models.ImuRotations) {
-		ticker := utils.NewTicker("imu", dataPerSecond, true, 10)
+		ticker := utils.NewTicker("imu", dataPerSecond, true, imuTimeCorrectionPercent)
 		for range ticker {
 			ch <- imudev.ReadRotations()
 		}
@@ -112,7 +118,7 @@ func newImuDataChannel(imudev imu, dataPerSecond int) <-chan models.ImuRotations
 func newCommandChannel(r radio) <-chan models.FlightData {
 	radioChannel := make(chan models.FlightData, 10)
 	go func(r radio, c chan models.FlightData) {
-		ticker := utils.NewTicker("command", 40, true, 5)
+		ticker := utils.NewTicker("command", 40, true, commandTimeCorrectionPercent)
 		for range ticker {
 			if d, isOk := r.ReceiveFlightData(); isOk {
 				c <- d
