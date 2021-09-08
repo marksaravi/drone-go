@@ -62,7 +62,7 @@ func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
 
 func (d *pca9685Dev) writeByte(offset uint8, b uint8) error {
 	write := []byte{offset, b}
-	err := d.connection.Tx(write, nil)
+	_, err := d.connection.Write(write)
 	return err
 }
 
@@ -75,23 +75,25 @@ func getOffTime(frequency float32, pulseWidth float32) (on uint16, off uint16) {
 
 func (d *pca9685Dev) setPWM(channel int, pulseWidth float32) (err error) {
 	on, off := getOffTime(d.frequency, pulseWidth)
-
-	if err := d.writeByte(byte(PCA9685LED0OnL+4*channel), byte(on)&0xFF); err != nil {
-		return err
+	addresses := []byte{
+		byte(PCA9685LED0OnL + 4*channel),
+		byte(PCA9685LED0OnH + 4*channel),
+		byte(PCA9685LED0OffL + 4*channel),
+		byte(PCA9685LED0OffH + 4*channel),
+	}
+	values := []byte{
+		byte(on) & 0xFF,
+		byte(on >> 8),
+		byte(off) & 0xFF,
+		byte(off >> 8),
 	}
 
-	if err := d.writeByte(byte(PCA9685LED0OnH+4*channel), byte(on>>8)); err != nil {
-		return err
+	for i := 0; i < 4; i++ {
+		w := []byte{addresses[i], values[i]}
+		if err := d.connection.Tx(w, nil); err != nil {
+			return err
+		}
 	}
-
-	if err := d.writeByte(byte(PCA9685LED0OffL+4*channel), byte(off)&0xFF); err != nil {
-		return err
-	}
-
-	if err := d.writeByte(byte(PCA9685LED0OffH+4*channel), byte(off>>8)); err != nil {
-		return err
-	}
-
 	return
 }
 

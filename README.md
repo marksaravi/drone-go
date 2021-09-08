@@ -53,5 +53,14 @@ mkdir ~/go/pkg/
 mkdir ~/go/bin/
 ```
 ## Enabling SPI1 in Raspberry Pi
-Add `dtoverlay=spi1-3cs` to ***/boot/config.txt***  
-Use GPIO16 as CS. This is SPI1.CS2
+1. Open `/boot/config.txt` with command `sudo nano /boot/config.txt` in command terminal
+2. Add `dtoverlay=spi1-3cs` to */boot/config.txt*
+3. Use `ctrl+o` to save and `ctrl+x` to exit *nano* editor.
+4. Use GPIO16 as CS. This is SPI1.CS2
+
+## Setting maximum speed for I2C in Raspberry Pi
+1. Enable **I2C** by running *raspi-config*. To run *raspi-config* use `sudo raspi-config` command in terminal
+2. Open `/boot/config.txt` with command `sudo nano /boot/config.txt` in command terminal
+3. Find the line containing `dtparam=i2c_arm=on`.
+4. Change it to `dtparam=i2c_arm=on,i2c_arm_baudrate=400000`
+5. Use `ctrl+o` to save and `ctrl+x` to exit *nano* editor.
