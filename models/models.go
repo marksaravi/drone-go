@@ -18,7 +18,7 @@ type ImuRotations struct {
 	ReadInterval  int64
 }
 
-type FlightData struct {
+type FlightCommands struct {
 	Id              uint32
 	Roll            float32
 	Pitch           float32

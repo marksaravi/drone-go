@@ -20,7 +20,7 @@ func main() {
 	start := time.Now()
 	var id uint32 = 0
 	for range time.Tick(time.Millisecond * 20) {
-		flightdata := models.FlightData{
+		flightCommands := models.FlightCommands{
 			Id:       id,
 			Roll:     roll,
 			Pitch:    -34.53,
@@ -29,7 +29,7 @@ func main() {
 			Altitude: altitude,
 		}
 		id++
-		err := radio.TransmitFlightData(flightdata)
+		err := radio.TransmitFlightData(flightCommands)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -39,7 +39,7 @@ func main() {
 		numSend++
 		if time.Since(start) >= time.Second {
 			start = time.Now()
-			fmt.Println("send ", numSend, " (", flightdata, ")")
+			fmt.Println("send ", numSend, " (", flightCommands, ")")
 		}
 	}
 }

@@ -19,9 +19,9 @@ const (
 
 type radio interface {
 	ReceiverOn()
-	ReceiveFlightData() (models.FlightData, bool)
+	ReceiveFlightData() (models.FlightCommands, bool)
 	TransmitterOn()
-	TransmitFlightData(models.FlightData) error
+	TransmitFlightData(models.FlightCommands) error
 }
 
 type imu interface {

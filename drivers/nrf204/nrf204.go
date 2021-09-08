@@ -204,7 +204,7 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReceiveFlightData() (payload models.FlightData, isAvailable bool) {
+func (radio *nrf204l01) ReceiveFlightData() (payload models.FlightCommands, isAvailable bool) {
 	isAvailable = false
 	if !radio.isDataAvailable() {
 		return
@@ -232,11 +232,11 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) TransmitFlightData(flightData models.FlightData) error {
+func (radio *nrf204l01) TransmitFlightData(flightCommands models.FlightCommands) error {
 	if radio.isReceiver {
 		return errors.New("not in transmit mode")
 	}
-	payload := flightDataToPayload(flightData)
+	payload := flightDataToPayload(flightCommands)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
 	if len(payload) < int(PAYLOAD_SIZE) {
@@ -344,30 +344,30 @@ func BoolToShiftedByte(b bool, bitPosition int) byte {
 	return r << byte(bitPosition)
 }
 
-func FlightStatusToBytes(flightData models.FlightData) []byte {
-	isRemote := BoolToShiftedByte(flightData.IsRemoteControl, 0)
-	isDrone := BoolToShiftedByte(flightData.IsDrone, 1)
-	isMotorsEngaged := BoolToShiftedByte(flightData.IsMotorsEngaged, 2)
+func FlightStatusToBytes(flightCommands models.FlightCommands) []byte {
+	isRemote := BoolToShiftedByte(flightCommands.IsRemoteControl, 0)
+	isDrone := BoolToShiftedByte(flightCommands.IsDrone, 1)
+	isMotorsEngaged := BoolToShiftedByte(flightCommands.IsMotorsEngaged, 2)
 	return []byte{
 		isRemote | isDrone | isMotorsEngaged,
 		0,
 	}
 }
 
-func flightDataToPayload(flightData models.FlightData) []byte {
-	payload := append([]byte{}, UInt32ToBytes(flightData.Id)...)
-	payload = append(payload, Float32ToBytes(flightData.Roll)...)
-	payload = append(payload, Float32ToBytes(flightData.Pitch)...)
-	payload = append(payload, Float32ToBytes(flightData.Yaw)...)
-	payload = append(payload, Float32ToBytes(flightData.Throttle)...)
-	payload = append(payload, Float32ToBytes(flightData.Altitude)...)
+func flightDataToPayload(flightCommands models.FlightCommands) []byte {
+	payload := append([]byte{}, UInt32ToBytes(flightCommands.Id)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Roll)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Yaw)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Throttle)...)
+	payload = append(payload, Float32ToBytes(flightCommands.Altitude)...)
 	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0})...)
-	payload = append(payload, FlightStatusToBytes(flightData)...)
+	payload = append(payload, FlightStatusToBytes(flightCommands)...)
 	return payload
 }
 
-func payloadToFlightData(payload []byte) models.FlightData {
-	return models.FlightData{
+func payloadToFlightData(payload []byte) models.FlightCommands {
+	return models.FlightCommands{
 		Id:       UInt32fromBytes(payload[0:4]),
 		Roll:     Float32fromBytes(payload[4:8]),
 		Pitch:    Float32fromBytes(payload[8:12]),

@@ -9,9 +9,9 @@ import (
 
 type radio interface {
 	ReceiverOn()
-	ReceiveFlightData() (models.FlightData, bool)
+	ReceiveFlightData() (models.FlightCommands, bool)
 	TransmitterOn()
-	TransmitFlightData(models.FlightData) error
+	TransmitFlightData(models.FlightCommands) error
 }
 
 type button interface {
@@ -39,7 +39,7 @@ func (rc *remoteControl) Start() {
 	sendTimer := time.NewTicker(time.Second / 25)
 	var id uint32 = 0
 	lastAcknowleged := time.Now()
-	var flightData models.FlightData = models.FlightData{
+	var flightCommands models.FlightCommands = models.FlightCommands{
 		Id: 0,
 	}
 	for {
@@ -47,7 +47,7 @@ func (rc *remoteControl) Start() {
 		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
-			rc.radio.TransmitFlightData(models.FlightData{
+			rc.radio.TransmitFlightData(models.FlightCommands{
 				Id:              id,
 				Roll:            rc.data.Roll.Value,
 				Pitch:           rc.data.Pitch.Value,
@@ -60,19 +60,19 @@ func (rc *remoteControl) Start() {
 			})
 			rc.radio.ReceiverOn()
 			id++
-		case flightData = <-acknowleg:
+		case flightCommands = <-acknowleg:
 			lastAcknowleged = time.Now()
 		default:
 			if time.Since(lastAcknowleged) > time.Millisecond*200 {
-				fmt.Println("Connection Error ", flightData.Id)
+				fmt.Println("Connection Error ", flightCommands.Id)
 			}
 		}
 	}
 }
 
-func createAckReceiver(receiver radio) <-chan models.FlightData {
-	acknowlegChannel := make(chan models.FlightData)
-	go func(receiver radio, ackChannell chan models.FlightData) {
+func createAckReceiver(receiver radio) <-chan models.FlightCommands {
+	acknowlegChannel := make(chan models.FlightCommands)
+	go func(receiver radio, ackChannell chan models.FlightCommands) {
 		for {
 			ack, isavailable := receiver.ReceiveFlightData()
 			if isavailable {

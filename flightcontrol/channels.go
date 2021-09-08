@@ -49,10 +49,10 @@ func newImuDataChannel(ctx context.Context, wg *sync.WaitGroup, imudev imu, data
 	return imuDataChannel
 }
 
-func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan models.FlightData {
+func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan models.FlightCommands {
 	wg.Add(1)
-	radioChannel := make(chan models.FlightData, 10)
-	go func(r radio, c chan models.FlightData) {
+	radioChannel := make(chan models.FlightCommands, 10)
+	go func(r radio, c chan models.FlightCommands) {
 		defer wg.Done()
 		ticker := utils.NewTicker("command", 40, commandTimeCorrectionPercent, true)
 		for {
@@ -72,7 +72,7 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 	return radioChannel
 }
 
-// func acknowledge(fd models.FlightData, radio radio) {
+// func acknowledge(fd models.FlightCommands, radio radio) {
 // 	radio.TransmitterOn()
 // 	radio.TransmitFlightData(fd)
 // 	radio.ReceiverOn()
