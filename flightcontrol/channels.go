@@ -62,7 +62,7 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 				return
 			case <-ticker:
 				if d, isOk := r.Receive(); isOk {
-					c <- d
+					c <- utils.DeserializeFlightCommand(d)
 				}
 			default:
 				utils.Idle()

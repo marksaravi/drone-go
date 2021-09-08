@@ -28,7 +28,7 @@ func main() {
 			Throttle: 13.45,
 		}
 		id++
-		err := radio.Transmit(flightCommands)
+		err := radio.Transmit(utils.SerializeFlightCommand(flightCommands))
 		if err != nil {
 			fmt.Println(err)
 		}

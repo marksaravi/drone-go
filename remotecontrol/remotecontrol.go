@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type radio interface {
 	ReceiverOn()
-	Receive() (models.FlightCommands, bool)
+	Receive() ([]byte, bool)
 	TransmitterOn()
-	Transmit(models.FlightCommands) error
+	Transmit([]byte) error
 }
 
 type button interface {
@@ -47,13 +48,14 @@ func (rc *remoteControl) Start() {
 		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
-			rc.radio.Transmit(models.FlightCommands{
-				Id:       id,
-				Roll:     rc.data.Roll,
-				Pitch:    rc.data.Pitch,
-				Yaw:      rc.data.Yaw,
-				Throttle: rc.data.Throttle,
-			})
+			rc.radio.Transmit(
+				utils.SerializeFlightCommand(models.FlightCommands{
+					Id:       id,
+					Roll:     rc.data.Roll,
+					Pitch:    rc.data.Pitch,
+					Yaw:      rc.data.Yaw,
+					Throttle: rc.data.Throttle,
+				}))
 			rc.radio.ReceiverOn()
 			id++
 		case flightCommands = <-acknowleg:
@@ -72,7 +74,7 @@ func createAckReceiver(receiver radio) <-chan models.FlightCommands {
 		for {
 			ack, isavailable := receiver.Receive()
 			if isavailable {
-				ackChannell <- ack
+				ackChannell <- utils.DeserializeFlightCommand(ack)
 			}
 
 		}
@@ -81,7 +83,7 @@ func createAckReceiver(receiver radio) <-chan models.FlightCommands {
 }
 
 func (rc *remoteControl) read() {
-	rc.data = models.RemoteControlData{
+	rc.data = models.FlightCommands{
 		Roll:            rc.roll.Read(),
 		Pitch:           rc.pitch.Read(),
 		Yaw:             rc.yaw.Read(),

@@ -20,9 +20,9 @@ const (
 
 type radio interface {
 	ReceiverOn()
-	Receive() (models.FlightCommands, bool)
+	Receive() ([]byte, bool)
 	TransmitterOn()
-	Transmit(models.FlightCommands) error
+	Transmit([]byte) error
 }
 
 type imu interface {
