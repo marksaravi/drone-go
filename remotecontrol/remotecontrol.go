@@ -94,16 +94,6 @@ func (rc *remoteControl) read() {
 	}
 }
 
-var lastPrint time.Time = time.Now()
-
-func (rc *remoteControl) showData(id uint32) {
-	if time.Since(lastPrint) < time.Second/4 {
-		return
-	}
-	lastPrint = time.Now()
-	fmt.Println(id, rc.data)
-}
-
 func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {
 	return &remoteControl{
 		radio:        radio,
