@@ -1,3 +1,4 @@
+// Drone is the main application to run the FlightControl.
 package main
 
 import (
