@@ -5,21 +5,22 @@ import (
 	"time"
 
 	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type radio interface {
 	ReceiverOn()
-	ReceiveFlightData() (models.FlightCommands, bool)
+	Receive() ([]byte, bool)
 	TransmitterOn()
-	TransmitFlightData(models.FlightCommands) error
+	Transmit([]byte) error
 }
 
 type button interface {
-	Read() models.ButtonData
+	Read() bool
 }
 
 type joystick interface {
-	Read() models.JoystickData
+	Read() float32
 }
 
 type remoteControl struct {
@@ -29,7 +30,7 @@ type remoteControl struct {
 	yaw          joystick
 	throttle     joystick
 	btnFrontLeft button
-	data         models.RemoteControlData
+	data         models.FlightCommands
 }
 
 func (rc *remoteControl) Start() {
@@ -47,23 +48,38 @@ func (rc *remoteControl) Start() {
 		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
-			rc.radio.TransmitFlightData(models.FlightCommands{
-				Id:              id,
-				Roll:            rc.data.Roll.Value,
-				Pitch:           rc.data.Pitch.Value,
-				Yaw:             rc.data.Yaw.Value,
-				Throttle:        rc.data.Throttle.Value,
-				Altitude:        0,
-				IsRemoteControl: true,
-				IsDrone:         false,
-				IsMotorsEngaged: false,
-			})
+			fc := models.FlightCommands{
+				Id:                id,
+				Roll:              rc.data.Roll,
+				Pitch:             rc.data.Pitch,
+				Yaw:               rc.data.Yaw,
+				Throttle:          rc.data.Throttle,
+				ButtonFrontLeft:   rc.data.ButtonFrontLeft,
+				ButtonFrontRight:  rc.data.ButtonFrontRight,
+				ButtonTopLeft:     rc.data.ButtonTopLeft,
+				ButtonTopRight:    rc.data.ButtonTopRight,
+				ButtonBottomLeft:  rc.data.ButtonBottomLeft,
+				ButtonBottomRight: rc.data.ButtonBottomRight,
+			}
+			fmt.Printf(
+				"%0.2f, %0.2f, %0.2f, %0.2f, %v, %v, %v, %v, %v, %v\n",
+				fc.Roll,
+				fc.Pitch,
+				fc.Yaw, fc.Throttle,
+				fc.ButtonFrontLeft,
+				fc.ButtonFrontRight,
+				fc.ButtonTopLeft,
+				fc.ButtonTopRight, fc.ButtonBottomLeft,
+				fc.ButtonBottomRight,
+			)
+			rc.radio.Transmit(
+				utils.SerializeFlightCommand(fc))
 			rc.radio.ReceiverOn()
 			id++
 		case flightCommands = <-acknowleg:
 			lastAcknowleged = time.Now()
 		default:
-			if time.Since(lastAcknowleged) > time.Millisecond*200 {
+			if time.Since(lastAcknowleged) > time.Millisecond*1000000 {
 				fmt.Println("Connection Error ", flightCommands.Id)
 			}
 		}
@@ -74,9 +90,9 @@ func createAckReceiver(receiver radio) <-chan models.FlightCommands {
 	acknowlegChannel := make(chan models.FlightCommands)
 	go func(receiver radio, ackChannell chan models.FlightCommands) {
 		for {
-			ack, isavailable := receiver.ReceiveFlightData()
+			ack, isavailable := receiver.Receive()
 			if isavailable {
-				ackChannell <- ack
+				ackChannell <- utils.DeserializeFlightCommand(ack)
 			}
 
 		}
@@ -85,23 +101,13 @@ func createAckReceiver(receiver radio) <-chan models.FlightCommands {
 }
 
 func (rc *remoteControl) read() {
-	rc.data = models.RemoteControlData{
+	rc.data = models.FlightCommands{
 		Roll:            rc.roll.Read(),
 		Pitch:           rc.pitch.Read(),
 		Yaw:             rc.yaw.Read(),
 		Throttle:        rc.throttle.Read(),
 		ButtonFrontLeft: rc.btnFrontLeft.Read(),
 	}
-}
-
-var lastPrint time.Time = time.Now()
-
-func (rc *remoteControl) showData(id uint32) {
-	if time.Since(lastPrint) < time.Second/4 {
-		return
-	}
-	lastPrint = time.Now()
-	fmt.Println(id, rc.data)
 }
 
 func NewRemoteControl(radio radio, roll, pitch, yaw, throttle joystick, btnFrontLeft button) *remoteControl {

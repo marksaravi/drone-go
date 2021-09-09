@@ -2,6 +2,7 @@ package utils
 
 import (
 	"log"
+	"runtime"
 	"time"
 )
 
@@ -41,5 +42,5 @@ func NewTicker(name string, tickPerSecond int, tolerancePercent float32, enableP
 }
 
 func Idle() {
-	time.Sleep(time.Microsecond)
+	runtime.Gosched()
 }

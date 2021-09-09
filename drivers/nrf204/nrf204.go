@@ -1,15 +1,11 @@
 package nrf204
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
-	"math"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -204,19 +200,16 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) ReceiveFlightData() (payload models.FlightCommands, isAvailable bool) {
-	isAvailable = false
+func (radio *nrf204l01) Receive() ([]byte, bool) {
 	if !radio.isDataAvailable() {
-		return
+		return nil, false
 	}
-	binarypayload, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+	payload, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	radio.resetDR()
 	if err != nil {
-		return
+		return nil, false
 	}
-	payload = payloadToFlightData(binarypayload)
-	isAvailable = true
-	return
+	return payload, true
 }
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
@@ -232,11 +225,10 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) TransmitFlightData(flightCommands models.FlightCommands) error {
+func (radio *nrf204l01) Transmit(payload []byte) error {
 	if radio.isReceiver {
 		return errors.New("not in transmit mode")
 	}
-	payload := flightDataToPayload(flightCommands)
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
 	if len(payload) < int(PAYLOAD_SIZE) {
@@ -244,7 +236,7 @@ func (radio *nrf204l01) TransmitFlightData(flightCommands models.FlightCommands)
 	}
 	_, err := writeSPI(W_TX_PAYLOAD, payload, radio.conn)
 	radio.ce.Out(gpio.High)
-	time.Sleep(time.Microsecond * 100)
+	time.Sleep(time.Millisecond)
 	radio.ce.Out(gpio.Low)
 	return err
 }
@@ -342,59 +334,4 @@ func BoolToShiftedByte(b bool, bitPosition int) byte {
 	}
 	var r byte = 1
 	return r << byte(bitPosition)
-}
-
-func FlightStatusToBytes(flightCommands models.FlightCommands) []byte {
-	isRemote := BoolToShiftedByte(flightCommands.IsRemoteControl, 0)
-	isDrone := BoolToShiftedByte(flightCommands.IsDrone, 1)
-	isMotorsEngaged := BoolToShiftedByte(flightCommands.IsMotorsEngaged, 2)
-	return []byte{
-		isRemote | isDrone | isMotorsEngaged,
-		0,
-	}
-}
-
-func flightDataToPayload(flightCommands models.FlightCommands) []byte {
-	payload := append([]byte{}, UInt32ToBytes(flightCommands.Id)...)
-	payload = append(payload, Float32ToBytes(flightCommands.Roll)...)
-	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
-	payload = append(payload, Float32ToBytes(flightCommands.Yaw)...)
-	payload = append(payload, Float32ToBytes(flightCommands.Throttle)...)
-	payload = append(payload, Float32ToBytes(flightCommands.Altitude)...)
-	payload = append(payload, ([]byte{0, 0, 0, 0, 0, 0})...)
-	payload = append(payload, FlightStatusToBytes(flightCommands)...)
-	return payload
-}
-
-func payloadToFlightData(payload []byte) models.FlightCommands {
-	return models.FlightCommands{
-		Id:       UInt32fromBytes(payload[0:4]),
-		Roll:     Float32fromBytes(payload[4:8]),
-		Pitch:    Float32fromBytes(payload[8:12]),
-		Yaw:      Float32fromBytes(payload[12:16]),
-		Throttle: Float32fromBytes(payload[16:20]),
-		Altitude: Float32fromBytes(payload[20:24]),
-	}
-}
-
-func UInt32ToBytes(i uint32) []byte {
-	buf := make([]byte, 4)
-	binary.LittleEndian.PutUint32(buf, i)
-	return buf
-}
-
-func UInt32fromBytes(bytes []byte) uint32 {
-	return binary.LittleEndian.Uint32(bytes)
-}
-
-func Float32ToBytes(f float32) []byte {
-	var buf bytes.Buffer
-	binary.Write(&buf, binary.LittleEndian, f)
-	return buf.Bytes()
-}
-
-func Float32fromBytes(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
-	float := math.Float32frombits(bits)
-	return float
 }

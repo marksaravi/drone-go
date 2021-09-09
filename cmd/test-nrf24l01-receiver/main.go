@@ -17,9 +17,9 @@ func main() {
 	start := time.Now()
 	var flightCommands models.FlightCommands
 	for {
-		fd, ia := radio.ReceiveFlightData()
+		fc, ia := radio.Receive()
 		if ia {
-			flightCommands = fd
+			flightCommands = utils.DeserializeFlightCommand(fc)
 			numReceive++
 		}
 		if time.Since(start) >= time.Second {
