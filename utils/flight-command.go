@@ -4,17 +4,9 @@ import (
 	"github.com/MarkSaravi/drone-go/models"
 )
 
-func SerializeFlightCommand(fc models.FlightCommands) []byte {
-	return []byte{}
-}
-
-func DeserializeFlightCommand(data []byte) models.FlightCommands {
-	return models.FlightCommands{}
-}
-
 const RADIO_PAYLOAD_SIZE int = 32
 
-func flightCommandsToByteArray(flightCommands models.FlightCommands) []byte {
+func SerializeFlightCommand(flightCommands models.FlightCommands) []byte {
 	payload := append([]byte{}, UInt32ToBytes(flightCommands.Id)...)
 	payload = append(payload, Float32ToBytes(flightCommands.Roll)...)
 	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
@@ -34,7 +26,7 @@ func flightCommandsToByteArray(flightCommands models.FlightCommands) []byte {
 	return payload[0:32]
 }
 
-func flightCommandsFromByteArray(payload []byte) models.FlightCommands {
+func DeserializeFlightCommand(payload []byte) models.FlightCommands {
 	buttons := BoolArrayFromByte(payload[20:21][0])
 	return models.FlightCommands{
 		Id:                UInt32FromBytes(payload[0:4]),
