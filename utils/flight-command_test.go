@@ -7,7 +7,7 @@ import (
 )
 
 func TestFlighCommandsToByteArray(t *testing.T) {
-	got := flightCommandsToByteArray(models.FlightCommands{
+	got := SerializeFlightCommand(models.FlightCommands{
 		Id:                133,
 		Roll:              -3.23,
 		Pitch:             4.17,
@@ -27,7 +27,7 @@ func TestFlighCommandsToByteArray(t *testing.T) {
 }
 
 func TestFlighCommandsFromByteArray(t *testing.T) {
-	got := flightCommandsFromByteArray([]byte{133, 0, 0, 0, 82, 184, 78, 192, 164, 112, 133, 64, 123, 20, 174, 190, 0, 0, 48, 64, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+	got := DeserializeFlightCommand([]byte{133, 0, 0, 0, 82, 184, 78, 192, 164, 112, 133, 64, 123, 20, 174, 190, 0, 0, 48, 64, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 	want := models.FlightCommands{
 		Id:                133,
 		Roll:              -3.23,
