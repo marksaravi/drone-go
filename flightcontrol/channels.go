@@ -71,9 +71,3 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 	}(r, radioChannel)
 	return radioChannel
 }
-
-// func acknowledge(fd models.FlightCommands, radio radio) {
-// 	radio.TransmitterOn()
-// 	radio.Transmit(fd)
-// 	radio.ReceiverOn()
-// }

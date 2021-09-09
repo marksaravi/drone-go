@@ -236,7 +236,7 @@ func (radio *nrf204l01) Transmit(payload []byte) error {
 	}
 	_, err := writeSPI(W_TX_PAYLOAD, payload, radio.conn)
 	radio.ce.Out(gpio.High)
-	time.Sleep(time.Microsecond * 100)
+	time.Sleep(time.Millisecond)
 	radio.ce.Out(gpio.Low)
 	return err
 }
