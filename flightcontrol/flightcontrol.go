@@ -72,7 +72,11 @@ func (fc *flightControl) Start() {
 	for running {
 		select {
 		case fc := <-commandChannel:
+			fmt.Println(fc.ButtonFrontLeft, fc.Throttle)
 			pidControl.ApplyFlightCommands(fc)
+			if fc.ButtonFrontLeft {
+				cancel()
+			}
 		case rotations := <-imuDataChannel:
 			pidControl.ApplyRotations(rotations)
 			fc.udpLogger.Send(rotations)
