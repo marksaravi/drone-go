@@ -48,20 +48,38 @@ func (rc *remoteControl) Start() {
 		case <-sendTimer.C:
 			rc.read()
 			rc.radio.TransmitterOn()
+			fc := models.FlightCommands{
+				Id:                id,
+				Roll:              rc.data.Roll,
+				Pitch:             rc.data.Pitch,
+				Yaw:               rc.data.Yaw,
+				Throttle:          rc.data.Throttle,
+				ButtonFrontLeft:   rc.data.ButtonFrontLeft,
+				ButtonFrontRight:  rc.data.ButtonFrontRight,
+				ButtonTopLeft:     rc.data.ButtonTopLeft,
+				ButtonTopRight:    rc.data.ButtonTopRight,
+				ButtonBottomLeft:  rc.data.ButtonBottomLeft,
+				ButtonBottomRight: rc.data.ButtonBottomRight,
+			}
+			fmt.Printf(
+				"%0.2f, %0.2f, %0.2f, %0.2f, %v, %v, %v, %v, %v, %v\n",
+				fc.Roll,
+				fc.Pitch,
+				fc.Yaw, fc.Throttle,
+				fc.ButtonFrontLeft,
+				fc.ButtonFrontRight,
+				fc.ButtonTopLeft,
+				fc.ButtonTopRight, fc.ButtonBottomLeft,
+				fc.ButtonBottomRight,
+			)
 			rc.radio.Transmit(
-				utils.SerializeFlightCommand(models.FlightCommands{
-					Id:       id,
-					Roll:     rc.data.Roll,
-					Pitch:    rc.data.Pitch,
-					Yaw:      rc.data.Yaw,
-					Throttle: rc.data.Throttle,
-				}))
+				utils.SerializeFlightCommand(fc))
 			rc.radio.ReceiverOn()
 			id++
 		case flightCommands = <-acknowleg:
 			lastAcknowleged = time.Now()
 		default:
-			if time.Since(lastAcknowleged) > time.Millisecond*200 {
+			if time.Since(lastAcknowleged) > time.Millisecond*1000000 {
 				fmt.Println("Connection Error ", flightCommands.Id)
 			}
 		}
