@@ -52,7 +52,7 @@ func NewUdpLogger(
 
 	dataPerPacket := imuDataPerSecond / packetsPerSecond
 
-	return &udpLogger{
+	logger := udpLogger{
 		conn:          conn,
 		address:       address,
 		enabled:       true,
@@ -60,6 +60,8 @@ func NewUdpLogger(
 		bufferCounter: 0,
 		buffer:        bytes.Buffer{},
 	}
+	logger.buffer.WriteByte(byte(dataPerPacket))
+	return &logger
 }
 
 func (l *udpLogger) Send(imuRotations models.ImuRotations) {
@@ -70,9 +72,11 @@ func (l *udpLogger) Send(imuRotations models.ImuRotations) {
 	l.buffer.Write(data)
 	l.bufferCounter++
 	if l.bufferCounter == l.dataPerPacket {
-		fmt.Println(len(l.buffer.Bytes()), l.dataPerPacket, len(data))
-		l.conn.WriteToUDP(l.buffer.Bytes(), l.address)
+		payload := l.buffer.Bytes()
+		// fmt.Println(len(payload), payload[0])
+		l.conn.WriteToUDP(payload, l.address)
 		l.buffer = bytes.Buffer{}
+		l.buffer.WriteByte(payload[0])
 		l.bufferCounter = 0
 	}
 
