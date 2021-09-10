@@ -15,12 +15,13 @@ import (
 )
 
 type udpLogger struct {
-	conn          *net.UDPConn
-	address       *net.UDPAddr
-	enabled       bool
-	buffer        bytes.Buffer
-	dataPerPacket int
-	bufferCounter int
+	conn             *net.UDPConn
+	address          *net.UDPAddr
+	enabled          bool
+	buffer           bytes.Buffer
+	packetsPerSecond int
+	dataPerPacket    int
+	bufferCounter    int
 }
 
 func NewUdpLogger(
@@ -53,13 +54,15 @@ func NewUdpLogger(
 	dataPerPacket := imuDataPerSecond / packetsPerSecond
 
 	logger := udpLogger{
-		conn:          conn,
-		address:       address,
-		enabled:       true,
-		dataPerPacket: dataPerPacket,
-		bufferCounter: 0,
-		buffer:        bytes.Buffer{},
+		conn:             conn,
+		address:          address,
+		enabled:          true,
+		dataPerPacket:    dataPerPacket,
+		packetsPerSecond: packetsPerSecond,
+		bufferCounter:    0,
+		buffer:           bytes.Buffer{},
 	}
+	logger.buffer.WriteByte(byte(packetsPerSecond))
 	logger.buffer.WriteByte(byte(dataPerPacket))
 	return &logger
 }
@@ -77,6 +80,7 @@ func (l *udpLogger) Send(imuRotations models.ImuRotations) {
 		l.conn.WriteToUDP(payload, l.address)
 		l.buffer = bytes.Buffer{}
 		l.buffer.WriteByte(payload[0])
+		l.buffer.WriteByte(payload[1])
 		l.bufferCounter = 0
 	}
 
