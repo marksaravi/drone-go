@@ -5,7 +5,6 @@ type UdpLoggerConfigs struct {
 	IP               string `yaml:"ip"`
 	Port             int    `yaml:"port"`
 	PacketsPerSecond int    `yaml:"packets-per-second"`
-	MaxDataPerPacket int    `yaml:"max-data-per-packet"`
 }
 
 type udpLoggerConfigs struct {
