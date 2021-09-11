@@ -6,6 +6,18 @@ import (
 	"math"
 )
 
+func UInt16ToBytes(i uint16) []byte {
+	buf := make([]byte, 2)
+	binary.LittleEndian.PutUint16(buf, i)
+	return buf
+}
+
+func UInt64ToBytes(i uint64) []byte {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, i)
+	return buf
+}
+
 func UInt32ToBytes(i uint32) []byte {
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, i)
@@ -48,4 +60,9 @@ func BoolArrayFromByte(b byte) [8]bool {
 		res[i] = (mask & b) > 0
 	}
 	return res
+}
+
+func Float64ToRoundedFloat32Bytes(x float64) []byte {
+	var v float32 = float32(math.Round(x*100) / 100)
+	return Float32ToBytes(v)
 }
