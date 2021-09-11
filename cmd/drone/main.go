@@ -2,20 +2,20 @@
 package main
 
 import (
+	"github.com/MarkSaravi/drone-go/devicecreators"
 	"github.com/MarkSaravi/drone-go/flightcontrol"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
 
-	imu, imuDataPerSecond, escUpdatePerSecond := utils.NewImu()
+	imu, imuDataPerSecond, escUpdatePerSecond := devicecreators.NewImu()
 	flightControl := flightcontrol.NewFlightControl(
 		imuDataPerSecond,
 		escUpdatePerSecond,
 		imu,
-		utils.NewESC(),
-		utils.NewRadio(),
-		utils.NewLogger(),
+		devicecreators.NewESC(),
+		devicecreators.NewRadio(),
+		devicecreators.NewLogger(),
 	)
 
 	flightControl.Start()
