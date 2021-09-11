@@ -6,12 +6,11 @@ package udplogger
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
-	"math"
 	"net"
 
 	"github.com/MarkSaravi/drone-go/models"
+	"github.com/MarkSaravi/drone-go/utils"
 )
 
 type udpLogger struct {
@@ -76,7 +75,6 @@ func (l *udpLogger) Send(imuRotations models.ImuRotations) {
 	l.bufferCounter++
 	if l.bufferCounter == l.dataPerPacket {
 		payload := l.buffer.Bytes()
-		// fmt.Println(len(payload), payload[0])
 		l.conn.WriteToUDP(payload, l.address)
 		l.buffer = bytes.Buffer{}
 		l.buffer.WriteByte(payload[0])
@@ -86,35 +84,17 @@ func (l *udpLogger) Send(imuRotations models.ImuRotations) {
 
 }
 
-func float64ToTransferBytes(x float64) []byte {
-	var i int16 = int16(math.Round(x * 100))
-	var ui uint16 = uint16(i + 32767)
-	return uint16ToBytes(ui)
-}
-
 func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	buffer := bytes.Buffer{}
-	buffer.Write(float64ToTransferBytes(imuRot.Accelerometer.Roll))
-	buffer.Write(float64ToTransferBytes(imuRot.Accelerometer.Pitch))
-	buffer.Write(float64ToTransferBytes(imuRot.Accelerometer.Yaw))
-	buffer.Write(float64ToTransferBytes(imuRot.Gyroscope.Roll))
-	buffer.Write(float64ToTransferBytes(imuRot.Gyroscope.Pitch))
-	buffer.Write(float64ToTransferBytes(imuRot.Gyroscope.Yaw))
-	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Roll))
-	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Pitch))
-	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Yaw))
-	buffer.Write(uint64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Roll))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Pitch))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Yaw))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Roll))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Pitch))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Yaw))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Roll))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Pitch))
+	buffer.Write(utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Yaw))
+	buffer.Write(utils.UInt64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
 	return buffer.Bytes()
-}
-
-func uint16ToBytes(i uint16) []byte {
-	buf := make([]byte, 2)
-	binary.LittleEndian.PutUint16(buf, i)
-	return buf
-}
-
-func uint64ToBytes(i uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, i)
-	return buf
 }

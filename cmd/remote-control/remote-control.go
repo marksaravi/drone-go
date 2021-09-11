@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/MarkSaravi/drone-go/config"
+	"github.com/MarkSaravi/drone-go/devicecreators"
 	"github.com/MarkSaravi/drone-go/devices"
 	"github.com/MarkSaravi/drone-go/drivers"
 	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
 	"github.com/MarkSaravi/drone-go/remotecontrol"
-	"github.com/MarkSaravi/drone-go/utils"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	fmt.Println(config)
 	drivers.InitHost()
 
-	radio := utils.NewRadio()
+	radio := devicecreators.NewRadio()
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
 		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
