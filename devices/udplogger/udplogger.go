@@ -103,7 +103,7 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Roll))
 	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Pitch))
 	buffer.Write(float64ToTransferBytes(imuRot.Rotations.Yaw))
-	buffer.Write(uint64ToBytes(uint64(imuRot.ReadTime)))
+	buffer.Write(uint64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
 	return buffer.Bytes()
 }
 
