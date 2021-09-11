@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type XYZ struct {
 	X float64
 	Y float64
@@ -14,8 +16,8 @@ type ImuRotations struct {
 	Accelerometer Rotations
 	Gyroscope     Rotations
 	Rotations     Rotations
-	ReadTime      int64
-	ReadInterval  int64
+	ReadTime      time.Time
+	ReadInterval  time.Duration
 }
 
 type FlightCommands struct {

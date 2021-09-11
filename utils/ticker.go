@@ -6,41 +6,53 @@ import (
 	"time"
 )
 
-func NewTicker(name string, tickPerSecond int, tolerancePercent float32, enableProfiling bool) <-chan int64 {
+func Idle() {
+	runtime.Gosched()
+}
+
+func NewTicker(tickPerSecond int, tolerancePercent float32) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
-		acceptableProfileDurMax := time.Second + time.Second/100*time.Duration(tolerancePercent)
-		acceptableProfileDurMin := time.Second - time.Second/100*time.Duration(tolerancePercent)
-		log.Printf("tolerance %s: %v\n", name, acceptableProfileDurMax)
 		tickDur := time.Second / time.Duration(tickPerSecond)
-		log.Printf("expected Tick Duration for %s: %v\n", name, tickDur)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
-		log.Printf("Compensated Tick Duration for %s: %v\n", name, tickDur)
 		tickDurStart := time.Now()
-		tickProfilerStart := tickDurStart
-		tickProfilerCounter := 0
 		for {
 			now := time.Now()
 			if now.Sub(tickDurStart) >= tickDur {
 				tickDurStart = now
 				t <- now.UnixNano()
-				if enableProfiling {
-					tickProfilerCounter++
-					if tickProfilerCounter == tickPerSecond {
-						tickProfilerCounter = 0
-						profileDur := now.Sub(tickProfilerStart)
-						if profileDur > acceptableProfileDurMax || profileDur < acceptableProfileDurMin {
-							log.Printf("%s: %v\n", name, time.Since(tickProfilerStart))
-						}
-						tickProfilerStart = now
-					}
-				}
 			}
+			Idle()
 		}
 	}(ticker)
 	return ticker
 }
 
-func Idle() {
-	runtime.Gosched()
+type tickerProfiler struct {
+	name          string
+	tickPerSecond int
+	tickCounter   int
+	tickStart     time.Time
+}
+
+func NewTickerProfiler(name string, tickPerSecond int) *tickerProfiler {
+	tp := tickerProfiler{
+		name:          name,
+		tickPerSecond: tickPerSecond,
+	}
+	tp.Reset()
+	return &tp
+}
+
+func (tp *tickerProfiler) Count() {
+	tp.tickCounter++
+	if tp.tickCounter == tp.tickPerSecond {
+		log.Printf("%s time for %d ticks: %v\n", tp.name, tp.tickPerSecond, time.Since(tp.tickStart))
+		tp.Reset()
+	}
+}
+
+func (tp *tickerProfiler) Reset() {
+	tp.tickStart = time.Now()
+	tp.tickCounter = 0
 }

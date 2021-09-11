@@ -73,5 +73,4 @@ logger:
   enabled: true
   ip: 192.168.1.101
   port: 6431
-  packets-per-second: 20 # set to zero for disabling udp send
-  max-data-per-packet: 20
+  packets-per-second: 50

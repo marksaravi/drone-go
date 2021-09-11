@@ -67,7 +67,6 @@ func NewLogger() interface {
 		loggerConfigs.IP,
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
-		loggerConfigs.MaxDataPerPacket,
 		flightControl.Configs.ImuDataPerSecond,
 	)
 	return udplogger

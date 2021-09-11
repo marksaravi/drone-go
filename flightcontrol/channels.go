@@ -35,7 +35,7 @@ func newImuDataChannel(ctx context.Context, wg *sync.WaitGroup, imudev imu, data
 	imuDataChannel := make(chan models.ImuRotations, 10)
 	go func(imudev imu, ch chan models.ImuRotations) {
 		defer wg.Done()
-		ticker := utils.NewTicker("imu", dataPerSecond, imuTimeCorrectionPercent, true)
+		ticker := utils.NewTicker(dataPerSecond, 0)
 		for range ticker {
 			ch <- imudev.ReadRotations()
 			select {
@@ -54,7 +54,7 @@ func newCommandChannel(ctx context.Context, wg *sync.WaitGroup, r radio) <-chan 
 	radioChannel := make(chan models.FlightCommands, 10)
 	go func(r radio, c chan models.FlightCommands) {
 		defer wg.Done()
-		ticker := utils.NewTicker("command", 40, commandTimeCorrectionPercent, true)
+		ticker := utils.NewTicker(40, 0)
 		for {
 			select {
 			case <-ctx.Done():

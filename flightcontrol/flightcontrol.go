@@ -12,12 +12,6 @@ import (
 	"github.com/MarkSaravi/drone-go/utils"
 )
 
-const (
-	commandTimeCorrectionPercent float32 = 2.5
-	escTimeCorrectionPercent     float32 = 3.5
-	imuTimeCorrectionPercent     float32 = 8.5
-)
-
 type radio interface {
 	ReceiverOn()
 	Receive() ([]byte, bool)
@@ -65,7 +59,7 @@ func (fc *flightControl) Start() {
 	fc.warmUp(cancel)
 	imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
-	escRefresher := utils.NewTicker("esc", fc.escUpdatePerSecond, escTimeCorrectionPercent, true)
+	escRefresher := utils.NewTicker(fc.escUpdatePerSecond, 0)
 	commandChannel := newCommandChannel(ctx, &wg, fc.radio)
 	pidControl := pidcontrol.NewPIDControl()
 	var running bool = true
