@@ -42,6 +42,30 @@ function setupPlotter() {
     rotCtx = getCanvasContext("rotations");
 }
 
+function clearCanvases() {
+    accCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    gyroCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    rotCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+}
+
+function beginPath() {
+    accCtx.beginPath();
+    gyroCtx.beginPath();
+    rotCtx.beginPath();
+}
+
+function lineTo(x, ay,gy,ry) {
+    accCtx.lineTo(x, ay)
+    gyroCtx.lineTo(x, gy)
+    rotCtx.lineTo(x, ry)
+}
+
+function stroke() {
+    accCtx.stroke();
+    gyroCtx.stroke();
+    rotCtx.stroke();
+}
+
 function plot(buffer, lastIndex, numOfPackets) {
     let i = lastIndex;
     let packetCounter = 0
@@ -61,12 +85,8 @@ function plot(buffer, lastIndex, numOfPackets) {
         dataCounter++
     }
     const startTime = xyBuffer[dataCounter - 1].t;
-    accCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-    gyroCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-    rotCtx.clearRect(0, 0, 800, 100);
-    accCtx.beginPath();
-    gyroCtx.beginPath();
-    rotCtx.beginPath();
+    clearCanvases()
+    beginPath();
     let prevX = 0
     for (let i = dataCounter - 1; i >= 0; i--) {
         const x = canvasWidth - (xyBuffer[i].t - startTime) * xScale
@@ -75,14 +95,10 @@ function plot(buffer, lastIndex, numOfPackets) {
         const ry = canvasHeight / 2 - xyBuffer[i].rRol * yScale
         if (Math.floor(prevX) != Math.floor(x)) {
             prevX = x
-            accCtx.lineTo(x, ay)
-            gyroCtx.lineTo(x, gy)
-            rotCtx.lineTo(x, ry)
+            lineTo(x, ay,gy,ry);
         }
     }
-    accCtx.stroke();
-    gyroCtx.stroke();
-    rotCtx.stroke();
+    stroke();
 }
 function createWebSocket() {
     // Create WebSocket connection.
