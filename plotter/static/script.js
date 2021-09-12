@@ -1,7 +1,7 @@
 const DATA_PER_SECOND = 3200
-const CANVAS_TIME_SECONDS = 10
+const CANVAS_TIME_SECONDS = 1
 var TIME_SCALE = 1e9
-const MAX_BUFFER_SIZE = DATA_PER_SECOND * 60
+const MAX_BUFFER_SIZE = DATA_PER_SECOND * 2
 
 let grpah = null;
 let canvasWidth = 0;
@@ -66,25 +66,26 @@ function stroke() {
     rotCtx.stroke();
 }
 
-function plot(buffer, lastIndex, numOfPackets) {
-    let i = lastIndex;
-    let packetCounter = 0
+function plot(buffer, lastIndex) {
+    let bufferIndex = lastIndex;
     let dataCounter = 0
-    while (packetCounter < numOfPackets && dataCounter < xyBuffer.length) {
-        i--;
-        if (i < 0) {
-            i = MAX_BUFFER_SIZE - 1
+    while (dataCounter < xyBuffer.length) {
+        if (bufferIndex < 0) {
+            bufferIndex = MAX_BUFFER_SIZE - 1
         }
-        packetCounter++
+        if (!buffer[bufferIndex]) {
+            break
+        }
         xyBuffer[dataCounter] = {
-            aRol: buffer[i].a.r,
-            gRol: buffer[i].g.r,
-            rRol: buffer[i].r.r,
-            t: buffer[i].t
+            aRol: buffer[bufferIndex].a.r,
+            gRol: buffer[bufferIndex].g.r,
+            rRol: buffer[bufferIndex].r.r,
+            t: buffer[bufferIndex].t
         }
         dataCounter++
+        bufferIndex--;
     }
-    const startTime = xyBuffer[dataCounter - 1].t;
+    const startTime = xyBuffer[dataCounter-1].t;
     clearCanvases()
     beginPath();
     let prevX = 0
@@ -106,24 +107,22 @@ function createWebSocket() {
     const socket = new WebSocket('ws://localhost:8081/conn');
 
     window.plotterBuffer = new Array(MAX_BUFFER_SIZE)
+    for (let i=0; i<MAX_BUFFER_SIZE; i++) {
+        window.plotterBuffer[i] = null;
+    }
     window.plotterBufferLastIndex = 0
-    window.plotterBufferCounter = 0
     // Listen for messages
     socket.addEventListener('message', function (event) {
         const packets = JSON.parse(JSON.parse(event.data));
         packets.forEach(p => {
             window.plotterBuffer[window.plotterBufferLastIndex] = p
             window.plotterBufferLastIndex++
+            window.plotterBuffer[window.plotterBufferLastIndex] = null
             if (window.plotterBufferLastIndex == MAX_BUFFER_SIZE) {
                 window.plotterBufferLastIndex = 0
             }
-
-            if (window.plotterBufferCounter < MAX_BUFFER_SIZE) {
-                window.plotterBufferCounter++
-            }
         })
-        // console.log(window.plotterBufferLastIndex)
-        plot(window.plotterBuffer, window.plotterBufferLastIndex, window.plotterBufferCounter)
+        plot(window.plotterBuffer, window.plotterBufferLastIndex -1)
     });
 }
 
