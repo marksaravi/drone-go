@@ -54,7 +54,7 @@ function beginPath() {
     rotCtx.beginPath();
 }
 
-function lineTo(x, ay,gy,ry) {
+function lineTo(x, ay, gy, ry) {
     accCtx.lineTo(x, ay)
     gyroCtx.lineTo(x, gy)
     rotCtx.lineTo(x, ry)
@@ -66,26 +66,22 @@ function stroke() {
     rotCtx.stroke();
 }
 
-function plot(buffer, lastIndex) {
-    let bufferIndex = lastIndex;
+function plot(datalink) {
     let dataCounter = 0
     while (dataCounter < xyBuffer.length) {
-        if (bufferIndex < 0) {
-            bufferIndex = MAX_BUFFER_SIZE - 1
-        }
-        if (!buffer[bufferIndex]) {
+        if (!datalink.data) {
             break
         }
         xyBuffer[dataCounter] = {
-            aRol: buffer[bufferIndex].a.r,
-            gRol: buffer[bufferIndex].g.r,
-            rRol: buffer[bufferIndex].r.r,
-            t: buffer[bufferIndex].t
+            aRol: datalink.data.a.r,
+            gRol: datalink.data.g.r,
+            rRol: datalink.data.r.r,
+            t: datalink.data.t
         }
         dataCounter++
-        bufferIndex--;
+        datalink = datalink.prev
     }
-    const startTime = xyBuffer[dataCounter-1].t;
+    const startTime = xyBuffer[dataCounter - 1].t;
     clearCanvases()
     beginPath();
     let prevX = 0
@@ -96,7 +92,7 @@ function plot(buffer, lastIndex) {
         const ry = canvasHeight / 2 - xyBuffer[i].rRol * yScale
         if (Math.floor(prevX) != Math.floor(x)) {
             prevX = x
-            lineTo(x, ay,gy,ry);
+            lineTo(x, ay, gy, ry);
         }
     }
     stroke();
@@ -106,23 +102,33 @@ function createWebSocket() {
     console.log("establishing connection");
     const socket = new WebSocket('ws://localhost:8081/conn');
 
-    window.plotterBuffer = new Array(MAX_BUFFER_SIZE)
-    for (let i=0; i<MAX_BUFFER_SIZE; i++) {
-        window.plotterBuffer[i] = null;
+    const firstlink = {
+        next: null,
+        prev: null,
+        data: null,
     }
-    window.plotterBufferLastIndex = 0
-    // Listen for messages
+    let link = firstlink
+    for (let i = 0; i < MAX_BUFFER_SIZE; i++) {
+        newlink = {
+            next: null,
+            prev: null,
+            data: null,
+        }
+        newlink.prev = link
+        link.next = newlink
+        link=link.next
+    }
+    link.next=firstlink
+    firstlink.prev=link
+
     socket.addEventListener('message', function (event) {
         const packets = JSON.parse(JSON.parse(event.data));
         packets.forEach(p => {
-            window.plotterBuffer[window.plotterBufferLastIndex] = p
-            window.plotterBufferLastIndex++
-            window.plotterBuffer[window.plotterBufferLastIndex] = null
-            if (window.plotterBufferLastIndex == MAX_BUFFER_SIZE) {
-                window.plotterBufferLastIndex = 0
-            }
+            link=link.next
+            link.data=p
+            link.next.data=null
         })
-        plot(window.plotterBuffer, window.plotterBufferLastIndex -1)
+        plot(link)
     });
 }
 
