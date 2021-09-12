@@ -13,7 +13,7 @@ function createWebSocket() {
 
     // Listen for messages
     socket.addEventListener('message', function (event) {
-        console.log('Message from server ', event.data);
+        const json = JSON.parse(event.data);
     });
 }
 plot()
