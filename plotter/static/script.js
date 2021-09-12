@@ -1,5 +1,4 @@
 const DATA_PER_SECOND = 3200
-const CANVAS_TIME_SECONDS = 10
 var TIME_SCALE = 1e9
 const MAX_BUFFER_SIZE = DATA_PER_SECOND * 120
 
@@ -10,14 +9,14 @@ const graphSettings = {
     yScale: 1,
     timeSpan: 10,
     yMax: 90,
-    axis: 'yaw',
+    axis: 'roll',
 }
 const ctx2D = {
     accelerometer: null,
     gyroscope: null,
     rotations: null,
 }
-const xyBuffer = new Array(DATA_PER_SECOND * CANVAS_TIME_SECONDS)
+const xyBuffer = new Array(DATA_PER_SECOND * graphSettings.timeSpan)
 const grapgs = ['accelerometer', 'gyroscope', 'rotations']
 
 function setupContainer() {
@@ -25,7 +24,7 @@ function setupContainer() {
     const acc = document.getElementById('accelerometer')
     graphSettings.width = container.offsetWidth
     graphSettings.height = acc.offsetHeight
-    graphSettings.xScale = graphSettings.width / CANVAS_TIME_SECONDS / TIME_SCALE
+    graphSettings.xScale = graphSettings.width / graphSettings.timeSpan / TIME_SCALE
     graphSettings.yScale = graphSettings.height / 2 / graphSettings.yMax
 }
 
