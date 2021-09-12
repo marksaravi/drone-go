@@ -12,39 +12,27 @@ const graphSettings = {
     yMax: 90,
     axis: 'roll',
 }
-
 const ctx2D = {
     accelerometer: null,
     gyroscope: null,
     rotations: null,
 }
-
-let canvasWidth = 0;
-let canvasHeight = 0;
-var xScale = 1
-var yScale = 1
-var maxAngle = 90
 const xyBuffer = new Array(DATA_PER_SECOND * CANVAS_TIME_SECONDS)
-
 const grapgs = ['accelerometer', 'gyroscope', 'rotations']
 
 function setupContainer() {
     const container = document.getElementById('canvas-container')
     const acc = document.getElementById('accelerometer')
     graphSettings.width = container.offsetWidth
-    graphSettings.height = container.offsetHeight
-    canvasWidth = container.offsetWidth
-    canvasHeight = acc.offsetHeight
-    xScale = canvasWidth / CANVAS_TIME_SECONDS / TIME_SCALE
-    yScale = canvasHeight / 2 / maxAngle
-    graphSettings.xScale = canvasWidth / CANVAS_TIME_SECONDS / TIME_SCALE
-    graphSettings.yScale = canvasHeight / 2 / maxAngle
+    graphSettings.height = acc.offsetHeight
+    graphSettings.xScale = graphSettings.width / CANVAS_TIME_SECONDS / TIME_SCALE
+    graphSettings.yScale = graphSettings.height / 2 / graphSettings.yMax
 }
 
 function getCanvasContext(id) {
     const canvas = document.getElementById(id);
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    canvas.width = graphSettings.width;
+    canvas.height = graphSettings.height;
     const ctx = canvas.getContext("2d");
     return ctx
 }
@@ -64,7 +52,7 @@ function getContextes(action) {
 }
 
 function clearCanvases() {
-    getContextes((ctx)=> ctx.clearRect(0, 0, canvasWidth, canvasHeight));
+    getContextes((ctx)=> ctx.clearRect(0, 0, graphSettings.width, graphSettings.height));
 }
 
 function beginPath() {
@@ -101,10 +89,10 @@ function plot(datalink) {
     beginPath();
     let prevX = 0
     for (let i = dataCounter - 1; i >= 0; i--) {
-        const x = canvasWidth - (xyBuffer[i].t - startTime) * xScale
-        const ay = canvasHeight / 2 - xyBuffer[i].aRol * yScale
-        const gy = canvasHeight / 2 - xyBuffer[i].gRol * yScale
-        const ry = canvasHeight / 2 - xyBuffer[i].rRol * yScale
+        const x = graphSettings.width - (xyBuffer[i].t - startTime) * graphSettings.xScale
+        const ay = graphSettings.height / 2 - xyBuffer[i].aRol * graphSettings.yScale
+        const gy = graphSettings.height / 2 - xyBuffer[i].gRol * graphSettings.yScale
+        const ry = graphSettings.height / 2 - xyBuffer[i].rRol * graphSettings.yScale
         if (Math.floor(prevX) != Math.floor(x)) {
             prevX = x
             lineTo(x, ay, gy, ry);
