@@ -31,7 +31,7 @@ function plot(buffer, lastIndex, numOfPackets) {
     while (packetCounter < numOfPackets && dataCounter < xyBuffer.length) {
         i--;
         if (i < 0) {
-            i = MAX_BUFFER_SIZE
+            i = MAX_BUFFER_SIZE - 1
         }
         packetCounter++
         xyBuffer[dataCounter] = {
