@@ -18,18 +18,28 @@ var maxAngle = 90
 const xyBuffer = new Array(DATA_PER_SECOND * CANVAS_TIME_SECONDS)
 
 
-function setupCanvas() {
-    grpah = document.querySelector('#gyro');
-    canvasWidth = grpah.offsetWidth;
-    canvasHeight = grpah.offsetHeight;
-    accCanvas = document.getElementById("acc");
-    gyroCanvas = document.getElementById("gyro");
-    rotCanvas = document.getElementById("rotations");
-    xScale = canvasWidth / CANVAS_TIME_SECONDS / TIME_SCALE
-    yScale = canvasHeight / 2 / maxAngle
-    accCtx = accCanvas.getContext("2d");
-    gyroCtx = gyroCanvas.getContext("2d");
-    rotCtx = rotCanvas.getContext("2d");
+function setupContainer() {
+    const container = document.getElementById('canvas-container');
+    const acc = document.getElementById('acc');
+    canvasWidth = container.offsetWidth;
+    canvasHeight = acc.offsetHeight;
+    xScale = canvasWidth / CANVAS_TIME_SECONDS / TIME_SCALE;
+    yScale = canvasHeight / 2 / maxAngle;
+}
+
+function getCanvasContext(id) {
+    const canvas = document.getElementById(id);
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const ctx = canvas.getContext("2d");
+    return ctx
+}
+
+function setupPlotter() {
+    setupContainer()
+    accCtx = getCanvasContext("acc");
+    gyroCtx = getCanvasContext("gyro");
+    rotCtx = getCanvasContext("rotations");
 }
 
 function plot(buffer, lastIndex, numOfPackets) {
@@ -51,8 +61,8 @@ function plot(buffer, lastIndex, numOfPackets) {
         dataCounter++
     }
     const startTime = xyBuffer[dataCounter - 1].t;
-    accCtx.clearRect(0, 0, 800, 100);
-    gyroCtx.clearRect(0, 0, 800, 100);
+    accCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    gyroCtx.clearRect(0, 0, canvasWidth, canvasHeight);
     rotCtx.clearRect(0, 0, 800, 100);
     accCtx.beginPath();
     gyroCtx.beginPath();
@@ -63,7 +73,7 @@ function plot(buffer, lastIndex, numOfPackets) {
         const ay = canvasHeight / 2 - xyBuffer[i].aRol * yScale
         const gy = canvasHeight / 2 - xyBuffer[i].gRol * yScale
         const ry = canvasHeight / 2 - xyBuffer[i].rRol * yScale
-        if (Math.floor(prevX)!=Math.floor(x)) {
+        if (Math.floor(prevX) != Math.floor(x)) {
             prevX = x
             accCtx.lineTo(x, ay)
             gyroCtx.lineTo(x, gy)
@@ -101,5 +111,5 @@ function createWebSocket() {
     });
 }
 
-setupCanvas()
+setupPlotter()
 createWebSocket()
