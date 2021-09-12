@@ -42,7 +42,10 @@ function setupPlotter() {
     ctx2D.accelerometer = getCanvasContext("accelerometer");
     ctx2D.gyroscope = getCanvasContext("gyroscope");
     ctx2D.rotations = getCanvasContext("rotations");
-
+    getContextes((ctx)=> { 
+        ctx.lineWidth = 0.5
+        ctx.strokeStyle = '#006400';
+    });
 }
 
 function getContextes(action) {
@@ -50,6 +53,7 @@ function getContextes(action) {
         action(ctx2D[g])
     })
 }
+
 
 function clearCanvases() {
     getContextes((ctx)=> ctx.clearRect(0, 0, graphSettings.width, graphSettings.height));
