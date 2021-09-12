@@ -1,6 +1,6 @@
-const DATA_PER_SECOND = 3200
+const MAX_DATA_PER_SECOND = 5000
 var TIME_SCALE = 1e9
-const MAX_BUFFER_SIZE = DATA_PER_SECOND * 120
+const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 
 const graphSettings = {
     width: 0,
@@ -16,7 +16,7 @@ const ctx2D = {
     gyroscope: null,
     rotations: null,
 }
-const xyBuffer = new Array(DATA_PER_SECOND * graphSettings.timeSpan)
+const xyBuffer = new Array(MAX_DATA_PER_SECOND * graphSettings.timeSpan)
 const grapgs = ['accelerometer', 'gyroscope', 'rotations']
 
 function setupContainer() {
@@ -41,7 +41,7 @@ function setupPlotter() {
     ctx2D.accelerometer = getCanvasContext("accelerometer");
     ctx2D.gyroscope = getCanvasContext("gyroscope");
     ctx2D.rotations = getCanvasContext("rotations");
-    getContextes((ctx)=> { 
+    getContextes((ctx) => {
         ctx.lineWidth = 0.5
         ctx.strokeStyle = '#006400';
     });
@@ -55,11 +55,11 @@ function getContextes(action) {
 
 
 function clearCanvases() {
-    getContextes((ctx)=> ctx.clearRect(0, 0, graphSettings.width, graphSettings.height));
+    getContextes((ctx) => ctx.clearRect(0, 0, graphSettings.width, graphSettings.height));
 }
 
 function beginPath() {
-    getContextes((ctx)=> ctx.beginPath());
+    getContextes((ctx) => ctx.beginPath());
 }
 
 function lineTo(x, ay, gy, ry) {
@@ -69,36 +69,40 @@ function lineTo(x, ay, gy, ry) {
 }
 
 function stroke() {
-    getContextes((ctx)=> ctx.stroke());
+    getContextes((ctx) => ctx.stroke());
 }
 
 function plot(datalink) {
     let dataCounter = 0
+    const startTime = datalink.data.t
     while (dataCounter < xyBuffer.length) {
         if (!datalink.data) {
             break
         }
+        const x = graphSettings.width - (startTime - datalink.data.t) * graphSettings.xScale
+        const ay = graphSettings.height / 2 - datalink.data.a[graphSettings.axis] * graphSettings.yScale;
+        const gy = graphSettings.height / 2 - datalink.data.g[graphSettings.axis] * graphSettings.yScale;
+        const ry = graphSettings.height / 2 - datalink.data.r[graphSettings.axis] * graphSettings.yScale;
         xyBuffer[dataCounter] = {
-            aRol: datalink.data.a[graphSettings.axis],
-            gRol: datalink.data.g[graphSettings.axis],
-            rRol: datalink.data.r[graphSettings.axis],
-            t: datalink.data.t
+            x,
+            ay,
+            gy,
+            ry
         }
+
         dataCounter++
+        if (x < 0) {
+            break
+        }
         datalink = datalink.prev
     }
-    const startTime = xyBuffer[dataCounter - 1].t;
     clearCanvases()
     beginPath();
     let prevX = 0
     for (let i = dataCounter - 1; i >= 0; i--) {
-        const x = graphSettings.width - (xyBuffer[i].t - startTime) * graphSettings.xScale
-        const ay = graphSettings.height / 2 - xyBuffer[i].aRol * graphSettings.yScale
-        const gy = graphSettings.height / 2 - xyBuffer[i].gRol * graphSettings.yScale
-        const ry = graphSettings.height / 2 - xyBuffer[i].rRol * graphSettings.yScale
-        if (Math.floor(prevX) != Math.floor(x)) {
-            prevX = x
-            lineTo(x, ay, gy, ry);
+        if (Math.floor(prevX) != Math.floor(xyBuffer[i].x)) {
+            prevX = xyBuffer[i].x
+            lineTo(xyBuffer[i].x, xyBuffer[i].ay, xyBuffer[i].gy, xyBuffer[i].ry);
         }
     }
     stroke();
