@@ -107,6 +107,7 @@ func extractPackets(data []byte, dataPerPacket int) string {
 	for i := 0; i < dataPerPacket; i++ {
 		imudata := extractImuRotations(data[IMU_DATA_SIZE*i : IMU_DATA_SIZE*(i+1)])
 		jsonData += comma + imudata
+		comma = ","
 	}
 	return jsonData + "]"
 }
