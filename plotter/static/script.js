@@ -40,29 +40,18 @@ function plot(buffer, lastIndex, numOfPackets) {
         }
         dataCounter++
     }
-    gyroCtx.clearRect(0, 0, 800, 100);
-    gyroCtx.stroke();
-    let first = true;
     const startTime = xyBuffer[dataCounter - 1].t;
+    gyroCtx.clearRect(0, 0, 800, 100);
+    gyroCtx.beginPath();
     let prevX = 0
-    let strokeCounter = 0
-    for (let i = 0; i < dataCounter; i++) {
+    for (let i = dataCounter - 1; i >= 0; i--) {
         const x = canvasWidth - (xyBuffer[i].t - startTime) * xScale
         const y = canvasHeight / 2 - xyBuffer[i].rRol * yScale
-        if (first) {
-            first = false;
-            strokeCounter++;
-            gyroCtx.moveTo(x, y)
+        if (Math.floor(prevX)!=Math.floor(x)) {
             prevX = x
-        } else {
-            if (Math.floor(prevX) !== Math.floor(x)) {
-                gyroCtx.lineTo(x, y)
-                prevX = x;
-                strokeCounter++;
-            }
+            gyroCtx.lineTo(x, y)
         }
     }
-    console.log(strokeCounter)
     gyroCtx.stroke();
 }
 function createWebSocket() {
