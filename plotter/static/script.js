@@ -1,4 +1,5 @@
 const MAX_DATA_PER_SECOND = 5000
+const MAX_TIME_SPAN = 60
 var TIME_SCALE = 1e9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 
@@ -16,7 +17,7 @@ const ctx2D = {
     gyroscope: null,
     rotations: null,
 }
-const xyBuffer = new Array(MAX_DATA_PER_SECOND * graphSettings.timeSpan)
+const xyBuffer = new Array(MAX_DATA_PER_SECOND * MAX_TIME_SPAN)
 const grapgs = ['accelerometer', 'gyroscope', 'rotations']
 
 function setupContainer() {
