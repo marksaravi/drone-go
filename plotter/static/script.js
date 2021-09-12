@@ -10,7 +10,7 @@ const graphSettings = {
     yScale: 1,
     timeSpan: 10,
     yMax: 90,
-    axis: 'roll',
+    axis: 'yaw',
 }
 const ctx2D = {
     accelerometer: null,
@@ -80,9 +80,9 @@ function plot(datalink) {
             break
         }
         xyBuffer[dataCounter] = {
-            aRol: datalink.data.a.r,
-            gRol: datalink.data.g.r,
-            rRol: datalink.data.r.r,
+            aRol: datalink.data.a[graphSettings.axis],
+            gRol: datalink.data.g[graphSettings.axis],
+            rRol: datalink.data.r[graphSettings.axis],
             t: datalink.data.t
         }
         dataCounter++

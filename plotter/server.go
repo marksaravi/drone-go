@@ -124,5 +124,5 @@ func extractRotations(data []byte) string {
 	roll := float64(utils.Float32FromBytes(data[0:4]))
 	pitch := float64(utils.Float32FromBytes(data[4:8]))
 	yaw := float64(utils.Float32FromBytes(data[8:12]))
-	return fmt.Sprintf("{\"r\":%0.2f,\"p\":%0.2f,\"y\":%0.2f}", roll, pitch, yaw)
+	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", roll, pitch, yaw)
 }
