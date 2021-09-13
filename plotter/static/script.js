@@ -3,8 +3,8 @@ const MAX_TIME_SPAN = 60
 var TIME_SCALE = 1e9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 
-const X_PADDING = 24
-const Y_PADDING = 24
+const X_PADDING = 48
+const Y_PADDING = 48
 
 const graphSettings = {
     width: 0,
@@ -14,8 +14,9 @@ const graphSettings = {
     xScale: 1,
     yScale: 1,
     timeSpan: 10,
-    yMax: 90,
+    yMax: 100,
     axis: 'roll',
+    yGrid: 15
 }
 const ctx2D = {
     accelerometer: null,
@@ -77,20 +78,34 @@ function stroke() {
 }
 
 function Y(y) {
-    return graphSettings.graphHeight / 2 - y * graphSettings.yScale - Y_PADDING
+    return graphSettings.graphHeight / 2 - y * graphSettings.yScale
 }
 
 function X(t) {
     return graphSettings.graphWidth - t * graphSettings.xScale + X_PADDING
 }
 
+
+function drawYGrids() {
+    getContextes((ctx) => {
+        ctx.lineWidth = 0.5
+        ctx.strokeStyle = 'darkgray';
+    });
+    let y = -graphSettings.yMax
+    while (y <= graphSettings.yMax) {
+        const gy = Y(y)
+        beginPath()
+        lineTo(X(0), gy, gy, gy)
+        lineTo(X(graphSettings.timeSpan * TIME_SCALE), gy, gy, gy)
+        stroke()
+        y += graphSettings.yGrid
+    }
+
+}
+
 function plot(datalink) {
     let dataCounter = 0
     const startTime = datalink.data.t
-    getContextes((ctx) => {
-        ctx.lineWidth = 1
-        ctx.strokeStyle = '#006400';
-    });
     while (dataCounter < xyBuffer.length) {
         if (!datalink.data) {
             break
@@ -113,6 +128,11 @@ function plot(datalink) {
         datalink = datalink.prev
     }
     clearCanvases()
+    drawYGrids()
+    getContextes((ctx) => {
+        ctx.lineWidth = 1
+        ctx.strokeStyle = '#006400';
+    });
     beginPath();
     let prevX = 0
     for (let i = dataCounter - 1; i >= 0; i--) {
