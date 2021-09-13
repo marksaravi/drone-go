@@ -143,5 +143,11 @@ function createWebSocket() {
     });
 }
 
+function setAxis(axis) {
+    graphSettings.axis = axis
+    const label = document.getElementById('axis')
+    label.innerHTML = axis
+}
+
 setupPlotter()
 createWebSocket()

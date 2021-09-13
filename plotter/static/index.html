@@ -8,10 +8,10 @@
 
 <body>
   <div class="settings">
-    <input type="button" value="Roll" class="settings-button" />
-    <input type="button" value="Pitch" class="settings-button" />
-    <input type="button" value="Yaw" class="settings-button" />
-    <span class="setting-text">Roll</span>
+    <input type="button" value="Roll" class="settings-button" onclick="setAxis('roll')" />
+    <input type="button" value="Pitch" class="settings-button" onclick="setAxis('pitch')" />
+    <input type="button" value="Yaw" class="settings-button" onclick="setAxis('yaw')" />
+    <span class="setting-text" id="axis">roll</span>
   </div>
   <div id="canvas-container" class="graphs-container" >
     <span class="graph-title">Accelerometer</span>
