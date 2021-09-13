@@ -82,15 +82,11 @@ func startUDPReceiverServer(dataChannel chan string) {
 		data := make([]byte, bufferSize)
 
 		for {
-
-			// rlen, remote, err := conn.ReadFromUDP(data[:])
 			nBytes, _, err := conn.ReadFromUDP(data)
 			if err != nil {
 				panic(err)
 			}
-
 			if nBytes > 0 {
-				// packetsPerSecond := int(data[0])
 				dataPerPacket := int(data[1])
 				jsonData := extractPackets(data[2:], dataPerPacket)
 				dataChannel <- jsonData
