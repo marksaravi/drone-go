@@ -115,7 +115,6 @@ function drawXGrids(lastTime) {
         const x = X((t + offset) * TIME_SCALE)
         const y1 = Y(graphSettings.yMax)
         const y2 = Y(-graphSettings.yMax)
-        console.log(x, y1, y2)
         beginPath()
         lineTo(x, y1, y1, y1)
         lineTo(x, y2, y2, y2)
