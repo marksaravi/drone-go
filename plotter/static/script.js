@@ -49,10 +49,6 @@ function setupPlotter() {
     ctx2D.accelerometer = getCanvasContext("accelerometer");
     ctx2D.gyroscope = getCanvasContext("gyroscope");
     ctx2D.rotations = getCanvasContext("rotations");
-    getContextes((ctx) => {
-        ctx.lineWidth = 0.5
-        ctx.strokeStyle = '#006400';
-    });
 }
 
 function getContextes(action) {
@@ -91,6 +87,10 @@ function X(t) {
 function plot(datalink) {
     let dataCounter = 0
     const startTime = datalink.data.t
+    getContextes((ctx) => {
+        ctx.lineWidth = 1
+        ctx.strokeStyle = '#006400';
+    });
     while (dataCounter < xyBuffer.length) {
         if (!datalink.data) {
             break
