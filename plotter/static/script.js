@@ -103,6 +103,26 @@ function drawYGrids() {
 
 }
 
+function drawXGrids(lastTime) {
+    const sT = lastTime / TIME_SCALE % graphSettings.timeSpan
+    const offset = sT - Math.floor(sT)
+    getContextes((ctx) => {
+        ctx.lineWidth = 0.5
+        ctx.strokeStyle = 'darkgray';
+    });
+
+    for (let t = 0; t < graphSettings.timeSpan; t++) {
+        const x = X((t + offset) * TIME_SCALE)
+        const y1 = Y(graphSettings.yMax)
+        const y2 = Y(-graphSettings.yMax)
+        console.log(x, y1, y2)
+        beginPath()
+        lineTo(x, y1, y1, y1)
+        lineTo(x, y2, y2, y2)
+        stroke()
+    }
+}
+
 function plot(datalink) {
     let dataCounter = 0
     const startTime = datalink.data.t
@@ -129,6 +149,7 @@ function plot(datalink) {
     }
     clearCanvases()
     drawYGrids()
+    drawXGrids(startTime)
     getContextes((ctx) => {
         ctx.lineWidth = 1
         ctx.strokeStyle = '#006400';
