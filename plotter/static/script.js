@@ -3,6 +3,9 @@ const MAX_TIME_SPAN = 60
 var TIME_SCALE = 1e9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 
+const X_PADDING = 24
+const Y_PADDING = 24
+
 const graphSettings = {
     width: 0,
     height: 0,
@@ -73,6 +76,14 @@ function stroke() {
     getContextes((ctx) => ctx.stroke());
 }
 
+function Y(y) {
+    return graphSettings.height / 2 - y * graphSettings.yScale
+}
+
+function X(t) {
+    return graphSettings.width - t * graphSettings.xScale
+}
+
 function plot(datalink) {
     let dataCounter = 0
     const startTime = datalink.data.t
@@ -80,10 +91,10 @@ function plot(datalink) {
         if (!datalink.data) {
             break
         }
-        const x = graphSettings.width - (startTime - datalink.data.t) * graphSettings.xScale
-        const ay = graphSettings.height / 2 - datalink.data.a[graphSettings.axis] * graphSettings.yScale;
-        const gy = graphSettings.height / 2 - datalink.data.g[graphSettings.axis] * graphSettings.yScale;
-        const ry = graphSettings.height / 2 - datalink.data.r[graphSettings.axis] * graphSettings.yScale;
+        const x = X(startTime - datalink.data.t)
+        const ay = Y(datalink.data.a[graphSettings.axis])
+        const gy = Y(datalink.data.g[graphSettings.axis])
+        const ry = Y(datalink.data.r[graphSettings.axis])
         xyBuffer[dataCounter] = {
             x,
             ay,
