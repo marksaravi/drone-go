@@ -9,6 +9,8 @@ const Y_PADDING = 24
 const graphSettings = {
     width: 0,
     height: 0,
+    graphWidth: 0,
+    graphHeight: 0,
     xScale: 1,
     yScale: 1,
     timeSpan: 10,
@@ -28,8 +30,10 @@ function setupContainer() {
     const acc = document.getElementById('accelerometer')
     graphSettings.width = container.offsetWidth
     graphSettings.height = acc.offsetHeight
-    graphSettings.xScale = graphSettings.width / graphSettings.timeSpan / TIME_SCALE
-    graphSettings.yScale = graphSettings.height / 2 / graphSettings.yMax
+    graphSettings.graphWidth = graphSettings.width - X_PADDING
+    graphSettings.graphHeight = graphSettings.height - Y_PADDING
+    graphSettings.xScale = graphSettings.graphWidth / graphSettings.timeSpan / TIME_SCALE
+    graphSettings.yScale = graphSettings.graphHeight / 2 / graphSettings.yMax
 }
 
 function getCanvasContext(id) {
@@ -77,11 +81,11 @@ function stroke() {
 }
 
 function Y(y) {
-    return graphSettings.height / 2 - y * graphSettings.yScale
+    return graphSettings.graphHeight / 2 - y * graphSettings.yScale - Y_PADDING
 }
 
 function X(t) {
-    return graphSettings.width - t * graphSettings.xScale
+    return graphSettings.graphWidth - t * graphSettings.xScale + X_PADDING
 }
 
 function plot(datalink) {
@@ -103,7 +107,7 @@ function plot(datalink) {
         }
 
         dataCounter++
-        if (x < 0) {
+        if (x < X_PADDING) {
             break
         }
         datalink = datalink.prev
