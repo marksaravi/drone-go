@@ -1,6 +1,6 @@
 const MAX_DATA_PER_SECOND = 4000
 const MAX_TIME_SPAN = 60
-const TIME_SCALE = 1e9
+const TIME_SCALE = 1e-9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 const FONT_SIZE = 10
 
@@ -35,7 +35,7 @@ function setupContainer() {
     graphSettings.height = acc.offsetHeight
     graphSettings.graphWidth = graphSettings.width - X_PADDING
     graphSettings.graphHeight = graphSettings.height - Y_PADDING
-    graphSettings.xScale = graphSettings.graphWidth / graphSettings.timeSpan / TIME_SCALE
+    graphSettings.xScale = graphSettings.graphWidth / graphSettings.timeSpan
     graphSettings.yScale = graphSettings.graphHeight / 2 / graphSettings.yMax
 }
 
@@ -86,8 +86,8 @@ function Y(y) {
     return graphSettings.graphHeight / 2 - y * graphSettings.yScale
 }
 
-function X(t) {
-    return graphSettings.graphWidth - t * graphSettings.xScale + X_PADDING
+function X(sec) {
+    return sec * graphSettings.xScale + X_PADDING
 }
 
 
@@ -104,7 +104,7 @@ function drawYGrids() {
         lineTo(X(0), gy, gy, gy)
         lineTo(xe, gy, gy, gy)
         stroke()
-        drwaText(`${y}`,xe - 20, gy)
+        drwaText(`${y}`, xe - 20, gy)
         y += graphSettings.yGrid
     }
 
@@ -116,70 +116,116 @@ function drwaText(txt, x, y) {
     });
 }
 
-function drawXGrids(lastTime) {
-    const time0 = Math.floor((lastTime - graphSettings.firstTime) / TIME_SCALE)
-    const sT = lastTime / TIME_SCALE % graphSettings.timeSpan
-    const offset = sT - Math.floor(sT)
-    getContextes((ctx) => {
-        ctx.lineWidth = 0.5
-        ctx.strokeStyle = 'darkgray';
-    });
+function drawXGrids(datalink) {
+    let dl = datalink
+    const secOffset = dl.data.sec <= graphSettings.timeSpan ? 0 : dl.data.sec - graphSettings.timeSpan
+    // console.log(dl.data.sec, dl.data.sec - secOffset, secOffset)
+    while (dl.prev && dl.prev.data) {
+        const sec = dl.data.sec - secOffset
+        if (sec <= 0) {
+            break
+        }
+        if (dl.data.secMarker || dl.data.decSecMarker) {
+            getContextes((ctx) => {
+                if (dl.data.secMarker) {
+                    ctx.strokeStyle = 'darkgray';
+                    ctx.lineWidth = 0.5    
+                } else {
+                    ctx.strokeStyle = 'lightgray';
+                    ctx.lineWidth = 0.25
+                }
+                ctx.beginPath()
+                ctx.lineTo(X(sec), Y(graphSettings.yMax))
+                ctx.lineTo(X(sec), Y(-graphSettings.yMax))
+                ctx.stroke()
+            });
+        }
 
-    for (let t = 0; t < graphSettings.timeSpan; t++) {
-        const x = X((t + offset) * TIME_SCALE)
-        const y1 = Y(graphSettings.yMax)
-        const y2 = Y(-graphSettings.yMax)
-        beginPath()
-        lineTo(x, y1, y1, y1)
-        lineTo(x, y2, y2, y2)
-        stroke()
-        drwaText(`${Math.floor(100 * (time0-t)) / 100}`, x, y2)
+        dl = dl.prev
     }
+    // const time0 = Math.floor((lastTime - graphSettings.firstTime) * TIME_SCALE)
+    // const sT = lastTime * TIME_SCALE % graphSettings.timeSpan
+    // const offset = sT - Math.floor(sT)
+    // getContextes((ctx) => {
+    //     ctx.lineWidth = 0.5
+    //     ctx.strokeStyle = 'darkgray';
+    // });
+
+    // for (let t = 0; t < graphSettings.timeSpan; t++) {
+    //     const x = X((t + offset) * TIME_SCALE)
+    //     const y1 = Y(graphSettings.yMax)
+    //     const y2 = Y(-graphSettings.yMax)
+    //     beginPath()
+    //     lineTo(x, y1, y1, y1)
+    //     lineTo(x, y2, y2, y2)
+    //     stroke()
+    //     drwaText(`${Math.floor(100 * (time0 - t)) / 100}`, x, y2)
+    // }
 }
 
 function plot(datalink) {
-    let dataCounter = 0
-    const startTime = datalink.data.t
-    while (dataCounter < xyBuffer.length) {
-        if (!datalink.data) {
-            break
-        }
-        const x = X(startTime - datalink.data.t)
-        const ay = Y(datalink.data.a[graphSettings.axis])
-        const gy = Y(datalink.data.g[graphSettings.axis])
-        const ry = Y(datalink.data.r[graphSettings.axis])
-        const t = (datalink.data.t - graphSettings.firstTime) * TIME_SCALE
-        xyBuffer[dataCounter] = {
-            x,
-            ay,
-            gy,
-            ry,
-            t,
-        }
-
-        dataCounter++
-        if (x < X_PADDING) {
-            break
-        }
-        datalink = datalink.prev
-    }
+    const lastSec = datalink.data.sec
     clearCanvases()
-    drawYGrids()
-    drawXGrids(startTime)
-    getContextes((ctx) => {
-        ctx.lineWidth = 1
-        ctx.strokeStyle = '#006400';
-    });
-    beginPath();
-    let prevX = 0
-    for (let i = dataCounter - 1; i >= 0; i--) {
-        if (Math.floor(prevX) != Math.floor(xyBuffer[i].x)) {
-            prevX = xyBuffer[i].x
-            lineTo(xyBuffer[i].x, xyBuffer[i].ay, xyBuffer[i].gy, xyBuffer[i].ry);
+    drawXGrids(datalink, lastSec)
+    // while (dataCounter < xyBuffer.length) {
+    //     if (!datalink.data) {
+    //         break
+    //     }
+    //     const x = X(datalink.data.sec - startSec)
+    //         const ay = Y(datalink.data.a[graphSettings.axis])
+    //     const gy = Y(datalink.data.g[graphSettings.axis])
+    //     const ry = Y(datalink.data.r[graphSettings.axis])
+    //     const t = (datalink.data.t - graphSettings.firstTime) * TIME_SCALE
+    //     xyBuffer[dataCounter] = {
+    //         x,
+    //         ay,
+    //         gy,
+    //         ry,
+    //         t,
+    //     }
+
+    //     dataCounter++
+    //     if (x < X_PADDING) {
+    //         break
+    //     }
+    //     datalink = datalink.prev
+    // }
+    // clearCanvases()
+    // drawYGrids()
+
+    // getContextes((ctx) => {
+    //     ctx.lineWidth = 1
+    //     ctx.strokeStyle = '#006400';
+    // });
+    // beginPath();
+    // let prevX = 0
+    // for (let i = dataCounter - 1; i >= 0; i--) {
+    //     if (Math.floor(prevX) != Math.floor(xyBuffer[i].x)) {
+    //         prevX = xyBuffer[i].x
+    //         lineTo(xyBuffer[i].x, xyBuffer[i].ay, xyBuffer[i].gy, xyBuffer[i].ry);
+    //     }
+    // }
+    // stroke();
+}
+
+function setSecondsAndMarkers(l) {
+    l.data.sec = (l.data.t - graphSettings.firstTime) * TIME_SCALE
+    if (l.prev && l.prev.data) {
+        const currS = l.data.sec
+        const prevS = l.prev.data.sec
+        if (Math.floor(currS) - Math.floor(prevS) === 1) {
+            l.prev.data.secMarker = false
+            l.data.secMarker = true
+            // console.log("sec marker", l.data.sec, currS, prevS)
+        } else {
+            if (Math.floor(currS * 10) - Math.floor(prevS * 10) === 1) {
+                l.prev.data.decSecMarker = false
+                l.data.decSecMarker = true
+            }
         }
     }
-    stroke();
 }
+
 function createWebSocket() {
     // Create WebSocket connection.
     console.log("establishing connection");
@@ -207,12 +253,13 @@ function createWebSocket() {
     socket.addEventListener('message', function (event) {
         const packets = JSON.parse(JSON.parse(event.data))
         packets.forEach(p => {
-            link = link.next
-            link.data = p
-            link.next.data = null
             if (graphSettings.firstTime === 0) {
                 graphSettings.firstTime = p.t
             }
+            link = link.next
+            link.data = p
+            setSecondsAndMarkers(link)
+            link.next.data = null
         })
         plot(link)
     });
