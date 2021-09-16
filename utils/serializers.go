@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 const RADIO_PAYLOAD_SIZE int = 32

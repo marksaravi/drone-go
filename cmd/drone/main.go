@@ -2,8 +2,8 @@
 package main
 
 import (
-	"github.com/MarkSaravi/drone-go/devicecreators"
-	"github.com/MarkSaravi/drone-go/flightcontrol"
+	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/flightcontrol"
 )
 
 func main() {

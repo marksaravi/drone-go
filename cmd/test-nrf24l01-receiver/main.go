@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/devicecreators"
-	"github.com/MarkSaravi/drone-go/drivers"
-	"github.com/MarkSaravi/drone-go/models"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {

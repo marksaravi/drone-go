@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/models"
-	pidcontrol "github.com/MarkSaravi/drone-go/pid-control"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/models"
+	pidcontrol "github.com/marksaravi/drone-go/pid-control"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type radio interface {

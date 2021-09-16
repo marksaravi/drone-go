@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/MarkSaravi/drone-go/models"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type udpLogger struct {

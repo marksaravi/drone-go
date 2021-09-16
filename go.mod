@@ -1,4 +1,4 @@
-module github.com/MarkSaravi/drone-go
+module github.com/marksaravi/drone-go
 
 go 1.17
 

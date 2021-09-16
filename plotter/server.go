@@ -7,7 +7,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/utils"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )

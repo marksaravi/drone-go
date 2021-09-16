@@ -3,7 +3,7 @@ package icm20948
 import (
 	"time"
 
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 // initAccelerometer initialise the Accelerometer

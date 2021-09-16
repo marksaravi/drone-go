@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/MarkSaravi/drone-go/config"
-	"github.com/MarkSaravi/drone-go/devicecreators"
-	"github.com/MarkSaravi/drone-go/devices"
-	"github.com/MarkSaravi/drone-go/drivers"
-	"github.com/MarkSaravi/drone-go/drivers/mcp3008"
-	"github.com/MarkSaravi/drone-go/remotecontrol"
+	"github.com/marksaravi/drone-go/config"
+	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/devices"
+	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/drivers/mcp3008"
+	"github.com/marksaravi/drone-go/remotecontrol"
 )
 
 func main() {

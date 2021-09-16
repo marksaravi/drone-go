@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/devicecreators"
-	"github.com/MarkSaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/drivers"
 )
 
 func main() {

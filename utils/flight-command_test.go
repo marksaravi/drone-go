@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 func TestFlighCommandsToByteArray(t *testing.T) {

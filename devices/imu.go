@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 type rotationsChanges struct {
