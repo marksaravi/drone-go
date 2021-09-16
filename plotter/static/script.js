@@ -4,8 +4,8 @@ const TIME_SCALE = 1e-9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 const FONT_SIZE = 10
 
-const X_PADDING = 48
-const Y_PADDING = 48
+const X_PADDING = 32
+const Y_PADDING = 20
 
 const graphSettings = {
     width: 0,
@@ -15,7 +15,7 @@ const graphSettings = {
     xScale: 1,
     yScale: 1,
     timeSpan: 10,
-    yMax: 100,
+    yMax: 105,
     axis: 'roll',
     yGrid: 15,
     firstTime: 0,
@@ -68,20 +68,6 @@ function clearCanvases() {
     getContextes((ctx) => ctx.clearRect(0, 0, graphSettings.width, graphSettings.height));
 }
 
-function beginPath() {
-    getContextes((ctx) => ctx.beginPath());
-}
-
-function lineTo(x, ay, gy, ry) {
-    ctx2D['accelerometer'].lineTo(x, ay)
-    ctx2D['gyroscope'].lineTo(x, gy)
-    ctx2D['rotations'].lineTo(x, ry)
-}
-
-function stroke() {
-    getContextes((ctx) => ctx.stroke());
-}
-
 function Y(y) {
     return graphSettings.graphHeight / 2 - y * graphSettings.yScale
 }
@@ -98,75 +84,64 @@ function drawYGrids() {
     });
     let y = -graphSettings.yMax
     while (y <= graphSettings.yMax) {
-        const gy = Y(y)
-        const xe = X(graphSettings.timeSpan * TIME_SCALE)
-        beginPath()
-        lineTo(X(0), gy, gy, gy)
-        lineTo(xe, gy, gy, gy)
-        stroke()
-        drwaText(`${y}`, xe - 20, gy)
+        const yg = Y(y)
+        const xs = X(0)
+        const xe = X(graphSettings.timeSpan)
+        getContextes((ctx) => {
+            ctx.textAlign = "right";
+            ctx.strokeStyle = 'darkgray';
+            if (y > -graphSettings.yMax && y < graphSettings.yMax) {
+                ctx.fillText(`${Math.floor(y * 10) / 10}`, xs - 8, yg + FONT_SIZE * 0.33)
+            }
+            ctx.lineWidth = 0.5
+            ctx.beginPath()
+            ctx.lineTo(xs, yg)
+            ctx.lineTo(xe, yg)
+            ctx.stroke()
+        });
         y += graphSettings.yGrid
     }
 
 }
 
-function drwaText(txt, x, y) {
-    getContextes((ctx) => {
-        ctx.fillText(txt, x, y + FONT_SIZE * 1.5)
-    });
-}
-
 function drawXGrids(datalink) {
     let dl = datalink
     const secOffset = dl.data.sec <= graphSettings.timeSpan ? 0 : dl.data.sec - graphSettings.timeSpan
-    // console.log(dl.data.sec, dl.data.sec - secOffset, secOffset)
     while (dl.prev && dl.prev.data) {
         const sec = dl.data.sec - secOffset
         if (sec <= 0) {
             break
         }
         if (dl.data.secMarker || dl.data.decSecMarker) {
+            const x = X(sec)
+            const yt = Y(graphSettings.yMax)
+            const yb = Y(-graphSettings.yMax)
             getContextes((ctx) => {
+                ctx.textAlign = "center";
                 if (dl.data.secMarker) {
                     ctx.strokeStyle = 'darkgray';
-                    ctx.lineWidth = 0.5    
+                    ctx.lineWidth = 0.5
+                    ctx.fillText(`${Math.floor(dl.data.sec)}`, x, yb + FONT_SIZE * 1.5)
                 } else {
                     ctx.strokeStyle = 'lightgray';
                     ctx.lineWidth = 0.25
                 }
                 ctx.beginPath()
-                ctx.lineTo(X(sec), Y(graphSettings.yMax))
-                ctx.lineTo(X(sec), Y(-graphSettings.yMax))
+                ctx.lineTo(x, yt)
+                ctx.lineTo(x, yb)
                 ctx.stroke()
             });
         }
 
         dl = dl.prev
     }
-    // const time0 = Math.floor((lastTime - graphSettings.firstTime) * TIME_SCALE)
-    // const sT = lastTime * TIME_SCALE % graphSettings.timeSpan
-    // const offset = sT - Math.floor(sT)
-    // getContextes((ctx) => {
-    //     ctx.lineWidth = 0.5
-    //     ctx.strokeStyle = 'darkgray';
-    // });
-
-    // for (let t = 0; t < graphSettings.timeSpan; t++) {
-    //     const x = X((t + offset) * TIME_SCALE)
-    //     const y1 = Y(graphSettings.yMax)
-    //     const y2 = Y(-graphSettings.yMax)
-    //     beginPath()
-    //     lineTo(x, y1, y1, y1)
-    //     lineTo(x, y2, y2, y2)
-    //     stroke()
-    //     drwaText(`${Math.floor(100 * (time0 - t)) / 100}`, x, y2)
-    // }
 }
 
 function plot(datalink) {
     const lastSec = datalink.data.sec
     clearCanvases()
     drawXGrids(datalink, lastSec)
+    drawYGrids()
     // while (dataCounter < xyBuffer.length) {
     //     if (!datalink.data) {
     //         break
