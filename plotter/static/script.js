@@ -104,9 +104,8 @@ function drawYGrids() {
 
 }
 
-function drawXGrids(datalink) {
+function drawXGrids(datalink, secOffset) {
     let dl = datalink
-    const secOffset = dl.data.sec <= graphSettings.timeSpan ? 0 : dl.data.sec - graphSettings.timeSpan
     while (dl.prev && dl.prev.data) {
         const sec = dl.data.sec - secOffset
         if (sec <= 0) {
@@ -138,49 +137,35 @@ function drawXGrids(datalink) {
 }
 
 function plot(datalink) {
-    const lastSec = datalink.data.sec
+    let dl = datalink
+    const secOffset = dl.data.sec <= graphSettings.timeSpan ? 0 : dl.data.sec - graphSettings.timeSpan
     clearCanvases()
-    drawXGrids(datalink, lastSec)
+    drawXGrids(dl, secOffset)
     drawYGrids()
-    // while (dataCounter < xyBuffer.length) {
-    //     if (!datalink.data) {
-    //         break
-    //     }
-    //     const x = X(datalink.data.sec - startSec)
-    //         const ay = Y(datalink.data.a[graphSettings.axis])
-    //     const gy = Y(datalink.data.g[graphSettings.axis])
-    //     const ry = Y(datalink.data.r[graphSettings.axis])
-    //     const t = (datalink.data.t - graphSettings.firstTime) * TIME_SCALE
-    //     xyBuffer[dataCounter] = {
-    //         x,
-    //         ay,
-    //         gy,
-    //         ry,
-    //         t,
-    //     }
-
-    //     dataCounter++
-    //     if (x < X_PADDING) {
-    //         break
-    //     }
-    //     datalink = datalink.prev
-    // }
-    // clearCanvases()
-    // drawYGrids()
-
-    // getContextes((ctx) => {
-    //     ctx.lineWidth = 1
-    //     ctx.strokeStyle = '#006400';
-    // });
-    // beginPath();
-    // let prevX = 0
-    // for (let i = dataCounter - 1; i >= 0; i--) {
-    //     if (Math.floor(prevX) != Math.floor(xyBuffer[i].x)) {
-    //         prevX = xyBuffer[i].x
-    //         lineTo(xyBuffer[i].x, xyBuffer[i].ay, xyBuffer[i].gy, xyBuffer[i].ry);
-    //     }
-    // }
-    // stroke();
+    getContextes((ctx) => {
+        ctx.strokeStyle = 'darkgreen';
+        ctx.lineWidth = 1
+        ctx.beginPath()
+    });
+    let prevX = -1000
+    while (dl.prev && dl.prev.data) {
+        const sec = dl.data.sec - secOffset
+        if (sec <= 0) {
+            break
+        }
+        const x = X(sec)
+        const fx = Math.floor(x)
+        if (fx !== prevX) {
+            ctx2D.accelerometer.lineTo(x, Y(dl.data.a[graphSettings.axis]))
+            ctx2D.gyroscope.lineTo(x, Y(dl.data.g[graphSettings.axis]))
+            ctx2D.rotations.lineTo(x, Y(dl.data.r[graphSettings.axis]))
+            prevX = fx
+        }
+        dl = dl.prev
+    }
+    getContextes((ctx) => {
+        ctx.stroke()
+    });
 }
 
 function setSecondsAndMarkers(l) {
@@ -191,7 +176,6 @@ function setSecondsAndMarkers(l) {
         if (Math.floor(currS) - Math.floor(prevS) === 1) {
             l.prev.data.secMarker = false
             l.data.secMarker = true
-            // console.log("sec marker", l.data.sec, currS, prevS)
         } else {
             if (Math.floor(currS * 10) - Math.floor(prevS * 10) === 1) {
                 l.prev.data.decSecMarker = false
