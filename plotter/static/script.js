@@ -99,10 +99,12 @@ function drawYGrids() {
     let y = -graphSettings.yMax
     while (y <= graphSettings.yMax) {
         const gy = Y(y)
+        const xe = X(graphSettings.timeSpan * TIME_SCALE)
         beginPath()
         lineTo(X(0), gy, gy, gy)
-        lineTo(X(graphSettings.timeSpan * TIME_SCALE), gy, gy, gy)
+        lineTo(xe, gy, gy, gy)
         stroke()
+        drwaText(`${y}`,xe - 20, gy)
         y += graphSettings.yGrid
     }
 
