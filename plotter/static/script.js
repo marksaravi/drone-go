@@ -1,7 +1,8 @@
 const MAX_DATA_PER_SECOND = 4000
 const MAX_TIME_SPAN = 60
-var TIME_SCALE = 1e9
+const TIME_SCALE = 1e9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
+const FONT_SIZE = 10
 
 const X_PADDING = 48
 const Y_PADDING = 48
@@ -16,7 +17,8 @@ const graphSettings = {
     timeSpan: 10,
     yMax: 100,
     axis: 'roll',
-    yGrid: 15
+    yGrid: 15,
+    firstTime: 0,
 }
 const ctx2D = {
     accelerometer: null,
@@ -42,6 +44,9 @@ function getCanvasContext(id) {
     canvas.width = graphSettings.width;
     canvas.height = graphSettings.height;
     const ctx = canvas.getContext("2d");
+    ctx.font = `${FONT_SIZE}px Comic Sans MS`;
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
     return ctx
 }
 
@@ -103,7 +108,14 @@ function drawYGrids() {
 
 }
 
+function drwaText(txt, x, y) {
+    getContextes((ctx) => {
+        ctx.fillText(txt, x, y + FONT_SIZE * 1.5)
+    });
+}
+
 function drawXGrids(lastTime) {
+    const time0 = Math.floor((lastTime - graphSettings.firstTime) / TIME_SCALE)
     const sT = lastTime / TIME_SCALE % graphSettings.timeSpan
     const offset = sT - Math.floor(sT)
     getContextes((ctx) => {
@@ -119,6 +131,7 @@ function drawXGrids(lastTime) {
         lineTo(x, y1, y1, y1)
         lineTo(x, y2, y2, y2)
         stroke()
+        drwaText(`${Math.floor(100 * (time0-t)) / 100}`, x, y2)
     }
 }
 
@@ -133,11 +146,13 @@ function plot(datalink) {
         const ay = Y(datalink.data.a[graphSettings.axis])
         const gy = Y(datalink.data.g[graphSettings.axis])
         const ry = Y(datalink.data.r[graphSettings.axis])
+        const t = (datalink.data.t - graphSettings.firstTime) * TIME_SCALE
         xyBuffer[dataCounter] = {
             x,
             ay,
             gy,
-            ry
+            ry,
+            t,
         }
 
         dataCounter++
@@ -188,11 +203,14 @@ function createWebSocket() {
     firstlink.prev = link
 
     socket.addEventListener('message', function (event) {
-        const packets = JSON.parse(JSON.parse(event.data));
+        const packets = JSON.parse(JSON.parse(event.data))
         packets.forEach(p => {
             link = link.next
             link.data = p
             link.next.data = null
+            if (graphSettings.firstTime === 0) {
+                graphSettings.firstTime = p.t
+            }
         })
         plot(link)
     });
