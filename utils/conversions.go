@@ -18,6 +18,10 @@ func UInt64ToBytes(i uint64) []byte {
 	return buf
 }
 
+func UInt64FromBytes(bytes []byte) uint64 {
+	return binary.LittleEndian.Uint64(bytes)
+}
+
 func UInt32ToBytes(i uint32) []byte {
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, i)

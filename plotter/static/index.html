@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>IMU Plotter</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="settings">
+    <span class="setting-label" >Set Axis:</span>
+    <input type="button" value="Roll" class="settings-button" onclick="setAxis('roll')" />
+    <input type="button" value="Pitch" class="settings-button" onclick="setAxis('pitch')" />
+    <input type="button" value="Yaw" class="settings-button" onclick="setAxis('yaw')" />
+    <span class="setting-text" id="axis">roll</span>
+    <span class="spacer"></span>
+    <span class="setting-label" >Set Y Range:</span>
+    <input type="button" value="+1" class="settings-button" onclick="addYRange(1)" />
+    <input type="button" value="+10" class="settings-button" onclick="addYRange(10)" />
+    <input type="button" value="+30" class="settings-button" onclick="addYRange(30)" />
+    <span class="setting-text" id="yrange">90</span>
+    <input type="button" value="-30" class="settings-button" onclick="addYRange(-30)" />
+    <input type="button" value="-10" class="settings-button" onclick="addYRange(-10)" />
+    <input type="button" value="-1" class="settings-button" onclick="addYRange(-1)" />
+    <span class="spacer"></span>
+    <span class="setting-label" >Set Y Grids:</span>
+    <input type="button" value="+1" class="settings-button" onclick="addYGrid(1)" />
+    <span class="setting-text" id="ygrid">15</span>
+    <input type="button" value="-1" class="settings-button" onclick="addYGrid(-1)" />
+  </div>
+  <div id="canvas-container" class="graphs-container" >
+    <span class="graph-title">Accelerometer</span>
+    <canvas id="accelerometer"  class="graph"></canvas>
+    <span class="graph-title">Gyroscope</span>
+    <canvas id="gyroscope" class="graph"></canvas>
+    <span class="graph-title">Rotations</span>
+    <canvas id="rotations"  class="graph"></canvas>
+  </div>
+
+  <script src="script.js">
+  </script>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 package pidcontrol
 
 import (
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 type pidControl struct {

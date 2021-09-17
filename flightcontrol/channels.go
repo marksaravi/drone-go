@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/MarkSaravi/drone-go/models"
-	"github.com/MarkSaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func newEscThrottleControlChannel(ctx context.Context, wg *sync.WaitGroup, escdevice esc) chan<- map[uint8]float32 {

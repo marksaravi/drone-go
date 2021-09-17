@@ -3,7 +3,7 @@ package icm20948
 import (
 	"fmt"
 
-	"github.com/MarkSaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/models"
 )
 
 // initGyroscope initialise the Gyroscope
