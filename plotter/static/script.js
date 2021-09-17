@@ -3,9 +3,12 @@ const MAX_TIME_SPAN = 60
 const TIME_SCALE = 1e-9
 const MAX_BUFFER_SIZE = MAX_DATA_PER_SECOND * 120
 const FONT_SIZE = 10
-
 const X_PADDING = 32
 const Y_PADDING = 20
+const DEFAULT_Y_RANGE = 90
+const DEFAULT_Y_GRID = 15
+
+
 
 const graphSettings = {
     width: 0,
@@ -15,9 +18,10 @@ const graphSettings = {
     xScale: 1,
     yScale: 1,
     timeSpan: 10,
-    yMax: 105,
+    yRange: DEFAULT_Y_RANGE,
+    yMax: DEFAULT_Y_RANGE + DEFAULT_Y_GRID,
     axis: 'roll',
-    yGrid: 15,
+    yGrid: DEFAULT_Y_GRID,
     firstTime: 0,
 }
 const ctx2D = {
@@ -28,6 +32,12 @@ const ctx2D = {
 const xyBuffer = new Array(MAX_DATA_PER_SECOND * MAX_TIME_SPAN)
 const grapgs = ['accelerometer', 'gyroscope', 'rotations']
 
+function setScales() {
+    graphSettings.yMax = graphSettings.yRange + graphSettings.yGrid
+    graphSettings.xScale = graphSettings.graphWidth / graphSettings.timeSpan
+    graphSettings.yScale = graphSettings.graphHeight / 2 / graphSettings.yMax
+}
+
 function setupContainer() {
     const container = document.getElementById('canvas-container')
     const acc = document.getElementById('accelerometer')
@@ -35,8 +45,7 @@ function setupContainer() {
     graphSettings.height = acc.offsetHeight
     graphSettings.graphWidth = graphSettings.width - X_PADDING
     graphSettings.graphHeight = graphSettings.height - Y_PADDING
-    graphSettings.xScale = graphSettings.graphWidth / graphSettings.timeSpan
-    graphSettings.yScale = graphSettings.graphHeight / 2 / graphSettings.yMax
+    updateGridsSettings()
 }
 
 function getCanvasContext(id) {
@@ -228,6 +237,32 @@ function setAxis(axis) {
     graphSettings.axis = axis
     const label = document.getElementById('axis')
     label.innerHTML = axis
+}
+
+function addYRange(dy) {
+    const nYRange = graphSettings.yRange + dy
+    if (nYRange <= 0 || nYRange > 360) {
+        return;
+    }
+    graphSettings.yRange = nYRange
+    updateGridsSettings()
+}
+
+function addYGrid(dy) {
+    const nYGrid = graphSettings.yGrid + dy
+    if (nYGrid <= 0 || nYGrid > 30) {
+        return;
+    }
+    graphSettings.yGrid = nYGrid
+    updateGridsSettings()
+}
+
+function updateGridsSettings() {
+    setScales()
+    const ygrid = document.getElementById('ygrid')
+    ygrid.innerHTML = `${graphSettings.yGrid}`
+    const yrange = document.getElementById('yrange')
+    yrange.innerHTML = `${graphSettings.yRange}`
 }
 
 setupPlotter()
