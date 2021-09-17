@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"sync"
 
 	"github.com/marksaravi/drone-go/utils"
 	"nhooyr.io/websocket"
@@ -23,14 +24,30 @@ const (
 func Start() {
 
 	dataChannel := make(chan string, 10)
-
+	var waitGroup sync.WaitGroup
 	startUDPReceiverServer(dataChannel)
 	handler := createWebSocketHandler(dataChannel)
 	http.Handle("/", http.FileServer(http.Dir("./plotter/static")))
 	http.HandleFunc("/conn", handler)
-	log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
-	err := http.ListenAndServe(fmt.Sprintf("localhost:%d", SERVER_PORT), nil)
-	log.Fatal(err)
+	var server = http.Server{
+		Addr: fmt.Sprintf(":%d", SERVER_PORT),
+	}
+
+	waitGroup.Add(1)
+	go func(wg sync.WaitGroup) {
+		defer wg.Done()
+		log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+
+	}(waitGroup)
+	fmt.Println("Press ENTER to stop server")
+	fmt.Scanln()
+	if err := server.Close(); err != nil {
+		log.Fatal(err)
+	}
+	waitGroup.Wait()
 }
 
 func createWebSocketHandler(dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
