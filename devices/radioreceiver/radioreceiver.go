@@ -19,9 +19,17 @@ type radioReceiver struct {
 	connection chan bool
 }
 
-func NewRadioReceiver() *radioReceiver {
+func NewRadioReceiver(
+	ctx context.Context,
+	radio radio,
+	commandPerSecond int,
+	heartBeatPerSecond int,
+	timeout time.Duration,
+) *radioReceiver {
 	commandChan := make(chan models.FlightCommands)
 	connectionChan := make(chan bool)
+
+	go receiverTask(ctx, radio, commandPerSecond, heartBeatPerSecond, timeout, commandChan, connectionChan)
 
 	return &radioReceiver{
 		command:    commandChan,
@@ -32,14 +40,15 @@ func NewRadioReceiver() *radioReceiver {
 func receiverTask(
 	ctx context.Context,
 	radio radio,
-	dataPerSecond int,
+	commandPerSecond int,
+	heartBeatPerSecond int,
 	timeout time.Duration,
 	command chan models.FlightCommands,
 	connection chan bool,
 ) {
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, dataPerSecond, 0)
-	heartBeatTicker := utils.NewTicker(ctx, 1, 0)
+	receiveTicker := utils.NewTicker(ctx, commandPerSecond, 0)
+	heartBeatTicker := utils.NewTicker(ctx, heartBeatPerSecond, 0)
 	connected := false
 	var lastDataTime time.Time
 	for {
