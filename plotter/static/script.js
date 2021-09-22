@@ -267,3 +267,22 @@ function updateGridsSettings() {
 
 setupPlotter()
 createWebSocket()
+
+document.addEventListener('click', e => {
+    const isDropdownButton = e.target.matches("[data-dropdown-button]")
+    if (e.target.closest("[data-dropdown]") !== null) {
+        return
+    }
+
+    let currDropdown;
+    if (isDropdownButton) {
+        currDropdown = e.target.closest("[data-dropdown]")
+        currDropdown.classList.toggle("active")
+    }
+    document.querySelector("[data-dropdown].active").forEach(dropDown => {
+        if (dropDown === currDropdown) {
+            return
+        }
+        dropDown.classList.remove("active")
+    })
+})

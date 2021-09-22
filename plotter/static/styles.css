@@ -62,7 +62,7 @@ body {
     padding: 0;
 }
 
-.dropdown > .link:focus,
+.dropdown.active > .link:focus,
 .link:hover {
     color: black;
 }
