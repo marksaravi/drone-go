@@ -239,12 +239,8 @@ function setAxis(axis) {
     label.innerHTML = axis
 }
 
-function addYRange(dy) {
-    const nYRange = graphSettings.yRange + dy
-    if (nYRange <= 0 || nYRange > 360) {
-        return;
-    }
-    graphSettings.yRange = nYRange
+function setYRange(yrange) {
+    graphSettings.yRange = yrange
     updateGridsSettings()
 }
 
