@@ -30,17 +30,26 @@
       <a href="javascript:void(0);" class="link" onclick="setYRange(360)" >360&#176;</a>
     </div>
   </div>
+  <div class="dropdown" data-dropdown>
+    <input type="button" value="Y-Grids" class="link" data-dropdown-button />
+    <div class="dropdown-menu">
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(0.1)">0.1&#176;</a>
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(1)">1&#176;</a>
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(5)">5&#176;</a>
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(10)">10&#176;</a>
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(15)">15&#176;</a>
+      <a href="javascript:void(0);" class="link" onclick="setYGrid(30)">30&#176;</a>
+    </div>
+  </div>
   <div class="settings">
-    <span class="setting-label">Set Axis:</span>
+    <span class="setting-label">Axis:</span>
     <span class="setting-text" id="axis">roll</span>
     <span class="spacer"></span>
-    <span class="setting-label">Set Y Range:</span>
+    <span class="setting-label">Y-Range:</span>
     <span class="setting-text" id="yrange">90</span>
     <span class="spacer"></span>
-    <span class="setting-label">Set Y Grids:</span>
-    <input type="button" value="+1" class="settings-button" onclick="addYGrid(1)" />
+    <span class="setting-label">Y-Grids:</span>
     <span class="setting-text" id="ygrid">15</span>
-    <input type="button" value="-1" class="settings-button" onclick="addYGrid(-1)" />
   </div>
   <div id="canvas-container" class="graphs-container">
     <span class="graph-title">Accelerometer</span>

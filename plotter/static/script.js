@@ -244,13 +244,8 @@ function setYRange(yrange) {
     updateGridsSettings()
 }
 
-function addYGrid(dy) {
-    console.log(dy)
-    const nYGrid = graphSettings.yGrid + dy
-    if (nYGrid <= 0 || nYGrid > 30) {
-        return;
-    }
-    graphSettings.yGrid = nYGrid
+function setYGrid(ygrid) {
+    graphSettings.yGrid = ygrid
     updateGridsSettings()
 }
 
