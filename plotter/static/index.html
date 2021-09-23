@@ -7,48 +7,43 @@
 </head>
 
 <body>
-  <div class="dropdown" data-dropdown>
-    <input type="button" value="Axis" class="link" data-dropdown-button />
-    <div class="dropdown-menu">
-      <a href="javascript:void(0);" class="link" onclick="setAxis('roll')" >Roll</a>
-      <a href="javascript:void(0);" class="link" onclick="setAxis('pitch')">Pitch</a>
-      <a href="javascript:void(0);" class="link" onclick="setAxis('yaw')">Yaw</a>
-      </div>
-  </div>
-  <div class="dropdown" data-dropdown>
-    <input type="button" value="Y-Range" class="link" data-dropdown-button />
-    <div class="dropdown-menu">
-      <a href="javascript:void(0);" class="link" onclick="setYRange(1)">1&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(5)">5&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(15)">15&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(30)">30&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(45)">45&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(60)">60&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(90)">90&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(180)">180&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(270)" >270&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYRange(360)" >360&#176;</a>
-    </div>
-  </div>
-  <div class="dropdown" data-dropdown>
-    <input type="button" value="Y-Grids" class="link" data-dropdown-button />
-    <div class="dropdown-menu">
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(0.1)">0.1&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(1)">1&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(5)">5&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(10)">10&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(15)">15&#176;</a>
-      <a href="javascript:void(0);" class="link" onclick="setYGrid(30)">30&#176;</a>
-    </div>
-  </div>
   <div class="settings">
-    <span class="setting-label">Axis:</span>
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Axis" class="link" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link" onclick="setAxis('roll')">Roll</a>
+        <a href="javascript:void(0);" class="link" onclick="setAxis('pitch')">Pitch</a>
+        <a href="javascript:void(0);" class="link" onclick="setAxis('yaw')">Yaw</a>
+      </div>
+    </div>
     <span class="setting-text" id="axis">roll</span>
-    <span class="spacer"></span>
-    <span class="setting-label">Y-Range:</span>
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Y-Range" class="link" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link" onclick="setYRange(1)">1&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(5)">5&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(15)">15&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(30)">30&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(45)">45&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(60)">60&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(90)">90&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(180)">180&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(270)">270&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYRange(360)">360&#176;</a>
+      </div>
+    </div>
     <span class="setting-text" id="yrange">90</span>
-    <span class="spacer"></span>
-    <span class="setting-label">Y-Grids:</span>
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Y-Grids" class="link" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(0.1)">0.1&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(1)">1&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(5)">5&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(10)">10&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(15)">15&#176;</a>
+        <a href="javascript:void(0);" class="link" onclick="setYGrid(30)">30&#176;</a>
+      </div>
+    </div>
     <span class="setting-text" id="ygrid">15</span>
   </div>
   <div id="canvas-container" class="graphs-container">
