@@ -60,6 +60,7 @@ body {
     font-size: inherit;
     cursor: pointer;
     padding: 0;
+    clear: both;
 }
 
 .dropdown.active > .link:focus,
