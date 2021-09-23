@@ -8,33 +8,53 @@
 
 <body>
   <div class="settings">
-    <span class="setting-label" >Set Axis:</span>
-    <input type="button" value="Roll" class="settings-button" onclick="setAxis('roll')" />
-    <input type="button" value="Pitch" class="settings-button" onclick="setAxis('pitch')" />
-    <input type="button" value="Yaw" class="settings-button" onclick="setAxis('yaw')" />
-    <span class="setting-text" id="axis">roll</span>
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Axis" class="link dropdown-menu-button" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('roll')" data-dropdown-item>Roll</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('pitch')" data-dropdown-button>Pitch</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('yaw')" data-dropdown-button>Yaw</a>
+      </div>
+    </div>
+    <span class="setting-text capitalize" id="axis">roll</span>
     <span class="spacer"></span>
-    <span class="setting-label" >Set Y Range:</span>
-    <input type="button" value="+1" class="settings-button" onclick="addYRange(1)" />
-    <input type="button" value="+10" class="settings-button" onclick="addYRange(10)" />
-    <input type="button" value="+30" class="settings-button" onclick="addYRange(30)" />
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Y-Range" class="link dropdown-menu-button" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(1)" data-dropdown-item>1&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(5)" data-dropdown-item>5&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(15)" data-dropdown-item>15&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(30)" data-dropdown-item>30&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(45)" data-dropdown-item>45&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(60)" data-dropdown-item>60&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(90)" data-dropdown-item>90&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(180)" data-dropdown-item>180&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(270)" data-dropdown-item>270&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYRange(360)" data-dropdown-item>360&#176;</a>
+      </div>
+    </div>
     <span class="setting-text" id="yrange">90</span>
-    <input type="button" value="-30" class="settings-button" onclick="addYRange(-30)" />
-    <input type="button" value="-10" class="settings-button" onclick="addYRange(-10)" />
-    <input type="button" value="-1" class="settings-button" onclick="addYRange(-1)" />
     <span class="spacer"></span>
-    <span class="setting-label" >Set Y Grids:</span>
-    <input type="button" value="+1" class="settings-button" onclick="addYGrid(1)" />
+    <div class="dropdown" data-dropdown>
+      <input type="button" value="Y-Grids" class="link dropdown-menu-button" data-dropdown-button />
+      <div class="dropdown-menu">
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(0.1)" data-dropdown-item>0.1&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(1)" data-dropdown-item>1&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(5)" data-dropdown-item>5&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(10)" data-dropdown-item>10&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(15)" data-dropdown-item>15&#176;</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setYGrid(30)" data-dropdown-item>30&#176;</a>
+      </div>
+    </div>
     <span class="setting-text" id="ygrid">15</span>
-    <input type="button" value="-1" class="settings-button" onclick="addYGrid(-1)" />
   </div>
-  <div id="canvas-container" class="graphs-container" >
+  <div id="canvas-container" class="graphs-container">
     <span class="graph-title">Accelerometer</span>
-    <canvas id="accelerometer"  class="graph"></canvas>
+    <canvas id="accelerometer" class="graph"></canvas>
     <span class="graph-title">Gyroscope</span>
     <canvas id="gyroscope" class="graph"></canvas>
     <span class="graph-title">Rotations</span>
-    <canvas id="rotations"  class="graph"></canvas>
+    <canvas id="rotations" class="graph"></canvas>
   </div>
 
   <script src="script.js">
