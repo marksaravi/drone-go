@@ -36,11 +36,21 @@ body {
     margin-bottom: 4px;
 }
 
+.capitalize {
+    text-transform: capitalize;
+}
+
 .setting-text {
-    border: 1px solid #3c3c3c;
+    background-color: #e7e7e7;
     color: black;
-    font-weight: 300;
-    background-color: #f4f5d5;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    width: 96px;
+    border-radius: 4px;
 }
 
 .setting-label {
@@ -59,15 +69,37 @@ body {
     gap: 1rem;
 }
 
-.link {
+.dropdown-menu-button {
     background: none;
-    border: none;
+    color: #777;
+    text-align: left;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 16px;
+    border-radius: 4px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-radius: 4px;
+}
+
+.dropdown-menu-item {
+    background: none;
     text-decoration: none;
     color: #777;
-    font-family: inherit;
-    font-size: inherit;
-    cursor: pointer;
     padding: 0;
+    text-align: center;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 16px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    width: 96px;
+    border-radius: 4px;
+}
+
+.link {
+    border: none;
+    cursor: pointer;
 }
 
 .dropdown.active>.link, .link:hover {
@@ -100,4 +132,3 @@ body {
     transform: translateY(0);
     pointer-events: auto;
 }
-

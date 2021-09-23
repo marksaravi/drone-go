@@ -9,14 +9,15 @@
 <body>
   <div class="settings">
     <div class="dropdown" data-dropdown>
-      <input type="button" value="Axis" class="link" data-dropdown-button />
+      <input type="button" value="Axis" class="link dropdown-menu-button" data-dropdown-button />
       <div class="dropdown-menu">
-        <a href="javascript:void(0);" class="link" onclick="setAxis('roll')">Roll</a>
-        <a href="javascript:void(0);" class="link" onclick="setAxis('pitch')">Pitch</a>
-        <a href="javascript:void(0);" class="link" onclick="setAxis('yaw')">Yaw</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('roll')" data-dropdown-item>Roll</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('pitch')" data-dropdown-button>Pitch</a>
+        <a href="javascript:void(0);" class="link dropdown-menu-item" onclick="setAxis('yaw')" data-dropdown-button>Yaw</a>
       </div>
     </div>
-    <span class="setting-text" id="axis">roll</span>
+    <span class="setting-text capitalize" id="axis">roll</span>
+    <span class="spacer"></span>
     <div class="dropdown" data-dropdown>
       <input type="button" value="Y-Range" class="link" data-dropdown-button />
       <div class="dropdown-menu">
@@ -33,6 +34,7 @@
       </div>
     </div>
     <span class="setting-text" id="yrange">90</span>
+    <span class="spacer"></span>
     <div class="dropdown" data-dropdown>
       <input type="button" value="Y-Grids" class="link" data-dropdown-button />
       <div class="dropdown-menu">

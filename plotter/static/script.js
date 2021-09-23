@@ -262,19 +262,21 @@ setupPlotter()
 createWebSocket()
 
 document.addEventListener("click", e => {
-    const isDropdownButton = e.target.matches("[data-dropdown-button]")
-    if (!isDropdownButton && e.target.closest("[data-dropdown]") != null) return
-  
     let currentDropdown
-    if (isDropdownButton) {
+    const isDropdownItem = e.target.matches("[data-dropdown-item]")
+    const isDropdownButton = e.target.matches("[data-dropdown-button]")
+
+    if (!isDropdownButton && !isDropdownItem && e.target.closest("[data-dropdown]") != null) {
+        return
+    }
+  
+    if (isDropdownButton || isDropdownItem) {
       currentDropdown = e.target.closest("[data-dropdown]")
-      console.log("toggle active")
       currentDropdown.classList.toggle("active")
     }
   
     document.querySelectorAll("[data-dropdown].active").forEach(dropdown => {
       if (dropdown === currentDropdown) return
-      console.log("remove active")
       dropdown.classList.remove("active")
     })
   })
