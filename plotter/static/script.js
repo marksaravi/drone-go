@@ -283,6 +283,7 @@ document.addEventListener("click", e => {
   
     document.querySelectorAll("[data-dropdown].active").forEach(dropdown => {
       if (dropdown === currentDropdown) return
+      console.log("remove active")
       dropdown.classList.remove("active")
     })
   })

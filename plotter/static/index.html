@@ -8,6 +8,14 @@
 
 <body>
   <div class="dropdown" data-dropdown>
+    <input type="button" value="Axis" class="link" data-dropdown-button />
+    <div class="dropdown-menu">
+      <a href="javascript:void(0);" class="link" onclick="setAxis('roll')" >Roll</a>
+      <a href="javascript:void(0);" class="link" onclick="setAxis('pitch')">Pitch</a>
+      <a href="javascript:void(0);" class="link" onclick="setAxis('roll')">Yaw</a>
+      </div>
+  </div>
+  <div class="dropdown" data-dropdown>
     <input type="button" value="Y Range" class="link" data-dropdown-button />
     <div class="dropdown-menu">
       <input type="button" value="+1" class="link" onclick="addYRange(1)" />
