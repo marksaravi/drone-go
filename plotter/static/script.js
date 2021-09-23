@@ -249,6 +249,7 @@ function addYRange(dy) {
 }
 
 function addYGrid(dy) {
+    console.log(dy)
     const nYGrid = graphSettings.yGrid + dy
     if (nYGrid <= 0 || nYGrid > 30) {
         return;
@@ -258,6 +259,7 @@ function addYGrid(dy) {
 }
 
 function updateGridsSettings() {
+    console.log('****')
     setScales()
     const ygrid = document.getElementById('ygrid')
     ygrid.innerHTML = `${graphSettings.yGrid}`
@@ -268,21 +270,19 @@ function updateGridsSettings() {
 setupPlotter()
 createWebSocket()
 
-document.addEventListener('click', e => {
+document.addEventListener("click", e => {
     const isDropdownButton = e.target.matches("[data-dropdown-button]")
-    if (e.target.closest("[data-dropdown]") !== null) {
-        return
-    }
-
-    let currDropdown;
+    if (!isDropdownButton && e.target.closest("[data-dropdown]") != null) return
+  
+    let currentDropdown
     if (isDropdownButton) {
-        currDropdown = e.target.closest("[data-dropdown]")
-        currDropdown.classList.toggle("active")
+      currentDropdown = e.target.closest("[data-dropdown]")
+      console.log("toggle active")
+      currentDropdown.classList.toggle("active")
     }
-    document.querySelector("[data-dropdown].active").forEach(dropDown => {
-        if (dropDown === currDropdown) {
-            return
-        }
-        dropDown.classList.remove("active")
+  
+    document.querySelectorAll("[data-dropdown].active").forEach(dropdown => {
+      if (dropdown === currentDropdown) return
+      dropdown.classList.remove("active")
     })
-})
+  })

@@ -8,7 +8,7 @@
 
 <body>
   <div class="dropdown" data-dropdown>
-    <input type="button" value="Y Range 0" class="link" data-dropdown-button />
+    <input type="button" value="Y Range" class="link" data-dropdown-button />
     <div class="dropdown-menu">
       <input type="button" value="+1" class="link" onclick="addYRange(1)" />
       <input type="button" value="+10" class="link" onclick="addYRange(10)" />
@@ -18,7 +18,7 @@
       <input type="button" value="-1" class="link" onclick="addYRange(-1)" />
     </div>
   </div>
-  <!-- <div class="settings">
+  <div class="settings">
     <span class="setting-label">Set Axis:</span>
     <input type="button" value="Roll" class="settings-button" onclick="setAxis('roll')" />
     <input type="button" value="Pitch" class="settings-button" onclick="setAxis('pitch')" />
@@ -32,7 +32,7 @@
     <input type="button" value="+1" class="settings-button" onclick="addYGrid(1)" />
     <span class="setting-text" id="ygrid">15</span>
     <input type="button" value="-1" class="settings-button" onclick="addYGrid(-1)" />
-  </div> -->
+  </div>
   <div id="canvas-container" class="graphs-container">
     <span class="graph-title">Accelerometer</span>
     <canvas id="accelerometer" class="graph"></canvas>
