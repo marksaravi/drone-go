@@ -250,7 +250,6 @@ function setYGrid(ygrid) {
 }
 
 function updateGridsSettings() {
-    console.log('****')
     setScales()
     const ygrid = document.getElementById('ygrid')
     ygrid.innerHTML = `${graphSettings.yGrid}`
