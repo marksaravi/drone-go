@@ -8,3 +8,5 @@ require (
 	nhooyr.io/websocket v1.8.7
 	periph.io/x/periph v3.6.4+incompatible
 )
+
+require github.com/klauspost/compress v1.10.3 // indirect
