@@ -12,7 +12,7 @@ type radio interface {
 	ReceiverOn()
 	Receive() ([32]byte, bool)
 	TransmitterOn()
-	Transmit([]byte) error
+	Transmit([32]byte) error
 }
 type radioReceiver struct {
 	command    chan models.FlightCommands
@@ -24,12 +24,12 @@ func NewRadioReceiver(
 	radio radio,
 	commandPerSecond int,
 	heartBeatPerSecond int,
-	timeout time.Duration,
+	receiverTimeout time.Duration,
 ) *radioReceiver {
 	commandChan := make(chan models.FlightCommands)
 	connectionChan := make(chan bool)
 
-	go receiverTask(ctx, radio, commandPerSecond, heartBeatPerSecond, timeout, commandChan, connectionChan)
+	go receiverRoutine(ctx, radio, int(float32(commandPerSecond)*1.5), heartBeatPerSecond, receiverTimeout, commandChan, connectionChan)
 
 	return &radioReceiver{
 		command:    commandChan,
@@ -37,12 +37,12 @@ func NewRadioReceiver(
 	}
 }
 
-func receiverTask(
+func receiverRoutine(
 	ctx context.Context,
 	radio radio,
 	commandPerSecond int,
 	heartBeatPerSecond int,
-	timeout time.Duration,
+	receiverTimeout time.Duration,
 	command chan models.FlightCommands,
 	connection chan bool,
 ) {
@@ -65,13 +65,15 @@ func receiverTask(
 				}
 				command <- utils.DeserializeFlightCommand(data)
 			} else {
-				if connected && time.Since(lastDataTime) > timeout {
+				if connected && time.Since(lastDataTime) > receiverTimeout {
 					connected = false
 					connection <- false
 				}
 			}
 		case <-heartBeatTicker:
 			radio.TransmitterOn()
+			timedata := utils.Int64ToBytes(time.Now().UnixNano())
+			radio.Transmit(utils.SliceToArray32(timedata[:]))
 			radio.ReceiverOn()
 		}
 	}

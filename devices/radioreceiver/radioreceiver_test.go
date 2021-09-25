@@ -56,7 +56,7 @@ func (r *mockradio) TransmitterOn() {
 	r.isTransmitterOn = true
 }
 
-func (r *mockradio) Transmit(data []byte) error {
+func (r *mockradio) Transmit(data [32]byte) error {
 	return nil
 }
 

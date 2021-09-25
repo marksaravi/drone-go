@@ -34,3 +34,10 @@ type FlightCommands struct {
 	ButtonBottomLeft  bool
 	ButtonBottomRight bool
 }
+
+type RadioLink interface {
+	ReceiverOn()
+	Receive() ([32]byte, bool)
+	TransmitterOn()
+	Transmit([32]byte) error
+}

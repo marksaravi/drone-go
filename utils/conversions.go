@@ -84,3 +84,9 @@ func SliceToArray8(slice []byte) [8]byte {
 	copy(array[:], slice)
 	return array
 }
+
+func SliceToArray32(slice []byte) [32]byte {
+	array := [32]byte{}
+	copy(array[:], slice)
+	return array
+}
