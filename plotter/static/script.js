@@ -239,21 +239,13 @@ function setAxis(axis) {
     label.innerHTML = axis
 }
 
-function addYRange(dy) {
-    const nYRange = graphSettings.yRange + dy
-    if (nYRange <= 0 || nYRange > 360) {
-        return;
-    }
-    graphSettings.yRange = nYRange
+function setYRange(yrange) {
+    graphSettings.yRange = yrange
     updateGridsSettings()
 }
 
-function addYGrid(dy) {
-    const nYGrid = graphSettings.yGrid + dy
-    if (nYGrid <= 0 || nYGrid > 30) {
-        return;
-    }
-    graphSettings.yGrid = nYGrid
+function setYGrid(ygrid) {
+    graphSettings.yGrid = ygrid
     updateGridsSettings()
 }
 
@@ -267,3 +259,23 @@ function updateGridsSettings() {
 
 setupPlotter()
 createWebSocket()
+
+document.addEventListener("click", e => {
+    let currentDropdown
+    const isDropdownItem = e.target.matches("[data-dropdown-item]")
+    const isDropdownButton = e.target.matches("[data-dropdown-button]")
+
+    if (!isDropdownButton && !isDropdownItem && e.target.closest("[data-dropdown]") != null) {
+        return
+    }
+  
+    if (isDropdownButton || isDropdownItem) {
+      currentDropdown = e.target.closest("[data-dropdown]")
+      currentDropdown.classList.toggle("active")
+    }
+  
+    document.querySelectorAll("[data-dropdown].active").forEach(dropdown => {
+      if (dropdown === currentDropdown) return
+      dropdown.classList.remove("active")
+    })
+  })
