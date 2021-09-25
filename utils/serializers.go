@@ -12,6 +12,7 @@ func SerializeFlightCommand(flightCommands models.FlightCommands) []byte {
 	payload = append(payload, Float32ToBytes(flightCommands.Pitch)...)
 	payload = append(payload, Float32ToBytes(flightCommands.Yaw)...)
 	payload = append(payload, Float32ToBytes(flightCommands.Throttle)...)
+	// payload = append(payload, UI)
 	bottons := BoolArrayToByte([8]bool{
 		flightCommands.ButtonFrontLeft,
 		flightCommands.ButtonFrontRight,

@@ -12,14 +12,22 @@ func UInt16ToBytes(i uint16) []byte {
 	return buf
 }
 
-func UInt64ToBytes(i uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, i)
+func UInt64ToBytes(i uint64) [8]byte {
+	buf := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
+	binary.LittleEndian.PutUint64(buf[:], i)
 	return buf
 }
 
-func UInt64FromBytes(bytes []byte) uint64 {
-	return binary.LittleEndian.Uint64(bytes)
+func UInt64FromBytes(bytes [8]byte) uint64 {
+	return binary.LittleEndian.Uint64(bytes[:])
+}
+
+func Int64ToByteArray(i int64) [8]byte {
+	return UInt64ToBytes(uint64(i))
+}
+
+func Int64FromByteArray(bytes [8]byte) int64 {
+	return int64(UInt64FromBytes(bytes))
 }
 
 func UInt32ToBytes(i uint32) []byte {

@@ -77,3 +77,31 @@ func TestReceiverConnected(t *testing.T) {
 		t.Fatal("Receiver failed to connect")
 	}
 }
+
+func TestReceiverTimeout(t *testing.T) {
+	radio := NewMockRadio([][]byte{utils.SerializeFlightCommand(models.FlightCommands{
+		Id: 0,
+	})})
+	ctx, cancel := context.WithCancel(context.Background())
+	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC, time.Millisecond*time.Duration(TIMEOUT_MS))
+	var running bool = true
+	time.AfterFunc(time.Duration(100)*time.Millisecond, func() {
+		cancel()
+	})
+	var connected []bool = []bool{}
+	for running {
+		select {
+		case <-ctx.Done():
+			running = false
+		case <-receiver.command:
+		case conn := <-receiver.connection:
+			connected = append(connected, conn)
+		}
+	}
+	if !radio.isReceiverOn || radio.isTransmitterOn {
+		t.Fatal("Receiver is not activated")
+	}
+	// if !connected {
+	// 	t.Fatal("Receiver failed to connect")
+	// }
+}

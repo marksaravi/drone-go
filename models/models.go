@@ -22,6 +22,7 @@ type ImuRotations struct {
 
 type FlightCommands struct {
 	Id                uint32
+	Time              int64
 	Roll              float32
 	Pitch             float32
 	Yaw               float32

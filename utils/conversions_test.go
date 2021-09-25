@@ -77,3 +77,35 @@ func TestBoolArrayFromByte(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestNegativeInt64ToByteArray(t *testing.T) {
+	want := [8]byte{8, 0, 0, 0, 0, 0, 0, 128}
+	got := Int64ToByteArray(-9223372036854775800)
+	if !compareByteArrays(want[:], got[:]) {
+		t.Fatalf("Wanted %v, got %v", want, got)
+	}
+}
+
+func TestNegativeInt64FromByteArray(t *testing.T) {
+	const want int64 = -9223372036854775800
+	got := Int64FromByteArray([8]byte{8, 0, 0, 0, 0, 0, 0, 128})
+	if got != want {
+		t.Fatalf("Wanted %d, got %d", want, got)
+	}
+}
+
+func TestPositiveInt64ToByteArray(t *testing.T) {
+	want := [8]byte{248, 255, 255, 255, 255, 255, 255, 127}
+	got := Int64ToByteArray(9223372036854775800)
+	if !compareByteArrays(want[:], got[:]) {
+		t.Fatalf("Wanted %v, got %v", want, got)
+	}
+}
+
+func TestPositiveInt64FromByteArray(t *testing.T) {
+	const want int64 = 9223372036854775800
+	got := Int64FromByteArray([8]byte{248, 255, 255, 255, 255, 255, 255, 127})
+	if got != want {
+		t.Fatalf("Wanted %d, got %d", want, got)
+	}
+}
