@@ -10,9 +10,9 @@ import (
 
 type radio interface {
 	ReceiverOn()
-	Receive() ([]byte, bool)
+	Receive() ([32]byte, bool)
 	TransmitterOn()
-	Transmit([]byte) error
+	Transmit([32]byte) error
 }
 
 type button interface {
@@ -72,8 +72,9 @@ func (rc *remoteControl) Start() {
 				fc.ButtonTopRight, fc.ButtonBottomLeft,
 				fc.ButtonBottomRight,
 			)
+			payload := utils.SerializeFlightCommand(fc)
 			rc.radio.Transmit(
-				utils.SerializeFlightCommand(fc))
+				payload)
 			rc.radio.ReceiverOn()
 			id++
 		case flightCommands = <-acknowleg:

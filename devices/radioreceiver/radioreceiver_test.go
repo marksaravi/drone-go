@@ -14,19 +14,19 @@ const HEARBIT_PER_SEC int = 1
 const RECEIVE_PER_SEC int = 50
 
 type mockradio struct {
-	mockdata        [][]byte
+	mockdata        [][32]byte
 	receiveIndex    int
 	isReceiverOn    bool
 	isTransmitterOn bool
 }
 
-func (r *mockradio) Receive() ([]byte, bool) {
+func (r *mockradio) Receive() ([32]byte, bool) {
 	i := r.receiveIndex
 	r.receiveIndex++
 	if i < len(r.mockdata) {
 		return r.mockdata[i], true
 	}
-	return []byte{}, false
+	return [32]byte{}, false
 }
 
 func (r *mockradio) ReceiverOn() {
@@ -43,7 +43,7 @@ func (r *mockradio) Transmit(data []byte) error {
 	return nil
 }
 
-func NewMockRadio(data [][]byte) *mockradio {
+func NewMockRadio(data [][32]byte) *mockradio {
 	return &mockradio{
 		mockdata:     data,
 		receiveIndex: 0,
@@ -51,7 +51,7 @@ func NewMockRadio(data [][]byte) *mockradio {
 }
 
 func TestReceiverConnected(t *testing.T) {
-	radio := NewMockRadio([][]byte{utils.SerializeFlightCommand(models.FlightCommands{
+	radio := NewMockRadio([][32]byte{utils.SerializeFlightCommand(models.FlightCommands{
 		Id: 0,
 	})})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -79,7 +79,7 @@ func TestReceiverConnected(t *testing.T) {
 }
 
 func TestReceiverTimeout(t *testing.T) {
-	radio := NewMockRadio([][]byte{utils.SerializeFlightCommand(models.FlightCommands{
+	radio := NewMockRadio([][32]byte{utils.SerializeFlightCommand(models.FlightCommands{
 		Id: 0,
 	})})
 	ctx, cancel := context.WithCancel(context.Background())

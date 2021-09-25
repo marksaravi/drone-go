@@ -126,13 +126,13 @@ func extractImuRotations(data []byte) string {
 	a := extractRotations(data[0:ROTATION_SIZE])
 	g := extractRotations(data[ROTATION_SIZE : 2*ROTATION_SIZE])
 	r := extractRotations(data[2*ROTATION_SIZE : 3*ROTATION_SIZE])
-	t := utils.UInt64FromBytes(data[3*ROTATION_SIZE : 3*ROTATION_SIZE+TIME_SIZE])
+	t := utils.UInt64FromBytes(utils.SliceToArray8(data[3*ROTATION_SIZE : 3*ROTATION_SIZE+TIME_SIZE]))
 	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d}", a, g, r, t)
 }
 
 func extractRotations(data []byte) string {
-	roll := float64(utils.Float32FromBytes(data[0:4]))
-	pitch := float64(utils.Float32FromBytes(data[4:8]))
-	yaw := float64(utils.Float32FromBytes(data[8:12]))
+	roll := float64(utils.Float32FromBytes(utils.SliceToArray4(data[0:4])))
+	pitch := float64(utils.Float32FromBytes(utils.SliceToArray4(data[4:8])))
+	yaw := float64(utils.Float32FromBytes(utils.SliceToArray4(data[8:12])))
 	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", roll, pitch, yaw)
 }

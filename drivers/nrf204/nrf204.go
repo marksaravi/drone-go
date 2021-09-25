@@ -200,14 +200,16 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) Receive() ([]byte, bool) {
+func (radio *nrf204l01) Receive() ([32]byte, bool) {
 	if !radio.isDataAvailable() {
-		return nil, false
+		return [32]byte{}, false
 	}
-	payload, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+	payload := [32]byte{}
+	data, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+	copy(payload[:], data)
 	radio.resetDR()
 	if err != nil {
-		return nil, false
+		return [32]byte{}, false
 	}
 	return payload, true
 }
@@ -225,7 +227,7 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) Transmit(payload []byte) error {
+func (radio *nrf204l01) Transmit(payload [32]byte) error {
 	if radio.isReceiver {
 		return errors.New("not in transmit mode")
 	}
@@ -234,7 +236,7 @@ func (radio *nrf204l01) Transmit(payload []byte) error {
 	if len(payload) < int(PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
-	_, err := writeSPI(W_TX_PAYLOAD, payload, radio.conn)
+	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
 	radio.ce.Out(gpio.Low)

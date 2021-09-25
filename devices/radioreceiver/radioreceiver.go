@@ -10,7 +10,7 @@ import (
 
 type radio interface {
 	ReceiverOn()
-	Receive() ([]byte, bool)
+	Receive() ([32]byte, bool)
 	TransmitterOn()
 	Transmit([]byte) error
 }
