@@ -50,7 +50,7 @@ func receiverTask(
 	receiveTicker := utils.NewTicker(ctx, commandPerSecond, 0)
 	heartBeatTicker := utils.NewTicker(ctx, heartBeatPerSecond, 0)
 	connected := false
-	var lastDataTime time.Time
+	var lastDataTime time.Time = time.Now()
 	for {
 		select {
 		case <-ctx.Done():
@@ -58,11 +58,11 @@ func receiverTask(
 		case <-receiveTicker:
 			data, dataAvailable := radio.Receive()
 			if dataAvailable {
+				lastDataTime = time.Now()
 				if !connected {
 					connected = true
 					connection <- true
 				}
-				lastDataTime = time.Now()
 				command <- utils.DeserializeFlightCommand(data)
 			} else {
 				if connected && time.Since(lastDataTime) > timeout {

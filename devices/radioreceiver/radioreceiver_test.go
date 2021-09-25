@@ -13,23 +13,40 @@ const TIMEOUT_MS int = 250
 const HEARBIT_PER_SEC int = 1
 const RECEIVE_PER_SEC int = 50
 
+type mockData struct {
+	interval  time.Duration
+	available bool
+	data      [32]byte
+}
 type mockradio struct {
-	mockdata        [][32]byte
+	startTime       time.Time
+	tries           []time.Duration
+	mockdata        []mockData
 	receiveIndex    int
 	isReceiverOn    bool
 	isTransmitterOn bool
+	cancel          context.CancelFunc
 }
 
 func (r *mockradio) Receive() ([32]byte, bool) {
-	i := r.receiveIndex
-	r.receiveIndex++
-	if i < len(r.mockdata) {
-		return r.mockdata[i], true
+	if r.receiveIndex == len(r.mockdata) {
+		r.cancel()
+		return [32]byte{}, false
 	}
-	return [32]byte{}, false
+	r.tries = append(r.tries, time.Since(r.startTime))
+	if time.Since(r.startTime) < r.mockdata[r.receiveIndex].interval {
+
+		return [32]byte{}, false
+	}
+	r.startTime = time.Now()
+	data := r.mockdata[r.receiveIndex].data
+	available := r.mockdata[r.receiveIndex].available
+	r.receiveIndex++
+	return data, available
 }
 
 func (r *mockradio) ReceiverOn() {
+	r.startTime = time.Now()
 	r.isReceiverOn = true
 	r.isTransmitterOn = false
 }
@@ -43,23 +60,32 @@ func (r *mockradio) Transmit(data []byte) error {
 	return nil
 }
 
-func NewMockRadio(data [][32]byte) *mockradio {
+func NewMockRadio(cancel context.CancelFunc, data []mockData) *mockradio {
 	return &mockradio{
 		mockdata:     data,
 		receiveIndex: 0,
+		cancel:       cancel,
 	}
 }
 
 func TestReceiverConnected(t *testing.T) {
-	radio := NewMockRadio([][32]byte{utils.SerializeFlightCommand(models.FlightCommands{
-		Id: 0,
-	})})
 	ctx, cancel := context.WithCancel(context.Background())
+	radio := NewMockRadio(cancel, []mockData{
+		{
+			data: utils.SerializeFlightCommand(models.FlightCommands{
+				Id: 0,
+			}),
+			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			available: true,
+		},
+		{
+			data:      [32]byte{},
+			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			available: false,
+		},
+	})
 	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC, time.Millisecond*time.Duration(TIMEOUT_MS))
 	var running bool = true
-	time.AfterFunc(time.Duration(100)*time.Millisecond, func() {
-		cancel()
-	})
 	var connected bool = false
 	for running {
 		select {
@@ -79,15 +105,24 @@ func TestReceiverConnected(t *testing.T) {
 }
 
 func TestReceiverTimeout(t *testing.T) {
-	radio := NewMockRadio([][32]byte{utils.SerializeFlightCommand(models.FlightCommands{
-		Id: 0,
-	})})
 	ctx, cancel := context.WithCancel(context.Background())
+	radio := NewMockRadio(cancel, []mockData{
+		{
+			data: utils.SerializeFlightCommand(models.FlightCommands{
+				Id: 0,
+			}),
+			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			available: true,
+		},
+		{
+			data:      [32]byte{},
+			interval:  time.Second/time.Duration(RECEIVE_PER_SEC) + time.Millisecond*time.Duration(TIMEOUT_MS),
+			available: false,
+		},
+	})
+
 	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC, time.Millisecond*time.Duration(TIMEOUT_MS))
 	var running bool = true
-	time.AfterFunc(time.Duration(100)*time.Millisecond, func() {
-		cancel()
-	})
 	var connected []bool = []bool{}
 	for running {
 		select {
@@ -95,13 +130,14 @@ func TestReceiverTimeout(t *testing.T) {
 			running = false
 		case <-receiver.command:
 		case conn := <-receiver.connection:
+			t.Log(conn)
 			connected = append(connected, conn)
 		}
 	}
 	if !radio.isReceiverOn || radio.isTransmitterOn {
 		t.Fatal("Receiver is not activated")
 	}
-	// if !connected {
-	// 	t.Fatal("Receiver failed to connect")
-	// }
+	if len(connected) != 2 || !connected[0] || connected[1] {
+		t.Fatal("Receiver failed to timeout", radio.tries, connected)
+	}
 }
