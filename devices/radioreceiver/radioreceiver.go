@@ -8,12 +8,6 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
-type radio interface {
-	ReceiverOn()
-	Receive() ([32]byte, bool)
-	TransmitterOn()
-	Transmit([32]byte) error
-}
 type radioReceiver struct {
 	command    chan models.FlightCommands
 	connection chan bool
@@ -21,7 +15,7 @@ type radioReceiver struct {
 
 func NewRadioReceiver(
 	ctx context.Context,
-	radio radio,
+	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
 	receiverTimeout time.Duration,
@@ -39,7 +33,7 @@ func NewRadioReceiver(
 
 func receiverRoutine(
 	ctx context.Context,
-	radio radio,
+	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
 	receiverTimeout time.Duration,
