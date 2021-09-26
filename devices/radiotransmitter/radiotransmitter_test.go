@@ -83,7 +83,9 @@ func TestTransmitterConnected(t *testing.T) {
 	})
 	hearbeatChan := NewRadioTransmitter(
 		ctx,
-		&commandreader{},
+		func() models.FlightCommands {
+			return models.FlightCommands{}
+		},
 		radio,
 		TRANSMIT_PER_SEC,
 		HEARBIT_PER_SEC,
@@ -121,7 +123,9 @@ func TestReceiverTimeout(t *testing.T) {
 	})
 	hearbeatChan := NewRadioTransmitter(
 		ctx,
-		&commandreader{},
+		func() models.FlightCommands {
+			return models.FlightCommands{}
+		},
 		radio,
 		TRANSMIT_PER_SEC,
 		HEARBIT_PER_SEC,

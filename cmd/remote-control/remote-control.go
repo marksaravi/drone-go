@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/marksaravi/drone-go/config"
@@ -53,5 +54,12 @@ func main() {
 	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
 	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
-	remoteControl.Start()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		fmt.Println("Press ENTER to Stop")
+		fmt.Scanln()
+		cancel()
+	}()
+	remoteControl.Start(ctx)
+	<-ctx.Done()
 }

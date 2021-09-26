@@ -14,7 +14,7 @@ type commandReader interface {
 
 func NewRadioTransmitter(
 	ctx context.Context,
-	commandreader commandReader,
+	commandreader func() models.FlightCommands,
 	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
@@ -36,7 +36,7 @@ func NewRadioTransmitter(
 
 func transmitterRoutine(
 	ctx context.Context,
-	commandreader commandReader,
+	commandreader func() models.FlightCommands,
 	heartbeat chan bool,
 	radio models.RadioLink,
 	commandPerSecond int,
@@ -54,7 +54,7 @@ func transmitterRoutine(
 			return
 		case t := <-transmitterTicker:
 			radio.TransmitterOn()
-			flightcommands := commandreader.Read()
+			flightcommands := commandreader()
 			flightcommands.Time = t
 			radio.Transmit(utils.SerializeFlightCommand(flightcommands))
 			id++
