@@ -6,40 +6,42 @@ import (
 	"math"
 )
 
-func UInt16ToBytes(i uint16) []byte {
-	buf := make([]byte, 2)
-	binary.LittleEndian.PutUint16(buf, i)
+func UInt64ToBytes(i uint64) [8]byte {
+	buf := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
+	binary.LittleEndian.PutUint64(buf[:], i)
 	return buf
 }
 
-func UInt64ToBytes(i uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, i)
-	return buf
+func UInt64FromBytes(bytes [8]byte) uint64 {
+	return binary.LittleEndian.Uint64(bytes[:])
 }
 
-func UInt64FromBytes(bytes []byte) uint64 {
-	return binary.LittleEndian.Uint64(bytes)
+func Int64ToBytes(i int64) [8]byte {
+	return UInt64ToBytes(uint64(i))
 }
 
-func UInt32ToBytes(i uint32) []byte {
+func Int64FromBytes(bytes [8]byte) int64 {
+	return int64(UInt64FromBytes(bytes))
+}
+
+func UInt32ToBytes(i uint32) [4]byte {
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, i)
-	return buf
+	return SliceToArray4(buf)
 }
 
-func UInt32FromBytes(bytes []byte) uint32 {
-	return binary.LittleEndian.Uint32(bytes)
+func UInt32FromBytes(bytes [4]byte) uint32 {
+	return binary.LittleEndian.Uint32(bytes[:])
 }
 
-func Float32ToBytes(f float32) []byte {
+func Float32ToBytes(f float32) [4]byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.LittleEndian, f)
-	return buf.Bytes()
+	return SliceToArray4(buf.Bytes())
 }
 
-func Float32FromBytes(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
+func Float32FromBytes(bytes [4]byte) float32 {
+	bits := binary.LittleEndian.Uint32(bytes[:])
 	float := math.Float32frombits(bits)
 	return float
 }
@@ -66,7 +68,25 @@ func BoolArrayFromByte(b byte) [8]bool {
 	return res
 }
 
-func Float64ToRoundedFloat32Bytes(x float64) []byte {
+func Float64ToRoundedFloat32Bytes(x float64) [4]byte {
 	var v float32 = float32(math.Round(x*100) / 100)
 	return Float32ToBytes(v)
+}
+
+func SliceToArray4(slice []byte) [4]byte {
+	array := [4]byte{}
+	copy(array[:], slice)
+	return array
+}
+
+func SliceToArray8(slice []byte) [8]byte {
+	array := [8]byte{}
+	copy(array[:], slice)
+	return array
+}
+
+func SliceToArray32(slice []byte) [32]byte {
+	array := [32]byte{}
+	copy(array[:], slice)
+	return array
 }

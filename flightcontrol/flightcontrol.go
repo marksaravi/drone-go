@@ -14,9 +14,9 @@ import (
 
 type radio interface {
 	ReceiverOn()
-	Receive() ([]byte, bool)
+	Receive() ([32]byte, bool)
 	TransmitterOn()
-	Transmit([]byte) error
+	Transmit([32]byte) error
 }
 
 type imu interface {
@@ -59,7 +59,7 @@ func (fc *flightControl) Start() {
 	fc.warmUp(cancel)
 	imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
 	escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
-	escRefresher := utils.NewTicker(fc.escUpdatePerSecond, 0)
+	escRefresher := utils.NewTicker(ctx, fc.escUpdatePerSecond, 0)
 	commandChannel := newCommandChannel(ctx, &wg, fc.radio)
 	pidControl := pidcontrol.NewPIDControl()
 	var running bool = true

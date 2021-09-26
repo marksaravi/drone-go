@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"log"
 	"runtime"
 	"time"
@@ -10,19 +11,24 @@ func Idle() {
 	runtime.Gosched()
 }
 
-func NewTicker(tickPerSecond int, tolerancePercent float32) <-chan int64 {
+func NewTicker(ctx context.Context, tickPerSecond int, tolerancePercent float32) <-chan int64 {
 	ticker := make(chan int64)
 	go func(t chan int64) {
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
 		tickDurStart := time.Now()
 		for {
-			now := time.Now()
-			if now.Sub(tickDurStart) >= tickDur {
-				tickDurStart = now
-				t <- now.UnixNano()
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				now := time.Now()
+				if now.Sub(tickDurStart) >= tickDur {
+					tickDurStart = now
+					t <- now.UnixNano()
+				}
+				Idle()
 			}
-			Idle()
 		}
 	}(ticker)
 	return ticker

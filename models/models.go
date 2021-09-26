@@ -22,6 +22,7 @@ type ImuRotations struct {
 
 type FlightCommands struct {
 	Id                uint32
+	Time              int64
 	Roll              float32
 	Pitch             float32
 	Yaw               float32
@@ -32,4 +33,11 @@ type FlightCommands struct {
 	ButtonTopRight    bool
 	ButtonBottomLeft  bool
 	ButtonBottomRight bool
+}
+
+type RadioLink interface {
+	ReceiverOn()
+	Receive() ([32]byte, bool)
+	TransmitterOn()
+	Transmit([32]byte) error
 }
