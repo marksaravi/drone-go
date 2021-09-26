@@ -46,7 +46,6 @@ func (r *mockradio) Receive() ([32]byte, bool) {
 }
 
 func (r *mockradio) ReceiverOn() {
-	r.startTime = time.Now()
 	r.isReceiverOn = true
 	r.isTransmitterOn = false
 }
@@ -65,6 +64,7 @@ func NewMockRadio(cancel context.CancelFunc, data []mockData) *mockradio {
 		mockdata:     data,
 		receiveIndex: 0,
 		cancel:       cancel,
+		startTime:    time.Now(),
 	}
 }
 
