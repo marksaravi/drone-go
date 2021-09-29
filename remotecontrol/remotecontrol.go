@@ -48,15 +48,19 @@ func NewRemoteControl(radio models.RadioLink, roll, pitch, yaw, throttle joystic
 }
 
 func (rc *remoteControl) Start(ctx context.Context) {
+	var id uint32 = 0
 	transmitter := radiotransmitter.NewRadioTransmitter(ctx, rc.radio, 20, 4, time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case t := <-transmitter.DataReadTicker:
-			transmitter.FlightComands <- models.FlightCommands{
-				Time: t,
-			}
+			flightcommands := rc.read()
+			flightcommands.Time = t
+			flightcommands.Id = id
+			id++
+			transmitter.FlightComands <- flightcommands
+			// fmt.Println(time.Unix(0, t).Format("2006-01-02 15:04:05.000"), flightcommands)
 		case hb := <-transmitter.DroneHeartBeat:
 			if hb {
 				log.Println("Connected to Drone")
