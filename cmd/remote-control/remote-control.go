@@ -53,8 +53,10 @@ func main() {
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
 	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
-	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
+
 	ctx, cancel := context.WithCancel(context.Background())
+	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
+
 	go func() {
 		fmt.Println("Press ENTER to Stop")
 		fmt.Scanln()

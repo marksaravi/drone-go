@@ -8,55 +8,59 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
-type commandReader interface {
-	Read() models.FlightCommands
+type radioTransmitter struct {
+	FlightComands  chan<- models.FlightCommands
+	DataReadTicker <-chan int64
+	DroneHeartBeat <-chan bool
 }
 
 func NewRadioTransmitter(
 	ctx context.Context,
-	commandreader func() models.FlightCommands,
 	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
 	hearbeattTimeout time.Duration,
-) chan bool {
+) *radioTransmitter {
 	heartbeatChan := make(chan bool)
-
+	dataReadTicker := utils.NewTicker(ctx, commandPerSecond, 0)
+	flightCommandsChan := make(chan models.FlightCommands)
 	go transmitterRoutine(
 		ctx,
-		commandreader,
+		flightCommandsChan,
 		heartbeatChan,
 		radio,
 		commandPerSecond,
 		heartBeatPerSecond,
 		hearbeattTimeout,
 	)
-	return heartbeatChan
+	return &radioTransmitter{
+		FlightComands:  flightCommandsChan,
+		DataReadTicker: dataReadTicker,
+		DroneHeartBeat: heartbeatChan,
+	}
 }
 
 func transmitterRoutine(
 	ctx context.Context,
-	commandreader func() models.FlightCommands,
+	flightcommands chan models.FlightCommands,
 	heartbeat chan bool,
 	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
 	hearbeattTimeout time.Duration,
 ) {
-	transmitterTicker := utils.NewTicker(ctx, commandPerSecond, 0)
 	heartbeatTicker := utils.NewTicker(ctx, int(float32(heartBeatPerSecond)*1.5), 0)
 	var id uint32 = 0
 	lastHeartbeat := time.Now()
 	var heartbeating bool = false
+	radio.ReceiverOn()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case t := <-transmitterTicker:
+		case fc := <-flightcommands:
 			radio.TransmitterOn()
-			flightcommands := commandreader()
-			flightcommands.Time = t
-			radio.Transmit(utils.SerializeFlightCommand(flightcommands))
+			radio.Transmit(utils.SerializeFlightCommand(fc))
 			id++
 			radio.ReceiverOn()
 		case <-heartbeatTicker:
