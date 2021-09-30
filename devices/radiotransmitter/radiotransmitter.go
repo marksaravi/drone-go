@@ -2,7 +2,7 @@ package radiotransmitter
 
 import (
 	"context"
-	"log"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -17,6 +17,7 @@ type radioTransmitter struct {
 
 func NewRadioTransmitter(
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	radio models.RadioLink,
 	commandPerSecond int,
 	hearbeattTimeout time.Duration,
@@ -24,8 +25,10 @@ func NewRadioTransmitter(
 	heartbeatChan := make(chan bool)
 	dataReadTicker := utils.NewTicker(ctx, commandPerSecond, 0)
 	flightCommandsChan := make(chan models.FlightCommands)
+	wg.Add(1)
 	go transmitterRoutine(
 		ctx,
+		wg,
 		flightCommandsChan,
 		heartbeatChan,
 		radio,
@@ -41,12 +44,14 @@ func NewRadioTransmitter(
 
 func transmitterRoutine(
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	flightcommands chan models.FlightCommands,
 	heartbeat chan bool,
 	radio models.RadioLink,
 	commandPerSecond int,
 	hearbeattTimeout time.Duration,
 ) {
+	defer wg.Done()
 	var id uint32 = 0
 	lastHeartbeat := time.Now()
 	var heartbeating bool = false
@@ -54,7 +59,6 @@ func transmitterRoutine(
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Canceled")
 			return
 		case fc := <-flightcommands:
 			radio.TransmitterOn()

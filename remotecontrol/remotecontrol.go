@@ -3,6 +3,7 @@ package remotecontrol
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/radiotransmitter"
@@ -47,11 +48,13 @@ func NewRemoteControl(radio models.RadioLink, roll, pitch, yaw, throttle joystic
 	}
 }
 
-func (rc *remoteControl) Start(ctx context.Context) {
+func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var id uint32 = 0
 	const heartbeatPerSecond int = 4
 	const commandPerSecond int = 20
-	transmitter := radiotransmitter.NewRadioTransmitter(ctx, rc.radio, commandPerSecond, time.Second/time.Duration(heartbeatPerSecond/2))
+	transmitter := radiotransmitter.NewRadioTransmitter(ctx, wg, rc.radio, commandPerSecond, time.Second/time.Duration(heartbeatPerSecond/2))
+	wg.Add(1)
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
@@ -62,7 +65,6 @@ func (rc *remoteControl) Start(ctx context.Context) {
 			flightcommands.Id = id
 			id++
 			transmitter.FlightComands <- flightcommands
-			// fmt.Println(time.Unix(0, t).Format("2006-01-02 15:04:05.000"), flightcommands)
 		case hb := <-transmitter.DroneHeartBeat:
 			if hb {
 				log.Println("Connected to Drone")
