@@ -71,6 +71,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			} else {
 				log.Println("Lost connection to Drone")
 			}
+		default:
 		}
 	}
 }
