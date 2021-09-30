@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/flightcontrol"
 )
 
@@ -18,7 +19,7 @@ func main() {
 		escUpdatePerSecond,
 		imu,
 		devicecreators.NewESC(),
-		devicecreators.NewRadio(),
+		nrf204.NewRadio(),
 		devicecreators.NewLogger(),
 	)
 

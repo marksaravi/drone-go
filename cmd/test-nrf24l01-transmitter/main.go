@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/devicecreators"
 	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	drivers.InitHost()
-	radio := devicecreators.NewRadio()
+	radio := nrf204.NewRadio()
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
