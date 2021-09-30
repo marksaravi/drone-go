@@ -2,12 +2,13 @@ package radiotransmitter
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 )
 
 const HEARBIT_TIMEOUT_MS int = 250
-const TRANSMIT_PER_SEC int = 50
+const TRANSMIT_PER_SEC int = 20
 
 type mockdata struct {
 	interval  time.Duration
@@ -64,6 +65,7 @@ func NewMockRadio(cancel context.CancelFunc, data []mockdata) *mockradio {
 
 func TestTransmitterConnected(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
@@ -73,8 +75,10 @@ func TestTransmitterConnected(t *testing.T) {
 	})
 	rt := NewRadioTransmitter(
 		ctx,
+		&wg,
 		radio,
 		TRANSMIT_PER_SEC,
+		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
 	)
 	var running bool = true
 	var heartbeating bool = false
@@ -95,6 +99,7 @@ func TestTransmitterConnected(t *testing.T) {
 
 func TestReceiverTimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
@@ -103,14 +108,16 @@ func TestReceiverTimeout(t *testing.T) {
 		},
 		{
 			data:      [32]byte{},
-			interval:  time.Second + time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
+			interval:  time.Millisecond * time.Duration(HEARBIT_TIMEOUT_MS),
 			available: false,
 		},
 	})
 	rt := NewRadioTransmitter(
 		ctx,
+		&wg,
 		radio,
 		TRANSMIT_PER_SEC,
+		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
 	)
 	var running bool = true
 	var heartbeatings []bool = []bool{}
