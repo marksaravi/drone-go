@@ -4,20 +4,10 @@ import (
 	"context"
 	"testing"
 	"time"
-
-	"github.com/marksaravi/drone-go/models"
 )
 
 const HEARBIT_TIMEOUT_MS int = 250
-const HEARBIT_PER_SEC int = 10
 const TRANSMIT_PER_SEC int = 50
-
-type commandreader struct {
-}
-
-func (cr *commandreader) Read() models.FlightCommands {
-	return models.FlightCommands{}
-}
 
 type mockdata struct {
 	interval  time.Duration
@@ -77,18 +67,14 @@ func TestTransmitterConnected(t *testing.T) {
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
-			interval:  time.Second / time.Duration(HEARBIT_PER_SEC),
+			interval:  time.Second,
 			available: true,
 		},
 	})
-	hearbeatChan := NewRadioTransmitter(
+	rt := NewRadioTransmitter(
 		ctx,
-		func() models.FlightCommands {
-			return models.FlightCommands{}
-		},
 		radio,
 		TRANSMIT_PER_SEC,
-		HEARBIT_PER_SEC,
 		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
 	var running bool = true
 	var heartbeating bool = false
@@ -96,7 +82,7 @@ func TestTransmitterConnected(t *testing.T) {
 		select {
 		case <-ctx.Done():
 			running = false
-		case heartbeating = <-hearbeatChan:
+		case heartbeating = <-rt.DroneHeartBeat:
 		}
 	}
 	if !radio.isReceiverOn || radio.isTransmitterOn {
@@ -112,23 +98,19 @@ func TestReceiverTimeout(t *testing.T) {
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
-			interval:  time.Second / time.Duration(HEARBIT_PER_SEC),
+			interval:  time.Second,
 			available: true,
 		},
 		{
 			data:      [32]byte{},
-			interval:  time.Second/time.Duration(HEARBIT_PER_SEC) + time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
+			interval:  time.Second + time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
 			available: false,
 		},
 	})
-	hearbeatChan := NewRadioTransmitter(
+	rt := NewRadioTransmitter(
 		ctx,
-		func() models.FlightCommands {
-			return models.FlightCommands{}
-		},
 		radio,
 		TRANSMIT_PER_SEC,
-		HEARBIT_PER_SEC,
 		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
 	var running bool = true
 	var heartbeatings []bool = []bool{}
@@ -136,7 +118,7 @@ func TestReceiverTimeout(t *testing.T) {
 		select {
 		case <-ctx.Done():
 			running = false
-		case beat := <-hearbeatChan:
+		case beat := <-rt.DroneHeartBeat:
 			heartbeatings = append(heartbeatings, beat)
 		}
 	}

@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"sync"
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devicecreators"
@@ -53,13 +55,20 @@ func main() {
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
 	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
-	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
+
 	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		fmt.Println("Press ENTER to Stop")
+	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
+
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		log.Println("Press ENTER to Stop")
 		fmt.Scanln()
+		log.Println("Stopping the Remote Control")
 		cancel()
-	}()
-	remoteControl.Start(ctx)
-	<-ctx.Done()
+	}(&waitGroup)
+	remoteControl.Start(ctx, &waitGroup)
+	waitGroup.Wait()
+	log.Println("Remote Control stopped")
 }

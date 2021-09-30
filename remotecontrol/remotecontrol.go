@@ -3,6 +3,7 @@ package remotecontrol
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/radiotransmitter"
@@ -47,18 +48,30 @@ func NewRemoteControl(radio models.RadioLink, roll, pitch, yaw, throttle joystic
 	}
 }
 
-func (rc *remoteControl) Start(ctx context.Context) {
-	heartbeat := radiotransmitter.NewRadioTransmitter(ctx, rc.read, rc.radio, 40, 4, time.Second)
+func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
+	var id uint32 = 0
+	const heartbeatPerSecond int = 4
+	const commandPerSecond int = 20
+	transmitter := radiotransmitter.NewRadioTransmitter(ctx, wg, rc.radio, commandPerSecond, time.Second/time.Duration(heartbeatPerSecond/2))
+	wg.Add(1)
+	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case hb := <-heartbeat:
+		case t := <-transmitter.DataReadTicker:
+			flightcommands := rc.read()
+			flightcommands.Time = t
+			flightcommands.Id = id
+			id++
+			transmitter.FlightComands <- flightcommands
+		case hb := <-transmitter.DroneHeartBeat:
 			if hb {
 				log.Println("Connected to Drone")
 			} else {
 				log.Println("Lost connection to Drone")
 			}
+		default:
 		}
 	}
 }
