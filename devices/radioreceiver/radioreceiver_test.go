@@ -84,15 +84,15 @@ func TestReceiverConnected(t *testing.T) {
 			available: false,
 		},
 	})
-	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC, time.Millisecond*time.Duration(TIMEOUT_MS))
+	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected bool = false
 	for running {
 		select {
 		case <-ctx.Done():
 			running = false
-		case <-receiver.command:
-		case connected = <-receiver.connection:
+		case <-receiver.Command:
+		case connected = <-receiver.Connection:
 
 		}
 	}
@@ -121,15 +121,15 @@ func TestReceiverTimeout(t *testing.T) {
 		},
 	})
 
-	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC, time.Millisecond*time.Duration(TIMEOUT_MS))
+	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected []bool = []bool{}
 	for running {
 		select {
 		case <-ctx.Done():
 			running = false
-		case <-receiver.command:
-		case conn := <-receiver.connection:
+		case <-receiver.Command:
+		case conn := <-receiver.Connection:
 			t.Log(conn)
 			connected = append(connected, conn)
 		}

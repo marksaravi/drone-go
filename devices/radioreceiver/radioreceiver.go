@@ -2,6 +2,7 @@ package radioreceiver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -9,8 +10,8 @@ import (
 )
 
 type radioReceiver struct {
-	command    chan models.FlightCommands
-	connection chan bool
+	Command    chan models.FlightCommands
+	Connection chan bool
 }
 
 func NewRadioReceiver(
@@ -18,16 +19,15 @@ func NewRadioReceiver(
 	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
-	receiverTimeout time.Duration,
 ) *radioReceiver {
 	commandChan := make(chan models.FlightCommands)
 	connectionChan := make(chan bool)
 
-	go receiverRoutine(ctx, radio, int(float32(commandPerSecond)*1.5), heartBeatPerSecond, receiverTimeout, commandChan, connectionChan)
+	go receiverRoutine(ctx, radio, commandPerSecond, heartBeatPerSecond, commandChan, connectionChan)
 
 	return &radioReceiver{
-		command:    commandChan,
-		connection: connectionChan,
+		Command:    commandChan,
+		Connection: connectionChan,
 	}
 }
 
@@ -36,12 +36,12 @@ func receiverRoutine(
 	radio models.RadioLink,
 	commandPerSecond int,
 	heartBeatPerSecond int,
-	receiverTimeout time.Duration,
 	command chan models.FlightCommands,
 	connection chan bool,
 ) {
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, commandPerSecond, 0)
+	receiveTicker := utils.NewTicker(ctx, commandPerSecond*2, 0)
+	receiverTimeout := time.Second / time.Duration(commandPerSecond/2)
 	heartBeatTicker := utils.NewTicker(ctx, heartBeatPerSecond, 0)
 	connected := false
 	var lastDataTime time.Time = time.Now()
@@ -65,9 +65,12 @@ func receiverRoutine(
 				}
 			}
 		case <-heartBeatTicker:
+			// log.Println("heartbeat")
 			radio.TransmitterOn()
 			timedata := utils.Int64ToBytes(time.Now().UnixNano())
-			radio.Transmit(utils.SliceToArray32(timedata[:]))
+			if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
+				fmt.Println(err)
+			}
 			radio.ReceiverOn()
 		}
 	}
