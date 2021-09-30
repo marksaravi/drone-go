@@ -49,7 +49,9 @@ func NewRemoteControl(radio models.RadioLink, roll, pitch, yaw, throttle joystic
 
 func (rc *remoteControl) Start(ctx context.Context) {
 	var id uint32 = 0
-	transmitter := radiotransmitter.NewRadioTransmitter(ctx, rc.radio, 20, 4, time.Second)
+	const heartbeatPerSecond int = 4
+	const commandPerSecond int = 20
+	transmitter := radiotransmitter.NewRadioTransmitter(ctx, rc.radio, commandPerSecond, time.Second/time.Duration(heartbeatPerSecond/2))
 	for {
 		select {
 		case <-ctx.Done():

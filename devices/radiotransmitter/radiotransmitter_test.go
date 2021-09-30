@@ -7,7 +7,6 @@ import (
 )
 
 const HEARBIT_TIMEOUT_MS int = 250
-const HEARBIT_PER_SEC int = 10
 const TRANSMIT_PER_SEC int = 50
 
 type mockdata struct {
@@ -68,7 +67,7 @@ func TestTransmitterConnected(t *testing.T) {
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
-			interval:  time.Second / time.Duration(HEARBIT_PER_SEC),
+			interval:  time.Second,
 			available: true,
 		},
 	})
@@ -76,7 +75,6 @@ func TestTransmitterConnected(t *testing.T) {
 		ctx,
 		radio,
 		TRANSMIT_PER_SEC,
-		HEARBIT_PER_SEC,
 		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
 	var running bool = true
 	var heartbeating bool = false
@@ -100,12 +98,12 @@ func TestReceiverTimeout(t *testing.T) {
 	radio := NewMockRadio(cancel, []mockdata{
 		{
 			data:      [32]byte{},
-			interval:  time.Second / time.Duration(HEARBIT_PER_SEC),
+			interval:  time.Second,
 			available: true,
 		},
 		{
 			data:      [32]byte{},
-			interval:  time.Second/time.Duration(HEARBIT_PER_SEC) + time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
+			interval:  time.Second + time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
 			available: false,
 		},
 	})
@@ -113,7 +111,6 @@ func TestReceiverTimeout(t *testing.T) {
 		ctx,
 		radio,
 		TRANSMIT_PER_SEC,
-		HEARBIT_PER_SEC,
 		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
 	var running bool = true
 	var heartbeatings []bool = []bool{}
