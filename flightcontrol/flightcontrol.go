@@ -4,20 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
-	"time"
 
+	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/models"
-	pidcontrol "github.com/marksaravi/drone-go/pid-control"
 	"github.com/marksaravi/drone-go/utils"
 )
-
-type radio interface {
-	ReceiverOn()
-	Receive() ([32]byte, bool)
-	TransmitterOn()
-	Transmit([32]byte) error
-}
 
 type imu interface {
 	ReadRotations() models.ImuRotations
@@ -38,11 +29,11 @@ type flightControl struct {
 	escUpdatePerSecond int
 	imu                imu
 	esc                esc
-	radio              radio
+	radio              models.RadioLink
 	udpLogger          udpLogger
 }
 
-func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc esc, radio radio, udpLogger udpLogger) *flightControl {
+func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc esc, radio models.RadioLink, udpLogger udpLogger) *flightControl {
 	return &flightControl{
 		imuDataPerSecond:   imuDataPerSecond,
 		escUpdatePerSecond: escUpdatePerSecond,
@@ -55,45 +46,42 @@ func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc
 
 func (fc *flightControl) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	fc.warmUp(cancel)
-	imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
-	escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
-	escRefresher := utils.NewTicker(ctx, fc.escUpdatePerSecond, 0)
-	commandChannel := newCommandChannel(ctx, &wg, fc.radio)
-	pidControl := pidcontrol.NewPIDControl()
+	go func() {
+		fmt.Println("Press ENTER to exit.")
+		fmt.Scanln()
+		cancel()
+	}()
+	// var wg sync.WaitGroup
+	// imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
+	// escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
+	// escRefresher := utils.NewTicker(ctx, fc.escUpdatePerSecond, 0)
+	// commandChannel := newCommandChannel(ctx, &wg, fc.radio)
+	// pidControl := pidcontrol.NewPIDControl()
+	const heatbeatPerSecond int = 4
+	const commandPerSecond int = 20
+	receiver := radioreceiver.NewRadioReceiver(ctx, fc.radio, commandPerSecond, heatbeatPerSecond)
 	var running bool = true
 	for running {
 		select {
-		case fc := <-commandChannel:
+		case fc := <-receiver.Command:
 			fmt.Println(fc.ButtonFrontLeft, fc.Throttle)
-			pidControl.ApplyFlightCommands(fc)
-			if fc.ButtonFrontLeft {
-				cancel()
-			}
-		case rotations := <-imuDataChannel:
-			pidControl.ApplyRotations(rotations)
-			fc.udpLogger.Send(rotations)
-		case <-escRefresher:
-			escThrottleControlChannel <- pidControl.Throttles()
+			// pidControl.ApplyFlightCommands(fc)
+			// if fc.ButtonFrontLeft {
+			// 	cancel()
+			// }
+		// case rotations := <-imuDataChannel:
+		// 	pidControl.ApplyRotations(rotations)
+		// 	fc.udpLogger.Send(rotations)
+		// case <-escRefresher:
+		// 	escThrottleControlChannel <- pidControl.Throttles()
+		case connection := <-receiver.Connection:
+			fmt.Println("connected: ", connection)
 		case <-ctx.Done():
 			running = false
 		default:
 			utils.Idle()
 		}
 	}
-	wg.Wait()
+	// wg.Wait()
 	log.Printf("stopping flightcontrol\n")
-}
-
-func (fc *flightControl) warmUp(cancel context.CancelFunc) {
-	fmt.Printf("IMU data/s: %d, ESC refresh/s: %d\n", fc.imuDataPerSecond, fc.escUpdatePerSecond)
-	fc.radio.ReceiverOn()
-	fc.esc.On()
-	time.Sleep(3 * time.Second)
-	go func() {
-		fmt.Scanln()
-		fc.esc.Off()
-		cancel()
-	}()
 }
