@@ -3,7 +3,7 @@ package flightcontrol
 import (
 	"context"
 	"fmt"
-	"log"
+	"sync"
 
 	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/models"
@@ -44,13 +44,9 @@ func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc
 	}
 }
 
-func (fc *flightControl) Start() {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		fmt.Println("Press ENTER to exit.")
-		fmt.Scanln()
-		cancel()
-	}()
+func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 	// var wg sync.WaitGroup
 	// imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
 	// escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
@@ -82,6 +78,4 @@ func (fc *flightControl) Start() {
 			utils.Idle()
 		}
 	}
-	// wg.Wait()
-	log.Printf("stopping flightcontrol\n")
 }
