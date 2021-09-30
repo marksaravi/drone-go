@@ -75,7 +75,7 @@ func TestTransmitterConnected(t *testing.T) {
 		ctx,
 		radio,
 		TRANSMIT_PER_SEC,
-		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
+	)
 	var running bool = true
 	var heartbeating bool = false
 	for running {
@@ -111,7 +111,7 @@ func TestReceiverTimeout(t *testing.T) {
 		ctx,
 		radio,
 		TRANSMIT_PER_SEC,
-		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS))
+	)
 	var running bool = true
 	var heartbeatings []bool = []bool{}
 	for running {
