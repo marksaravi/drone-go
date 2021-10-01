@@ -1,5 +1,15 @@
 package motors
 
+import (
+	"log"
+
+	"github.com/marksaravi/drone-go/config"
+	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/drivers/pca9685"
+	"periph.io/x/periph/conn/i2c"
+	"periph.io/x/periph/conn/i2c/i2creg"
+)
+
 const (
 	NUM_OF_MOTORS uint8 = 4
 )
@@ -53,4 +63,22 @@ func (mc *motorsControl) allMotorsOff() {
 	for i = 0; i < NUM_OF_MOTORS; i++ {
 		mc.setThrottle(i, 0)
 	}
+}
+
+func NewESC() interface {
+	On()
+	Off()
+	SetThrottles(map[uint8]float32)
+} {
+	flightControlConfigs := config.ReadFlightControlConfig()
+	escConfigs := flightControlConfigs.Configs.ESC
+	powerbreaker := drivers.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
+	b, _ := i2creg.Open(escConfigs.I2CDev)
+	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
+	pwmDev, err := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, escConfigs.MaxThrottle)
+	if err != nil {
+		log.Fatal(err)
+	}
+	esc := NewMotorsControl(pwmDev, powerbreaker, escConfigs.MotorESCMappings)
+	return esc
 }

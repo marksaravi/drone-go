@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/devices/motors"
 	"github.com/marksaravi/drone-go/drivers"
 )
 
@@ -18,7 +18,7 @@ func main() {
 	const steps int = 10
 	var dThrottle float32 = maxThrottle / float32(steps)
 	var throttle float32 = 0
-	esc := devicecreators.NewESC()
+	esc := motors.NewESC()
 	esc.On()
 	time.Sleep(3 * time.Second)
 	throttles := map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0}

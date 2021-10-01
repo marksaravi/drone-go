@@ -6,21 +6,23 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/marksaravi/drone-go/devicecreators"
+	"github.com/marksaravi/drone-go/devices"
+	"github.com/marksaravi/drone-go/devices/motors"
+	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/flightcontrol"
 )
 
 func main() {
 
-	imu, imuDataPerSecond, escUpdatePerSecond := devicecreators.NewImu()
+	imu, imuDataPerSecond, escUpdatePerSecond := devices.NewImu()
 	flightControl := flightcontrol.NewFlightControl(
 		imuDataPerSecond,
 		escUpdatePerSecond,
 		imu,
-		devicecreators.NewESC(),
+		motors.NewESC(),
 		nrf204.NewRadio(),
-		devicecreators.NewLogger(),
+		udplogger.NewLogger(),
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

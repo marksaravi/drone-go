@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -105,4 +106,20 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	Append4(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Yaw))
 	Append8(&buffer, utils.UInt64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
 	return buffer.Bytes()
+}
+
+func NewLogger() interface {
+	Send(models.ImuRotations)
+} {
+	flightControl := config.ReadFlightControlConfig()
+	loggerConfig := config.ReadLoggerConfig()
+	loggerConfigs := loggerConfig.UdpLoggerConfigs
+	udplogger := NewUdpLogger(
+		loggerConfigs.Enabled,
+		loggerConfigs.IP,
+		loggerConfigs.Port,
+		loggerConfigs.PacketsPerSecond,
+		flightControl.Configs.ImuDataPerSecond,
+	)
+	return udplogger
 }

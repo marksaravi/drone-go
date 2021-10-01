@@ -1,9 +1,13 @@
 package devices
 
 import (
+	"fmt"
 	"math"
 	"time"
 
+	"github.com/marksaravi/drone-go/config"
+	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/drivers/icm20948"
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -109,4 +113,43 @@ func radToDeg(x float64) float64 {
 
 func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
+}
+
+func NewImu() (interface {
+	ReadRotations() models.ImuRotations
+	ResetTime()
+}, int, int) {
+	flightControlConfigs := config.ReadFlightControlConfig()
+	imuConfig := flightControlConfigs.Configs.Imu
+	fmt.Println(flightControlConfigs)
+	drivers.InitHost()
+	imuSPIConn := drivers.NewSPIConnection(
+		imuConfig.SPI.BusNumber,
+		imuConfig.SPI.ChipSelect,
+	)
+	accConfig := imuConfig.Accelerometer
+	gyroConfig := imuConfig.Gyroscope
+	imuMems := icm20948.NewICM20948Driver(
+		imuSPIConn,
+		accConfig.SensitivityLevel,
+		accConfig.Averaging,
+		accConfig.LowPassFilterEnabled,
+		accConfig.LowPassFilterConfig,
+		accConfig.Offsets.X,
+		accConfig.Offsets.Y,
+		accConfig.Offsets.Z,
+		gyroConfig.SensitivityLevel,
+		gyroConfig.Averaging,
+		gyroConfig.LowPassFilterEnabled,
+		gyroConfig.LowPassFilterConfig,
+		gyroConfig.Offsets.X,
+		gyroConfig.Offsets.Y,
+		gyroConfig.Offsets.Z,
+	)
+	imu := NewIMU(
+		imuMems,
+		imuConfig.AccLowPassFilterCoefficient,
+		imuConfig.LowPassFilterCoefficient,
+	)
+	return imu, flightControlConfigs.Configs.ImuDataPerSecond, flightControlConfigs.Configs.EscUpdatePerSecond
 }
