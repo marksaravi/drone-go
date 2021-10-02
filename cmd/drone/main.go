@@ -15,7 +15,7 @@ func main() {
 	drivers.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
 	var workgroup sync.WaitGroup
-	command, connection := radioreceiver.NewRadioReceiver(ctx)
+	command, connection := radioreceiver.NewRadioReceiver(ctx, &workgroup)
 	flightControl := flightcontrol.NewFlightControl(command, connection)
 	workgroup.Add(1)
 	go func(wg *sync.WaitGroup) {

@@ -2,6 +2,7 @@ package radioreceiver
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -70,6 +71,7 @@ func NewMockRadio(cancel context.CancelFunc, data []mockData) *mockradio {
 
 func TestReceiverConnected(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockData{
 		{
 			data: utils.SerializeFlightCommand(models.FlightCommands{
@@ -84,7 +86,7 @@ func TestReceiverConnected(t *testing.T) {
 			available: false,
 		},
 	})
-	receiver := newRadioReceiver(ctx, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
+	receiver := newRadioReceiver(ctx, &wg, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected bool = false
 	for running {
@@ -106,6 +108,7 @@ func TestReceiverConnected(t *testing.T) {
 
 func TestReceiverTimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockData{
 		{
 			data: utils.SerializeFlightCommand(models.FlightCommands{
@@ -121,7 +124,7 @@ func TestReceiverTimeout(t *testing.T) {
 		},
 	})
 
-	receiver := newRadioReceiver(ctx, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
+	receiver := newRadioReceiver(ctx, &wg, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected []bool = []bool{}
 	for running {
