@@ -25,7 +25,6 @@ func NewFlightControl(imu <-chan models.ImuRotations, command <-chan models.Flig
 }
 
 func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
 	// var wg sync.WaitGroup
 	// imuDataChannel := newImuDataChannel(ctx, &wg, fc.imu, fc.imuDataPerSecond)
 	// escThrottleControlChannel := newEscThrottleControlChannel(ctx, &wg, fc.esc)
@@ -33,11 +32,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// commandChannel := newCommandChannel(ctx, &wg, fc.radio)
 	// pidControl := pidcontrol.NewPIDControl()
 	go func() {
-		defer wg.Done()
 		for {
 			select {
-			// case rotations := <-fc.imu:
-			// 	fc.logger <- rotations
+			case <-fc.imu:
+				// fc.logger <- rotations
 			// case fc := <-fc.command:
 			// 	fmt.Println(fc.ButtonFrontLeft, fc.Throttle)
 			// 	// pidControl.ApplyFlightCommands(fc)
