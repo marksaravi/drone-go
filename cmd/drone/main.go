@@ -3,32 +3,24 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"sync"
 
-	"github.com/marksaravi/drone-go/devices"
-	"github.com/marksaravi/drone-go/devices/radioreceiver"
-	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/flightcontrol"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
+	log.SetFlags(log.Lmicroseconds)
 	drivers.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
-	var workgroup sync.WaitGroup
-	command, connection := radioreceiver.NewRadioReceiver(ctx, &workgroup)
-	logger := udplogger.NewLogger(ctx, &workgroup)
-	imu := devices.NewImu(ctx, &workgroup)
-	flightControl := flightcontrol.NewFlightControl(imu, command, connection, logger)
-	workgroup.Add(1)
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		fmt.Println("Press ENTER to abort")
-		fmt.Scanln()
-		fmt.Println("Stopping the flight control")
-		cancel()
-	}(&workgroup)
-	flightControl.Start(ctx, &workgroup)
-	workgroup.Wait()
+	var waitgroup sync.WaitGroup
+	// command, connection := radioreceiver.NewRadioReceiver(ctx, &waitgroup)
+	// logger := udplogger.NewLogger(ctx, &waitgroup)
+	// imu := devices.NewImu(ctx, &waitgroup)
+	flightControl := flightcontrol.NewFlightControl(nil, nil, nil, nil)
+	flightControl.Start(ctx, &waitgroup)
+	utils.WaitToAbortByENTER(cancel, &waitgroup)
+	waitgroup.Wait()
 }

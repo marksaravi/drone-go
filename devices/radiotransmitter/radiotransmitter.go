@@ -23,7 +23,7 @@ func NewRadioTransmitter(
 	hearbeattTimeout time.Duration,
 ) *radioTransmitter {
 	heartbeatChan := make(chan bool)
-	dataReadTicker := utils.NewTicker(ctx, commandPerSecond, 0)
+	dataReadTicker := utils.NewTicker(ctx, wg, commandPerSecond, 0)
 	flightCommandsChan := make(chan models.FlightCommands)
 	wg.Add(1)
 	go transmitterRoutine(

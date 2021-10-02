@@ -3,6 +3,7 @@ package radioreceiver
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -17,7 +18,7 @@ type radioReceiver struct {
 	Connection chan bool
 }
 
-func NewRadioReceiver(ctx context.Context, wg *sync.WaitGroup) (chan models.FlightCommands, chan bool) {
+func NewRadioReceiver(ctx context.Context, wg *sync.WaitGroup) (<-chan models.FlightCommands, <-chan bool) {
 	radio := nrf204.NewRadio()
 	config := config.ReadFlightControlConfig().Radio
 	receiver := newRadioReceiver(ctx, wg, radio, config.CommandPerSecond, config.CommandTimeoutMS, config.HeartBeatPerSecond)
@@ -55,10 +56,14 @@ func receiverRoutine(
 	connection chan bool,
 ) {
 	defer wg.Done()
+	defer log.Println("RADIO CLOSED")
+	defer close(command)
+	defer close(connection)
+
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, commandPerSecond*2, 0)
+	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*2, 0)
 	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
-	heartBeatTicker := utils.NewTicker(ctx, heartBeatPerSecond, 0)
+	heartBeatTicker := utils.NewTicker(ctx, wg, heartBeatPerSecond, 0)
 	connected := false
 	var lastDataTime time.Time = time.Now()
 	for {

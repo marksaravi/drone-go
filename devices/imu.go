@@ -149,12 +149,13 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	imuReadTicker := utils.NewTicker(ctx, configs.ImuDataPerSecond, 0)
+	imuReadTicker := utils.NewTicker(ctx, wg, configs.ImuDataPerSecond, 0)
 	dataChannel := make(chan models.ImuRotations)
 	wg.Add(1)
 	go func() {
-		defer log.Println("IMU DONE...")
 		defer wg.Done()
+		defer log.Println("IMU CLOSED")
+		defer close(dataChannel)
 
 		imu.ResetTime()
 		for {

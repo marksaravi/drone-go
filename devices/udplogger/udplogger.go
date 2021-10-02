@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"sync"
 
@@ -110,7 +111,7 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	return buffer.Bytes()
 }
 
-func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan models.ImuRotations {
+func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan<- models.ImuRotations {
 	flightControl := config.ReadFlightControlConfig()
 	loggerConfig := config.ReadLoggerConfig()
 	loggerConfigs := loggerConfig.UdpLoggerConfigs
@@ -125,6 +126,9 @@ func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan models.ImuRotations
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer log.Println("LOGGER CLOSED")
+		defer close(loggerChan)
+
 		for {
 			select {
 			case <-ctx.Done():

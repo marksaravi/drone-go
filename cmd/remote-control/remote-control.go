@@ -63,9 +63,10 @@ func main() {
 	waitGroup.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
+		defer log.Println("Stopping the Remote Control")
+
 		log.Println("Press ENTER to Stop")
 		fmt.Scanln()
-		log.Println("Stopping the Remote Control")
 		cancel()
 	}(&waitGroup)
 	remoteControl.Start(ctx, &waitGroup)
