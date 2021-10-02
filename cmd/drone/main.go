@@ -6,27 +6,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/marksaravi/drone-go/devices"
-	"github.com/marksaravi/drone-go/devices/motors"
-	"github.com/marksaravi/drone-go/devices/udplogger"
-	"github.com/marksaravi/drone-go/drivers/nrf204"
+	"github.com/marksaravi/drone-go/devices/radioreceiver"
+	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/flightcontrol"
 )
 
 func main() {
-
-	imu, imuDataPerSecond, escUpdatePerSecond := devices.NewImu()
-	flightControl := flightcontrol.NewFlightControl(
-		imuDataPerSecond,
-		escUpdatePerSecond,
-		imu,
-		motors.NewESC(),
-		nrf204.NewRadio(),
-		udplogger.NewLogger(),
-	)
-
+	drivers.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
 	var workgroup sync.WaitGroup
+	command, connection := radioreceiver.NewRadioReceiver(ctx)
+	flightControl := flightcontrol.NewFlightControl(command, connection)
 	workgroup.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()

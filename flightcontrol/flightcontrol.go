@@ -5,42 +5,19 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
 
-type imu interface {
-	ReadRotations() models.ImuRotations
-	ResetTime()
-}
-type esc interface {
-	Off()
-	On()
-	SetThrottles(map[uint8]float32)
-}
-
-type udpLogger interface {
-	Send(models.ImuRotations)
-}
-
 type flightControl struct {
-	imuDataPerSecond   int
-	escUpdatePerSecond int
-	imu                imu
-	esc                esc
-	radio              models.RadioLink
-	udpLogger          udpLogger
+	command    chan models.FlightCommands
+	connection chan bool
 }
 
-func NewFlightControl(imuDataPerSecond int, escUpdatePerSecond int, imu imu, esc esc, radio models.RadioLink, udpLogger udpLogger) *flightControl {
+func NewFlightControl(command chan models.FlightCommands, connection chan bool) *flightControl {
 	return &flightControl{
-		imuDataPerSecond:   imuDataPerSecond,
-		escUpdatePerSecond: escUpdatePerSecond,
-		imu:                imu,
-		esc:                esc,
-		radio:              radio,
-		udpLogger:          udpLogger,
+		command:    command,
+		connection: connection,
 	}
 }
 
@@ -53,13 +30,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// escRefresher := utils.NewTicker(ctx, fc.escUpdatePerSecond, 0)
 	// commandChannel := newCommandChannel(ctx, &wg, fc.radio)
 	// pidControl := pidcontrol.NewPIDControl()
-	const heatbeatPerSecond int = 4
-	const commandPerSecond int = 20
-	receiver := radioreceiver.NewRadioReceiver(ctx, fc.radio, commandPerSecond, heatbeatPerSecond)
 	var running bool = true
 	for running {
 		select {
-		case fc := <-receiver.Command:
+		case fc := <-fc.command:
 			fmt.Println(fc.ButtonFrontLeft, fc.Throttle)
 			// pidControl.ApplyFlightCommands(fc)
 			// if fc.ButtonFrontLeft {
@@ -70,7 +44,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		// 	fc.udpLogger.Send(rotations)
 		// case <-escRefresher:
 		// 	escThrottleControlChannel <- pidControl.Throttles()
-		case connection := <-receiver.Connection:
+		case connection := <-fc.connection:
 			fmt.Println("connected: ", connection)
 		case <-ctx.Done():
 			running = false

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/config"
+	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -14,16 +16,24 @@ type radioReceiver struct {
 	Connection chan bool
 }
 
-func NewRadioReceiver(
+func NewRadioReceiver(ctx context.Context) (chan models.FlightCommands, chan bool) {
+	radio := nrf204.NewRadio()
+	config := config.ReadFlightControlConfig().Radio
+	receiver := newRadioReceiver(ctx, radio, config.CommandPerSecond, config.CommandTimeoutMS, config.HeartBeatPerSecond)
+	return receiver.Command, receiver.Connection
+}
+
+func newRadioReceiver(
 	ctx context.Context,
 	radio models.RadioLink,
 	commandPerSecond int,
+	commandTimeoutMs int,
 	heartBeatPerSecond int,
 ) *radioReceiver {
 	commandChan := make(chan models.FlightCommands)
 	connectionChan := make(chan bool)
 
-	go receiverRoutine(ctx, radio, commandPerSecond, heartBeatPerSecond, commandChan, connectionChan)
+	go receiverRoutine(ctx, radio, commandPerSecond, commandTimeoutMs, heartBeatPerSecond, commandChan, connectionChan)
 
 	return &radioReceiver{
 		Command:    commandChan,
@@ -35,13 +45,14 @@ func receiverRoutine(
 	ctx context.Context,
 	radio models.RadioLink,
 	commandPerSecond int,
+	commandTimeoutMs int,
 	heartBeatPerSecond int,
 	command chan models.FlightCommands,
 	connection chan bool,
 ) {
 	radio.ReceiverOn()
 	receiveTicker := utils.NewTicker(ctx, commandPerSecond*2, 0)
-	receiverTimeout := time.Second / time.Duration(commandPerSecond/2)
+	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
 	heartBeatTicker := utils.NewTicker(ctx, heartBeatPerSecond, 0)
 	connected := false
 	var lastDataTime time.Time = time.Now()
@@ -59,13 +70,12 @@ func receiverRoutine(
 				}
 				command <- utils.DeserializeFlightCommand(data)
 			} else {
-				if connected && time.Since(lastDataTime) > receiverTimeout {
+				if connected && time.Since(lastDataTime) > commandTimeout {
 					connected = false
 					connection <- false
 				}
 			}
 		case <-heartBeatTicker:
-			// log.Println("heartbeat")
 			radio.TransmitterOn()
 			timedata := utils.Int64ToBytes(time.Now().UnixNano())
 			if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {

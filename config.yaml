@@ -71,6 +71,7 @@ remote-control:
 
 radio-connetion:
   command-per-second: 20
+  heartbeat-per-second: 4
   drone-connection-timeout-ms: 250
   remote-connection-timeout-ms: 250
 logger:

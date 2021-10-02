@@ -14,7 +14,8 @@ type spiConfig struct {
 
 type radioConnection struct {
 	CommandPerSecond          int `yaml:"command-per-second"`
-	DroneConnectionTimeoutMS  int `yaml:"drone-connection-timeout-ms"`
+	HeartBeatPerSecond        int `yaml:"heartbeat-per-second"`
+	CommandTimeoutMS          int `yaml:"drone-connection-timeout-ms"`
 	RemoteConnectionTimeoutMS int `yaml:"remote-connection-timeout-ms"`
 }
 
