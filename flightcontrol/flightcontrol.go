@@ -3,21 +3,25 @@ package flightcontrol
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type flightControl struct {
+	imu        <-chan models.ImuRotations
 	command    chan models.FlightCommands
 	connection chan bool
+	logger     chan models.ImuRotations
 }
 
-func NewFlightControl(command chan models.FlightCommands, connection chan bool) *flightControl {
+func NewFlightControl(imu <-chan models.ImuRotations, command chan models.FlightCommands, connection chan bool, logger chan models.ImuRotations) *flightControl {
 	return &flightControl{
+		imu:        imu,
 		command:    command,
 		connection: connection,
+		logger:     logger,
 	}
 }
 
@@ -30,9 +34,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// escRefresher := utils.NewTicker(ctx, fc.escUpdatePerSecond, 0)
 	// commandChannel := newCommandChannel(ctx, &wg, fc.radio)
 	// pidControl := pidcontrol.NewPIDControl()
-	var running bool = true
-	for running {
+	for {
 		select {
+		case rotations := <-fc.imu:
+			fc.logger <- rotations
 		case fc := <-fc.command:
 			fmt.Println(fc.ButtonFrontLeft, fc.Throttle)
 			// pidControl.ApplyFlightCommands(fc)
@@ -47,9 +52,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		case connection := <-fc.connection:
 			fmt.Println("connected: ", connection)
 		case <-ctx.Done():
-			running = false
-		default:
-			utils.Idle()
+			log.Println("Flight Control Done")
+			return
 		}
 	}
 }

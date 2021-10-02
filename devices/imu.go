@@ -1,14 +1,17 @@
 package devices
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/drivers/icm20948"
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type rotationsChanges struct {
@@ -29,7 +32,7 @@ type imudevice struct {
 	lowPassFilterCoefficient    float64
 }
 
-func NewIMU(
+func newIMU(
 	imuMems imuMems,
 	accLowPassFilterCoefficient float64,
 	lowPassFilterCoefficient float64,
@@ -115,14 +118,9 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
-func NewImu() (interface {
-	ReadRotations() models.ImuRotations
-	ResetTime()
-}, int, int) {
-	flightControlConfigs := config.ReadFlightControlConfig()
-	imuConfig := flightControlConfigs.Configs.Imu
-	fmt.Println(flightControlConfigs)
-	drivers.InitHost()
+func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations {
+	configs := config.ReadFlightControlConfig().Configs
+	imuConfig := configs.Imu
 	imuSPIConn := drivers.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
 		imuConfig.SPI.ChipSelect,
@@ -146,10 +144,28 @@ func NewImu() (interface {
 		gyroConfig.Offsets.Y,
 		gyroConfig.Offsets.Z,
 	)
-	imu := NewIMU(
+	imu := newIMU(
 		imuMems,
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	return imu, flightControlConfigs.Configs.ImuDataPerSecond, flightControlConfigs.Configs.EscUpdatePerSecond
+	imuReadTicker := utils.NewTicker(ctx, configs.ImuDataPerSecond, 0)
+	dataChannel := make(chan models.ImuRotations)
+	wg.Add(1)
+	go func() {
+		defer log.Println("IMU DONE...")
+		defer wg.Done()
+
+		imu.ResetTime()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-imuReadTicker:
+				rotations := imu.ReadRotations()
+				dataChannel <- rotations
+			}
+		}
+	}()
+	return dataChannel
 }

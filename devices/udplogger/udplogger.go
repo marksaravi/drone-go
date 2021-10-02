@@ -6,8 +6,10 @@ package udplogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/models"
@@ -108,9 +110,7 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	return buffer.Bytes()
 }
 
-func NewLogger() interface {
-	Send(models.ImuRotations)
-} {
+func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan models.ImuRotations {
 	flightControl := config.ReadFlightControlConfig()
 	loggerConfig := config.ReadLoggerConfig()
 	loggerConfigs := loggerConfig.UdpLoggerConfigs
@@ -121,5 +121,18 @@ func NewLogger() interface {
 		loggerConfigs.PacketsPerSecond,
 		flightControl.Configs.ImuDataPerSecond,
 	)
-	return udplogger
+	loggerChan := make(chan models.ImuRotations)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case data := <-loggerChan:
+				udplogger.Send(data)
+			}
+		}
+	}()
+	return loggerChan
 }

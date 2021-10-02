@@ -13,7 +13,8 @@ func Idle() {
 
 func NewTicker(ctx context.Context, tickPerSecond int, tolerancePercent float32) <-chan int64 {
 	ticker := make(chan int64)
-	go func(t chan int64) {
+	go func() {
+		defer close(ticker)
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
 		tickDurStart := time.Now()
@@ -25,12 +26,12 @@ func NewTicker(ctx context.Context, tickPerSecond int, tolerancePercent float32)
 				now := time.Now()
 				if now.Sub(tickDurStart) >= tickDur {
 					tickDurStart = now
-					t <- now.UnixNano()
+					ticker <- now.UnixNano()
 				}
 				Idle()
 			}
 		}
-	}(ticker)
+	}()
 	return ticker
 }
 

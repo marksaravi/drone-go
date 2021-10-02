@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/radioreceiver"
+	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/flightcontrol"
 )
@@ -16,7 +18,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var workgroup sync.WaitGroup
 	command, connection := radioreceiver.NewRadioReceiver(ctx, &workgroup)
-	flightControl := flightcontrol.NewFlightControl(command, connection)
+	logger := udplogger.NewLogger(ctx, &workgroup)
+	imu := devices.NewImu(ctx, &workgroup)
+	flightControl := flightcontrol.NewFlightControl(imu, command, connection, logger)
 	workgroup.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
