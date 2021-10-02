@@ -122,12 +122,11 @@ func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan<- models.ImuRotatio
 		loggerConfigs.PacketsPerSecond,
 		flightControl.Configs.ImuDataPerSecond,
 	)
-	loggerChan := make(chan models.ImuRotations)
+	loggerChan := make(chan models.ImuRotations, 2)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer log.Println("LOGGER CLOSED")
-		defer close(loggerChan)
+		defer log.Println("Logger is closed")
 
 		for {
 			select {
