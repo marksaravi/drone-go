@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/devices"
+	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/flightcontrol"
@@ -18,10 +19,10 @@ func main() {
 	drivers.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	// command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
+	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
 	logger := udplogger.NewLogger(ctx, &wg)
 	imu := devices.NewImu(ctx, &wg)
-	flightControl := flightcontrol.NewFlightControl(imu, nil, nil, logger)
+	flightControl := flightcontrol.NewFlightControl(imu, command, connection, logger)
 	utils.WaitToAbortByENTER(cancel, &wg)
 	flightControl.Start(ctx, &wg)
 }

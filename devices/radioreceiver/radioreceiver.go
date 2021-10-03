@@ -33,8 +33,8 @@ func newRadioReceiver(
 	commandTimeoutMs int,
 	heartBeatPerSecond int,
 ) *radioReceiver {
-	commandChan := make(chan models.FlightCommands)
-	connectionChan := make(chan bool)
+	commandChan := make(chan models.FlightCommands, 2)
+	connectionChan := make(chan bool, 2)
 
 	wg.Add(1)
 	go receiverRoutine(ctx, wg, radio, commandPerSecond, commandTimeoutMs, heartBeatPerSecond, commandChan, connectionChan)
@@ -57,8 +57,6 @@ func receiverRoutine(
 ) {
 	defer wg.Done()
 	defer log.Println("RADIO CLOSED")
-	defer close(command)
-	defer close(connection)
 
 	radio.ReceiverOn()
 	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*2, 0)

@@ -30,6 +30,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case rotations := <-fc.imu:
 			fc.logger <- rotations
+		case <-fc.command:
+		case cnonnected := <-fc.connection:
+			log.Println("Connected: ", cnonnected)
 		case <-ctx.Done():
 			wg.Wait()
 			return
