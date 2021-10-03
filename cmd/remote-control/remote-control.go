@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/devicecreators"
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/drivers/mcp3008"
+	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/remotecontrol"
 )
 
@@ -20,7 +20,7 @@ func main() {
 	fmt.Println(config)
 	drivers.InitHost()
 
-	radio := devicecreators.NewRadio()
+	radio := nrf204.NewRadio()
 	analogToDigitalSPIConn := drivers.NewSPIConnection(
 		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
@@ -63,9 +63,10 @@ func main() {
 	waitGroup.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
+		defer log.Println("Stopping the Remote Control")
+
 		log.Println("Press ENTER to Stop")
 		fmt.Scanln()
-		log.Println("Stopping the Remote Control")
 		cancel()
 	}(&waitGroup)
 	remoteControl.Start(ctx, &waitGroup)

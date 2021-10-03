@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/marksaravi/drone-go/config"
+	"github.com/marksaravi/drone-go/drivers"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -93,6 +95,22 @@ func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *n
 	}
 	radio.init()
 	return &radio
+}
+
+func NewRadio() interface {
+	ReceiverOn()
+	Receive() ([32]byte, bool)
+	TransmitterOn()
+	Transmit([32]byte) error
+} {
+	flightControlConfig := config.ReadFlightControlConfig()
+	radioConfig := flightControlConfig.Configs.Radio
+	radioSPIConn := drivers.NewSPIConnection(
+		radioConfig.SPI.BusNumber,
+		radioConfig.SPI.ChipSelect,
+	)
+	radio := NewNRF204(radioConfig.RxTxAddress, radioConfig.CE, radioConfig.PowerDBm, radioSPIConn)
+	return radio
 }
 
 func dbmStrToDBm(dbm string) byte {
@@ -328,12 +346,4 @@ func initPin(pinName string) gpio.PinIO {
 		log.Fatal("Failed to find ", pinName)
 	}
 	return pin
-}
-
-func BoolToShiftedByte(b bool, bitPosition int) byte {
-	if !b {
-		return 0
-	}
-	var r byte = 1
-	return r << byte(bitPosition)
 }

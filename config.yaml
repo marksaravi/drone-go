@@ -69,6 +69,11 @@ remote-control:
     down-right: 'GPIO23'
   v-ref: 5
 
+radio-connetion:
+  command-per-second: 20
+  heartbeat-per-second: 4
+  drone-connection-timeout-ms: 250
+  remote-connection-timeout-ms: 250
 logger:
   enabled: true
   ip: 192.168.1.101

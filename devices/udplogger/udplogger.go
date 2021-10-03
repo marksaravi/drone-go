@@ -6,9 +6,13 @@ package udplogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"log"
 	"net"
+	"sync"
 
+	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -105,4 +109,33 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	Append4(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Yaw))
 	Append8(&buffer, utils.UInt64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
 	return buffer.Bytes()
+}
+
+func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan<- models.ImuRotations {
+	flightControl := config.ReadFlightControlConfig()
+	loggerConfig := config.ReadLoggerConfig()
+	loggerConfigs := loggerConfig.UdpLoggerConfigs
+	udplogger := NewUdpLogger(
+		loggerConfigs.Enabled,
+		loggerConfigs.IP,
+		loggerConfigs.Port,
+		loggerConfigs.PacketsPerSecond,
+		flightControl.Configs.ImuDataPerSecond,
+	)
+	loggerChan := make(chan models.ImuRotations, 2)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer log.Println("Logger is closed")
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case data := <-loggerChan:
+				udplogger.Send(data)
+			}
+		}
+	}()
+	return loggerChan
 }

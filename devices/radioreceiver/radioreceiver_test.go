@@ -2,6 +2,7 @@ package radioreceiver
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 
 const TIMEOUT_MS int = 250
 const HEARBIT_PER_SEC int = 1
-const RECEIVE_PER_SEC int = 50
+const COMMAND_PER_SEC int = 20
 
 type mockData struct {
 	interval  time.Duration
@@ -70,21 +71,22 @@ func NewMockRadio(cancel context.CancelFunc, data []mockData) *mockradio {
 
 func TestReceiverConnected(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockData{
 		{
 			data: utils.SerializeFlightCommand(models.FlightCommands{
 				Id: 0,
 			}),
-			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			interval:  time.Second / time.Duration(COMMAND_PER_SEC),
 			available: true,
 		},
 		{
 			data:      [32]byte{},
-			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			interval:  time.Second / time.Duration(COMMAND_PER_SEC),
 			available: false,
 		},
 	})
-	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC)
+	receiver := newRadioReceiver(ctx, &wg, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected bool = false
 	for running {
@@ -106,22 +108,23 @@ func TestReceiverConnected(t *testing.T) {
 
 func TestReceiverTimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	radio := NewMockRadio(cancel, []mockData{
 		{
 			data: utils.SerializeFlightCommand(models.FlightCommands{
 				Id: 0,
 			}),
-			interval:  time.Second / time.Duration(RECEIVE_PER_SEC),
+			interval:  time.Second / time.Duration(COMMAND_PER_SEC),
 			available: true,
 		},
 		{
 			data:      [32]byte{},
-			interval:  time.Second/time.Duration(RECEIVE_PER_SEC) + time.Millisecond*time.Duration(TIMEOUT_MS),
+			interval:  time.Second/time.Duration(COMMAND_PER_SEC) + time.Millisecond*time.Duration(TIMEOUT_MS),
 			available: false,
 		},
 	})
 
-	receiver := NewRadioReceiver(ctx, radio, RECEIVE_PER_SEC, HEARBIT_PER_SEC)
+	receiver := newRadioReceiver(ctx, &wg, radio, COMMAND_PER_SEC, TIMEOUT_MS, HEARBIT_PER_SEC)
 	var running bool = true
 	var connected []bool = []bool{}
 	for running {

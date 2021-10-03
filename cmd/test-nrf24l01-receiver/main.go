@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/devicecreators"
 	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/drivers/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	drivers.InitHost()
-	radio := devicecreators.NewRadio()
+	radio := nrf204.NewRadio()
 	radio.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()

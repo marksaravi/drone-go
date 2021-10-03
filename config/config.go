@@ -7,9 +7,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type SPI struct {
+type spiConfig struct {
 	BusNumber  int `yaml:"bus-number"`
 	ChipSelect int `yaml:"chip-select"`
+}
+
+type radioConnection struct {
+	CommandPerSecond          int `yaml:"command-per-second"`
+	HeartBeatPerSecond        int `yaml:"heartbeat-per-second"`
+	CommandTimeoutMS          int `yaml:"drone-connection-timeout-ms"`
+	RemoteConnectionTimeoutMS int `yaml:"remote-connection-timeout-ms"`
 }
 
 func readConfig(config interface{}) interface{} {
