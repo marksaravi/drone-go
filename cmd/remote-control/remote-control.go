@@ -15,9 +15,9 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting RemoteControl")
+	log.SetFlags(log.Lmicroseconds)
+	log.Println("Starting RemoteControl")
 	config := config.ReadRemoteControlConfig()
-	fmt.Println(config)
 	drivers.InitHost()
 
 	radio := nrf204.NewRadio()

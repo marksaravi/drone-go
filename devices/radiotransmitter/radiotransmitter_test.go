@@ -2,7 +2,6 @@ package radiotransmitter
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 )
@@ -64,75 +63,7 @@ func NewMockRadio(cancel context.CancelFunc, data []mockdata) *mockradio {
 }
 
 func TestTransmitterConnected(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	radio := NewMockRadio(cancel, []mockdata{
-		{
-			data:      [32]byte{},
-			interval:  time.Second,
-			available: true,
-		},
-	})
-	rt := NewRadioTransmitter(
-		ctx,
-		&wg,
-		radio,
-		TRANSMIT_PER_SEC,
-		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
-	)
-	var running bool = true
-	var heartbeating bool = false
-	for running {
-		select {
-		case <-ctx.Done():
-			running = false
-		case heartbeating = <-rt.DroneHeartBeat:
-		}
-	}
-	if !radio.isReceiverOn || radio.isTransmitterOn {
-		t.Fatal("Receiver is not activated")
-	}
-	if !heartbeating {
-		t.Fatal("Receiver failed to get Heartbeat")
-	}
 }
 
 func TestReceiverTimeout(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	radio := NewMockRadio(cancel, []mockdata{
-		{
-			data:      [32]byte{},
-			interval:  time.Second,
-			available: true,
-		},
-		{
-			data:      [32]byte{},
-			interval:  time.Millisecond * time.Duration(HEARBIT_TIMEOUT_MS),
-			available: false,
-		},
-	})
-	rt := NewRadioTransmitter(
-		ctx,
-		&wg,
-		radio,
-		TRANSMIT_PER_SEC,
-		time.Millisecond*time.Duration(HEARBIT_TIMEOUT_MS),
-	)
-	var running bool = true
-	var heartbeatings []bool = []bool{}
-	for running {
-		select {
-		case <-ctx.Done():
-			running = false
-		case beat := <-rt.DroneHeartBeat:
-			heartbeatings = append(heartbeatings, beat)
-		}
-	}
-	if !radio.isReceiverOn || radio.isTransmitterOn {
-		t.Fatal("Transmitter is not activated")
-	}
-	if len(heartbeatings) != 2 || !heartbeatings[0] || heartbeatings[1] {
-		t.Fatal("Transmitter failed to get Heartbeat timeout", heartbeatings)
-	}
 }

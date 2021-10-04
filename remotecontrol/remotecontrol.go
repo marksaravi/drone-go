@@ -4,10 +4,11 @@ import (
 	"context"
 	"log"
 	"sync"
-	"time"
 
+	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices/radiotransmitter"
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -50,28 +51,28 @@ func NewRemoteControl(radio models.RadioLink, roll, pitch, yaw, throttle joystic
 
 func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var id uint32 = 0
-	const heartbeatPerSecond int = 4
-	const commandPerSecond int = 20
-	transmitter := radiotransmitter.NewRadioTransmitter(ctx, wg, rc.radio, commandPerSecond, time.Second/time.Duration(heartbeatPerSecond/2))
+	configs := config.ReadRemoteControlConfig().Radio
+	log.Println(configs.CommandPerSecond)
+	dataReadTicker := utils.NewTicker(ctx, wg, configs.CommandPerSecond, 0)
+	command, connection := radiotransmitter.NewRadioTransmitter(ctx, wg)
 	wg.Add(1)
 	defer wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case t := <-transmitter.DataReadTicker:
+		case t := <-dataReadTicker:
 			flightcommands := rc.read()
 			flightcommands.Time = t
 			flightcommands.Id = id
 			id++
-			transmitter.FlightComands <- flightcommands
-		case hb := <-transmitter.DroneHeartBeat:
-			if hb {
+			command <- flightcommands
+		case connected := <-connection:
+			if connected {
 				log.Println("Connected to Drone")
 			} else {
 				log.Println("Lost connection to Drone")
 			}
-		default:
 		}
 	}
 }
