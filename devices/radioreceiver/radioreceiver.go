@@ -59,7 +59,7 @@ func receiverRoutine(
 	defer log.Println("RADIO CLOSED")
 
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*3, 0)
+	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*2, 0)
 	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
 	heartbeatInterval := time.Second / time.Duration(heartBeatPerSecond)
 	connected := false
