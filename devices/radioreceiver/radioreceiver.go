@@ -59,11 +59,12 @@ func receiverRoutine(
 	defer log.Println("RADIO CLOSED")
 
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*2, 0)
+	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*3, 0)
 	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
-	heartBeatTicker := utils.NewTicker(ctx, wg, heartBeatPerSecond, 0)
+	heartbeatInterval := time.Second / time.Duration(heartBeatPerSecond)
 	connected := false
 	var lastDataTime time.Time = time.Now()
+	var lastHeartbeat time.Time = time.Now()
 	for {
 		select {
 		case <-ctx.Done():
@@ -83,13 +84,15 @@ func receiverRoutine(
 					connection <- false
 				}
 			}
-		case <-heartBeatTicker:
-			radio.TransmitterOn()
-			timedata := utils.Int64ToBytes(time.Now().UnixNano())
-			if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
-				fmt.Println(err)
+			if time.Since(lastHeartbeat) >= heartbeatInterval {
+				lastHeartbeat = time.Now()
+				radio.TransmitterOn()
+				timedata := utils.Int64ToBytes(time.Now().UnixNano())
+				if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
+					fmt.Println(err)
+				}
+				radio.ReceiverOn()
 			}
-			radio.ReceiverOn()
 		}
 	}
 }
