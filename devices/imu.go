@@ -149,7 +149,7 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	imuReadTicker := utils.NewTicker(ctx, wg, configs.ImuDataPerSecond, 0)
+	imuReadTicker := utils.NewTicker(ctx, "IMU", configs.ImuDataPerSecond, 0)
 	dataChannel := make(chan models.ImuRotations, 2)
 	wg.Add(1)
 	go func() {

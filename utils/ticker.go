@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"runtime"
-	"sync"
 	"time"
 )
 
@@ -12,16 +11,17 @@ func Idle() {
 	runtime.Gosched()
 }
 
-func NewTicker(ctx context.Context, wg *sync.WaitGroup, tickPerSecond int, tolerancePercent float32) <-chan int64 {
+func NewTicker(ctx context.Context, name string, tickPerSecond int, tolerancePercent float32) <-chan int64 {
 	ticker := make(chan int64)
 	go func() {
-		defer close(ticker)
+		defer log.Println("Closing Ticker (", name, ")")
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
 		tickDurStart := time.Now()
 		for {
 			select {
 			case <-ctx.Done():
+				close(ticker)
 				return
 			default:
 				now := time.Now()
