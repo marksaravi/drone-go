@@ -33,23 +33,31 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case rotations, isImuOk := <-fc.imu:
 				if isImuOk {
-					fc.logger <- rotations
-				} else if fc.imu != nil {
+					if fc.logger != nil {
+						fc.logger <- rotations
+					} else {
+						log.Println(isImuOk)
+					}
+				} else {
+					log.Println("*** closing imu ***")
 					fc.imu = nil
 				}
 			case _, isCommandOk := <-fc.command:
-				if !isCommandOk && fc.command != nil {
+				if !isCommandOk {
+					log.Println("*** closing command ***")
 					fc.command = nil
 				}
 			case cnonnected, isConnectionOk := <-fc.connection:
 				if isConnectionOk {
 					log.Println("Connected: ", cnonnected)
-				} else if fc.connection != nil {
+				} else {
+					log.Println("*** closing connection ***")
 					fc.connection = nil
 				}
 			case <-ctx.Done():
 				if fc.logger != nil {
 					close(fc.logger)
+					log.Println("*** closing logger ***")
 					fc.logger = nil
 				}
 			}

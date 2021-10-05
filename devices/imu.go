@@ -157,10 +157,11 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 		defer log.Println("IMU is closed")
 
 		imu.ResetTime()
-		for dataChannel != nil && imuReadTicker != nil {
+		for dataChannel != nil || imuReadTicker != nil {
 			select {
 			case <-ctx.Done():
 				if dataChannel != nil {
+					time.Sleep(100 * time.Millisecond)
 					close(dataChannel)
 					dataChannel = nil
 				}
