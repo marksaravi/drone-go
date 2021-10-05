@@ -23,7 +23,7 @@ const (
 
 func Start() {
 
-	dataChannel := make(chan string, 10)
+	dataChannel := make(chan string)
 	startUDPReceiverServer(dataChannel)
 	handler := createWebSocketHandler(dataChannel)
 	http.Handle("/", http.FileServer(http.Dir("./plotter/static")))

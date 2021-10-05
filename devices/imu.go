@@ -150,20 +150,28 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 		imuConfig.LowPassFilterCoefficient,
 	)
 	imuReadTicker := utils.NewTicker(ctx, "IMU", configs.ImuDataPerSecond, 0)
-	dataChannel := make(chan models.ImuRotations, 2)
+	dataChannel := make(chan models.ImuRotations)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer log.Println("IMU is closed")
 
 		imu.ResetTime()
-		for {
+		for dataChannel != nil && imuReadTicker != nil {
 			select {
 			case <-ctx.Done():
-				return
-			case <-imuReadTicker:
-				rotations := imu.ReadRotations()
-				dataChannel <- rotations
+				if dataChannel != nil {
+					close(dataChannel)
+					dataChannel = nil
+				}
+
+			case _, isOk := <-imuReadTicker:
+				if isOk {
+					rotations := imu.ReadRotations()
+					dataChannel <- rotations
+				} else {
+					imuReadTicker = nil
+				}
 			}
 		}
 	}()
