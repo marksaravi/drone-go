@@ -53,7 +53,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var id uint32 = 0
 	configs := config.ReadRemoteControlConfig().Radio
 	log.Println(configs.CommandPerSecond)
-	dataReadTicker := utils.NewTicker(ctx, wg, configs.CommandPerSecond, 0)
+	dataReadTicker := utils.NewTicker(ctx, "Remote Control", configs.CommandPerSecond, 0)
 	command, connection := radiotransmitter.NewRadioTransmitter(ctx, wg)
 	wg.Add(1)
 	defer wg.Done()

@@ -25,17 +25,36 @@ func NewFlightControl(imu <-chan models.ImuRotations, command <-chan models.Flig
 }
 
 func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
-	defer log.Println("Flight Control stopped")
-	for {
-		select {
-		case rotations := <-fc.imu:
-			fc.logger <- rotations
-		case <-fc.command:
-		case cnonnected := <-fc.connection:
-			log.Println("Connected: ", cnonnected)
-		case <-ctx.Done():
-			wg.Wait()
-			return
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer log.Println("Flight Control stopped")
+		for fc.command != nil || fc.connection != nil || fc.logger != nil || fc.imu != nil {
+			select {
+			case rotations, isImuOk := <-fc.imu:
+				if isImuOk {
+					if fc.logger != nil {
+						fc.logger <- rotations
+					}
+				} else {
+					fc.imu = nil
+				}
+			case _, isCommandOk := <-fc.command:
+				if !isCommandOk {
+					fc.command = nil
+				}
+			case cnonnected, isConnectionOk := <-fc.connection:
+				if isConnectionOk {
+					log.Println("Connected: ", cnonnected)
+				} else {
+					fc.connection = nil
+				}
+			case <-ctx.Done():
+				if fc.logger != nil {
+					close(fc.logger)
+					fc.logger = nil
+				}
+			}
 		}
-	}
+	}()
 }

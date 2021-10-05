@@ -38,8 +38,8 @@ func newRadioTransmitter(
 	hearbeatTimeoutMs int,
 
 ) *radioTransmitter {
-	command := make(chan models.FlightCommands, 2)
-	connection := make(chan bool, 2)
+	command := make(chan models.FlightCommands)
+	connection := make(chan bool)
 	transmitterRoutine(ctx, wg, radio, command, connection, hearbeatTimeoutMs)
 	return &radioTransmitter{
 		Command:    command,

@@ -20,9 +20,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
-	logger := udplogger.NewLogger(ctx, &wg)
+	logger := udplogger.NewLogger(&wg)
 	imu := devices.NewImu(ctx, &wg)
 	flightControl := flightcontrol.NewFlightControl(imu, command, connection, logger)
 	utils.WaitToAbortByENTER(cancel, &wg)
 	flightControl.Start(ctx, &wg)
+	wg.Wait()
 }

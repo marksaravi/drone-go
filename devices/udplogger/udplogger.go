@@ -6,7 +6,6 @@ package udplogger
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -111,7 +110,7 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	return buffer.Bytes()
 }
 
-func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan<- models.ImuRotations {
+func NewLogger(wg *sync.WaitGroup) chan<- models.ImuRotations {
 	flightControl := config.ReadFlightControlConfig()
 	loggerConfig := config.ReadLoggerConfig()
 	loggerConfigs := loggerConfig.UdpLoggerConfigs
@@ -122,18 +121,18 @@ func NewLogger(ctx context.Context, wg *sync.WaitGroup) chan<- models.ImuRotatio
 		loggerConfigs.PacketsPerSecond,
 		flightControl.Configs.ImuDataPerSecond,
 	)
-	loggerChan := make(chan models.ImuRotations, 2)
+	loggerChan := make(chan models.ImuRotations)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer log.Println("Logger is closed")
+		defer log.Println("Logger stopped")
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case data := <-loggerChan:
+		for loggerChan != nil {
+			data, isOk := <-loggerChan
+			if isOk {
 				udplogger.Send(data)
+			} else {
+				loggerChan = nil
 			}
 		}
 	}()

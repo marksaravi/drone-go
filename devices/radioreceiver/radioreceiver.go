@@ -33,8 +33,8 @@ func newRadioReceiver(
 	commandTimeoutMs int,
 	heartBeatPerSecond int,
 ) *radioReceiver {
-	commandChan := make(chan models.FlightCommands, 2)
-	connectionChan := make(chan bool, 2)
+	commandChan := make(chan models.FlightCommands)
+	connectionChan := make(chan bool)
 
 	wg.Add(1)
 	go receiverRoutine(ctx, wg, radio, commandPerSecond, commandTimeoutMs, heartBeatPerSecond, commandChan, connectionChan)
@@ -56,42 +56,51 @@ func receiverRoutine(
 	connection chan bool,
 ) {
 	defer wg.Done()
-	defer log.Println("RADIO CLOSED")
+	defer log.Println("Radio Receiver stopped")
 
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, wg, commandPerSecond*2, 0)
+	receiveTicker := utils.NewTicker(ctx, "Radio Receiver", commandPerSecond*2, 0)
 	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
 	heartbeatInterval := time.Second / time.Duration(heartBeatPerSecond)
 	connected := false
 	var lastDataTime time.Time = time.Now()
 	var lastHeartbeat time.Time = time.Now()
-	for {
+	for receiveTicker != nil || command != nil || connection != nil {
 		select {
 		case <-ctx.Done():
-			return
-		case <-receiveTicker:
-			data, dataAvailable := radio.Receive()
-			if dataAvailable {
-				lastDataTime = time.Now()
-				if !connected {
-					connected = true
-					connection <- true
-				}
-				command <- utils.DeserializeFlightCommand(data)
-			} else {
-				if connected && time.Since(lastDataTime) > commandTimeout {
-					connected = false
-					connection <- false
-				}
+			if command != nil {
+				close(command)
+				close(connection)
+				command = nil
+				connection = nil
 			}
-			if time.Since(lastHeartbeat) >= heartbeatInterval {
-				lastHeartbeat = time.Now()
-				radio.TransmitterOn()
-				timedata := utils.Int64ToBytes(time.Now().UnixNano())
-				if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
-					fmt.Println(err)
+		case _, isOk := <-receiveTicker:
+			if isOk {
+				data, dataAvailable := radio.Receive()
+				if dataAvailable {
+					lastDataTime = time.Now()
+					if !connected {
+						connected = true
+						connection <- true
+					}
+					command <- utils.DeserializeFlightCommand(data)
+				} else {
+					if connected && time.Since(lastDataTime) > commandTimeout {
+						connected = false
+						connection <- false
+					}
 				}
-				radio.ReceiverOn()
+				if time.Since(lastHeartbeat) >= heartbeatInterval {
+					lastHeartbeat = time.Now()
+					radio.TransmitterOn()
+					timedata := utils.Int64ToBytes(time.Now().UnixNano())
+					if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
+						fmt.Println(err)
+					}
+					radio.ReceiverOn()
+				}
+			} else {
+				receiveTicker = nil
 			}
 		}
 	}
