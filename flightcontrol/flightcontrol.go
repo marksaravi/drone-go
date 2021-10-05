@@ -35,8 +35,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if isImuOk {
 					if fc.logger != nil {
 						fc.logger <- rotations
-					} else {
-						log.Println(isImuOk)
 					}
 				} else {
 					fc.imu = nil

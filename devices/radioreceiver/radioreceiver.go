@@ -56,7 +56,7 @@ func receiverRoutine(
 	connection chan bool,
 ) {
 	defer wg.Done()
-	defer log.Println("Closing Radio Receiver")
+	defer log.Println("Radio Receiver stopped")
 
 	radio.ReceiverOn()
 	receiveTicker := utils.NewTicker(ctx, "Radio Receiver", commandPerSecond*2, 0)

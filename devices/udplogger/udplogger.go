@@ -125,7 +125,7 @@ func NewLogger(wg *sync.WaitGroup) chan<- models.ImuRotations {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer log.Println("Logger is closed")
+		defer log.Println("Logger stopped")
 
 		for loggerChan != nil {
 			data, isOk := <-loggerChan

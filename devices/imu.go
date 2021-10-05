@@ -154,22 +154,23 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer log.Println("IMU is closed")
+		defer log.Println("IMU stopped")
 
 		imu.ResetTime()
 		for dataChannel != nil || imuReadTicker != nil {
 			select {
 			case <-ctx.Done():
 				if dataChannel != nil {
-					time.Sleep(100 * time.Millisecond)
 					close(dataChannel)
 					dataChannel = nil
 				}
 
 			case _, isOk := <-imuReadTicker:
 				if isOk {
-					rotations := imu.ReadRotations()
-					dataChannel <- rotations
+					if dataChannel != nil {
+						rotations := imu.ReadRotations()
+						dataChannel <- rotations
+					}
 				} else {
 					imuReadTicker = nil
 				}

@@ -14,22 +14,24 @@ func Idle() {
 func NewTicker(ctx context.Context, name string, tickPerSecond int, tolerancePercent float32) <-chan int64 {
 	ticker := make(chan int64)
 	go func() {
-		defer log.Println("Closing Ticker (", name, ")")
+		defer log.Println("Ticker stopped (", name, ")")
 		tickDur := time.Second / time.Duration(tickPerSecond)
 		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
 		tickDurStart := time.Now()
-		for {
+		for ticker != nil {
 			select {
 			case <-ctx.Done():
 				close(ticker)
-				return
+				ticker = nil
 			default:
-				now := time.Now()
-				if now.Sub(tickDurStart) >= tickDur {
-					tickDurStart = now
-					ticker <- now.UnixNano()
+				if ticker != nil {
+					now := time.Now()
+					if now.Sub(tickDurStart) >= tickDur {
+						tickDurStart = now
+						ticker <- now.UnixNano()
+					}
+					Idle()
 				}
-				Idle()
 			}
 		}
 	}()
