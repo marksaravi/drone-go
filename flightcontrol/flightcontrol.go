@@ -36,8 +36,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					fc.logger <- rotations
 				} else if fc.imu != nil {
 					fc.imu = nil
-					close(fc.logger)
-					fc.logger = nil
 				}
 			case _, isCommandOk := <-fc.command:
 				if !isCommandOk && fc.command != nil {
@@ -48,6 +46,11 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					log.Println("Connected: ", cnonnected)
 				} else if fc.connection != nil {
 					fc.connection = nil
+				}
+			case <-ctx.Done():
+				if fc.logger != nil {
+					close(fc.logger)
+					fc.logger = nil
 				}
 			}
 		}
