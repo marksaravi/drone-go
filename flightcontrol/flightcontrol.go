@@ -56,6 +56,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					close(fc.logger)
 					fc.logger = nil
 				}
+			default:
 			}
 		}
 	}()

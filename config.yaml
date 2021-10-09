@@ -77,6 +77,6 @@ radio-connetion:
 
 logger:
   enabled: true
-  ip: 192.168.1.101
+  ip: 192.168.1.100
   port: 6431
   packets-per-second: 50
