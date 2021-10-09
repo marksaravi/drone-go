@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -59,7 +59,7 @@ func receiverRoutine(
 	defer log.Println("Radio Receiver stopped")
 
 	radio.ReceiverOn()
-	receiveTicker := utils.NewTicker(ctx, "Radio Receiver", commandPerSecond*2, 0)
+	receiveTicker := utils.NewTicker(ctx, "Radio Receiver", commandPerSecond*2)
 	commandTimeout := time.Millisecond * time.Duration(commandTimeoutMs)
 	heartbeatInterval := time.Second / time.Duration(heartBeatPerSecond)
 	connected := false

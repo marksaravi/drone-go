@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"runtime"
 	"time"
@@ -11,27 +12,27 @@ func Idle() {
 	runtime.Gosched()
 }
 
-func NewTicker(ctx context.Context, name string, tickPerSecond int, tolerancePercent float32) <-chan int64 {
+func NewTicker(ctx context.Context, name string, tickPerSecond int) <-chan int64 {
 	ticker := make(chan int64)
 	go func() {
 		defer log.Println("Ticker stopped (", name, ")")
-		tickDur := time.Second / time.Duration(tickPerSecond)
-		tickDur -= tickDur / 100 * time.Duration(tolerancePercent)
-		tickDurStart := time.Now()
+		tickDur := int64(time.Second / time.Duration(tickPerSecond))
+		if tickPerSecond >= 1000 {
+			tickDur -= tickDur / 20
+		}
+		fmt.Println(tickDur)
+		tickStart := time.Now().UnixNano()
 		for ticker != nil {
+			now := time.Now().UnixNano()
+			if now-tickStart >= tickDur {
+				tickStart = now
+				ticker <- tickStart
+			}
 			select {
 			case <-ctx.Done():
 				close(ticker)
 				ticker = nil
 			default:
-				if ticker != nil {
-					now := time.Now()
-					if now.Sub(tickDurStart) >= tickDur {
-						tickDurStart = now
-						ticker <- now.UnixNano()
-					}
-					Idle()
-				}
 			}
 		}
 	}()

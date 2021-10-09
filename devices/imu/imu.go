@@ -1,17 +1,13 @@
-package devices
+package imu
 
 import (
-	"context"
-	"log"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers"
-	"github.com/marksaravi/drone-go/drivers/icm20948"
+	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/icm20948"
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type rotationsChanges struct {
@@ -27,29 +23,36 @@ type imudevice struct {
 	accRawData                  models.XYZ
 	gyro                        models.Rotations
 	rotations                   models.Rotations
+	firstReading                bool
 	lastReading                 time.Time
+	readingInterval             time.Duration
 	accLowPassFilterCoefficient float64
 	lowPassFilterCoefficient    float64
 }
 
-func newIMU(
+func NewImuMems(
 	imuMems imuMems,
+	dataPerSecond int,
 	accLowPassFilterCoefficient float64,
 	lowPassFilterCoefficient float64,
 ) *imudevice {
 	return &imudevice{
 		imuMems:                     imuMems,
-		lastReading:                 time.Now(),
+		firstReading:                true,
+		readingInterval:             time.Second / time.Duration(dataPerSecond),
 		accLowPassFilterCoefficient: accLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    lowPassFilterCoefficient,
 	}
 }
 
-func (imu *imudevice) ResetTime() {
-	imu.lastReading = time.Now()
-}
-
-func (imu *imudevice) ReadRotations() models.ImuRotations {
+func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
+	if imu.firstReading {
+		imu.lastReading = time.Now()
+		imu.firstReading = false
+	}
+	if time.Since(imu.lastReading) < imu.readingInterval {
+		return models.ImuRotations{}, false
+	}
 	now := time.Now()
 	acc, gyro := imu.imuMems.Read()
 	diff := now.Sub(imu.lastReading)
@@ -74,7 +77,7 @@ func (imu *imudevice) ReadRotations() models.ImuRotations {
 		Rotations:     imu.rotations,
 		ReadTime:      now,
 		ReadInterval:  diff,
-	}
+	}, true
 }
 
 func calcaAcelerometerRotations(data models.XYZ) models.Rotations {
@@ -118,10 +121,10 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
-func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations {
+func NewImu() *imudevice {
 	configs := config.ReadFlightControlConfig().Configs
 	imuConfig := configs.Imu
-	imuSPIConn := drivers.NewSPIConnection(
+	imuSPIConn := hardware.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
 		imuConfig.SPI.ChipSelect,
 	)
@@ -144,38 +147,10 @@ func NewImu(ctx context.Context, wg *sync.WaitGroup) <-chan models.ImuRotations 
 		gyroConfig.Offsets.Y,
 		gyroConfig.Offsets.Z,
 	)
-	imu := newIMU(
+	return NewImuMems(
 		imuMems,
+		configs.ImuDataPerSecond,
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
-	imuReadTicker := utils.NewTicker(ctx, "IMU", configs.ImuDataPerSecond, 0)
-	dataChannel := make(chan models.ImuRotations)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer log.Println("IMU stopped")
-
-		imu.ResetTime()
-		for dataChannel != nil || imuReadTicker != nil {
-			select {
-			case <-ctx.Done():
-				if dataChannel != nil {
-					close(dataChannel)
-					dataChannel = nil
-				}
-
-			case _, isOk := <-imuReadTicker:
-				if isOk {
-					if dataChannel != nil {
-						rotations := imu.ReadRotations()
-						dataChannel <- rotations
-					}
-				} else {
-					imuReadTicker = nil
-				}
-			}
-		}
-	}()
-	return dataChannel
 }

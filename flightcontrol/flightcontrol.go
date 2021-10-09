@@ -8,14 +8,18 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
+type imu interface {
+	ReadRotations() (models.ImuRotations, bool)
+}
+
 type flightControl struct {
-	imu        <-chan models.ImuRotations
+	imu        imu
 	command    <-chan models.FlightCommands
 	connection <-chan bool
 	logger     chan<- models.ImuRotations
 }
 
-func NewFlightControl(imu <-chan models.ImuRotations, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
+func NewFlightControl(imu imu, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
 	return &flightControl{
 		imu:        imu,
 		command:    command,
@@ -29,16 +33,14 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Flight Control stopped")
-		for fc.command != nil || fc.connection != nil || fc.logger != nil || fc.imu != nil {
-			select {
-			case rotations, isImuOk := <-fc.imu:
-				if isImuOk {
-					if fc.logger != nil {
-						fc.logger <- rotations
-					}
-				} else {
-					fc.imu = nil
+		for fc.command != nil || fc.connection != nil || fc.logger != nil {
+			rotations, imuDataAvailable := fc.imu.ReadRotations()
+			if imuDataAvailable {
+				if fc.logger != nil {
+					fc.logger <- rotations
 				}
+			}
+			select {
 			case _, isCommandOk := <-fc.command:
 				if !isCommandOk {
 					fc.command = nil
@@ -54,6 +56,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					close(fc.logger)
 					fc.logger = nil
 				}
+			default:
 			}
 		}
 	}()
