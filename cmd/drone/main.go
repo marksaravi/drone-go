@@ -21,7 +21,7 @@ func main() {
 	var wg sync.WaitGroup
 	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
 	logger := udplogger.NewLogger(&wg)
-	imu := devices.NewImu(ctx, &wg)
+	imu := devices.NewImu()
 	flightControl := flightcontrol.NewFlightControl(imu, command, connection, logger)
 	utils.WaitToAbortByENTER(cancel, &wg)
 	flightControl.Start(ctx, &wg)
