@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/hardware"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -105,7 +105,7 @@ func NewRadio() interface {
 } {
 	flightControlConfig := config.ReadFlightControlConfig()
 	radioConfig := flightControlConfig.Configs.Radio
-	radioSPIConn := drivers.NewSPIConnection(
+	radioSPIConn := hardware.NewSPIConnection(
 		radioConfig.SPI.BusNumber,
 		radioConfig.SPI.ChipSelect,
 	)

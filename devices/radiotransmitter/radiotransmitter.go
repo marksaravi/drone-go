@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )

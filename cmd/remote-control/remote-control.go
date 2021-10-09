@@ -8,9 +8,9 @@ import (
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
-	"github.com/marksaravi/drone-go/drivers"
-	"github.com/marksaravi/drone-go/drivers/mcp3008"
-	"github.com/marksaravi/drone-go/drivers/nrf204"
+	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/mcp3008"
+	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/remotecontrol"
 )
 
@@ -18,10 +18,10 @@ func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
 	config := config.ReadRemoteControlConfig()
-	drivers.InitHost()
+	hardware.InitHost()
 
 	radio := nrf204.NewRadio()
-	analogToDigitalSPIConn := drivers.NewSPIConnection(
+	analogToDigitalSPIConn := hardware.NewSPIConnection(
 		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
 		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
 	)
@@ -53,7 +53,7 @@ func main() {
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor)
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
-	gpioinput := drivers.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
+	gpioinput := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
 	input := devices.NewButton(gpioinput)
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers"
-	"github.com/marksaravi/drone-go/drivers/pca9685"
+	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 )
@@ -72,7 +72,7 @@ func NewESC() interface {
 } {
 	flightControlConfigs := config.ReadFlightControlConfig()
 	escConfigs := flightControlConfigs.Configs.ESC
-	powerbreaker := drivers.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
+	powerbreaker := hardware.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
 	b, _ := i2creg.Open(escConfigs.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, err := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, escConfigs.MaxThrottle)

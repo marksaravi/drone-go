@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/drivers"
-	"github.com/marksaravi/drone-go/drivers/icm20948"
+	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/icm20948"
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -124,7 +124,7 @@ func goDurToDt(d int64) float64 {
 func NewImu() *imudevice {
 	configs := config.ReadFlightControlConfig().Configs
 	imuConfig := configs.Imu
-	imuSPIConn := drivers.NewSPIConnection(
+	imuSPIConn := hardware.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
 		imuConfig.SPI.ChipSelect,
 	)

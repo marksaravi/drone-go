@@ -9,14 +9,14 @@ import (
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/devices/udplogger"
-	"github.com/marksaravi/drone-go/drivers"
 	"github.com/marksaravi/drone-go/flightcontrol"
+	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	drivers.InitHost()
+	hardware.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)

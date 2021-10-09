@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/motors"
-	"github.com/marksaravi/drone-go/drivers"
+	"github.com/marksaravi/drone-go/hardware"
 )
 
 func main() {
-	drivers.InitHost()
+	hardware.InitHost()
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 

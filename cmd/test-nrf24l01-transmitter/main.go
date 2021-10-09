@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/drivers"
-	"github.com/marksaravi/drone-go/drivers/nrf204"
+	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
-	drivers.InitHost()
+	hardware.InitHost()
 	radio := nrf204.NewRadio()
 	radio.TransmitterOn()
 	var roll float32 = 0
