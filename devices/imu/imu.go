@@ -1,4 +1,4 @@
-package devices
+package imu
 
 import (
 	"math"
