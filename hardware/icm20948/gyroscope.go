@@ -1,8 +1,6 @@
 package icm20948
 
 import (
-	"fmt"
-
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -28,11 +26,10 @@ func (dev *memsICM20948) initGyroscope() error {
 
 	gyroConfig1 = gyroConfig1 | (uint8(sensitivity) << 1)
 	err := dev.writeRegister(GYRO_CONFIG_1, gyroConfig1, gyroConfig2)
-	cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
+	// cnfg, _ := dev.readRegister(GYRO_CONFIG_1, 2)
 	dev.setGyroOffset(XG_OFFS_USRH, dev.gyroConfig.offsetX)
 	dev.setGyroOffset(YG_OFFS_USRH, dev.gyroConfig.offsetY)
 	dev.setGyroOffset(ZG_OFFS_USRH, dev.gyroConfig.offsetZ)
-	fmt.Println("Gyro Config: ", cnfg)
 	return err
 }
 
