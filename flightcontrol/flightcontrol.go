@@ -12,15 +12,23 @@ type imu interface {
 	ReadRotations() (models.ImuRotations, bool)
 }
 
+type pidControl interface {
+	ApplyFlightCommands(flightCommands models.FlightCommands)
+	ApplyRotations(rotations models.ImuRotations)
+	Throttles() map[uint8]float32
+}
+
 type flightControl struct {
+	pid        pidControl
 	imu        imu
 	command    <-chan models.FlightCommands
 	connection <-chan bool
 	logger     chan<- models.ImuRotations
 }
 
-func NewFlightControl(imu imu, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
+func NewFlightControl(pid pidControl, imu imu, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
 	return &flightControl{
+		pid:        pid,
 		imu:        imu,
 		command:    command,
 		connection: connection,

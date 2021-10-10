@@ -10,7 +10,13 @@ type flightControlConfigs struct {
 	Configs struct {
 		ImuDataPerSecond   int `yaml:"imu-data-per-second"`
 		EscUpdatePerSecond int `yaml:"esc-update-per-second"`
-		Imu                struct {
+		PID                struct {
+			PGain        float64 `yaml:"p-gain"`
+			IGain        float64 `yaml:"i-gain"`
+			DGain        float64 `yaml:"d-gain"`
+			ThrottleGain float64 `yaml:"throttle-gain"`
+		} `yaml:"pid"`
+		Imu struct {
 			SPI           spiConfig `yaml:"spi"`
 			Accelerometer struct {
 				SensitivityLevel     string  `yaml:"sensitivity-level"`
