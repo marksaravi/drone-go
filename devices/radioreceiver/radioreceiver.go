@@ -56,6 +56,8 @@ func receiverRoutine(
 	connection chan bool,
 ) {
 	defer wg.Done()
+	defer close(command)
+	defer close(connection)
 	defer log.Println("Radio Receiver stopped")
 
 	radio.ReceiverOn()
@@ -65,43 +67,34 @@ func receiverRoutine(
 	connected := false
 	var lastDataTime time.Time = time.Now()
 	var lastHeartbeat time.Time = time.Now()
-	for receiveTicker != nil || command != nil || connection != nil {
-		select {
-		case <-ctx.Done():
-			if command != nil {
-				close(command)
-				close(connection)
-				command = nil
-				connection = nil
-			}
-		case _, isOk := <-receiveTicker:
-			if isOk {
-				data, dataAvailable := radio.Receive()
-				if dataAvailable {
-					lastDataTime = time.Now()
-					if !connected {
-						connected = true
-						connection <- true
-					}
-					command <- utils.DeserializeFlightCommand(data)
-				} else {
-					if connected && time.Since(lastDataTime) > commandTimeout {
-						connected = false
-						connection <- false
-					}
+	for receiveTicker != nil {
+		_, isOk := <-receiveTicker
+		if isOk {
+			data, dataAvailable := radio.Receive()
+			if dataAvailable {
+				lastDataTime = time.Now()
+				if !connected {
+					connected = true
+					connection <- true
 				}
-				if time.Since(lastHeartbeat) >= heartbeatInterval {
-					lastHeartbeat = time.Now()
-					radio.TransmitterOn()
-					timedata := utils.Int64ToBytes(time.Now().UnixNano())
-					if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
-						fmt.Println(err)
-					}
-					radio.ReceiverOn()
-				}
+				command <- utils.DeserializeFlightCommand(data)
 			} else {
-				receiveTicker = nil
+				if connected && time.Since(lastDataTime) > commandTimeout {
+					connected = false
+					connection <- false
+				}
 			}
+			if time.Since(lastHeartbeat) >= heartbeatInterval {
+				lastHeartbeat = time.Now()
+				radio.TransmitterOn()
+				timedata := utils.Int64ToBytes(time.Now().UnixNano())
+				if err := radio.Transmit(utils.SliceToArray32(timedata[:])); err != nil {
+					fmt.Println(err)
+				}
+				radio.ReceiverOn()
+			}
+		} else {
+			receiveTicker = nil
 		}
 	}
 }
