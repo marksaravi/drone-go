@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/devices/motors"
 	"github.com/marksaravi/drone-go/devices/radioreceiver"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/flightcontrol"
@@ -23,9 +24,10 @@ func main() {
 	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
 	logger := udplogger.NewLogger(&wg)
 	imudev := imu.NewImu()
+	throttles, onOff := motors.NewThrottleChannel(&wg)
 	pid := pidcontrol.NewPIDControl()
-	flightControl := flightcontrol.NewFlightControl(pid, imudev, command, connection, logger)
+	flightControl := flightcontrol.NewFlightControl(pid, imudev, throttles, onOff, command, connection, logger)
 	utils.WaitToAbortByENTER(cancel, &wg)
-	flightControl.Start(ctx, &wg)
+	flightControl.Start(&wg)
 	wg.Wait()
 }

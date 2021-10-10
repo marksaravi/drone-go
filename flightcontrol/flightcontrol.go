@@ -1,7 +1,6 @@
 package flightcontrol
 
 import (
-	"context"
 	"log"
 	"sync"
 
@@ -21,27 +20,35 @@ type pidControl interface {
 type flightControl struct {
 	pid        pidControl
 	imu        imu
+	throttles  chan<- models.Throttles
+	onOff      chan<- bool
 	command    <-chan models.FlightCommands
 	connection <-chan bool
 	logger     chan<- models.ImuRotations
 }
 
-func NewFlightControl(pid pidControl, imu imu, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
+func NewFlightControl(pid pidControl, imu imu, throttles chan<- models.Throttles, onOff chan<- bool, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
 	return &flightControl{
 		pid:        pid,
 		imu:        imu,
+		throttles:  throttles,
+		onOff:      onOff,
 		command:    command,
 		connection: connection,
 		logger:     logger,
 	}
 }
 
-func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
+func (fc *flightControl) Start(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer close(fc.onOff)
+		defer close(fc.throttles)
+		defer close(fc.logger)
 		defer log.Println("Flight Control stopped")
-		for fc.command != nil || fc.connection != nil || fc.logger != nil {
+		fc.onOff <- true
+		for fc.command != nil || fc.connection != nil {
 			rotations, imuDataAvailable := fc.imu.ReadRotations()
 			if imuDataAvailable {
 				if fc.logger != nil {
@@ -58,11 +65,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					log.Println("Connected: ", cnonnected)
 				} else {
 					fc.connection = nil
-				}
-			case <-ctx.Done():
-				if fc.logger != nil {
-					close(fc.logger)
-					fc.logger = nil
 				}
 			default:
 			}
