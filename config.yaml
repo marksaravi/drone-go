@@ -2,7 +2,7 @@ flight-control:
   imu-data-per-second: 3200
   esc-update-per-second: 100
   pid:
-    throttle-gain: 2
+    analog-input-to-throttle: 2
     p-gain: 0
     i-gain: 0
     d-gain: 0

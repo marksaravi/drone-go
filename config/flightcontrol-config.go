@@ -11,10 +11,10 @@ type flightControlConfigs struct {
 		ImuDataPerSecond   int `yaml:"imu-data-per-second"`
 		EscUpdatePerSecond int `yaml:"esc-update-per-second"`
 		PID                struct {
-			PGain        float64 `yaml:"p-gain"`
-			IGain        float64 `yaml:"i-gain"`
-			DGain        float64 `yaml:"d-gain"`
-			ThrottleGain float64 `yaml:"throttle-gain"`
+			PGain                 float64 `yaml:"p-gain"`
+			IGain                 float64 `yaml:"i-gain"`
+			DGain                 float64 `yaml:"d-gain"`
+			AnalogInputToThrottle float64 `yaml:"analog-input-to-throttle"`
 		} `yaml:"pid"`
 		Imu struct {
 			SPI           spiConfig `yaml:"spi"`
