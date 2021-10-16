@@ -6,15 +6,23 @@ type offsets struct {
 	Z int16 `yaml:"Z"`
 }
 
+type analogToDigitalConversion struct {
+	Ratio  float64 `yaml:"ratio"`
+	Offset float64 `yaml:"offset"`
+}
+
 type flightControlConfigs struct {
 	Configs struct {
 		ImuDataPerSecond   int `yaml:"imu-data-per-second"`
 		EscUpdatePerSecond int `yaml:"esc-update-per-second"`
 		PID                struct {
-			PGain                 float64 `yaml:"p-gain"`
-			IGain                 float64 `yaml:"i-gain"`
-			DGain                 float64 `yaml:"d-gain"`
-			AnalogInputToThrottle float64 `yaml:"analog-input-to-throttle"`
+			PGain                 float64                   `yaml:"p-gain"`
+			IGain                 float64                   `yaml:"i-gain"`
+			DGain                 float64                   `yaml:"d-gain"`
+			AnalogInputToRoll     analogToDigitalConversion `yaml:"analog-input-to-roll-conversion"`
+			AnalogInputToPitch    analogToDigitalConversion `yaml:"analog-input-to-pitch-conversion"`
+			AnalogInputToYaw      analogToDigitalConversion `yaml:"analog-input-to-yaw-conversion"`
+			AnalogInputToThrottle analogToDigitalConversion `yaml:"analog-input-to-throttle-conversion"`
 		} `yaml:"pid"`
 		Imu struct {
 			SPI           spiConfig `yaml:"spi"`

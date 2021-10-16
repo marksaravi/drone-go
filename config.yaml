@@ -2,10 +2,22 @@ flight-control:
   imu-data-per-second: 3200
   esc-update-per-second: 100
   pid:
-    analog-input-to-throttle: 2
     p-gain: 0
     i-gain: 0
     d-gain: 0
+    analog-input-to-roll-conversion:
+      ratio: 0.1
+      offset: 0
+    analog-input-to-pitch-conversion:
+      ratio: 0.1
+      offset: 0
+    analog-input-to-yaw-conversion:
+      ratio: 0.1
+      offset: 0
+    analog-input-to-throttle-conversion: 
+      ratio: 0.1
+      offset: 0
+
   imu:
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
