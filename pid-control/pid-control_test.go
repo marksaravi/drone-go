@@ -103,7 +103,7 @@ func TestApplyFlightCommand(t *testing.T) {
 	if got != want {
 		t.Fatalf("wanted %v, got %v", want, got)
 	}
-	if pid.throttle != want.throttle {
-		t.Fatalf("wanted throttle %f, got %f", want.throttle, pid.throttle)
+	if pid.commands.throttle != want.throttle {
+		t.Fatalf("wanted throttle %f, got %f", want.throttle, pid.commands.throttle)
 	}
 }

@@ -32,8 +32,6 @@ type pidControl struct {
 
 	rotations     models.ImuRotations
 	prevRotations models.ImuRotations
-	throttle      float64
-	iThrottle     float64
 	throttles     map[uint8]float32
 }
 
@@ -61,30 +59,33 @@ func NewPIDControl() *pidControl {
 				offset: configs.AnalogInputToThrottle.Offset,
 			},
 		},
+		throttles: map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0},
 	}
 }
 
 func (pid *pidControl) ApplyFlightCommands(flightCommands models.FlightCommands) {
-	pid.commands = flightControlCommandToPIDCommand(flightCommands, pid.conversions)
-	pid.throttle = pid.commands.throttle
+	commands := flightControlCommandToPIDCommand(flightCommands, pid.conversions)
+	pid.calcThrottlesByCommands(commands)
 }
 
 func (pid *pidControl) ApplyRotations(rotations models.ImuRotations) {
-	pid.prevRotations = pid.rotations
-	pid.rotations = rotations
-	if t, err := pid.calcMotorsThrottles(); err == nil {
-		pid.throttles = t
-	}
+	pid.calcThrottlesByFlightData(rotations)
 }
 
-func (pid *pidControl) calcMotorsThrottles() (map[uint8]float32, error) {
-	throttle := float32(pid.commands.throttle)
-	return map[uint8]float32{
-		0: throttle,
-		1: throttle,
-		2: throttle,
-		3: throttle,
-	}, nil
+func (pid *pidControl) calcThrottlesByFlightData(rotations models.ImuRotations) {
+	pid.prevRotations = pid.rotations
+	pid.rotations = rotations
+}
+
+func (pid *pidControl) calcThrottlesByCommands(commands pidCommands) {
+	pid.commands = commands
+	t := float32(pid.commands.throttle)
+	pid.throttles = map[uint8]float32{
+		0: t,
+		1: t,
+		2: t,
+		3: t,
+	}
 }
 
 func (pid *pidControl) Throttles() map[uint8]float32 {
