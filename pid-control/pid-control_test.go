@@ -6,6 +6,25 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
+var conversions = analogToDigitalConversions{
+	roll: analogToDigitalConversion{
+		ratio:  1.5,
+		offset: -2.5,
+	},
+	pitch: analogToDigitalConversion{
+		ratio:  1.2,
+		offset: -2.65,
+	},
+	yaw: analogToDigitalConversion{
+		ratio:  1.4,
+		offset: -2.3,
+	},
+	throttle: analogToDigitalConversion{
+		ratio:  1.1,
+		offset: 0.7,
+	},
+}
+
 func TestCurrAndPrevRotaions(t *testing.T) {
 	rotations1 := models.ImuRotations{
 		Rotations: models.Rotations{
@@ -58,24 +77,7 @@ func TestFlightControlCommandToPIDCommand(t *testing.T) {
 		Pitch:    1.5,
 		Yaw:      4.5,
 		Throttle: 3,
-	}, analogToDigitalConversions{
-		roll: analogToDigitalConversion{
-			ratio:  1.5,
-			offset: -2.5,
-		},
-		pitch: analogToDigitalConversion{
-			ratio:  1.2,
-			offset: -2.65,
-		},
-		yaw: analogToDigitalConversion{
-			ratio:  1.4,
-			offset: -2.3,
-		},
-		throttle: analogToDigitalConversion{
-			ratio:  1.1,
-			offset: 0.7,
-		},
-	})
+	}, conversions)
 	if got != want {
 		t.Fatalf("wanted %v, got %v", want, got)
 	}
@@ -89,24 +91,7 @@ func TestApplyFlightCommand(t *testing.T) {
 		throttle: 4,
 	}
 	pid := pidControl{
-		conversions: analogToDigitalConversions{
-			roll: analogToDigitalConversion{
-				ratio:  1.5,
-				offset: -2.5,
-			},
-			pitch: analogToDigitalConversion{
-				ratio:  1.2,
-				offset: -2.65,
-			},
-			yaw: analogToDigitalConversion{
-				ratio:  1.4,
-				offset: -2.3,
-			},
-			throttle: analogToDigitalConversion{
-				ratio:  1.1,
-				offset: 0.7,
-			},
-		},
+		conversions: conversions,
 	}
 	pid.ApplyFlightCommands(models.FlightCommands{
 		Roll:     1,
