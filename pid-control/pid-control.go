@@ -17,10 +17,10 @@ type analogToDigitalConversions struct {
 }
 
 type pidCommands struct {
-	throttle float64
 	roll     float64
 	pitch    float64
 	yaw      float64
+	throttle float64
 }
 
 type pidControl struct {
@@ -66,6 +66,7 @@ func NewPIDControl() *pidControl {
 
 func (pid *pidControl) ApplyFlightCommands(flightCommands models.FlightCommands) {
 	pid.commands = flightControlCommandToPIDCommand(flightCommands, pid.conversions)
+	pid.throttle = pid.commands.throttle
 }
 
 func (pid *pidControl) ApplyRotations(rotations models.ImuRotations) {

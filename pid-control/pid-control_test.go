@@ -37,3 +37,88 @@ func TestCurrAndPrevRotaions(t *testing.T) {
 		t.Fatalf("Expectd to set rotations to %v  and prevRotations to %v but has %v and %v", rotations2, rotations1, pid.rotations, pid.prevRotations)
 	}
 }
+
+func TestConversion(t *testing.T) {
+	want := float64(3)
+	got := convert(float32(1), analogToDigitalConversion{ratio: 2.3, offset: 0.7})
+	if got != want {
+		t.Fatalf("wanted %f, got %f", want, got)
+	}
+}
+
+func TestFlightControlCommandToPIDCommand(t *testing.T) {
+	want := pidCommands{
+		roll:     -1,
+		pitch:    -0.85,
+		yaw:      4,
+		throttle: 4,
+	}
+	got := flightControlCommandToPIDCommand(models.FlightCommands{
+		Roll:     1,
+		Pitch:    1.5,
+		Yaw:      4.5,
+		Throttle: 3,
+	}, analogToDigitalConversions{
+		roll: analogToDigitalConversion{
+			ratio:  1.5,
+			offset: -2.5,
+		},
+		pitch: analogToDigitalConversion{
+			ratio:  1.2,
+			offset: -2.65,
+		},
+		yaw: analogToDigitalConversion{
+			ratio:  1.4,
+			offset: -2.3,
+		},
+		throttle: analogToDigitalConversion{
+			ratio:  1.1,
+			offset: 0.7,
+		},
+	})
+	if got != want {
+		t.Fatalf("wanted %v, got %v", want, got)
+	}
+}
+
+func TestApplyFlightCommand(t *testing.T) {
+	want := pidCommands{
+		roll:     -1,
+		pitch:    -0.85,
+		yaw:      4,
+		throttle: 4,
+	}
+	pid := pidControl{
+		conversions: analogToDigitalConversions{
+			roll: analogToDigitalConversion{
+				ratio:  1.5,
+				offset: -2.5,
+			},
+			pitch: analogToDigitalConversion{
+				ratio:  1.2,
+				offset: -2.65,
+			},
+			yaw: analogToDigitalConversion{
+				ratio:  1.4,
+				offset: -2.3,
+			},
+			throttle: analogToDigitalConversion{
+				ratio:  1.1,
+				offset: 0.7,
+			},
+		},
+	}
+	pid.ApplyFlightCommands(models.FlightCommands{
+		Roll:     1,
+		Pitch:    1.5,
+		Yaw:      4.5,
+		Throttle: 3,
+	})
+	got := pid.commands
+	if got != want {
+		t.Fatalf("wanted %v, got %v", want, got)
+	}
+	if pid.throttle != want.throttle {
+		t.Fatalf("wanted throttle %f, got %f", want.throttle, pid.throttle)
+	}
+}
