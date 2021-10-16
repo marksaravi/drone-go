@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"runtime"
 	"time"
@@ -20,7 +19,6 @@ func NewTicker(ctx context.Context, name string, tickPerSecond int) <-chan int64
 		if tickPerSecond >= 1000 {
 			tickDur -= tickDur / 20
 		}
-		fmt.Println(tickDur)
 		tickStart := time.Now().UnixNano()
 		for ticker != nil {
 			now := time.Now().UnixNano()

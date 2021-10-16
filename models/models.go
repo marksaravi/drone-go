@@ -41,3 +41,5 @@ type RadioLink interface {
 	TransmitterOn()
 	Transmit([32]byte) error
 }
+
+type Throttles = map[uint8]float32

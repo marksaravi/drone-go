@@ -2,10 +2,12 @@ package motors
 
 import (
 	"log"
+	"sync"
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
+	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 )
@@ -65,11 +67,7 @@ func (mc *motorsControl) allMotorsOff() {
 	}
 }
 
-func NewESC() interface {
-	On()
-	Off()
-	SetThrottles(map[uint8]float32)
-} {
+func NewESC() *motorsControl {
 	flightControlConfigs := config.ReadFlightControlConfig()
 	escConfigs := flightControlConfigs.Configs.ESC
 	powerbreaker := hardware.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
@@ -81,4 +79,39 @@ func NewESC() interface {
 	}
 	esc := NewMotorsControl(pwmDev, powerbreaker, escConfigs.MotorESCMappings)
 	return esc
+}
+
+func NewThrottleChannel(wg *sync.WaitGroup) (chan<- map[uint8]float32, chan<- bool) {
+	wg.Add(1)
+	throttleChannel := make(chan map[uint8]float32)
+	onOff := make(chan bool)
+	esc := NewESC()
+	go escRoutine(wg, esc, throttleChannel, onOff)
+	return throttleChannel, onOff
+}
+
+func escRoutine(wg *sync.WaitGroup, esc *motorsControl, throttleChannel <-chan models.Throttles, onOff <-chan bool) {
+	defer wg.Done()
+	defer log.Println("ESC stopped")
+	for throttleChannel != nil || onOff != nil {
+		select {
+		case throttles, ok := <-throttleChannel:
+			if ok {
+				esc.SetThrottles(throttles)
+			} else {
+				throttleChannel = nil
+			}
+		case on, ok := <-onOff:
+			if ok {
+				if on {
+					esc.On()
+				} else {
+					esc.Off()
+				}
+			} else {
+				esc.Off()
+				onOff = nil
+			}
+		}
+	}
 }
