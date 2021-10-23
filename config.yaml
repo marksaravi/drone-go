@@ -78,12 +78,12 @@ remote-control:
       bus-number: 0
       chip-select: 0
   buttons:
-    front-left: 'GPIO27'
-    front-right: 'GPIO17'
-    top-left: 'GPIO22'
-    top-right: 'GPIO15'
-    down-left: 'GPIO18'
-    down-right: 'GPIO23'
+    front-left: 'GPIO15'
+    front-right: 'GPIO22'
+    top-left: 'GPIO17'
+    top-right: 'GPIO27'
+    bottom-left: 'GPIO18'
+    bottom-right: 'GPIO24'
   v-ref: 5
 
 radio-connetion:
