@@ -1,6 +1,7 @@
 package hardware
 
 import (
+	"fmt"
 	"log"
 
 	"periph.io/x/periph/conn/gpio"
@@ -16,6 +17,7 @@ func (b *gpioswitch) Read() bool {
 }
 
 func NewGPIOSwitch(pinName string) *gpioswitch {
+	fmt.Println("GPIO: ", pinName)
 	var pin gpio.PinIn = gpioreg.ByName(pinName)
 	if pin == nil {
 		log.Fatal("Failed to find ", pinName)

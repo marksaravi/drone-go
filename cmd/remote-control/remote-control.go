@@ -53,11 +53,27 @@ func main() {
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor)
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
-	gpioinput := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
-	input := devices.NewButton(gpioinput)
+	gpioFrontLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
+	btnFrontLeft := devices.NewButton(gpioFrontLeft)
+	gpioFrontRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontRight)
+	btnFrontRight := devices.NewButton(gpioFrontRight)
+	gpioTopLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.TopLeft)
+	btnToptLeft := devices.NewButton(gpioTopLeft)
+	gpioTopRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.TopRight)
+	btnTopRight := devices.NewButton(gpioTopRight)
+	gpioBottomLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.BottomLeft)
+	btnBottomLeft := devices.NewButton(gpioBottomLeft)
+	gpioBottomRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.BottomRight)
+	btnBottomRight := devices.NewButton(gpioBottomRight)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	remoteControl := remotecontrol.NewRemoteControl(radio, roll, pitch, yaw, throttle, input)
+	remoteControl := remotecontrol.NewRemoteControl(
+		radio,
+		roll, pitch, yaw, throttle,
+		btnFrontLeft, btnFrontRight,
+		btnToptLeft, btnTopRight,
+		btnBottomLeft, btnBottomRight,
+	)
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
