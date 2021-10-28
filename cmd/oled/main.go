@@ -26,13 +26,9 @@ import (
 
 	"periph.io/x/periph"
 	"periph.io/x/periph/conn/display"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/conn/physic"
-	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/conn/spi/spireg"
 	"periph.io/x/periph/devices/ssd1306"
 	"periph.io/x/periph/devices/ssd1306/image1bit"
 	"periph.io/x/periph/host"
@@ -135,8 +131,6 @@ func convert(disp display.Drawer, src image.Image) *image1bit.VerticalLSB {
 
 func mainImpl() error {
 	i2cID := flag.String("i2c", "", "I²C bus to use")
-	spiID := flag.String("spi", "", "SPI port to use")
-	dcName := flag.String("dc", "", "DC pin to use in 4-wire SPI mode")
 	var hz physic.Frequency
 	flag.Var(&hz, "hz", "I²C bus/SPI port speed")
 
@@ -166,48 +160,25 @@ func mainImpl() error {
 	// Open the device on the right bus.
 	var s *ssd1306.Dev
 	opts := ssd1306.Opts{W: *w, H: *h, Rotated: *rotated, Sequential: *sequential, SwapTopBottom: *swapTopBottom}
-	if *spiID != "" {
-		c, err := spireg.Open(*spiID)
-		if err != nil {
+
+	c, err := i2creg.Open(*i2cID)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	fmt.Println("I2C ********************8")
+	if hz != 0 {
+		if err := c.SetSpeed(hz); err != nil {
 			return err
 		}
-		defer c.Close()
-		if hz != 0 {
-			if err := c.LimitSpeed(hz); err != nil {
-				return err
-			}
-		}
-		if p, ok := c.(spi.Pins); ok {
-			// TODO(maruel): Print where the pins are located.
-			log.Printf("Using pins CLK: %s  MOSI: %s  CS: %s", p.CLK(), p.MOSI(), p.CS())
-		}
-		var dc gpio.PinOut
-		if len(*dcName) != 0 {
-			dc = gpioreg.ByName(*dcName)
-		}
-		s, err = ssd1306.NewSPI(c, dc, &opts)
-		if err != nil {
-			return err
-		}
-	} else {
-		c, err := i2creg.Open(*i2cID)
-		if err != nil {
-			return err
-		}
-		defer c.Close()
-		if hz != 0 {
-			if err := c.SetSpeed(hz); err != nil {
-				return err
-			}
-		}
-		if p, ok := c.(i2c.Pins); ok {
-			// TODO(maruel): Print where the pins are located.
-			log.Printf("Using pins SCL: %s  SDA: %s", p.SCL(), p.SDA())
-		}
-		s, err = ssd1306.NewI2C(c, &opts)
-		if err != nil {
-			return err
-		}
+	}
+	if p, ok := c.(i2c.Pins); ok {
+		// TODO(maruel): Print where the pins are located.
+		log.Printf("Using pins SCL: %s  SDA: %s", p.SCL(), p.SDA())
+	}
+	s, err = ssd1306.NewI2C(c, &opts)
+	if err != nil {
+		return err
 	}
 
 	// Load image.
