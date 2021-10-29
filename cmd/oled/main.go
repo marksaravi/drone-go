@@ -38,9 +38,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	const charW = 6
-	const charH = 13
-	const SCALE = 2
 	// addChar(dev, img, 48, charW, charH, SCALE, 0, 0)
 	// addChar(dev, img, 49, charW, charH, SCALE, 2, 0)
 
@@ -74,19 +71,19 @@ func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int) {
 	const CHAR_H = 26
 
 	char := fontData[charCode-48]
-	for y := 0; y < CHAR_H; y++ {
-		for x := 0; x < CHAR_W; x++ {
-			if char[y][x] > 0 {
-				setPixel(x, y, dev.Bounds(), img)
+	for row := 0; row < CHAR_H; row++ {
+		for col := 0; col < CHAR_W; col++ {
+			if char[row][col] > 0 {
+				setPixel(row, col, dev.Bounds(), img)
 			}
 		}
 	}
 
 }
 
-func setPixel(x, y int, bounds image.Rectangle, img *image1bit.VerticalLSB) {
-	absIndex := (y/8)*bounds.Dx() + x
-	maskIndex := y % 8
+func setPixel(row, col int, bounds image.Rectangle, img *image1bit.VerticalLSB) {
+	absIndex := (row/8)*bounds.Dx() + col
+	maskIndex := row % 8
 	maskValue := byte(1) << byte(maskIndex)
 
 	img.Pix[absIndex] = img.Pix[absIndex] | maskValue
