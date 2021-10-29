@@ -43,7 +43,7 @@ func main() {
 	const SCALE = 2
 	// addChar(dev, img, 48, charW, charH, SCALE, 0, 0)
 	// addChar(dev, img, 49, charW, charH, SCALE, 2, 0)
-	addMyChar(dev, img)
+	addMyChar(dev, img, 49)
 	if err := dev.Draw(dev.Bounds(), img, image.Point{}); err != nil {
 		log.Fatal(err)
 	}
@@ -67,11 +67,11 @@ func addChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int, charW, 
 
 }
 
-func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB) {
+func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int) {
 	const CHAR_W = 15
 	const CHAR_H = 26
 
-	char := zero
+	char := fontData[charCode-48]
 	for y := 0; y < CHAR_H; y++ {
 		for x := 0; x < CHAR_W; x++ {
 			if char[y][x] > 0 {
