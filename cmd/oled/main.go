@@ -41,13 +41,16 @@ func main() {
 	// addChar(dev, img, 48, charW, charH, SCALE, 0, 0)
 	// addChar(dev, img, 49, charW, charH, SCALE, 2, 0)
 
-	addMyChar(dev, img, 57)
+	for i := 0; i < 8; i++ {
+		addMyChar(dev, img, 48+i, i, 0)
+	}
 
 	if err := dev.Draw(dev.Bounds(), img, image.Point{}); err != nil {
 		log.Fatal(err)
 	}
 }
 
+//!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 // func addChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int, charW, charH, scale, x, y int) {
 // 	charOffset := charCode - 0x20
 // 	char := characters[charOffset*charW*charH : (charOffset+1)*charW*charH]
@@ -66,7 +69,7 @@ func main() {
 
 // }
 
-func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int) {
+func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode, x, y int) {
 	const CHAR_W = 15
 	const CHAR_H = 26
 
@@ -74,7 +77,7 @@ func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode int) {
 	for row := 0; row < CHAR_H; row++ {
 		for col := 0; col < CHAR_W; col++ {
 			if char[row][col] > 0 {
-				setPixel(row, col, dev.Bounds(), img)
+				setPixel(row+CHAR_H*y, col+CHAR_W*x, dev.Bounds(), img)
 			}
 		}
 	}
