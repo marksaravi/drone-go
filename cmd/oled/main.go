@@ -59,11 +59,11 @@ func writeString(dev *ssd1306.Dev, img *image1bit.VerticalLSB, msg string, x, y 
 }
 
 func writeChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode, x, y int) {
-	const CHAR_W = 10
-	const CHAR_H = 18
+	const CHAR_W = 9
+	const CHAR_H = 13
 	var xOffset = CHAR_W*x + 4
-	var yOffset = (CHAR_H + 5) * y
-	char := fontData[charCode]
+	var yOffset = (CHAR_H + 10) * y
+	char := monoFont[charCode]
 	for row := 0; row < CHAR_H; row++ {
 		for col := 0; col < CHAR_W; col++ {
 			if char[row][col] > 0 {
