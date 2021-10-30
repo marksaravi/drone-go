@@ -70,8 +70,8 @@ func main() {
 // }
 
 func addMyChar(dev *ssd1306.Dev, img *image1bit.VerticalLSB, charCode, x, y int) {
-	const CHAR_W = 15
-	const CHAR_H = 26
+	const CHAR_W = 10
+	const CHAR_H = 18
 
 	char := fontData[charCode-48]
 	for row := 0; row < CHAR_H; row++ {
