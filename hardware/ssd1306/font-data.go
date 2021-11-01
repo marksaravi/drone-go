@@ -1,4 +1,4 @@
-package main
+package ssd1306
 
 type CharCode = int
 
