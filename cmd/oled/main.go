@@ -28,7 +28,7 @@ func main() {
 
 	const W = 128
 	const H = 64
-	oled := ssd1306.OLED{
+	oled := ssd1306.SSD1306{
 		I2CDev: d,
 		Options: ssd1306.Options{
 			W:          W,
@@ -46,7 +46,7 @@ func main() {
 	buffer := make([]byte, W*H/8)
 
 	for i := 0; i < len(buffer); i++ {
-		buffer[i] = 1 + 4 + 16 + 64
+		buffer[i] = 1
 		//buffer[i] = 0
 	}
 	oled.SendData(buffer)

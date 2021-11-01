@@ -12,26 +12,26 @@ type Options struct {
 	SwapTopBottom bool
 }
 
-type OLED struct {
+type SSD1306 struct {
 	I2CDev  *i2c.Dev
 	Options Options
 }
 
-func (d *OLED) SendCommand(c []byte) error {
+func (d *SSD1306) SendCommand(c []byte) error {
 
 	return d.I2CDev.Tx(append([]byte{0x00}, c...), nil)
 }
 
-func (d *OLED) DisplayOff() error {
+func (d *SSD1306) DisplayOff() error {
 
 	return d.SendCommand([]byte{0xAE})
 }
 
-func (d *OLED) DisplayOn() error {
+func (d *SSD1306) DisplayOn() error {
 
 	return d.SendCommand([]byte{0xAF})
 }
 
-func (d *OLED) SendData(c []byte) error {
+func (d *SSD1306) SendData(c []byte) error {
 	return d.I2CDev.Tx(append([]byte{0x40}, c...), nil)
 }
