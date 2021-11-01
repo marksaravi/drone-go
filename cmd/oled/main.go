@@ -1,13 +1,11 @@
 package main
 
 import (
-	"image"
 	"log"
 
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
-	"periph.io/x/periph/devices/ssd1306/image1bit"
 	"periph.io/x/periph/host"
 )
 
@@ -26,33 +24,22 @@ func main() {
 
 	d := &i2c.Dev{Addr: 0x3D, Bus: b}
 
-	const W = 128
-	const H = 64
-	oled := ssd1306.SSD1306{
-		I2CDev: d,
-		Options: ssd1306.Options{
-			W:          W,
-			H:          H,
-			Sequential: false,
-			Rotated:    false,
-		},
-	}
+	oled := ssd1306.NewSSD1306(d, ssd1306.DefaultOptions)
 
 	err = oled.SendCommand(getInitCmd(oled.Options))
 	if err != nil {
 		log.Fatal(err)
 	}
 	oled.DisplayOn()
-	buffer := make([]byte, W*H/8)
 
-	for i := 0; i < len(buffer); i++ {
-		buffer[i] = 1
-		//buffer[i] = 0
+	for x := 0; x < 60; x++ {
+		oled.SetPixel(x, x)
 	}
-	oled.SendData(buffer)
+	oled.WriteString("Hello Mark!", 0, 0)
+	oled.SendData(oled.Buffer.Pix)
 	// bounds := image.Rect(0, 0, oled.ops.W, oled.ops.H)
 	// img := image1bit.NewVerticalLSB(bounds)
-	// writeString(bounds, img, "Hello Mark!", 0, 0)
+
 	// writeString(bounds, img, "Disconnected", 0, 1)
 	// writeString(bounds, img, "Power: 54.3%", 0, 2)
 
@@ -98,42 +85,11 @@ func getInitCmd(opts ssd1306.Options) []byte {
 		0x8D, 0x14, // Enable charge pump regulator; page 62
 		0xD9, 0xF1, // Set pre-charge period; from adafruit driver
 		0xDB, 0x40, // Set Vcomh deselect level; page 32
-		0x2E,                   // Deactivate scroll
-		0xA8, byte(opts.H - 1), // Set multiplex ratio (number of lines to display)
+		0x2E,                        // Deactivate scroll
+		0xA8, byte(opts.Height - 1), // Set multiplex ratio (number of lines to display)
 		0x20, 0x00, // Set memory addressing mode to horizontal
-		0x21, 0, uint8(opts.W - 1), // Set column address (Width)
-		0x22, 0, uint8(opts.H/8 - 1), // Set page address (Pages)
+		0x21, 0, uint8(opts.Width - 1), // Set column address (Width)
+		0x22, 0, uint8(opts.Height/8 - 1), // Set page address (Pages)
 		0xAF, // Display on
 	}
-}
-
-func setPixel(row, col int, bounds image.Rectangle, img *image1bit.VerticalLSB) {
-	absIndex := (row/8)*bounds.Dx() + col
-	maskIndex := row % 8
-	maskValue := byte(1) << byte(maskIndex)
-
-	img.Pix[absIndex] = img.Pix[absIndex] | maskValue
-}
-
-func writeString(bounds image.Rectangle, img *image1bit.VerticalLSB, msg string, x, y int) {
-	charCodes := []byte(msg)
-	for i := 0; i < len(charCodes); i++ {
-		writeChar(bounds, img, int(charCodes[i]), x+i, y)
-	}
-}
-
-func writeChar(bounds image.Rectangle, img *image1bit.VerticalLSB, charCode, x, y int) {
-	// const CHAR_W = 9
-	// const CHAR_H = 13
-	// var xOffset = CHAR_W*x + 4
-	// var yOffset = (CHAR_H + 5) * y
-	// char := fontData[charCode]
-	// for row := 0; row < CHAR_H; row++ {
-	// 	for col := 0; col < CHAR_W; col++ {
-	// 		if char[row][col] > 0 {
-	// 			setPixel(row+yOffset, col+xOffset, bounds, img)
-	// 		}
-	// 	}
-	// }
-
 }
