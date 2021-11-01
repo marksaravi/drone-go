@@ -34,7 +34,7 @@ func main() {
 	}
 	defer b.Close()
 
-	d := &i2c.Dev{Addr: 0x3C, Bus: b}
+	d := &i2c.Dev{Addr: 0x3D, Bus: b}
 
 	const W = 128
 	const H = 64
@@ -54,7 +54,7 @@ func main() {
 	}
 	buffer := make([]byte, W*H/8)
 	for i := 0; i < len(buffer); i++ {
-		buffer[i] = 255
+		buffer[i] = 32
 	}
 	err = oled.sendData(buffer)
 	if err != nil {
