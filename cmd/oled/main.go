@@ -4,24 +4,12 @@ import (
 	"image"
 	"log"
 
+	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
 	"periph.io/x/periph/devices/ssd1306/image1bit"
 	"periph.io/x/periph/host"
 )
-
-type options struct {
-	W             int
-	H             int
-	Rotated       bool
-	Sequential    bool
-	SwapTopBottom bool
-}
-
-type OLED struct {
-	conn *i2c.Dev
-	ops  options
-}
 
 func main() {
 	// Make sure periph is initialized.
@@ -40,9 +28,9 @@ func main() {
 
 	const W = 128
 	const H = 64
-	oled := OLED{
-		conn: d,
-		ops: options{
+	oled := ssd1306.OLED{
+		I2CDev: d,
+		Options: ssd1306.Options{
 			W:          W,
 			H:          H,
 			Sequential: false,
@@ -50,29 +38,27 @@ func main() {
 		},
 	}
 
-	err = oled.sendCommand(getInitCmd(&oled.ops))
+	err = oled.SendCommand(getInitCmd(oled.Options))
 	if err != nil {
 		log.Fatal(err)
 	}
-	oled.displayOn()
+	oled.DisplayOn()
 	buffer := make([]byte, W*H/8)
+
 	for i := 0; i < len(buffer); i++ {
 		buffer[i] = 1 + 4 + 16 + 64
+		//buffer[i] = 0
 	}
+	oled.SendData(buffer)
 	// bounds := image.Rect(0, 0, oled.ops.W, oled.ops.H)
 	// img := image1bit.NewVerticalLSB(bounds)
 	// writeString(bounds, img, "Hello Mark!", 0, 0)
 	// writeString(bounds, img, "Disconnected", 0, 1)
 	// writeString(bounds, img, "Power: 54.3%", 0, 2)
 
-	err = oled.sendData(buffer)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 }
 
-func getInitCmd(opts *options) []byte {
+func getInitCmd(opts ssd1306.Options) []byte {
 	// Set COM output scan direction; C0 means normal; C8 means reversed
 	comScan := byte(0xC8)
 	// See page 40.
@@ -119,25 +105,6 @@ func getInitCmd(opts *options) []byte {
 		0x22, 0, uint8(opts.H/8 - 1), // Set page address (Pages)
 		0xAF, // Display on
 	}
-}
-
-func (d *OLED) sendCommand(c []byte) error {
-
-	return d.conn.Tx(append([]byte{0x00}, c...), nil)
-}
-
-func (d *OLED) displayOff() error {
-
-	return d.sendCommand([]byte{0xAE})
-}
-
-func (d *OLED) displayOn() error {
-
-	return d.sendCommand([]byte{0xAF})
-}
-
-func (d *OLED) sendData(c []byte) error {
-	return d.conn.Tx(append([]byte{0x40}, c...), nil)
 }
 
 func setPixel(row, col int, bounds image.Rectangle, img *image1bit.VerticalLSB) {
