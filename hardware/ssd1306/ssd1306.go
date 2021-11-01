@@ -1,6 +1,7 @@
 package ssd1306
 
 import (
+	"errors"
 	"image"
 
 	"periph.io/x/periph/conn/i2c"
@@ -24,51 +25,60 @@ var DefaultOptions = Options{
 }
 
 type SSD1306 struct {
-	I2CDev  *i2c.Dev
+	i2cdev  *i2c.Dev
 	Options Options
-	Buffer  *image1bit.VerticalLSB
+	buffer  *image1bit.VerticalLSB
 }
 
 func NewSSD1306(dev *i2c.Dev, options Options) *SSD1306 {
 	return &SSD1306{
-		I2CDev:  dev,
+		i2cdev:  dev,
 		Options: options,
-		Buffer:  image1bit.NewVerticalLSB(image.Rect(0, 0, options.Width, options.Height)),
+		buffer:  image1bit.NewVerticalLSB(image.Rect(0, 0, options.Width, options.Height)),
 	}
 }
 
 func (d *SSD1306) Init() error {
-	return d.SendCommand(getInitCmd(d.Options))
+	return d.command(getInitCmd(d.Options))
 }
 
-func (d *SSD1306) SendCommand(c []byte) error {
+func (d *SSD1306) command(c []byte) error {
 
-	return d.I2CDev.Tx(append([]byte{0x00}, c...), nil)
+	_, err := d.i2cdev.Write(append([]byte{0x00}, c...))
+	return err
 }
 
 func (d *SSD1306) DisplayOff() error {
 
-	return d.SendCommand([]byte{0xAE})
+	return d.command([]byte{0xAE})
 }
 
 func (d *SSD1306) DisplayOn() error {
 
-	return d.SendCommand([]byte{0xAF})
+	return d.command([]byte{0xAF})
 }
 
 func (d *SSD1306) Draw() error {
-	return d.I2CDev.Tx(append([]byte{0x40}, d.Buffer.Pix...), nil)
+	_, err := d.i2cdev.Write(append([]byte{0x40}, d.buffer.Pix...))
+	return err
 }
 
-func (d *SSD1306) SetPixel(row, col int) {
+func (d *SSD1306) SetPixel(row, col int) error {
+	if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
+		return errors.New("coordinates out of range")
+	}
 	absIndex := (row/8)*d.Options.Width + col
 	maskIndex := row % 8
 	maskValue := byte(1) << byte(maskIndex)
 
-	d.Buffer.Pix[absIndex] = d.Buffer.Pix[absIndex] | maskValue
+	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] | maskValue
+	return nil
 }
 
-func (d *SSD1306) WriteChar(charCode, x, y int) {
+func (d *SSD1306) WriteChar(charCode, x, y int) error {
+	if charCode < 32 || charCode > 126 {
+		return errors.New("char code out of range")
+	}
 	var xOffset = MonoFont.width*x + 4
 	var yOffset = (MonoFont.height + 5) * y
 	char := MonoFont.fontData[charCode]
@@ -79,7 +89,7 @@ func (d *SSD1306) WriteChar(charCode, x, y int) {
 			}
 		}
 	}
-
+	return nil
 }
 
 func (d *SSD1306) WriteString(msg string, x, y int) {

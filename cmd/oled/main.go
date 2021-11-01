@@ -26,6 +26,6 @@ func main() {
 	}
 	oled.WriteString("Hello Mark!", 0, 0)
 	oled.WriteString("Disconnected", 0, 1)
-	oled.WriteString("T: 45.3%", 0, 2)
+	oled.WriteString("T: 15.7%", 0, 2)
 	oled.Draw()
 }
