@@ -37,6 +37,8 @@ type SoundWave struct {
 	BaseFrequency float64
 	DevFrequency  float64
 	Steps         float64
+	MinT          float64
+	MaxT          float64
 	Duration      time.Duration
 }
 
@@ -45,6 +47,8 @@ var Warning = SoundWave{
 	DevFrequency:  0,
 	Steps:         25,
 	Duration:      0,
+	MinT:          1,
+	MaxT:          2,
 }
 
 var Siren = SoundWave{
@@ -52,6 +56,8 @@ var Siren = SoundWave{
 	DevFrequency:  200,
 	Steps:         500,
 	Duration:      0,
+	MinT:          1,
+	MaxT:          2,
 }
 
 type Buzzer struct {
@@ -86,8 +92,8 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
-		const maxT float64 = 2
-		const minT float64 = 1
+		var maxT float64 = sound.MaxT
+		var minT float64 = sound.MinT
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
