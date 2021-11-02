@@ -10,25 +10,26 @@ import (
 )
 
 // CBGE
-type NoteFrequency float64
 
 const (
-	A      NoteFrequency = 27.50
-	ASharp NoteFrequency = 29.14
-	B      NoteFrequency = 30.87
-	C      NoteFrequency = 32.70
-	CSharp NoteFrequency = 34.65
-	D      NoteFrequency = 36.71
-	DSharp NoteFrequency = 38.89
-	E1     NoteFrequency = 41.20
-	F      NoteFrequency = 43.65
-	FSharp NoteFrequency = 46.25
-	G      NoteFrequency = 49.00
+	C      float64 = 16.35
+	CSharp float64 = 17.32
+	D      float64 = 18.35
+	DSharp float64 = 19.45
+	E      float64 = 20.60
+	F      float64 = 21.83
+	FSharp float64 = 23.12
+	G      float64 = 24.50
+	GSharp float64 = 25.96
+	A      float64 = 27.50
+	ASharp float64 = 29.14
+	B      float64 = 30.87
 )
 
 type Note struct {
-	F NoteFrequency
-	D time.Duration
+	Frequency float64
+	Duration  time.Duration
+	Octet     int
 }
 
 type Notes = []Note
@@ -78,6 +79,23 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 	buzzer.out.Out(gpio.High)
 
 	return buzzer
+}
+
+func (b *Buzzer) PlayNote(note Note) {
+	start := time.Now()
+
+	freq := note.Frequency * math.Pow(2, float64(note.Octet))
+	period := time.Second / time.Duration(freq)
+	for time.Since(start) < note.Duration {
+		b.out.Out(gpio.High)
+		onTime := time.Now()
+		for time.Since(onTime) < 100*time.Microsecond {
+		}
+		b.out.Out(gpio.Low)
+		for time.Since(onTime) < period {
+		}
+	}
+
 }
 
 func (b *Buzzer) WaveGenerator(sound SoundWave) {
