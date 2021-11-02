@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
@@ -11,12 +10,14 @@ import (
 )
 
 func main() {
-	fmt.Println("Press ENTER to stop")
+	fmt.Println("Press ENTER to change sounds")
 	hardware.InitHost()
 	var pin gpio.PinOut = gpioreg.ByName("GPIO5")
 	buzzer := piezobuzzer.NewBuzzer(pin)
-	buzzer.Warning()
+	buzzer.WaveGenerator(piezobuzzer.Warning)
 	fmt.Scanln()
 	buzzer.Stop()
-	time.Sleep(100 * time.Millisecond)
+	buzzer.WaveGenerator(piezobuzzer.Siren)
+	fmt.Scanln()
+	buzzer.Stop()
 }

@@ -8,6 +8,24 @@ import (
 	"periph.io/x/periph/conn/gpio"
 )
 
+type SoundType struct {
+	DevFrequency float64
+	Steps        float64
+	Duration     time.Duration
+}
+
+var Warning = SoundType{
+	DevFrequency: 0,
+	Steps:        25,
+	Duration:     0,
+}
+
+var Siren = SoundType{
+	DevFrequency: 200,
+	Steps:        500,
+	Duration:     0,
+}
+
 type Buzzer struct {
 	out    gpio.PinOut
 	cancel context.CancelFunc
@@ -23,7 +41,7 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 	return buzzer
 }
 
-func (b *Buzzer) Warning() {
+func (b *Buzzer) WaveGenerator(sound SoundType) {
 	cx, cancel := context.WithCancel(context.Background())
 	b.cancel = cancel
 
@@ -31,10 +49,10 @@ func (b *Buzzer) Warning() {
 		buzzing := true
 		const multiplier float64 = 1
 		const baseFrequency float64 = 300 * multiplier
-		const devFrequency float64 = 0 * multiplier // set to 200 for siren alarm
+		var devFrequency float64 = sound.DevFrequency * multiplier
 		const maxT float64 = 2
 		const minT float64 = 1
-		const dT = (maxT - minT) / 25 //set to 500 for siren alarm
+		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
 		for buzzing {
