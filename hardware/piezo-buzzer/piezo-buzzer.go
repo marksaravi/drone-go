@@ -33,22 +33,25 @@ type Note struct {
 
 type Notes = []Note
 
-type SoundType struct {
-	DevFrequency float64
-	Steps        float64
-	Duration     time.Duration
+type SoundWave struct {
+	BaseFrequency float64
+	DevFrequency  float64
+	Steps         float64
+	Duration      time.Duration
 }
 
-var Warning = SoundType{
-	DevFrequency: 0,
-	Steps:        25,
-	Duration:     0,
+var Warning = SoundWave{
+	BaseFrequency: 300,
+	DevFrequency:  0,
+	Steps:         25,
+	Duration:      0,
 }
 
-var Siren = SoundType{
-	DevFrequency: 200,
-	Steps:        500,
-	Duration:     0,
+var Siren = SoundWave{
+	BaseFrequency: 300,
+	DevFrequency:  200,
+	Steps:         500,
+	Duration:      0,
 }
 
 type Buzzer struct {
@@ -69,7 +72,7 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 	return buzzer
 }
 
-func (b *Buzzer) WaveGenerator(sound SoundType) {
+func (b *Buzzer) WaveGenerator(sound SoundWave) {
 	if b.cancel != nil {
 		return
 	}
@@ -81,7 +84,7 @@ func (b *Buzzer) WaveGenerator(sound SoundType) {
 		wg.Add(1)
 		buzzing := true
 		const multiplier float64 = 1
-		const baseFrequency float64 = 300 * multiplier
+		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
 		const maxT float64 = 2
 		const minT float64 = 1
