@@ -61,17 +61,19 @@ var Siren = SoundWave{
 }
 
 type Buzzer struct {
-	out    gpio.PinOut
-	cancel context.CancelFunc
-	wg     *sync.WaitGroup
+	playing bool
+	out     gpio.PinOut
+	cancel  context.CancelFunc
+	wg      *sync.WaitGroup
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
 	var wg sync.WaitGroup
 	buzzer := &Buzzer{
-		out:    out,
-		cancel: nil,
-		wg:     &wg,
+		playing: false,
+		out:     out,
+		cancel:  nil,
+		wg:      &wg,
 	}
 	buzzer.out.Out(gpio.High)
 
@@ -79,16 +81,16 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 }
 
 func (b *Buzzer) WaveGenerator(sound SoundWave) {
-	if b.cancel != nil {
+	if b.playing {
 		return
 	}
 	cx, cancel := context.WithCancel(context.Background())
 	b.cancel = cancel
 
-	go func(ctx context.Context, wg *sync.WaitGroup, buzzer *Buzzer) {
-		defer wg.Done()
-		wg.Add(1)
-		buzzing := true
+	go func(ctx context.Context, buzzer *Buzzer) {
+		defer b.wg.Done()
+		b.playing = true
+		b.wg.Add(1)
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
@@ -97,31 +99,31 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
-		for buzzing {
+		for b.playing {
 			freq := baseFrequency + devFrequency*math.Exp(t)
 			t += dT
 			if t >= maxT {
 				t = minT
 				on = !on
 			}
+			if on {
+				buzzer.out.Out(gpio.High)
+			}
+			period := time.Second / time.Duration(freq)
+			onTime := time.Now()
+			for time.Since(onTime) < 100*time.Microsecond {
+			}
+			buzzer.out.Out(gpio.Low)
+			for time.Since(onTime) < period {
+			}
 			select {
 			case <-ctx.Done():
-				buzzing = false
+				b.playing = false
 			default:
-				if on {
-					buzzer.out.Out(gpio.High)
-				}
-				period := time.Second / time.Duration(freq)
-				onTime := time.Now()
-				for time.Since(onTime) < 100*time.Microsecond {
-				}
-				buzzer.out.Out(gpio.Low)
-				for time.Since(onTime) < period {
-				}
 			}
 		}
 		buzzer.out.Out(gpio.Low)
-	}(cx, b.wg, b)
+	}(cx, b)
 }
 
 func (b *Buzzer) Stop() {
