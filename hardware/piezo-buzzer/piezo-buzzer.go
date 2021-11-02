@@ -61,6 +61,11 @@ var Siren = SoundWave{
 	MaxT:          2,
 }
 
+var Connection1 = Notes{
+	{Frequency: CSharp, Duration: time.Second / 6, Octet: 5},
+	{Frequency: FSharp, Duration: time.Second / 6, Octet: 5},
+}
+
 type Buzzer struct {
 	playing bool
 	out     gpio.PinOut
@@ -95,7 +100,12 @@ func (b *Buzzer) PlayNote(note Note) {
 		for time.Since(onTime) < period {
 		}
 	}
+}
 
+func (b *Buzzer) PlayNotes(notes Notes) {
+	for _, note := range notes {
+		b.PlayNote(note)
+	}
 }
 
 func (b *Buzzer) WaveGenerator(sound SoundWave) {

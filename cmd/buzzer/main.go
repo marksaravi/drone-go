@@ -22,22 +22,7 @@ func main() {
 	// buzzer.WaveGenerator(piezobuzzer.Siren)
 	// fmt.Scanln()
 	// buzzer.Stop()
-	const dur = time.Second / 2
-	const octet = 3
-	notes := piezobuzzer.Notes{
-		{Frequency: piezobuzzer.C, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.D, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.E, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.F, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.G, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.A, Duration: dur, Octet: octet},
-		{Frequency: piezobuzzer.B, Duration: dur, Octet: octet},
-	}
-	for i := octet; i < octet+4; i++ {
-		for n := 0; n < len(notes); n++ {
-			notes[n].Octet = i
-			buzzer.PlayNote(notes[n])
-		}
-	}
-	buzzer.Stop()
+	const dur = time.Second / 6
+	const octet = 5
+	buzzer.PlayNotes(piezobuzzer.Connection1)
 }
