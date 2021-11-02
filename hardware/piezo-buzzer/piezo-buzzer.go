@@ -61,7 +61,12 @@ var Siren = SoundWave{
 	MaxT:          2,
 }
 
-var Connection1 = Notes{
+var Connection = Notes{
+	{Frequency: C, Duration: time.Second / 6, Octet: 4},
+	{Frequency: G, Duration: time.Second / 6, Octet: 4},
+}
+
+var Connection2 = Notes{
 	{Frequency: CSharp, Duration: time.Second / 6, Octet: 5},
 	{Frequency: FSharp, Duration: time.Second / 6, Octet: 5},
 }

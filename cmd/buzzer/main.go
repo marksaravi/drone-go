@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
@@ -22,7 +21,5 @@ func main() {
 	// buzzer.WaveGenerator(piezobuzzer.Siren)
 	// fmt.Scanln()
 	// buzzer.Stop()
-	const dur = time.Second / 6
-	const octet = 5
-	buzzer.PlayNotes(piezobuzzer.Connection1)
+	buzzer.PlayNotes(piezobuzzer.Connection)
 }
