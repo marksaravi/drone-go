@@ -11,11 +11,11 @@ import (
 )
 
 func main() {
-	fmt.Println("Start")
+	fmt.Println("Press ENTER to stop")
 	hardware.InitHost()
 	var pin gpio.PinOut = gpioreg.ByName("GPIO5")
 	buzzer := piezobuzzer.NewBuzzer(pin)
-	buzzer.Buzz()
+	buzzer.Warning()
 	fmt.Scanln()
 	buzzer.Stop()
 	time.Sleep(100 * time.Millisecond)
