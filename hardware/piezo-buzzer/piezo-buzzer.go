@@ -43,7 +43,7 @@ type SoundWave struct {
 	Duration      time.Duration
 }
 
-var Warning = SoundWave{
+var WarningSound = SoundWave{
 	BaseFrequency: 300,
 	DevFrequency:  0,
 	Steps:         25,
@@ -52,7 +52,7 @@ var Warning = SoundWave{
 	MaxT:          2,
 }
 
-var Siren = SoundWave{
+var SirenSound = SoundWave{
 	BaseFrequency: 300,
 	DevFrequency:  200,
 	Steps:         500,
@@ -61,14 +61,14 @@ var Siren = SoundWave{
 	MaxT:          2,
 }
 
-var Connection = Notes{
+var ConnectedSound = Notes{
 	{Frequency: C, Duration: time.Second / 6, Octet: 4},
 	{Frequency: G, Duration: time.Second / 6, Octet: 4},
 }
 
-var Connection2 = Notes{
-	{Frequency: CSharp, Duration: time.Second / 6, Octet: 5},
-	{Frequency: FSharp, Duration: time.Second / 6, Octet: 5},
+var DisconnectedSound = Notes{
+	{Frequency: G, Duration: time.Second / 6, Octet: 4},
+	{Frequency: C, Duration: time.Second / 6, Octet: 4},
 }
 
 type Buzzer struct {
