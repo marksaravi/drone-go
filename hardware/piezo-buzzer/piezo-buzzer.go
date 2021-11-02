@@ -3,6 +3,7 @@ package piezobuzzer
 import (
 	"context"
 	"math"
+	"sync"
 	"time"
 
 	"periph.io/x/periph/conn/gpio"
@@ -29,12 +30,15 @@ var Siren = SoundType{
 type Buzzer struct {
 	out    gpio.PinOut
 	cancel context.CancelFunc
+	wg     *sync.WaitGroup
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
+	var wg sync.WaitGroup
 	buzzer := &Buzzer{
 		out:    out,
 		cancel: nil,
+		wg:     &wg,
 	}
 	buzzer.out.Out(gpio.High)
 
@@ -42,10 +46,15 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 }
 
 func (b *Buzzer) WaveGenerator(sound SoundType) {
+	if b.cancel != nil {
+		return
+	}
 	cx, cancel := context.WithCancel(context.Background())
 	b.cancel = cancel
 
-	go func(ctx context.Context, buzzer *Buzzer) {
+	go func(ctx context.Context, wg *sync.WaitGroup, buzzer *Buzzer) {
+		defer wg.Done()
+		wg.Add(1)
 		buzzing := true
 		const multiplier float64 = 1
 		const baseFrequency float64 = 300 * multiplier
@@ -72,20 +81,20 @@ func (b *Buzzer) WaveGenerator(sound SoundType) {
 				period := time.Second / time.Duration(freq)
 				onTime := time.Now()
 				for time.Since(onTime) < 100*time.Microsecond {
-
 				}
 				buzzer.out.Out(gpio.Low)
 				for time.Since(onTime) < period {
-
 				}
 			}
 		}
 		buzzer.out.Out(gpio.Low)
-	}(cx, b)
+	}(cx, b.wg, b)
 }
 
 func (b *Buzzer) Stop() {
 	if b.cancel != nil {
 		b.cancel()
+		b.cancel = nil
 	}
+	b.wg.Wait()
 }
