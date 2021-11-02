@@ -14,4 +14,5 @@ require (
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d // indirect
 )
