@@ -31,12 +31,15 @@ func (b *Buzzer) Buzz() {
 		buzzing := true
 		const baseFrequency float64 = 300
 		const devFrequency float64 = 200
-		var t float64 = 1
+		const maxT float64 = 2
+		const minT float64 = 1
+		const dT = (maxT - minT) / 200
+		var t float64 = minT
 		for buzzing {
 			freq := baseFrequency + devFrequency*math.Exp(t)
-			t += 0.005
-			if t >= 2 {
-				t = 1
+			t += dT
+			if t >= maxT {
+				t = minT
 			}
 			select {
 			case <-ctx.Done():
