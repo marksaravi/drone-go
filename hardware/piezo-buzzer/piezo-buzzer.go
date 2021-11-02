@@ -9,6 +9,30 @@ import (
 	"periph.io/x/periph/conn/gpio"
 )
 
+// CBGE
+type NoteFrequency float64
+
+const (
+	A      NoteFrequency = 27.50
+	ASharp NoteFrequency = 29.14
+	B      NoteFrequency = 30.87
+	C      NoteFrequency = 32.70
+	CSharp NoteFrequency = 34.65
+	D      NoteFrequency = 36.71
+	DSharp NoteFrequency = 38.89
+	E1     NoteFrequency = 41.20
+	F      NoteFrequency = 43.65
+	FSharp NoteFrequency = 46.25
+	G      NoteFrequency = 49.00
+)
+
+type Note struct {
+	F NoteFrequency
+	D time.Duration
+}
+
+type Notes = []Note
+
 type SoundType struct {
 	DevFrequency float64
 	Steps        float64
