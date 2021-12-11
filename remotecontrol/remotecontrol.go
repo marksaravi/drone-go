@@ -73,9 +73,9 @@ func NewRemoteControl(
 func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var id uint32 = 0
 	configs := config.ReadRemoteControlConfig().Radio
-	log.Println(configs.CommandPerSecond)
 	dataReadTicker := utils.NewTicker(ctx, "Remote Control", configs.CommandPerSecond)
 	command, connection := radiotransmitter.NewRadioTransmitter(ctx, wg)
+	log.Println("Waiting for connection...")
 	wg.Add(1)
 	defer wg.Done()
 	for {

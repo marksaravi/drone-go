@@ -1,7 +1,5 @@
 package devices
 
-import "fmt"
-
 type gpioswitch interface {
 	Read() bool
 }
@@ -17,7 +15,6 @@ func (btn *button) Read() bool {
 }
 
 func NewButton(input gpioswitch) *button {
-	fmt.Println(input)
 	return &button{
 		input: input,
 	}
