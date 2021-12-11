@@ -110,6 +110,6 @@
 	<line x1="90" y1="150" x2="95" y2="150" style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2" />
 	<line x1="135" y1="150" x2="140" y2="150" style="stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2" />
 	<path d="M 95,150 L 97,150 L 100,143 L 106,157 L 112,143 L 118,157 L 124,143 L 130,157 L 133,150 L 135,150" style="fill-opacity:0;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-linecap:square;stroke-width:2" />
-	<text x="115" y="136" style="font-family:Arial;font-size:11px;text-anchor:middle" dominant-baseline="baseline" transform="rotate(0, 115, 136)">4.7 kΩ</text>
+	<text x="115" y="136" style="font-family:Arial;font-size:11px;text-anchor:middle" dominant-baseline="baseline" transform="rotate(0, 115, 136)">27 kΩ</text>
 	<ellipse cx="220" cy="150" rx="2" ry="2" style="fill-opacity:1;fill:rgb(0, 0, 0);stroke:rgb(0, 0, 0);stroke-width:2" />
 </svg>
