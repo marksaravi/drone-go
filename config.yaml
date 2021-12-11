@@ -83,7 +83,7 @@ remote-control:
     top-left: 'GPIO17'
     top-right: 'GPIO27'
     bottom-left: 'GPIO18'
-    bottom-right: 'GPIO24'
+    bottom-right: 'GPIO23'
   v-ref: 5
 
 radio-connetion:
