@@ -5,16 +5,11 @@ import (
 	"context"
 	"log"
 	"sync"
-	"time"
 
-	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/devices/imu"
-	"github.com/marksaravi/drone-go/devices/motors"
-	"github.com/marksaravi/drone-go/devices/radioreceiver"
-	"github.com/marksaravi/drone-go/devices/udplogger"
+	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/flightcontrol"
 	"github.com/marksaravi/drone-go/hardware"
-	pidcontrol "github.com/marksaravi/drone-go/pid-control"
+	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/utils"
 )
 
@@ -23,14 +18,25 @@ func main() {
 	hardware.InitHost()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	command, connection := radioreceiver.NewRadioReceiver(ctx, &wg)
-	logger := udplogger.NewLogger(&wg)
-	imudev := imu.NewImu()
-	throttles, onOff := motors.NewThrottleChannel(&wg)
-	pid := pidcontrol.NewPIDControl()
-	escRefreshInterval := time.Second / time.Duration(config.ReadFlightControlConfig().Configs.EscUpdatePerSecond)
-	flightControl := flightcontrol.NewFlightControl(pid, imudev, throttles, onOff, escRefreshInterval, command, connection, logger)
+	radioNRF204 := nrf204.NewRadio()
+	radioDev := radio.NewRadio(radioNRF204)
+	// logger := udplogger.NewLogger(&wg)
+	// imudev := imu.NewImu()
+	// throttles, onOff := motors.NewThrottleChannel(&wg)
+	// pid := pidcontrol.NewPIDControl()
+	// escRefreshInterval := time.Second / time.Duration(config.ReadFlightControlConfig().Configs.EscUpdatePerSecond)
+	flightControl := flightcontrol.NewFlightControl(
+		nil,
+		nil,
+		nil,
+		nil,
+		0,
+		radioDev,
+		nil,
+	)
 	utils.WaitToAbortByENTER(cancel, &wg)
-	flightControl.Start(&wg)
+	radioDev.Start(ctx, &wg)
+	flightControl.Start(ctx, &wg)
+	log.Println("Waiting for routines to stop...")
 	wg.Wait()
 }

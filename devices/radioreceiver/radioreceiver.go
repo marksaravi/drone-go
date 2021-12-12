@@ -72,6 +72,7 @@ func receiverRoutine(
 		if isOk {
 			data, dataAvailable := radio.Receive()
 			if dataAvailable {
+				log.Println("DATA")
 				lastDataTime = time.Now()
 				if !connected {
 					connected = true

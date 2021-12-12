@@ -42,4 +42,10 @@ type RadioLink interface {
 	Transmit([32]byte) error
 }
 
+type Radio interface {
+	Transmit(FlightCommands) bool
+	GetReceiver() <-chan FlightCommands
+	GetConnection() <-chan bool
+}
+
 type Throttles = map[uint8]float32
