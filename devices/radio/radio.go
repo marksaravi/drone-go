@@ -32,8 +32,8 @@ func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	}
 }
 
-func (r *radioDevice) Acknowledge() {
-	r.Transmit(models.FlightCommands{
+func (r *radioDevice) Acknowledge() bool {
+	return r.Transmit(models.FlightCommands{
 		Id:   0,
 		Time: time.Now().UnixNano(),
 	})
@@ -67,6 +67,12 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				close(r.receiver)
 				log.Println("Stopping the Radio...")
 				running = false
+			case data, ok := <-r.transmitter:
+				if ok {
+					r.radio.TransmitterOn()
+					r.radio.Transmit(utils.SerializeFlightCommand(data))
+					r.radio.ReceiverOn()
+				}
 			default:
 				data, available := r.radio.Receive()
 				if available {

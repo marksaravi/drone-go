@@ -83,6 +83,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				running = false
 			case flightCommands, ok := <-command:
 				if ok {
+					fc.radio.Acknowledge()
 					if time.Since(lastPrinted) >= time.Second {
 						showFLightCommands(flightCommands)
 						lastPrinted = time.Now()
