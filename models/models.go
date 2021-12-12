@@ -47,6 +47,12 @@ type Radio interface {
 	Transmit(FlightCommands) bool
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan bool
+	Close()
+}
+
+type Logger interface {
+	Send(ImuRotations)
+	Close()
 }
 
 type Throttles = map[uint8]float32

@@ -126,6 +126,11 @@ func NewUdpLogger() *udpLogger {
 	)
 }
 
+func (l *udpLogger) Close() {
+	close(l.dataChannel)
+	l.dataChannel = nil
+}
+
 func (l *udpLogger) Send(data models.ImuRotations) {
 	if l.dataChannel != nil {
 		l.dataChannel <- data
@@ -141,13 +146,11 @@ func (l *udpLogger) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Loger is stopped.")
 		for l.dataChannel != nil {
 			select {
-			case <-ctx.Done():
-				close(l.dataChannel)
-				l.dataChannel = nil
 			case data, ok := <-l.dataChannel:
 				if ok {
 					l.send(data)
 				}
+			default:
 			}
 		}
 	}()

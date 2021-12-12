@@ -47,6 +47,11 @@ func (r *radioDevice) Transmit(data models.FlightCommands) bool {
 	return false
 }
 
+func (r *radioDevice) Close() {
+	close(r.transmitter)
+	r.transmitter = nil
+}
+
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Radio...")
@@ -58,11 +63,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		r.setConnection(false)
 		r.radio.ReceiverOn()
 		var running bool = true
-		for running {
+		for running && r.transmitter != nil {
 			select {
 			case <-ctx.Done():
-				close(r.transmitter)
-				r.transmitter = nil
 				close(r.connection)
 				close(r.receiver)
 				running = false
