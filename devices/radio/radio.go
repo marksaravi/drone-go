@@ -7,21 +7,28 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type radioDevice struct {
-	transmitter chan models.FlightCommands
-	receiver    chan models.FlightCommands
-	connection  chan bool
-	radio       models.RadioLink
+	transmitter      chan models.FlightCommands
+	receiver         chan models.FlightCommands
+	connection       chan bool
+	radio            models.RadioLink
+	connected        bool
+	lastHeartBeat    time.Time
+	heartBeatTimeout time.Duration
 }
 
-func NewRadio(radio models.RadioLink) *radioDevice {
+func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	return &radioDevice{
-		transmitter: make(chan models.FlightCommands),
-		receiver:    make(chan models.FlightCommands),
-		connection:  make(chan bool),
-		radio:       radio,
+		transmitter:      make(chan models.FlightCommands),
+		receiver:         make(chan models.FlightCommands),
+		connection:       make(chan bool),
+		radio:            radio,
+		heartBeatTimeout: time.Duration(heartBeatTimeoutMs * int(time.Millisecond)),
+		lastHeartBeat:    time.Now(),
+		connected:        false,
 	}
 }
 
@@ -48,8 +55,8 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
 
-		// var connected bool = false
-		// r.connection <- connected
+		r.setConnection(false)
+		r.radio.ReceiverOn()
 		var running bool = true
 		for running {
 			select {
@@ -61,17 +68,31 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				log.Println("Stopping the Radio...")
 				running = false
 			default:
-				// data, available := rl.Receive()
-				// if available {
-				// 	log.Println(utils.DeserializeFlightCommand(data))
-				// 	if !connected {
-				// 		connected = true
-				// 		r.connection <- connected
-				// 	}
-				// }
+				data, available := r.radio.Receive()
+				if available {
+					r.receiver <- utils.DeserializeFlightCommand(data)
+				}
+				r.setConnection(available)
 			}
 		}
 	}()
+}
+
+func (r *radioDevice) setConnection(available bool) {
+	if available {
+		if !r.connected {
+			r.connected = true
+			r.connection <- true
+		}
+		r.lastHeartBeat = time.Now()
+	} else {
+		if r.connected {
+			if time.Since(r.lastHeartBeat) > r.heartBeatTimeout {
+				r.connected = false
+				r.connection <- false
+			}
+		}
+	}
 }
 
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {

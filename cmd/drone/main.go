@@ -16,10 +16,9 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
+
 	radioNRF204 := nrf204.NewRadio()
-	radioDev := radio.NewRadio(radioNRF204)
+	radioDev := radio.NewRadio(radioNRF204, 750)
 	// logger := udplogger.NewLogger(&wg)
 	// imudev := imu.NewImu()
 	// throttles, onOff := motors.NewThrottleChannel(&wg)
@@ -34,6 +33,9 @@ func main() {
 		radioDev,
 		nil,
 	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
 	radioDev.Start(ctx, &wg)
 	flightControl.Start(ctx, &wg)

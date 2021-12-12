@@ -59,10 +59,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		// fc.onOff <- true
 		// time.Sleep(3 * time.Second)
 		// lastEscRefresh := time.Now()
-		// var lastPrinted time.Time = time.Now()
+		var lastPrinted time.Time = time.Now()
 		var running bool = true
-		// command := fc.radio.GetReceiver()
-		// connection := fc.radio.GetConnection()
+		command := fc.radio.GetReceiver()
+		connection := fc.radio.GetConnection()
 		for running {
 			// rotations, imuDataAvailable := fc.imu.ReadRotations()
 			// if imuDataAvailable {
@@ -81,22 +81,22 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case <-ctx.Done():
 				log.Println("Stopping Flight Control...")
 				running = false
-			// case flightCommands, ok = <-command:
-			// 	if ok {
-			// 		if time.Since(lastPrinted) >= time.Second {
-			// 			showFLightCommands(flightCommands)
-			// 			lastPrinted = time.Now()
-			// 		}
-			// 	} else {
-			// 		command = nil
-			// 	}
-			// case connected, ok := <-connection:
-			// 	if ok {
-			// 		log.Println("connected: ", connected)
-			// 	} else {
-			// 		log.Println("channel is closed")
-			// 		connection = nil
-			// 	}
+			case flightCommands, ok := <-command:
+				if ok {
+					if time.Since(lastPrinted) >= time.Second {
+						showFLightCommands(flightCommands)
+						lastPrinted = time.Now()
+					}
+				} else {
+					command = nil
+				}
+			case connected, ok := <-connection:
+				if ok {
+					log.Println("connected: ", connected)
+				} else {
+					log.Println("channel is closed")
+					connection = nil
+				}
 			default:
 			}
 		}
