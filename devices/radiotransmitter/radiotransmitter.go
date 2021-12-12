@@ -2,7 +2,6 @@ package radiotransmitter
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
@@ -58,10 +57,8 @@ func transmitterRoutine(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer log.Println("RADIO CLOSED")
 		radio.ReceiverOn()
 		heartbeatTimeout := time.Duration(heartbeatTimeoutMs) * time.Millisecond
-		log.Print(heartbeatTimeout)
 		var connected bool = false
 		var lastHeartbeat time.Time
 		for {
