@@ -6,11 +6,13 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/flightcontrol"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
+	pidcontrol "github.com/marksaravi/drone-go/pid-control"
 	"github.com/marksaravi/drone-go/utils"
 )
 
@@ -21,16 +23,11 @@ func main() {
 	radioNRF204 := nrf204.NewRadio()
 	radioDev := radio.NewRadio(radioNRF204, 750)
 	logger := udplogger.NewUdpLogger()
-	// imudev := imu.NewImu()
-	// throttles, onOff := motors.NewThrottleChannel(&wg)
-	// pid := pidcontrol.NewPIDControl()
-	// escRefreshInterval := time.Second / time.Duration(config.ReadFlightControlConfig().Configs.EscUpdatePerSecond)
+	imudev := imu.NewImu()
+	pid := pidcontrol.NewPIDControl()
 	flightControl := flightcontrol.NewFlightControl(
-		nil,
-		nil,
-		nil,
-		nil,
-		0,
+		pid,
+		imudev,
 		radioDev,
 		logger,
 	)

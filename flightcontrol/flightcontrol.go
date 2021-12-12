@@ -20,31 +20,23 @@ type pidControl interface {
 }
 
 type flightControl struct {
-	pid                pidControl
-	imu                imu
-	throttles          chan<- models.Throttles
-	onOff              chan<- bool
-	escRefreshInterval time.Duration
-	radio              models.Radio
-	logger             models.Logger
+	pid    pidControl
+	imu    imu
+	radio  models.Radio
+	logger models.Logger
 }
 
 func NewFlightControl(
 	pid pidControl,
-	imu imu, throttles chan<- models.Throttles,
-	onOff chan<- bool,
-	escRefreshInterval time.Duration,
+	imu imu,
 	radio models.Radio,
 	logger models.Logger,
 ) *flightControl {
 	return &flightControl{
-		pid:                pid,
-		imu:                imu,
-		throttles:          throttles,
-		onOff:              onOff,
-		escRefreshInterval: escRefreshInterval,
-		radio:              radio,
-		logger:             logger,
+		pid:    pid,
+		imu:    imu,
+		radio:  radio,
+		logger: logger,
 	}
 }
 
@@ -52,31 +44,12 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
-		// defer close(fc.onOff)
-		// defer close(fc.throttles)
-		// defer close(fc.logger)
 		defer log.Println("Flight Control is stopped...")
-		// fc.onOff <- true
-		// time.Sleep(3 * time.Second)
-		// lastEscRefresh := time.Now()
 		var lastPrinted time.Time = time.Now()
 		var running bool = true
 		command := fc.radio.GetReceiver()
 		connection := fc.radio.GetConnection()
 		for running {
-			// rotations, imuDataAvailable := fc.imu.ReadRotations()
-			// if imuDataAvailable {
-			// 	if fc.logger != nil {
-			// 		fc.logger <- rotations
-			// 	}
-			// }
-			// if time.Since(lastEscRefresh) >= fc.escRefreshInterval {
-			// 	fc.pid.ApplyFlightCommands(models.FlightCommands{
-			// 		Throttle: 2.5,
-			// 	})
-			// 	lastEscRefresh = time.Now()
-			// 	fc.throttles <- fc.pid.Throttles()
-			// }
 			select {
 			case <-ctx.Done():
 				fc.radio.Close()
@@ -100,6 +73,12 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					connection = nil
 				}
 			default:
+				rotations, imuDataAvailable := fc.imu.ReadRotations()
+				if imuDataAvailable {
+					if fc.logger != nil {
+						fc.logger.Send(rotations)
+					}
+				}
 			}
 		}
 	}(ctx, wg)
