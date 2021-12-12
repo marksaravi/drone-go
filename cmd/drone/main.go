@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/devices/radio"
+	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/flightcontrol"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
@@ -19,7 +20,7 @@ func main() {
 
 	radioNRF204 := nrf204.NewRadio()
 	radioDev := radio.NewRadio(radioNRF204, 750)
-	// logger := udplogger.NewLogger(&wg)
+	logger := udplogger.NewUdpLogger()
 	// imudev := imu.NewImu()
 	// throttles, onOff := motors.NewThrottleChannel(&wg)
 	// pid := pidcontrol.NewPIDControl()
@@ -31,13 +32,14 @@ func main() {
 		nil,
 		0,
 		radioDev,
-		nil,
+		logger,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
 	radioDev.Start(ctx, &wg)
+	logger.Start(ctx, &wg)
 	flightControl.Start(ctx, &wg)
 	log.Println("Waiting for routines to stop...")
 	wg.Wait()

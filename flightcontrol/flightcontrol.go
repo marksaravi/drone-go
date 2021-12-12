@@ -26,7 +26,7 @@ type flightControl struct {
 	onOff              chan<- bool
 	escRefreshInterval time.Duration
 	radio              models.Radio
-	logger             chan<- models.ImuRotations
+	logger             interface{ Send(models.ImuRotations) }
 }
 
 func NewFlightControl(
@@ -35,7 +35,7 @@ func NewFlightControl(
 	onOff chan<- bool,
 	escRefreshInterval time.Duration,
 	radio models.Radio,
-	logger chan<- models.ImuRotations,
+	logger interface{ Send(models.ImuRotations) },
 ) *flightControl {
 	return &flightControl{
 		pid:                pid,
@@ -79,7 +79,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			// }
 			select {
 			case <-ctx.Done():
-				log.Println("Stopping Flight Control...")
 				running = false
 			case flightCommands, ok := <-command:
 				if ok {

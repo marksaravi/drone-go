@@ -65,7 +65,6 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				r.transmitter = nil
 				close(r.connection)
 				close(r.receiver)
-				log.Println("Stopping the Radio...")
 				running = false
 			case data, ok := <-r.transmitter:
 				if ok {
