@@ -1,6 +1,7 @@
 package flightcontrol
 
 import (
+	"context"
 	"log"
 	"sync"
 	"time"
@@ -19,67 +20,70 @@ type pidControl interface {
 }
 
 type flightControl struct {
-	pid                pidControl
-	imu                imu
-	throttles          chan<- models.Throttles
-	onOff              chan<- bool
-	escRefreshInterval time.Duration
-	command            <-chan models.FlightCommands
-	connection         <-chan bool
-	logger             chan<- models.ImuRotations
+	pid    pidControl
+	imu    imu
+	radio  models.Radio
+	logger models.Logger
 }
 
-func NewFlightControl(pid pidControl, imu imu, throttles chan<- models.Throttles, onOff chan<- bool, escRefreshInterval time.Duration, command <-chan models.FlightCommands, connection <-chan bool, logger chan<- models.ImuRotations) *flightControl {
+func NewFlightControl(
+	pid pidControl,
+	imu imu,
+	radio models.Radio,
+	logger models.Logger,
+) *flightControl {
 	return &flightControl{
-		pid:                pid,
-		imu:                imu,
-		throttles:          throttles,
-		onOff:              onOff,
-		escRefreshInterval: escRefreshInterval,
-		command:            command,
-		connection:         connection,
-		logger:             logger,
+		pid:    pid,
+		imu:    imu,
+		radio:  radio,
+		logger: logger,
 	}
 }
 
-func (fc *flightControl) Start(wg *sync.WaitGroup) {
+func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
-	go func() {
+	go func(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
-		defer close(fc.onOff)
-		defer close(fc.throttles)
-		defer close(fc.logger)
-		defer log.Println("Flight Control stopped")
-		fc.onOff <- true
-		time.Sleep(3 * time.Second)
-		lastEscRefresh := time.Now()
-		for fc.command != nil || fc.connection != nil {
-			rotations, imuDataAvailable := fc.imu.ReadRotations()
-			if imuDataAvailable {
-				if fc.logger != nil {
-					fc.logger <- rotations
-				}
-			}
-			if time.Since(lastEscRefresh) >= fc.escRefreshInterval {
-				fc.pid.ApplyFlightCommands(models.FlightCommands{
-					Throttle: 2.5,
-				})
-				lastEscRefresh = time.Now()
-				fc.throttles <- fc.pid.Throttles()
-			}
+		defer log.Println("Flight Control is stopped...")
+		var lastPrinted time.Time = time.Now()
+		var running bool = true
+		command := fc.radio.GetReceiver()
+		connection := fc.radio.GetConnection()
+		for running {
 			select {
-			case _, isCommandOk := <-fc.command:
-				if !isCommandOk {
-					fc.command = nil
-				}
-			case cnonnected, isConnectionOk := <-fc.connection:
-				if isConnectionOk {
-					log.Println("Connected: ", cnonnected)
+			case <-ctx.Done():
+				fc.radio.Close()
+				fc.logger.Close()
+				running = false
+			case flightCommands, ok := <-command:
+				if ok {
+					fc.radio.Acknowledge()
+					if time.Since(lastPrinted) >= time.Second {
+						showFLightCommands(flightCommands)
+						lastPrinted = time.Now()
+					}
 				} else {
-					fc.connection = nil
+					command = nil
+				}
+			case connected, ok := <-connection:
+				if ok {
+					log.Println("connected: ", connected)
+				} else {
+					log.Println("channel is closed")
+					connection = nil
 				}
 			default:
+				rotations, imuDataAvailable := fc.imu.ReadRotations()
+				if imuDataAvailable {
+					if fc.logger != nil {
+						fc.logger.Send(rotations)
+					}
+				}
 			}
 		}
-	}()
+	}(ctx, wg)
+}
+
+func showFLightCommands(fc models.FlightCommands) {
+	log.Printf("%8.2f, %8.2f, %t, %t", fc.Roll, fc.Pitch, fc.ButtonFrontLeft, fc.ButtonTopLeft)
 }
