@@ -25,7 +25,7 @@ type flightControlConfigs struct {
 			AnalogInputToThrottle analogToDigitalConversion `yaml:"analog-input-to-throttle-conversion"`
 		} `yaml:"pid"`
 		Imu struct {
-			SPI           spiConfig `yaml:"spi"`
+			SPI           SpiConfig `yaml:"spi"`
 			Accelerometer struct {
 				SensitivityLevel     string  `yaml:"sensitivity-level"`
 				LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
@@ -51,15 +51,10 @@ type flightControlConfigs struct {
 			MaxThrottle      float32     `yaml:"max-throttle"`
 			MotorESCMappings map[int]int `yaml:"motors-esc-mappings"`
 		} `yaml:"esc"`
-		Radio struct {
-			CE          string    `yaml:"ce-gpio"`
-			RxTxAddress string    `yaml:"rx-tx-address"`
-			PowerDBm    string    `yaml:"power-dbm"`
-			SPI         spiConfig `yaml:"spi"`
-		} `yaml:"radio"`
-		PowerBreaker string `yaml:"power-breaker"`
+		Radio        RadioConfig `yaml:"radio"`
+		PowerBreaker string      `yaml:"power-breaker"`
 	} `yaml:"flight-control"`
-	Radio radioConnection `yaml:"radio-connetion"`
+	RadioConnection RadioConnection `yaml:"radio-connection"`
 }
 
 func ReadFlightControlConfig() flightControlConfigs {

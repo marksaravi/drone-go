@@ -6,14 +6,15 @@ type joystick struct {
 }
 
 type remoteControlConfigs struct {
-	RemoteControlConfigs struct {
-		Joysticks struct {
+	Configs struct {
+		CommandPerSecond int `yaml:"command-per-sec"`
+		Joysticks        struct {
 			Roll     joystick  `yaml:"roll"`
 			Pitch    joystick  `yaml:"pitch"`
 			Yaw      joystick  `yaml:"yaw"`
 			Throttle joystick  `yaml:"throttle"`
 			VRef     float32   `yaml:"v-ref"`
-			SPI      spiConfig `yaml:"spi"`
+			SPI      SpiConfig `yaml:"spi"`
 		} `yaml:"joysticks"`
 		Buttons struct {
 			FrontLeft   string `yaml:"front-left"`
@@ -23,8 +24,9 @@ type remoteControlConfigs struct {
 			BottomLeft  string `yaml:"bottom-left"`
 			BottomRight string `yaml:"bottom-right"`
 		} `yaml:"buttons"`
+		Radio RadioConfig `yaml:"radio"`
 	} `yaml:"remote-control"`
-	Radio radioConnection `yaml:"radio-connetion"`
+	RadioConnection RadioConnection `yaml:"radio-connection"`
 }
 
 func ReadRemoteControlConfig() remoteControlConfigs {

@@ -5,8 +5,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/marksaravi/drone-go/config"
-	"github.com/marksaravi/drone-go/devices/radiotransmitter"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -20,17 +18,18 @@ type joystick interface {
 }
 
 type remoteControl struct {
-	radio          models.RadioLink
-	roll           joystick
-	pitch          joystick
-	yaw            joystick
-	throttle       joystick
-	btnFrontLeft   button
-	btnFrontRight  button
-	btnTopLeft     button
-	btnTopRight    button
-	btnBottomLeft  button
-	btnBottomRight button
+	commandPerSecond int
+	radio            models.Radio
+	roll             joystick
+	pitch            joystick
+	yaw              joystick
+	throttle         joystick
+	btnFrontLeft     button
+	btnFrontRight    button
+	btnTopLeft       button
+	btnTopRight      button
+	btnBottomLeft    button
+	btnBottomRight   button
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
@@ -49,32 +48,33 @@ func (rc *remoteControl) read() models.FlightCommands {
 }
 
 func NewRemoteControl(
-	radio models.RadioLink,
+	radio models.Radio,
 	roll, pitch, yaw, throttle joystick,
 	btnFrontLeft, btnFrontRight button,
 	btnTopLeft, btnTopRight button,
 	btnBottomLeft, btnBottomRight button,
+	commandPerSecond int,
 ) *remoteControl {
 	return &remoteControl{
-		radio:          radio,
-		roll:           roll,
-		pitch:          pitch,
-		yaw:            yaw,
-		throttle:       throttle,
-		btnFrontLeft:   btnFrontLeft,
-		btnFrontRight:  btnFrontRight,
-		btnTopLeft:     btnTopLeft,
-		btnTopRight:    btnTopRight,
-		btnBottomLeft:  btnBottomLeft,
-		btnBottomRight: btnBottomRight,
+		radio:            radio,
+		roll:             roll,
+		pitch:            pitch,
+		yaw:              yaw,
+		throttle:         throttle,
+		btnFrontLeft:     btnFrontLeft,
+		btnFrontRight:    btnFrontRight,
+		btnTopLeft:       btnTopLeft,
+		btnTopRight:      btnTopRight,
+		btnBottomLeft:    btnBottomLeft,
+		btnBottomRight:   btnBottomRight,
+		commandPerSecond: commandPerSecond,
 	}
 }
 
 func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var id uint32 = 0
-	configs := config.ReadRemoteControlConfig().Radio
-	dataReadTicker := utils.NewTicker(ctx, "Remote Control", configs.CommandPerSecond)
-	command, connection := radiotransmitter.NewRadioTransmitter(ctx, wg)
+	dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
+	connection := rc.radio.GetConnection()
 	log.Println("Waiting for connection...")
 	wg.Add(1)
 	defer wg.Done()
@@ -88,7 +88,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			fc.Time = t
 			fc.Id = id
 			id++
-			command <- fc
+			rc.radio.Transmit(fc)
 		case connected := <-connection:
 			if connected {
 				log.Println("Connected to Drone")

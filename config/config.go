@@ -7,16 +7,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type spiConfig struct {
+type SpiConfig struct {
 	BusNumber  int `yaml:"bus-number"`
 	ChipSelect int `yaml:"chip-select"`
 }
 
-type radioConnection struct {
-	CommandPerSecond   int `yaml:"command-per-second"`
-	HeartBeatPerSecond int `yaml:"heartbeat-per-second"`
-	CommandTimeoutMS   int `yaml:"command-timeout-ms"`
-	HeartBeatTimeoutMS int `yaml:"heartbeat-timeout-ms"`
+type RadioConfig struct {
+	CE  string    `yaml:"ce-gpio"`
+	SPI SpiConfig `yaml:"spi"`
+}
+
+type RadioConnection struct {
+	RxTxAddress         string `yaml:"rx-tx-address"`
+	PowerDBm            string `yaml:"power-dbm"`
+	ConnectionTimeoutMS int    `yaml:"connection-timeout-ms"`
 }
 
 func readConfig(config interface{}) interface{} {
