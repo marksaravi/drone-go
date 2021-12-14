@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -72,29 +72,42 @@ func NewRemoteControl(
 }
 
 func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
-	var id uint32 = 0
-	dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
-	connection := rc.radio.GetConnection()
-	log.Println("Waiting for connection...")
 	wg.Add(1)
-	defer wg.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case t := <-dataReadTicker:
-			fc := rc.read()
 
-			fc.Time = t
-			fc.Id = id
-			id++
-			rc.radio.Transmit(fc)
-		case connected := <-connection:
-			if connected {
-				log.Println("Connected to Drone")
-			} else {
-				log.Println("Lost connection to Drone")
+	go func() {
+		defer wg.Done()
+		defer log.Println("Remote Control is stopped.")
+
+		// var id uint32 = 0
+		// dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
+		lastPrinted := time.Now()
+		connection := rc.radio.GetConnection()
+		log.Println("Waiting for connection...")
+		for {
+			select {
+			case <-ctx.Done():
+				rc.radio.Close()
+				return
+				// case t := <-dataReadTicker:
+				// fc := rc.read()
+
+			// 	fc.Time = t
+			// 	fc.Id = id
+			// 	id++
+			// 	rc.radio.Transmit(fc)
+			case connected := <-connection:
+				if connected {
+					log.Println("Connected to Drone")
+				} else {
+					log.Println("Lost connection to Drone")
+				}
+			default:
+				fc := rc.read()
+				if time.Since(lastPrinted) >= time.Second/4 {
+					log.Println(fc)
+					lastPrinted = time.Now()
+				}
 			}
 		}
-	}
+	}()
 }

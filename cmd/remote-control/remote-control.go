@@ -13,6 +13,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
@@ -71,7 +72,6 @@ func main() {
 	gpioBottomRight := hardware.NewGPIOSwitch(remoteConfigs.Buttons.BottomRight)
 	btnBottomRight := devices.NewButton(gpioBottomRight)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	remoteControl := remotecontrol.NewRemoteControl(
 		radioDev,
 		roll, pitch, yaw, throttle,
@@ -81,17 +81,12 @@ func main() {
 		remoteConfigs.CommandPerSecond,
 	)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		defer log.Println("Stopping the Remote Control")
 
-		log.Println("Press ENTER to Stop")
-		fmt.Scanln()
-		cancel()
-	}(&waitGroup)
+	radioDev.Start(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup)
+	utils.WaitToAbortByENTER(cancel, &waitGroup)
 	waitGroup.Wait()
 	log.Println("Remote Control stopped")
 }
