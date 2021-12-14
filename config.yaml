@@ -61,14 +61,14 @@ remote-control:
   command-per-sec: 40
   joysticks:
     roll:
-      channel: 2
-      zero-value: 2.5
-    pitch:
       channel: 4
-      zero-value: 2.6
+      zero-value: 2.1582031250
+    pitch:
+      channel: 2
+      zero-value: 2.2656250000
     yaw:
       channel: 3
-      zero-value: 2.4
+      zero-value: 2.2119140625
     throttle:
       channel: 5
       zero-value: 0

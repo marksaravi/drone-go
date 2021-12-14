@@ -2,6 +2,7 @@ package remotecontrol
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -104,7 +105,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 				fc := rc.read()
 				if time.Since(lastPrinted) >= time.Second/4 {
-					log.Println(fc)
+					fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
 					lastPrinted = time.Now()
 				}
 			}
