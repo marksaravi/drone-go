@@ -31,10 +31,16 @@ type remoteControl struct {
 	btnTopRight      button
 	btnBottomLeft    button
 	btnBottomRight   button
+	flightCommands   models.FlightCommands
 }
 
-func (rc *remoteControl) read() models.FlightCommands {
-	return models.FlightCommands{
+func isChanged(fc1, fc2 models.FlightCommands) bool {
+	return true
+}
+
+func (rc *remoteControl) read() bool {
+	prevFlightCommands := rc.flightCommands
+	rc.flightCommands = models.FlightCommands{
 		Roll:              rc.roll.Read(),
 		Pitch:             rc.pitch.Read(),
 		Yaw:               rc.yaw.Read(),
@@ -46,6 +52,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 		ButtonBottomLeft:  rc.btnBottomLeft.Read(),
 		ButtonBottomRight: rc.btnBottomRight.Read(),
 	}
+	return isChanged(rc.flightCommands, prevFlightCommands)
 }
 
 func NewRemoteControl(
@@ -103,10 +110,12 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					log.Println("Lost connection to Drone")
 				}
 			default:
-				fc := rc.read()
-				if time.Since(lastPrinted) >= time.Second/4 {
-					fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
-					lastPrinted = time.Now()
+				if rc.read() {
+					fc := rc.flightCommands
+					if time.Since(lastPrinted) >= time.Second/4 {
+						fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
+						lastPrinted = time.Now()
+					}
 				}
 			}
 		}
