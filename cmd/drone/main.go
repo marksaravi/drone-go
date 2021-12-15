@@ -6,11 +6,11 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/apps/flightcontrol"
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
-	"github.com/marksaravi/drone-go/flightcontrol"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	pidcontrol "github.com/marksaravi/drone-go/pid-control"
@@ -30,6 +30,7 @@ func main() {
 		radioConfigs.RxTxAddress,
 		radioConfigs.PowerDBm,
 	)
+
 	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()

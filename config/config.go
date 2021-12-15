@@ -19,42 +19,6 @@ type radioConfig struct {
 	CE                 string    `yaml:"ce-gpio"`
 	SPI                spiConfig `yaml:"spi"`
 }
-type joystick struct {
-	Channel   int     `yaml:"channel"`
-	ZeroValue float32 `yaml:"zero-value"`
-}
-
-type remoteControl struct {
-	CommandPerSecond int `yaml:"command-per-sec"`
-	Joysticks        struct {
-		Roll     joystick  `yaml:"roll"`
-		Pitch    joystick  `yaml:"pitch"`
-		Yaw      joystick  `yaml:"yaw"`
-		Throttle joystick  `yaml:"throttle"`
-		VRef     float32   `yaml:"v-ref"`
-		SPI      spiConfig `yaml:"spi"`
-	} `yaml:"joysticks"`
-	Buttons struct {
-		FrontLeft   string `yaml:"front-left"`
-		FrontRight  string `yaml:"front-right"`
-		TopLeft     string `yaml:"top-left"`
-		TopRight    string `yaml:"top-right"`
-		BottomLeft  string `yaml:"bottom-left"`
-		BottomRight string `yaml:"bottom-right"`
-	} `yaml:"buttons"`
-	Radio radioConfig `yaml:"radio"`
-}
-
-type offsets struct {
-	X int16 `yaml:"X"`
-	Y int16 `yaml:"Y"`
-	Z int16 `yaml:"Z"`
-}
-
-type analogToDigitalConversion struct {
-	Ratio  float64 `yaml:"ratio"`
-	Offset float64 `yaml:"offset"`
-}
 
 type flightControl struct {
 	ImuDataPerSecond   int `yaml:"imu-data-per-second"`
@@ -97,6 +61,43 @@ type flightControl struct {
 	} `yaml:"esc"`
 	Radio        radioConfig `yaml:"radio"`
 	PowerBreaker string      `yaml:"power-breaker"`
+}
+
+type joystick struct {
+	Channel   int     `yaml:"channel"`
+	ZeroValue float32 `yaml:"zero-value"`
+}
+
+type remoteControl struct {
+	CommandPerSecond int `yaml:"command-per-sec"`
+	Joysticks        struct {
+		Roll     joystick  `yaml:"roll"`
+		Pitch    joystick  `yaml:"pitch"`
+		Yaw      joystick  `yaml:"yaw"`
+		Throttle joystick  `yaml:"throttle"`
+		VRef     float32   `yaml:"v-ref"`
+		SPI      spiConfig `yaml:"spi"`
+	} `yaml:"joysticks"`
+	Buttons struct {
+		FrontLeft   string `yaml:"front-left"`
+		FrontRight  string `yaml:"front-right"`
+		TopLeft     string `yaml:"top-left"`
+		TopRight    string `yaml:"top-right"`
+		BottomLeft  string `yaml:"bottom-left"`
+		BottomRight string `yaml:"bottom-right"`
+	} `yaml:"buttons"`
+	Radio radioConfig `yaml:"radio"`
+}
+
+type offsets struct {
+	X int16 `yaml:"X"`
+	Y int16 `yaml:"Y"`
+	Z int16 `yaml:"Z"`
+}
+
+type analogToDigitalConversion struct {
+	Ratio  float64 `yaml:"ratio"`
+	Offset float64 `yaml:"offset"`
 }
 
 type udpLogger struct {
