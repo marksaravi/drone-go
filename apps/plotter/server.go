@@ -26,7 +26,7 @@ func Start() {
 	dataChannel := make(chan string)
 	startUDPReceiverServer(dataChannel)
 	handler := createWebSocketHandler(dataChannel)
-	http.Handle("/", http.FileServer(http.Dir("./plotter/static")))
+	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
 	http.HandleFunc("/conn", handler)
 	var server = http.Server{
 		Addr: fmt.Sprintf(":%d", SERVER_PORT),
