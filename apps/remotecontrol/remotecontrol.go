@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
@@ -16,6 +17,8 @@ type button interface {
 type joystick interface {
 	Read() float32
 }
+
+var id uint32 = 0
 
 type remoteControl struct {
 	commandPerSecond int
@@ -33,7 +36,10 @@ type remoteControl struct {
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
+	id++
 	return models.FlightCommands{
+		Id:                id,
+		Time:              time.Now().UnixNano(),
 		Roll:              rc.roll.Read(),
 		Pitch:             rc.pitch.Read(),
 		Yaw:               rc.yaw.Read(),
@@ -78,9 +84,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		// var id uint32 = 0
 		dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
-		// lastPrinted := time.Now()
 		connection := rc.radio.GetConnection()
 		log.Println("Waiting for connection...")
 		var running bool = true
