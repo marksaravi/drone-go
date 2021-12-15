@@ -17,7 +17,6 @@ flight-control:
     analog-input-to-throttle-conversion: 
       ratio: 0.1
       offset: 0
-
   imu:
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
@@ -51,25 +50,27 @@ flight-control:
       2: 8
       3: 12
   radio:
-    ce-gpio: 'GPIO26'
     rx-tx-address: '03896'
     power-dbm: '-12dbm'
+    ce-gpio: 'GPIO26'
+    heart-beat-timeout-ms: 750
     spi:
       bus-number: 1
       chip-select: 2
   power-breaker: 'GPIO17'
 
 remote-control:
+  command-per-sec: 40
   joysticks:
     roll:
-      channel: 2
-      zero-value: 2.5
-    pitch:
       channel: 4
-      zero-value: 2.6
+      zero-value: 2.1582031250
+    pitch:
+      channel: 2
+      zero-value: 2.2656250000
     yaw:
       channel: 3
-      zero-value: 2.4
+      zero-value: 2.2119140625
     throttle:
       channel: 5
       zero-value: 0
@@ -84,13 +85,14 @@ remote-control:
     top-right: 'GPIO27'
     bottom-left: 'GPIO18'
     bottom-right: 'GPIO23'
-  v-ref: 5
-
-radio-connetion:
-  command-per-second: 20
-  heartbeat-per-second: 4
-  command-timeout-ms: 250
-  heartbeat-timeout-ms: 750
+  radio:
+    rx-tx-address: '03896'
+    power-dbm: '-12dbm'
+    ce-gpio: 'GPIO26'
+    heart-beat-timeout-ms: 750
+    spi:
+      bus-number: 1
+      chip-select: 2  
 
 logger:
   enabled: true

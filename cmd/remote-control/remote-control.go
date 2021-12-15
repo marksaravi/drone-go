@@ -6,86 +6,94 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/apps/remotecontrol"
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
+	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
-	"github.com/marksaravi/drone-go/remotecontrol"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
-	config := config.ReadRemoteControlConfig()
+	configs := config.ReadConfigs().RemoteControl
+	fmt.Println(configs)
+	radioConfigs := configs.Radio
+	joysticksConfigs := configs.Joysticks
+	buttonsConfis := configs.Buttons
 	hardware.InitHost()
 
-	radio := nrf204.NewRadio()
+	radioNRF204 := nrf204.NewRadio(
+		radioConfigs.SPI.BusNumber,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.CE,
+		radioConfigs.RxTxAddress,
+		radioConfigs.PowerDBm,
+	)
+	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
-		config.RemoteControlConfigs.Joysticks.SPI.BusNumber,
-		config.RemoteControlConfigs.Joysticks.SPI.ChipSelect,
+		joysticksConfigs.SPI.BusNumber,
+		joysticksConfigs.SPI.ChipSelect,
 	)
 	xAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfigs.Joysticks.VRef,
-		config.RemoteControlConfigs.Joysticks.Roll.Channel,
-		config.RemoteControlConfigs.Joysticks.Roll.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Roll.Channel,
+		joysticksConfigs.Roll.ZeroValue,
 	)
 	yAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfigs.Joysticks.VRef,
-		config.RemoteControlConfigs.Joysticks.Pitch.Channel,
-		config.RemoteControlConfigs.Joysticks.Pitch.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Pitch.Channel,
+		joysticksConfigs.Pitch.ZeroValue,
 	)
 	zAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfigs.Joysticks.VRef,
-		config.RemoteControlConfigs.Joysticks.Yaw.Channel,
-		config.RemoteControlConfigs.Joysticks.Yaw.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Yaw.Channel,
+		joysticksConfigs.Yaw.ZeroValue,
 	)
 	throttleAlogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		config.RemoteControlConfigs.Joysticks.VRef,
-		config.RemoteControlConfigs.Joysticks.Throttle.Channel,
-		config.RemoteControlConfigs.Joysticks.Throttle.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Throttle.Channel,
+		joysticksConfigs.Throttle.ZeroValue,
 	)
 	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor)
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
-	gpioFrontLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontLeft)
+	gpioFrontLeft := hardware.NewGPIOSwitch(buttonsConfis.FrontLeft)
 	btnFrontLeft := devices.NewButton(gpioFrontLeft)
-	gpioFrontRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.FrontRight)
+	gpioFrontRight := hardware.NewGPIOSwitch(buttonsConfis.FrontRight)
 	btnFrontRight := devices.NewButton(gpioFrontRight)
-	gpioTopLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.TopLeft)
+	gpioTopLeft := hardware.NewGPIOSwitch(buttonsConfis.TopLeft)
 	btnToptLeft := devices.NewButton(gpioTopLeft)
-	gpioTopRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.TopRight)
+	gpioTopRight := hardware.NewGPIOSwitch(buttonsConfis.TopRight)
 	btnTopRight := devices.NewButton(gpioTopRight)
-	gpioBottomLeft := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.BottomLeft)
+	gpioBottomLeft := hardware.NewGPIOSwitch(buttonsConfis.BottomLeft)
 	btnBottomLeft := devices.NewButton(gpioBottomLeft)
-	gpioBottomRight := hardware.NewGPIOSwitch(config.RemoteControlConfigs.Buttons.BottomRight)
+	gpioBottomRight := hardware.NewGPIOSwitch(buttonsConfis.BottomRight)
 	btnBottomRight := devices.NewButton(gpioBottomRight)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	remoteControl := remotecontrol.NewRemoteControl(
-		radio,
+		radioDev,
 		roll, pitch, yaw, throttle,
 		btnFrontLeft, btnFrontRight,
 		btnToptLeft, btnTopRight,
 		btnBottomLeft, btnBottomRight,
+		configs.CommandPerSecond,
 	)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		defer log.Println("Stopping the Remote Control")
 
-		log.Println("Press ENTER to Stop")
-		fmt.Scanln()
-		cancel()
-	}(&waitGroup)
+	radioDev.Start(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup)
+	utils.WaitToAbortByENTER(cancel, &waitGroup)
 	waitGroup.Wait()
 	log.Println("Remote Control stopped")
 }

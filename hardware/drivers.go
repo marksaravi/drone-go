@@ -17,7 +17,7 @@ func NewPowerBreaker() interface {
 	SetLow()
 	SetHigh()
 } {
-	flightControlConfig := config.ReadFlightControlConfig()
-	powerbreaker := NewGPIOOutput(flightControlConfig.Configs.PowerBreaker)
+	flightControlConfig := config.ReadConfigs().FlightControl
+	powerbreaker := NewGPIOOutput(flightControlConfig.PowerBreaker)
 	return powerbreaker
 }

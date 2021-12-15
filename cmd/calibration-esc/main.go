@@ -10,8 +10,8 @@ import (
 
 func main() {
 	hardware.InitHost()
-	flightControlConfigs := config.ReadFlightControlConfig()
-	b, _ := i2creg.Open(flightControlConfigs.Configs.ESC.I2CDev)
+	configs := config.ReadConfigs().FlightControl.ESC
+	b, _ := i2creg.Open(configs.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	powerbreaker := hardware.NewPowerBreaker()
 	pca9685.Calibrate(i2cConn, powerbreaker)

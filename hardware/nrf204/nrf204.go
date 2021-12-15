@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -97,19 +97,19 @@ func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *n
 	return &radio
 }
 
-func NewRadio() interface {
-	ReceiverOn()
-	Receive() ([32]byte, bool)
-	TransmitterOn()
-	Transmit([32]byte) error
-} {
-	flightControlConfig := config.ReadFlightControlConfig()
-	radioConfig := flightControlConfig.Configs.Radio
+func NewRadio(
+	spiBusNum int,
+	spiChipSelect int,
+	spiChipEnabledGPIO string,
+	rxTxAddress string,
+	powerDb string,
+) models.RadioLink {
 	radioSPIConn := hardware.NewSPIConnection(
-		radioConfig.SPI.BusNumber,
-		radioConfig.SPI.ChipSelect,
+		spiBusNum,
+		spiChipSelect,
 	)
-	radio := NewNRF204(radioConfig.RxTxAddress, radioConfig.CE, radioConfig.PowerDBm, radioSPIConn)
+	fmt.Println(rxTxAddress)
+	radio := NewNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
 	return radio
 }
 

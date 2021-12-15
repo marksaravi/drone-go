@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/models"
@@ -12,7 +13,14 @@ import (
 
 func main() {
 	hardware.InitHost()
-	radio := nrf204.NewRadio()
+	radioConfigs := config.ReadConfigs().FlightControl.Radio
+	radio := nrf204.NewRadio(
+		radioConfigs.SPI.BusNumber,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.CE,
+		radioConfigs.RxTxAddress,
+		radioConfigs.PowerDBm,
+	)
 	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0

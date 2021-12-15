@@ -122,7 +122,7 @@ func goDurToDt(d int64) float64 {
 }
 
 func NewImu() *imudevice {
-	configs := config.ReadFlightControlConfig().Configs
+	configs := config.ReadConfigs().FlightControl
 	imuConfig := configs.Imu
 	imuSPIConn := hardware.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
