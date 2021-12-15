@@ -68,9 +68,9 @@ func (mc *motorsControl) allMotorsOff() {
 }
 
 func NewESC() *motorsControl {
-	flightControlConfigs := config.ReadFlightControlConfig()
-	escConfigs := flightControlConfigs.Configs.ESC
-	powerbreaker := hardware.NewGPIOOutput(flightControlConfigs.Configs.PowerBreaker)
+	flightControlConfigs := config.ReadConfigs().FlightControl
+	escConfigs := flightControlConfigs.ESC
+	powerbreaker := hardware.NewGPIOOutput(flightControlConfigs.PowerBreaker)
 	b, _ := i2creg.Open(escConfigs.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, err := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, escConfigs.MaxThrottle)

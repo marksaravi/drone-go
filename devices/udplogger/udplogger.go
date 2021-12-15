@@ -114,15 +114,15 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 }
 
 func NewUdpLogger() *udpLogger {
-	flightControl := config.ReadFlightControlConfig()
-	loggerConfig := config.ReadLoggerConfig()
-	loggerConfigs := loggerConfig.UdpLoggerConfigs
+	configs := config.ReadConfigs()
+	flightControl := configs.FlightControl
+	loggerConfigs := configs.UdpLogger
 	return newLogger(
 		loggerConfigs.Enabled,
 		loggerConfigs.IP,
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
-		flightControl.Configs.ImuDataPerSecond,
+		flightControl.ImuDataPerSecond,
 	)
 }
 

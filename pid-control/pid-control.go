@@ -36,7 +36,7 @@ type pidControl struct {
 }
 
 func NewPIDControl() *pidControl {
-	configs := config.ReadFlightControlConfig().Configs.PID
+	configs := config.ReadConfigs().FlightControl.PID
 	return &pidControl{
 		pGain: configs.PGain,
 		iGain: configs.IGain,

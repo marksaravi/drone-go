@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
@@ -18,10 +19,18 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
+	radioConfigs := config.ReadConfigs().FlightControl.Radio
+
 	hardware.InitHost()
 
-	radioNRF204 := nrf204.NewRadio()
-	radioDev := radio.NewRadio(radioNRF204, 750)
+	radioNRF204 := nrf204.NewRadio(
+		radioConfigs.SPI.BusNumber,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.CE,
+		radioConfigs.RxTxAddress,
+		radioConfigs.PowerDBm,
+	)
+	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()
 	pid := pidcontrol.NewPIDControl()
