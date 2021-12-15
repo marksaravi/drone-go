@@ -51,6 +51,10 @@ flight-control:
       2: 8
       3: 12
   radio:
+    rx-tx-address: '03896'
+    power-dbm: '-12dbm'
+    ce-gpio: 'GPIO26'
+    heart-beat-timeout-ms: 750
     ce-gpio: 'GPIO26'
     spi:
       bus-number: 1
@@ -85,16 +89,13 @@ remote-control:
     bottom-right: 'GPIO23'
   v-ref: 5
   radio:
+    rx-tx-address: '03896'
+    power-dbm: '-12dbm'
     ce-gpio: 'GPIO26'
+    heart-beat-timeout-ms: 750
     spi:
       bus-number: 1
-      chip-select: 2
-
-
-radio-connection:
-  rx-tx-address: '03896'
-  power-dbm: '-12dbm'
-  connection-timeout-ms: 750
+      chip-select: 2  
 
 logger:
   enabled: true

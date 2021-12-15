@@ -19,57 +19,64 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
-	configs := config.ReadRemoteControlConfig()
+	configs := config.ReadConfigs().RemoteControl
 	fmt.Println(configs)
-	remoteConfigs := configs.Configs
-	radioConnectionConfigs := configs.RadioConnection
+	radioConfigs := configs.Radio
+	joysticksConfigs := configs.Joysticks
+	buttonsConfis := configs.Buttons
 	hardware.InitHost()
 
-	radioNRF204 := nrf204.NewRadio(remoteConfigs.Radio, radioConnectionConfigs)
-	radioDev := radio.NewRadio(radioNRF204, radioConnectionConfigs.ConnectionTimeoutMS)
+	radioNRF204 := nrf204.NewRadio(
+		radioConfigs.SPI.BusNumber,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.CE,
+		radioConfigs.RxTxAddress,
+		radioConfigs.PowerDBm,
+	)
+	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
-		remoteConfigs.Joysticks.SPI.BusNumber,
-		remoteConfigs.Joysticks.SPI.ChipSelect,
+		joysticksConfigs.SPI.BusNumber,
+		joysticksConfigs.SPI.ChipSelect,
 	)
 	xAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		remoteConfigs.Joysticks.VRef,
-		remoteConfigs.Joysticks.Roll.Channel,
-		remoteConfigs.Joysticks.Roll.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Roll.Channel,
+		joysticksConfigs.Roll.ZeroValue,
 	)
 	yAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		remoteConfigs.Joysticks.VRef,
-		remoteConfigs.Joysticks.Pitch.Channel,
-		remoteConfigs.Joysticks.Pitch.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Pitch.Channel,
+		joysticksConfigs.Pitch.ZeroValue,
 	)
 	zAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		remoteConfigs.Joysticks.VRef,
-		remoteConfigs.Joysticks.Yaw.Channel,
-		remoteConfigs.Joysticks.Yaw.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Yaw.Channel,
+		joysticksConfigs.Yaw.ZeroValue,
 	)
 	throttleAlogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		remoteConfigs.Joysticks.VRef,
-		remoteConfigs.Joysticks.Throttle.Channel,
-		remoteConfigs.Joysticks.Throttle.ZeroValue,
+		joysticksConfigs.VRef,
+		joysticksConfigs.Throttle.Channel,
+		joysticksConfigs.Throttle.ZeroValue,
 	)
 	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)
 	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor)
 	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor)
-	gpioFrontLeft := hardware.NewGPIOSwitch(remoteConfigs.Buttons.FrontLeft)
+	gpioFrontLeft := hardware.NewGPIOSwitch(buttonsConfis.FrontLeft)
 	btnFrontLeft := devices.NewButton(gpioFrontLeft)
-	gpioFrontRight := hardware.NewGPIOSwitch(remoteConfigs.Buttons.FrontRight)
+	gpioFrontRight := hardware.NewGPIOSwitch(buttonsConfis.FrontRight)
 	btnFrontRight := devices.NewButton(gpioFrontRight)
-	gpioTopLeft := hardware.NewGPIOSwitch(remoteConfigs.Buttons.TopLeft)
+	gpioTopLeft := hardware.NewGPIOSwitch(buttonsConfis.TopLeft)
 	btnToptLeft := devices.NewButton(gpioTopLeft)
-	gpioTopRight := hardware.NewGPIOSwitch(remoteConfigs.Buttons.TopRight)
+	gpioTopRight := hardware.NewGPIOSwitch(buttonsConfis.TopRight)
 	btnTopRight := devices.NewButton(gpioTopRight)
-	gpioBottomLeft := hardware.NewGPIOSwitch(remoteConfigs.Buttons.BottomLeft)
+	gpioBottomLeft := hardware.NewGPIOSwitch(buttonsConfis.BottomLeft)
 	btnBottomLeft := devices.NewButton(gpioBottomLeft)
-	gpioBottomRight := hardware.NewGPIOSwitch(remoteConfigs.Buttons.BottomRight)
+	gpioBottomRight := hardware.NewGPIOSwitch(buttonsConfis.BottomRight)
 	btnBottomRight := devices.NewButton(gpioBottomRight)
 
 	remoteControl := remotecontrol.NewRemoteControl(
@@ -78,7 +85,7 @@ func main() {
 		btnFrontLeft, btnFrontRight,
 		btnToptLeft, btnTopRight,
 		btnBottomLeft, btnBottomRight,
-		remoteConfigs.CommandPerSecond,
+		configs.CommandPerSecond,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

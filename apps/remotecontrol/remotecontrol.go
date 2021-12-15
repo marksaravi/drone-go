@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -34,10 +34,6 @@ type remoteControl struct {
 	flightCommands   models.FlightCommands
 }
 
-func isChanged(fc1, fc2 models.FlightCommands) bool {
-	return true
-}
-
 func (rc *remoteControl) read() bool {
 	prevFlightCommands := rc.flightCommands
 	rc.flightCommands = models.FlightCommands{
@@ -52,7 +48,7 @@ func (rc *remoteControl) read() bool {
 		ButtonBottomLeft:  rc.btnBottomLeft.Read(),
 		ButtonBottomRight: rc.btnBottomRight.Read(),
 	}
-	return isChanged(rc.flightCommands, prevFlightCommands)
+	return utils.IsFlightCommandChaned(rc.flightCommands, prevFlightCommands, 0.1)
 }
 
 func NewRemoteControl(
@@ -88,7 +84,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		// var id uint32 = 0
 		// dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
-		lastPrinted := time.Now()
+		// lastPrinted := time.Now()
 		connection := rc.radio.GetConnection()
 		log.Println("Waiting for connection...")
 		for {
@@ -112,10 +108,11 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 				if rc.read() {
 					fc := rc.flightCommands
-					if time.Since(lastPrinted) >= time.Second/4 {
-						fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
-						lastPrinted = time.Now()
-					}
+					fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
+					// if time.Since(lastPrinted) >= time.Second/4 {
+					// 	fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
+					// 	lastPrinted = time.Now()
+					// }
 				}
 			}
 		}
