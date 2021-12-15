@@ -10,6 +10,7 @@ const RADIO_PAYLOAD_SIZE int = 32
 
 func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
 	var buf bytes.Buffer
+	typeBytes := [1]byte{flightCommands.Type}
 	idBytes := UInt32ToBytes(flightCommands.Id)
 	timeBytes := Int64ToBytes(flightCommands.Time)
 	rollBytes := Float32ToBytes(flightCommands.Roll)
@@ -33,6 +34,7 @@ func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
 	buf.Write(yawBytes[:])
 	buf.Write(throttleBytes[:])
 	buf.WriteByte(bottons)
+	buf.Write(typeBytes[:])
 	var payload [32]byte
 	copy(payload[:], buf.Bytes())
 	return payload
@@ -53,5 +55,6 @@ func DeserializeFlightCommand(payload [32]byte) models.FlightCommands {
 		ButtonTopRight:    buttons[3],
 		ButtonBottomLeft:  buttons[4],
 		ButtonBottomRight: buttons[5],
+		Type:              payload[29],
 	}
 }
