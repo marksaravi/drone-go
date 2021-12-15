@@ -2,7 +2,6 @@ package remotecontrol
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
@@ -31,12 +30,10 @@ type remoteControl struct {
 	btnTopRight      button
 	btnBottomLeft    button
 	btnBottomRight   button
-	flightCommands   models.FlightCommands
 }
 
-func (rc *remoteControl) read() bool {
-	prevFlightCommands := rc.flightCommands
-	rc.flightCommands = models.FlightCommands{
+func (rc *remoteControl) read() models.FlightCommands {
+	return models.FlightCommands{
 		Roll:              rc.roll.Read(),
 		Pitch:             rc.pitch.Read(),
 		Yaw:               rc.yaw.Read(),
@@ -48,7 +45,6 @@ func (rc *remoteControl) read() bool {
 		ButtonBottomLeft:  rc.btnBottomLeft.Read(),
 		ButtonBottomRight: rc.btnBottomRight.Read(),
 	}
-	return utils.IsFlightCommandChaned(rc.flightCommands, prevFlightCommands, 0.1)
 }
 
 func NewRemoteControl(
@@ -83,36 +79,28 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Remote Control is stopped.")
 
 		// var id uint32 = 0
-		// dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
+		dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
 		// lastPrinted := time.Now()
 		connection := rc.radio.GetConnection()
 		log.Println("Waiting for connection...")
-		for {
+		var running bool = true
+		for running && dataReadTicker != nil {
 			select {
 			case <-ctx.Done():
 				rc.radio.Close()
-				return
-				// case t := <-dataReadTicker:
-				// fc := rc.read()
-
-			// 	fc.Time = t
-			// 	fc.Id = id
-			// 	id++
-			// 	rc.radio.Transmit(fc)
+				running = false
 			case connected := <-connection:
 				if connected {
 					log.Println("Connected to Drone")
 				} else {
 					log.Println("Lost connection to Drone")
 				}
-			default:
-				if rc.read() {
-					fc := rc.flightCommands
-					fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
-					// if time.Since(lastPrinted) >= time.Second/4 {
-					// 	fmt.Printf("%16.10f, %16.10f, %16.10f, %16.10f\n", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle)
-					// 	lastPrinted = time.Now()
-					// }
+			case _, ok := <-dataReadTicker:
+				if !ok {
+					dataReadTicker = nil
+				} else {
+					fc := rc.read()
+					rc.radio.Transmit(fc)
 				}
 			}
 		}
