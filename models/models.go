@@ -44,7 +44,6 @@ type RadioLink interface {
 }
 
 type Radio interface {
-	Acknowledge() bool
 	Transmit(FlightCommands) bool
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan bool
