@@ -144,14 +144,14 @@ func (l *udpLogger) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Loger is stopped.")
-		for l.dataChannel != nil {
-			select {
-			case data, ok := <-l.dataChannel:
-				if ok {
-					l.send(data)
-				}
-			default:
-			}
-		}
+		// for l.dataChannel != nil {
+		// 	select {
+		// 	case data, ok := <-l.dataChannel:
+		// 		if ok {
+		// 			l.send(data)
+		// 		}
+		// 	default:
+		// 	}
+		// }
 	}()
 }

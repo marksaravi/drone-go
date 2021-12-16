@@ -53,37 +53,37 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
-		r.setConnection(false)
-		r.radio.ReceiverOn()
-		var running bool = true
-		for running && r.transmitter != nil {
-			select {
-			case <-ctx.Done():
-				close(r.connection)
-				close(r.receiver)
-				running = false
-			case data, ok := <-r.transmitter:
-				if ok {
-					r.transmit(data)
-				}
-			default:
-				payload, available := r.radio.Receive()
-				if available {
-					data := utils.DeserializeFlightCommand(payload)
-					if data.Type == DATA_PAYLOAD {
-						r.receiver <- data
-					}
-				}
-				r.setConnection(available)
-				if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-					r.transmit(models.FlightCommands{
-						Id:   0,
-						Type: HEART_BEAT_PAYLOAD,
-						Time: time.Now().UnixNano(),
-					})
-				}
-			}
-		}
+		// r.setConnection(false)
+		// r.radio.ReceiverOn()
+		// var running bool = true
+		// for running && r.transmitter != nil {
+		// 	select {
+		// 	case <-ctx.Done():
+		// 		close(r.connection)
+		// 		close(r.receiver)
+		// 		running = false
+		// 	case data, ok := <-r.transmitter:
+		// 		if ok {
+		// 			r.transmit(data)
+		// 		}
+		// 	default:
+		// 		payload, available := r.radio.Receive()
+		// 		if available {
+		// 			data := utils.DeserializeFlightCommand(payload)
+		// 			if data.Type == DATA_PAYLOAD {
+		// 				r.receiver <- data
+		// 			}
+		// 		}
+		// 		r.setConnection(available)
+		// 		if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+		// 			r.transmit(models.FlightCommands{
+		// 				Id:   0,
+		// 				Type: HEART_BEAT_PAYLOAD,
+		// 				Time: time.Now().UnixNano(),
+		// 			})
+		// 		}
+		// 	}
+		// }
 	}()
 }
 

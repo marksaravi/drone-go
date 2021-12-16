@@ -48,6 +48,5 @@ func main() {
 	radioDev.Start(ctx, &wg)
 	logger.Start(ctx, &wg)
 	flightControl.Start(ctx, &wg)
-	log.Println("Waiting for routines to stop...")
 	wg.Wait()
 }

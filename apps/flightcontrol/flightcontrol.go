@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/marksaravi/drone-go/models"
 )
@@ -42,45 +41,45 @@ func NewFlightControl(
 
 func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
+	go func() {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
-		var lastPrinted time.Time = time.Now()
-		var running bool = true
-		command := fc.radio.GetReceiver()
-		connection := fc.radio.GetConnection()
-		for running {
-			select {
-			case <-ctx.Done():
-				fc.radio.Close()
-				fc.logger.Close()
-				running = false
-			case flightCommands, ok := <-command:
-				if ok {
-					if time.Since(lastPrinted) >= time.Second {
-						showFLightCommands(flightCommands)
-						lastPrinted = time.Now()
-					}
-				} else {
-					command = nil
-				}
-			case connected, ok := <-connection:
-				if ok {
-					log.Println("connected: ", connected)
-				} else {
-					log.Println("channel is closed")
-					connection = nil
-				}
-			default:
-				rotations, imuDataAvailable := fc.imu.ReadRotations()
-				if imuDataAvailable {
-					if fc.logger != nil {
-						fc.logger.Send(rotations)
-					}
-				}
-			}
-		}
-	}(ctx, wg)
+		// var lastPrinted time.Time = time.Now()
+		// var running bool = true
+		// command := fc.radio.GetReceiver()
+		// connection := fc.radio.GetConnection()
+		// for running {
+		// 	select {
+		// 	case <-ctx.Done():
+		// 		fc.radio.Close()
+		// 		fc.logger.Close()
+		// 		running = false
+		// 	case flightCommands, ok := <-command:
+		// 		if ok {
+		// 			if time.Since(lastPrinted) >= time.Second {
+		// 				showFLightCommands(flightCommands)
+		// 				lastPrinted = time.Now()
+		// 			}
+		// 		} else {
+		// 			command = nil
+		// 		}
+		// 	case connected, ok := <-connection:
+		// 		if ok {
+		// 			log.Println("connected: ", connected)
+		// 		} else {
+		// 			log.Println("channel is closed")
+		// 			connection = nil
+		// 		}
+		// 	default:
+		// 		rotations, imuDataAvailable := fc.imu.ReadRotations()
+		// 		if imuDataAvailable {
+		// 			if fc.logger != nil {
+		// 				fc.logger.Send(rotations)
+		// 			}
+		// 		}
+		// 	}
+		// }
+	}()
 }
 
 func showFLightCommands(fc models.FlightCommands) {
