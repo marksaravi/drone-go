@@ -53,7 +53,7 @@ flight-control:
     rx-tx-address: '03896'
     power-dbm: '-12dbm'
     ce-gpio: 'GPIO26'
-    heart-beat-timeout-ms: 750
+    heart-beat-timeout-ms: 1000
     spi:
       bus-number: 1
       chip-select: 2
@@ -89,7 +89,7 @@ remote-control:
     rx-tx-address: '03896'
     power-dbm: '-12dbm'
     ce-gpio: 'GPIO26'
-    heart-beat-timeout-ms: 750
+    heart-beat-timeout-ms: 1000
     spi:
       bus-number: 1
       chip-select: 2  

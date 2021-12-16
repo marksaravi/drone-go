@@ -21,6 +21,7 @@ type ImuRotations struct {
 }
 
 type FlightCommands struct {
+	Type              byte
 	Id                uint32
 	Time              int64
 	Roll              float32
@@ -43,7 +44,6 @@ type RadioLink interface {
 }
 
 type Radio interface {
-	Acknowledge() bool
 	Transmit(FlightCommands) bool
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan bool
