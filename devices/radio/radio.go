@@ -16,29 +16,31 @@ const (
 )
 
 type radioDevice struct {
-	transmitter      chan models.FlightCommands
-	receiver         chan models.FlightCommands
-	connection       chan bool
-	radio            models.RadioLink
-	connected        bool
-	lastHeartBeat    time.Time
-	heartBeatTimeout time.Duration
+	transmitter           chan models.FlightCommands
+	receiver              chan models.FlightCommands
+	connection            chan bool
+	radio                 models.RadioLink
+	connected             bool
+	lastSentHeartBeat     time.Time
+	lastReceivedHeartBeat time.Time
+	heartBeatTimeout      time.Duration
 }
 
 func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	return &radioDevice{
-		transmitter:      make(chan models.FlightCommands),
-		receiver:         make(chan models.FlightCommands),
-		connection:       make(chan bool),
-		radio:            radio,
-		heartBeatTimeout: time.Duration(heartBeatTimeoutMs * int(time.Millisecond)),
-		connected:        false,
-		lastHeartBeat:    time.Now(),
+		transmitter:           make(chan models.FlightCommands),
+		receiver:              make(chan models.FlightCommands),
+		connection:            make(chan bool),
+		radio:                 radio,
+		heartBeatTimeout:      time.Duration(heartBeatTimeoutMs * int(time.Millisecond)),
+		connected:             false,
+		lastSentHeartBeat:     time.Now(),
+		lastReceivedHeartBeat: time.Now(),
 	}
 }
 
 func (r *radioDevice) transmit(data models.FlightCommands) {
-	r.lastHeartBeat = time.Now()
+	r.lastSentHeartBeat = time.Now()
 	r.radio.TransmitterOn()
 	r.radio.Transmit(utils.SerializeFlightCommand(data))
 	r.radio.ReceiverOn()
@@ -73,7 +75,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					}
 				}
 				r.setConnection(available)
-				if time.Since(r.lastHeartBeat) >= r.heartBeatTimeout/2 {
+				if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
 					r.transmit(models.FlightCommands{
 						Id:   0,
 						Type: HEART_BEAT_PAYLOAD,
@@ -105,10 +107,10 @@ func (r *radioDevice) setConnection(available bool) {
 			r.connected = true
 			r.connection <- true
 		}
-		r.lastHeartBeat = time.Now()
+		r.lastReceivedHeartBeat = time.Now()
 	} else {
 		if r.connected {
-			if time.Since(r.lastHeartBeat) > r.heartBeatTimeout {
+			if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout {
 				r.connected = false
 				r.connection <- false
 			}
