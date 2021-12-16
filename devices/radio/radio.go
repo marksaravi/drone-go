@@ -53,6 +53,19 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
+		var done bool = false
+		for !done {
+			select {
+			case <-ctx.Done():
+				if !done {
+					log.Println("RADIO CONTEXT DONE")
+					done = true
+				}
+
+			default:
+			}
+		}
+
 		// r.setConnection(false)
 		// r.radio.ReceiverOn()
 		// var running bool = true

@@ -44,6 +44,19 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
+
+		var done bool = false
+		for !done {
+			select {
+			case <-ctx.Done():
+				if !done {
+					log.Println("FC CONTEXT DONE")
+					done = true
+				}
+
+			default:
+			}
+		}
 		// var lastPrinted time.Time = time.Now()
 		// var running bool = true
 		// command := fc.radio.GetReceiver()
