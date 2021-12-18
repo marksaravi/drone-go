@@ -28,17 +28,11 @@ type udpLogger struct {
 }
 
 func newLogger(
-	enabled bool,
 	ip string,
 	port int,
 	packetsPerSecond int,
 	imuDataPerSecond int,
 ) *udpLogger {
-	if !enabled {
-		return &udpLogger{
-			enabled: false,
-		}
-	}
 	conn, err := net.ListenUDP("udp", nil)
 	if err != nil {
 		fmt.Println("UDP initialization error: ", err)
@@ -72,9 +66,6 @@ func newLogger(
 }
 
 func (l *udpLogger) send(imuRotations models.ImuRotations) {
-	if !l.enabled {
-		return
-	}
 	data := imuDataToBytes(imuRotations)
 	l.buffer.Write(data)
 	l.bufferCounter++
@@ -116,8 +107,12 @@ func NewUdpLogger() *udpLogger {
 	configs := config.ReadConfigs()
 	flightControl := configs.FlightControl
 	loggerConfigs := configs.UdpLogger
+	if !loggerConfigs.Enabled {
+		return &udpLogger{
+			enabled: false,
+		}
+	}
 	return newLogger(
-		loggerConfigs.Enabled,
 		loggerConfigs.IP,
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
@@ -126,16 +121,26 @@ func NewUdpLogger() *udpLogger {
 }
 
 func (l *udpLogger) Close() {
+	if !l.enabled {
+		return
+	}
 	close(l.dataChannel)
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
+	if !l.enabled {
+		return
+	}
 	if l.dataChannel != nil {
 		l.dataChannel <- data
 	}
 }
 
 func (l *udpLogger) Start(wg *sync.WaitGroup) {
+	if !l.enabled {
+		log.Println("Logger is not enabled.")
+		return
+	}
 	wg.Add(1)
 
 	log.Println("Starting the Logger...")
