@@ -55,7 +55,33 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
 		var running bool = true
-		for running || r.transmitter != nil {
+		var transmitterChannelOpen bool = true
+		var flightCommands models.FlightCommands
+		for running || transmitterChannelOpen {
+
+			if running {
+				payload, available := r.radio.Receive()
+				if available {
+					r.receiver <- utils.DeserializeFlightCommand(payload)
+				}
+				r.setConnection(available)
+			}
+
+			select {
+			case flightCommands, transmitterChannelOpen = <-r.transmitter:
+				if transmitterChannelOpen {
+					r.transmit(flightCommands)
+				}
+			default:
+				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+					r.transmit(models.FlightCommands{
+						Id:   0,
+						Type: HEART_BEAT_PAYLOAD,
+						Time: time.Now().UnixNano(),
+					})
+				}
+			}
+
 			select {
 			case <-ctx.Done():
 				if running {
@@ -66,46 +92,8 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 			default:
 			}
-			if running {
-				payload, available := r.radio.Receive()
-				if available {
-					r.receiver <- utils.DeserializeFlightCommand(payload)
-				}
-				r.setConnection(available)
-			}
-		}
 
-		// r.setConnection(false)
-		// r.radio.ReceiverOn()
-		// var running bool = true
-		// for running && r.transmitter != nil {
-		// 	select {
-		// 	case <-ctx.Done():
-		// 		close(r.connection)
-		// 		close(r.receiver)
-		// 		running = false
-		// 	case data, ok := <-r.transmitter:
-		// 		if ok {
-		// 			r.transmit(data)
-		// 		}
-		// 	default:
-		// 		payload, available := r.radio.Receive()
-		// 		if available {
-		// 			data := utils.DeserializeFlightCommand(payload)
-		// 			if data.Type == DATA_PAYLOAD {
-		// 				r.receiver <- data
-		// 			}
-		// 		}
-		// 		r.setConnection(available)
-		// 		if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-		// 			r.transmit(models.FlightCommands{
-		// 				Id:   0,
-		// 				Type: HEART_BEAT_PAYLOAD,
-		// 				Time: time.Now().UnixNano(),
-		// 			})
-		// 		}
-		// 	}
-		// }
+		}
 	}()
 }
 
@@ -115,7 +103,6 @@ func (r *radioDevice) Transmit(data models.FlightCommands) {
 
 func (r *radioDevice) CloseTransmitter() {
 	close(r.transmitter)
-	r.transmitter = nil
 }
 
 func (r *radioDevice) setConnection(available bool) {
