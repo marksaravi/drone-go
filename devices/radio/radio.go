@@ -100,7 +100,7 @@ func (r *radioDevice) Transmit(data models.FlightCommands) {
 	r.transmitter <- data
 }
 
-func (r *radioDevice) Close() {
+func (r *radioDevice) CloseTransmitter() {
 	close(r.transmitter)
 }
 

@@ -47,7 +47,7 @@ type Radio interface {
 	Transmit(FlightCommands)
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan bool
-	Close()
+	CloseTransmitter()
 }
 
 type Logger interface {

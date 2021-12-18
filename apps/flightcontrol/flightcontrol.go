@@ -49,7 +49,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		for !done {
 			select {
 			case <-ctx.Done():
-				done = true
+				if !done {
+					done = true
+					fc.radio.CloseTransmitter()
+				}
 			default:
 			}
 		}
