@@ -56,19 +56,20 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Radio is stopped...")
 		var running bool = true
 		var transmitterChannelOpen bool = true
-		var flightCommands models.FlightCommands
 		for running || transmitterChannelOpen {
 
 			if running {
 				payload, available := r.radio.Receive()
-				if available {
-					r.receiver <- utils.DeserializeFlightCommand(payload)
+				flightCommands := utils.DeserializeFlightCommand(payload)
+				if available && flightCommands.Type != HEART_BEAT_PAYLOAD {
+					r.receiver <- flightCommands
 				}
 				r.setConnection(available)
 			}
 
 			select {
-			case flightCommands, transmitterChannelOpen = <-r.transmitter:
+			case flightCommands, ok := <-r.transmitter:
+				transmitterChannelOpen = ok
 				if transmitterChannelOpen {
 					r.transmit(flightCommands)
 				}
@@ -98,7 +99,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
-	// r.transmitter <- data
+	r.transmitter <- data
 }
 
 func (r *radioDevice) CloseTransmitter() {

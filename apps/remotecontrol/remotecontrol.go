@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -84,28 +83,45 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
-		connection := rc.radio.GetConnection()
 		log.Println("Waiting for connection...")
+		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
+		var lastReading time.Time = time.Now()
+
+		var connected bool = false
+		var connectionChanOpen bool = true
+		var flightCommands models.FlightCommands
+		var receiverChanOpen bool = true
 		var running bool = true
-		for running && dataReadTicker != nil {
+
+		for running || connectionChanOpen || receiverChanOpen {
+			if running && time.Since(lastReading) >= commandInterval {
+				lastReading = time.Now()
+				rc.radio.Transmit(rc.read())
+			}
+
+			select {
+			case flightCommands, receiverChanOpen = <-rc.radio.GetReceiver():
+				if receiverChanOpen {
+					log.Println("flight command: ", flightCommands.Type)
+				}
+			default:
+			}
+
+			select {
+			case connected, connectionChanOpen = <-rc.radio.GetConnection():
+				if connectionChanOpen {
+					log.Println("Connected: ", connected)
+				}
+			default:
+			}
+
 			select {
 			case <-ctx.Done():
-				rc.radio.CloseTransmitter()
-				running = false
-			case connected := <-connection:
-				if connected {
-					log.Println("Connected to Drone")
-				} else {
-					log.Println("Lost connection to Drone")
+				if running {
+					rc.radio.CloseTransmitter()
+					running = false
 				}
-			case _, ok := <-dataReadTicker:
-				if !ok {
-					dataReadTicker = nil
-				} else {
-					fc := rc.read()
-					rc.radio.Transmit(fc)
-				}
+			default:
 			}
 		}
 	}()
