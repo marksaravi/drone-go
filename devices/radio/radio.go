@@ -55,10 +55,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
 		var running bool = true
-		for running {
+		for running || r.transmitter != nil {
 			select {
 			case <-ctx.Done():
-				log.Println("Closing receiver and connection")
 				if running {
 					log.Println("Closing receiver and connection")
 					close(r.receiver)

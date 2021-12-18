@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type imu interface {
@@ -45,52 +46,35 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
 
-		var done bool = false
-		for !done {
+		var flightCommands models.FlightCommands
+		var connectionChanOpen bool = true
+		var connected bool = false
+		var receiverChanOpen bool = true
+		var running bool = true
+		for running || connectionChanOpen || receiverChanOpen {
 			select {
 			case <-ctx.Done():
-				if !done {
-					done = true
+				if running {
 					fc.radio.CloseTransmitter()
+					running = false
 				}
 			default:
 			}
+			select {
+			case connected, connectionChanOpen = <-fc.radio.GetConnection():
+				if connectionChanOpen {
+					log.Println("Connected: ", connected)
+				} else {
+					log.Println("connectionChanOpen: ", connectionChanOpen)
+				}
+			default:
+			}
+			select {
+			case flightCommands, receiverChanOpen = <-fc.radio.GetReceiver():
+				utils.SerializeFlightCommand(flightCommands)
+			default:
+			}
 		}
-		// var lastPrinted time.Time = time.Now()
-		// var running bool = true
-		// command := fc.radio.GetReceiver()
-		// connection := fc.radio.GetConnection()
-		// for running {
-		// 	select {
-		// 	case <-ctx.Done():
-		// 		fc.radio.Close()
-		// 		fc.logger.Close()
-		// 		running = false
-		// 	case flightCommands, ok := <-command:
-		// 		if ok {
-		// 			if time.Since(lastPrinted) >= time.Second {
-		// 				showFLightCommands(flightCommands)
-		// 				lastPrinted = time.Now()
-		// 			}
-		// 		} else {
-		// 			command = nil
-		// 		}
-		// 	case connected, ok := <-connection:
-		// 		if ok {
-		// 			log.Println("connected: ", connected)
-		// 		} else {
-		// 			log.Println("channel is closed")
-		// 			connection = nil
-		// 		}
-		// 	default:
-		// 		rotations, imuDataAvailable := fc.imu.ReadRotations()
-		// 		if imuDataAvailable {
-		// 			if fc.logger != nil {
-		// 				fc.logger.Send(rotations)
-		// 			}
-		// 		}
-		// 	}
-		// }
 	}()
 }
 
