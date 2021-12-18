@@ -10,6 +10,7 @@ import (
 )
 
 type imu interface {
+	ResetTime()
 	ReadRotations() (models.ImuRotations, bool)
 }
 
@@ -51,6 +52,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var connected bool = false
 		var receiverChanOpen bool = true
 		var running bool = true
+		fc.imu.ResetTime()
 		for running || connectionChanOpen || receiverChanOpen {
 			rotations, imuDataAvailable := fc.imu.ReadRotations()
 			if running && imuDataAvailable {

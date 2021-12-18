@@ -23,7 +23,6 @@ type imudevice struct {
 	accRawData                  models.XYZ
 	gyro                        models.Rotations
 	rotations                   models.Rotations
-	firstReading                bool
 	lastReading                 time.Time
 	readingInterval             time.Duration
 	accLowPassFilterCoefficient float64
@@ -38,18 +37,18 @@ func NewImuMems(
 ) *imudevice {
 	return &imudevice{
 		imuMems:                     imuMems,
-		firstReading:                true,
 		readingInterval:             time.Second / time.Duration(dataPerSecond),
+		lastReading:                 time.Now(),
 		accLowPassFilterCoefficient: accLowPassFilterCoefficient,
 		lowPassFilterCoefficient:    lowPassFilterCoefficient,
 	}
 }
 
+func (imu *imudevice) ResetTime() {
+	imu.lastReading = time.Now()
+}
+
 func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
-	if imu.firstReading {
-		imu.lastReading = time.Now()
-		imu.firstReading = false
-	}
 	if time.Since(imu.lastReading) < imu.readingInterval {
 		return models.ImuRotations{}, false
 	}
