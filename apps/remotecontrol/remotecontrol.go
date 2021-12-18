@@ -91,7 +91,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		for running && dataReadTicker != nil {
 			select {
 			case <-ctx.Done():
-				rc.radio.Close()
+				rc.radio.CloseTransmitter()
 				running = false
 			case connected := <-connection:
 				if connected {

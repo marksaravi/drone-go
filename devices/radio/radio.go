@@ -27,15 +27,16 @@ type radioDevice struct {
 }
 
 func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
+	heartBeatTimeout := time.Duration(heartBeatTimeoutMs * int(time.Millisecond))
 	return &radioDevice{
 		transmitter:           make(chan models.FlightCommands),
 		receiver:              make(chan models.FlightCommands),
 		connection:            make(chan bool),
 		radio:                 radio,
-		heartBeatTimeout:      time.Duration(heartBeatTimeoutMs * int(time.Millisecond)),
+		heartBeatTimeout:      heartBeatTimeout,
 		connected:             false,
 		lastSentHeartBeat:     time.Now(),
-		lastReceivedHeartBeat: time.Now(),
+		lastReceivedHeartBeat: time.Now().Add(-heartBeatTimeout * 2),
 	}
 }
 
@@ -53,29 +54,26 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
-		r.setConnection(false)
-		r.radio.ReceiverOn()
 		var running bool = true
-		for running && r.transmitter != nil {
-			select {
-			case <-ctx.Done():
-				close(r.connection)
-				close(r.receiver)
-				running = false
-			case data, ok := <-r.transmitter:
-				if ok {
-					r.transmit(data)
-				}
-			default:
+		var transmitterChannelOpen bool = true
+		var flightCommands models.FlightCommands
+		for running || transmitterChannelOpen {
+
+			if running {
 				payload, available := r.radio.Receive()
 				if available {
-					data := utils.DeserializeFlightCommand(payload)
-					if data.Type == DATA_PAYLOAD {
-						r.receiver <- data
-					}
+					r.receiver <- utils.DeserializeFlightCommand(payload)
 				}
 				r.setConnection(available)
-				if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+			}
+
+			select {
+			case flightCommands, transmitterChannelOpen = <-r.transmitter:
+				if transmitterChannelOpen {
+					r.transmit(flightCommands)
+				}
+			default:
+				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
 					r.transmit(models.FlightCommands{
 						Id:   0,
 						Type: HEART_BEAT_PAYLOAD,
@@ -83,38 +81,41 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					})
 				}
 			}
+
+			select {
+			case <-ctx.Done():
+				if running {
+					log.Println("Closing receiver and connection")
+					close(r.receiver)
+					close(r.connection)
+					running = false
+				}
+			default:
+			}
+
 		}
 	}()
 }
 
-func (r *radioDevice) Transmit(data models.FlightCommands) bool {
-	if r.transmitter != nil {
-		r.transmitter <- data
-		return true
-	}
-	return false
+func (r *radioDevice) Transmit(data models.FlightCommands) {
+	// r.transmitter <- data
 }
 
-func (r *radioDevice) Close() {
-	log.Println("Closing...")
+func (r *radioDevice) CloseTransmitter() {
 	close(r.transmitter)
-	r.transmitter = nil
 }
 
 func (r *radioDevice) setConnection(available bool) {
+	connected := false
 	if available {
-		if !r.connected {
-			r.connected = true
-			r.connection <- true
-		}
 		r.lastReceivedHeartBeat = time.Now()
-	} else {
-		if r.connected {
-			if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout {
-				r.connected = false
-				r.connection <- false
-			}
-		}
+	}
+	if time.Since(r.lastReceivedHeartBeat) < r.heartBeatTimeout {
+		connected = true
+	}
+	if connected != r.connected {
+		r.connected = connected
+		r.connection <- connected
 	}
 }
 

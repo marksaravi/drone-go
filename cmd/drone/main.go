@@ -46,8 +46,7 @@ func main() {
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
 	radioDev.Start(ctx, &wg)
-	logger.Start(ctx, &wg)
+	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)
-	log.Println("Waiting for routines to stop...")
 	wg.Wait()
 }
