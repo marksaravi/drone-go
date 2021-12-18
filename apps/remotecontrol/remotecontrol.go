@@ -6,7 +6,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/marksaravi/drone-go/devices/radio"
+	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/models"
+)
+
+type radioConnectionState = byte
+
+const (
+	CONNECTION_WAITING radioConnectionState = iota
+	CONNECTION_ESTABLISHED
+	CONNECTION_LOST
 )
 
 type button interface {
@@ -32,6 +42,8 @@ type remoteControl struct {
 	btnTopRight      button
 	btnBottomLeft    button
 	btnBottomRight   button
+	buzzer           *piezobuzzer.Buzzer
+	connectionState  radioConnectionState
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
@@ -59,6 +71,7 @@ func NewRemoteControl(
 	btnTopLeft, btnTopRight button,
 	btnBottomLeft, btnBottomRight button,
 	commandPerSecond int,
+	buzzer *piezobuzzer.Buzzer,
 ) *remoteControl {
 	return &remoteControl{
 		radio:            radio,
@@ -73,6 +86,7 @@ func NewRemoteControl(
 		btnBottomLeft:    btnBottomLeft,
 		btnBottomRight:   btnBottomRight,
 		commandPerSecond: commandPerSecond,
+		buzzer:           buzzer,
 	}
 }
 
@@ -87,7 +101,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
 		var lastReading time.Time = time.Now()
 
-		var connected bool = false
+		var connected int
 		var connectionChanOpen bool = true
 		var flightCommands models.FlightCommands
 		var receiverChanOpen bool = true
@@ -110,7 +124,8 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case connected, connectionChanOpen = <-rc.radio.GetConnection():
 				if connectionChanOpen {
-					log.Println("Connected: ", connected)
+					rc.setRadioConnectionState(connected)
+					rc.displayStatus()
 				}
 			default:
 			}
@@ -125,4 +140,33 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}()
+}
+
+func (rc *remoteControl) setRadioConnectionState(connected int) {
+	switch connected {
+	case radio.CONNECTED:
+		rc.connectionState = CONNECTION_ESTABLISHED
+	case radio.DISCONNECTED:
+		if rc.connectionState == CONNECTION_ESTABLISHED {
+			rc.connectionState = CONNECTION_LOST
+		}
+	case radio.RECEIVER_OFF:
+		rc.connectionState = CONNECTION_WAITING
+	}
+}
+
+func (rc *remoteControl) displayStatus() {
+	switch rc.connectionState {
+	case CONNECTION_ESTABLISHED:
+		log.Println("Connected to Drone.")
+		rc.buzzer.Stop()
+		rc.buzzer.PlayNotes(piezobuzzer.ConnectedSound)
+	case CONNECTION_LOST:
+		log.Println("Connection is lost.")
+		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
+	case CONNECTION_WAITING:
+		log.Println("Waiting for connection.")
+		rc.buzzer.Stop()
+		rc.buzzer.PlayNotes(piezobuzzer.DisconnectedSound)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -49,7 +50,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		var flightCommands models.FlightCommands
 		var connectionChanOpen bool = true
-		var connected bool = false
+		var connected int = radio.DISCONNECTED
 		var receiverChanOpen bool = true
 		var running bool = true
 		fc.imu.ResetTime()

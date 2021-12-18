@@ -11,6 +11,12 @@ import (
 )
 
 const (
+	CONNECTED int = iota
+	DISCONNECTED
+	RECEIVER_OFF
+)
+
+const (
 	DATA_PAYLOAD byte = iota
 	HEART_BEAT_PAYLOAD
 )
@@ -18,7 +24,7 @@ const (
 type radioDevice struct {
 	transmitter           chan models.FlightCommands
 	receiver              chan models.FlightCommands
-	connection            chan bool
+	connection            chan int
 	radio                 models.RadioLink
 	connected             bool
 	lastSentHeartBeat     time.Time
@@ -31,7 +37,7 @@ func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	return &radioDevice{
 		transmitter:           make(chan models.FlightCommands),
 		receiver:              make(chan models.FlightCommands),
-		connection:            make(chan bool),
+		connection:            make(chan int),
 		radio:                 radio,
 		heartBeatTimeout:      heartBeatTimeout,
 		connected:             false,
@@ -116,7 +122,12 @@ func (r *radioDevice) setConnection(available bool) {
 	}
 	if connected != r.connected {
 		r.connected = connected
-		r.connection <- connected
+		if r.connected {
+			r.connection <- CONNECTED
+		} else {
+			r.connection <- DISCONNECTED
+		}
+
 	}
 }
 
@@ -124,6 +135,6 @@ func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
 	return r.receiver
 }
 
-func (r *radioDevice) GetConnection() <-chan bool {
+func (r *radioDevice) GetConnection() <-chan int {
 	return r.connection
 }
