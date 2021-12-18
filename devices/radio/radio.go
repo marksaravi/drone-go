@@ -16,9 +16,9 @@ const (
 )
 
 type radioDevice struct {
-	transmitter           chan models.FlightCommands
-	receiver              chan models.FlightCommands
-	connection            chan bool
+	transmitter chan models.FlightCommands
+	// receiver              chan models.FlightCommands
+	// connection            chan bool
 	radio                 models.RadioLink
 	connected             bool
 	lastSentHeartBeat     time.Time
@@ -28,9 +28,9 @@ type radioDevice struct {
 
 func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	return &radioDevice{
-		transmitter:           make(chan models.FlightCommands),
-		receiver:              make(chan models.FlightCommands),
-		connection:            make(chan bool),
+		transmitter: make(chan models.FlightCommands),
+		// receiver:              make(chan models.FlightCommands),
+		// connection:            make(chan bool),
 		radio:                 radio,
 		heartBeatTimeout:      time.Duration(heartBeatTimeoutMs * int(time.Millisecond)),
 		connected:             false,
@@ -57,11 +57,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		for !done {
 			select {
 			case <-ctx.Done():
-				if !done {
-					log.Println("RADIO CONTEXT DONE")
-					done = true
-				}
-
+				done = true
 			default:
 			}
 		}
@@ -100,41 +96,35 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func (r *radioDevice) Transmit(data models.FlightCommands) bool {
-	if r.transmitter != nil {
-		r.transmitter <- data
-		return true
-	}
-	return false
+func (r *radioDevice) Transmit(data models.FlightCommands) {
+	r.transmitter <- data
 }
 
 func (r *radioDevice) Close() {
-	log.Println("Closing...")
 	close(r.transmitter)
-	r.transmitter = nil
 }
 
 func (r *radioDevice) setConnection(available bool) {
-	if available {
-		if !r.connected {
-			r.connected = true
-			r.connection <- true
-		}
-		r.lastReceivedHeartBeat = time.Now()
-	} else {
-		if r.connected {
-			if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout {
-				r.connected = false
-				r.connection <- false
-			}
-		}
-	}
+	// if available {
+	// 	if !r.connected {
+	// 		r.connected = true
+	// 		r.connection <- true
+	// 	}
+	// 	r.lastReceivedHeartBeat = time.Now()
+	// } else {
+	// 	if r.connected {
+	// 		if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout {
+	// 			r.connected = false
+	// 			r.connection <- false
+	// 		}
+	// 	}
+	// }
 }
 
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
-	return r.receiver
+	return nil
 }
 
 func (r *radioDevice) GetConnection() <-chan bool {
-	return r.connection
+	return nil
 }

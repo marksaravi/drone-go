@@ -49,11 +49,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		for !done {
 			select {
 			case <-ctx.Done():
-				if !done {
-					log.Println("FC CONTEXT DONE")
-					done = true
-				}
-
+				done = true
 			default:
 			}
 		}

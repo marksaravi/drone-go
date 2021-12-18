@@ -44,7 +44,7 @@ type RadioLink interface {
 }
 
 type Radio interface {
-	Transmit(FlightCommands) bool
+	Transmit(FlightCommands)
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan bool
 	Close()
