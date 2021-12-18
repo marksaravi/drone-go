@@ -6,7 +6,6 @@ package udplogger
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -128,7 +127,6 @@ func NewUdpLogger() *udpLogger {
 
 func (l *udpLogger) Close() {
 	close(l.dataChannel)
-	l.dataChannel = nil
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
@@ -137,20 +135,18 @@ func (l *udpLogger) Send(data models.ImuRotations) {
 	}
 }
 
-func (l *udpLogger) Start(ctx context.Context, wg *sync.WaitGroup) {
+func (l *udpLogger) Start(wg *sync.WaitGroup) {
 	wg.Add(1)
 
 	log.Println("Starting the Logger...")
 	go func() {
 		defer wg.Done()
 		defer log.Println("Loger is stopped.")
-		var done bool = false
-		for !done {
-			select {
-			case <-ctx.Done():
-				done = true
-			default:
-			}
+		var loggerChanOpen bool = true
+		var imuData models.ImuRotations
+		for loggerChanOpen {
+			imuData, loggerChanOpen = <-l.dataChannel
+			l.send(imuData)
 		}
 	}()
 }

@@ -52,26 +52,34 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var receiverChanOpen bool = true
 		var running bool = true
 		for running || connectionChanOpen || receiverChanOpen {
-			select {
-			case <-ctx.Done():
-				if running {
-					fc.radio.CloseTransmitter()
-					running = false
-				}
-			default:
+			rotations, imuDataAvailable := fc.imu.ReadRotations()
+			if running && imuDataAvailable {
+				fc.logger.Send(rotations)
 			}
+
 			select {
 			case connected, connectionChanOpen = <-fc.radio.GetConnection():
 				if connectionChanOpen {
 					log.Println("Connected: ", connected)
-				} else {
-					log.Println("connectionChanOpen: ", connectionChanOpen)
 				}
 			default:
 			}
+
 			select {
 			case flightCommands, receiverChanOpen = <-fc.radio.GetReceiver():
-				utils.SerializeFlightCommand(flightCommands)
+				if receiverChanOpen {
+					utils.SerializeFlightCommand(flightCommands)
+				}
+			default:
+			}
+
+			select {
+			case <-ctx.Done():
+				if running {
+					fc.radio.CloseTransmitter()
+					fc.logger.Close()
+					running = false
+				}
 			default:
 			}
 		}
