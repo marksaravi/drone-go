@@ -218,16 +218,16 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) Receive() ([32]byte, bool) {
+func (radio *nrf204l01) Receive() (models.Payload, bool) {
 	if !radio.isDataAvailable() {
-		return [32]byte{}, false
+		return models.Payload{}, false
 	}
-	payload := [32]byte{}
+	payload := models.Payload{}
 	data, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
 	copy(payload[:], data)
 	radio.resetDR()
 	if err != nil {
-		return [32]byte{}, false
+		return models.Payload{}, false
 	}
 	return payload, true
 }
@@ -245,7 +245,7 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) Transmit(payload [32]byte) error {
+func (radio *nrf204l01) Transmit(payload models.Payload) error {
 	if radio.isReceiver {
 		return errors.New("not in transmit mode")
 	}

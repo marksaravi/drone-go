@@ -8,7 +8,7 @@ import (
 
 const RADIO_PAYLOAD_SIZE int = 32
 
-func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
+func SerializeFlightCommand(flightCommands models.FlightCommands) models.Payload {
 	var buf bytes.Buffer
 	typeBytes := [1]byte{flightCommands.PayloadType}
 	idBytes := UInt32ToBytes(flightCommands.Id)
@@ -36,12 +36,12 @@ func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
 	buf.Write(throttleBytes[:])
 	buf.WriteByte(bottons)
 
-	var payload [32]byte
+	var payload models.Payload
 	copy(payload[:], buf.Bytes())
 	return payload
 }
 
-func DeserializeFlightCommand(payload [32]byte) models.FlightCommands {
+func DeserializeFlightCommand(payload models.Payload) models.FlightCommands {
 	buttons := BoolArrayFromByte(payload[29])
 	return models.FlightCommands{
 		PayloadType:       payload[0],

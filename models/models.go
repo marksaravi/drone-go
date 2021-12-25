@@ -36,11 +36,13 @@ type FlightCommands struct {
 	ButtonBottomRight bool
 }
 
+type Payload = [32]byte
+
 type RadioLink interface {
 	ReceiverOn()
-	Receive() ([32]byte, bool)
+	Receive() (Payload, bool)
 	TransmitterOn()
-	Transmit([32]byte) error
+	Transmit(Payload) error
 }
 
 type Radio interface {

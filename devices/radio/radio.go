@@ -10,23 +10,26 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+type ConnectionState = int
+
 const (
-	CONNECTED int = iota
+	CONNECTED ConnectionState = iota
 	DISCONNECTED
-	RECEIVER_OFF
+	LOST
 )
 
 const (
 	DATA_PAYLOAD byte = iota
 	HEART_BEAT_PAYLOAD
+	RECEIVER_OFF
 )
 
 type radioDevice struct {
 	transmitter           chan models.FlightCommands
 	receiver              chan models.FlightCommands
-	connection            chan int
+	connection            chan ConnectionState
 	radio                 models.RadioLink
-	connected             bool
+	connectionState       ConnectionState
 	lastSentHeartBeat     time.Time
 	lastReceivedHeartBeat time.Time
 	heartBeatTimeout      time.Duration
@@ -34,15 +37,16 @@ type radioDevice struct {
 
 func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	heartBeatTimeout := time.Duration(heartBeatTimeoutMs * int(time.Millisecond))
+	hearBeatInit := time.Now().Add(-heartBeatTimeout * 2)
 	return &radioDevice{
 		transmitter:           make(chan models.FlightCommands),
 		receiver:              make(chan models.FlightCommands),
-		connection:            make(chan int),
+		connection:            make(chan ConnectionState),
 		radio:                 radio,
 		heartBeatTimeout:      heartBeatTimeout,
-		connected:             false,
-		lastSentHeartBeat:     time.Now(),
-		lastReceivedHeartBeat: time.Now().Add(-heartBeatTimeout * 2),
+		connectionState:       DISCONNECTED,
+		lastSentHeartBeat:     hearBeatInit,
+		lastReceivedHeartBeat: hearBeatInit,
 	}
 }
 
@@ -67,7 +71,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			if running {
 				payload, available := r.radio.Receive()
 				flightCommands := utils.DeserializeFlightCommand(payload)
-				if available && flightCommands.Type != HEART_BEAT_PAYLOAD {
+				if available && flightCommands.PayloadType != HEART_BEAT_PAYLOAD {
 					r.receiver <- flightCommands
 				}
 				r.setConnection(available)
@@ -82,9 +86,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
 					r.transmit(models.FlightCommands{
-						Id:   0,
-						Type: HEART_BEAT_PAYLOAD,
-						Time: time.Now().UnixNano(),
+						Id:          0,
+						PayloadType: HEART_BEAT_PAYLOAD,
+						Time:        time.Now().UnixNano(),
 					})
 				}
 			}

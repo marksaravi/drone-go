@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
+
+	"github.com/marksaravi/drone-go/models"
 )
 
 func UInt64ToBytes(i uint64) [8]byte {
@@ -85,8 +87,8 @@ func SliceToArray8(slice []byte) [8]byte {
 	return array
 }
 
-func SliceToArray32(slice []byte) [32]byte {
-	array := [32]byte{}
+func SliceToArray32(slice []byte) models.Payload {
+	array := models.Payload{}
 	copy(array[:], slice)
 	return array
 }
