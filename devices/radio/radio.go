@@ -21,7 +21,7 @@ const (
 const (
 	NO_PAYLOAD byte = iota
 	DATA_PAYLOAD
-	HEART_BEAT_PAYLOAD
+	HEARTBEAT_PAYLOAD
 	RECEIVER_OFF
 )
 
@@ -89,7 +89,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 			default:
 				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-					r.transmitPayload(genPayload(HEART_BEAT_PAYLOAD))
+					r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
 				}
 			}
 
