@@ -62,6 +62,7 @@ func (r *radioDevice) transmitPayload(payload models.Payload) {
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Radio...")
+	r.clearBuffer()
 
 	go func() {
 		defer wg.Done()
@@ -99,8 +100,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					log.Println("Closing receiver and connection")
 					for i := 0; i < 3; i++ {
 						r.transmitPayload(genPayload(RECEIVER_OFF))
-						time.Sleep(50)
+						time.Sleep(time.Millisecond * 50)
 					}
+					time.Sleep(time.Millisecond * 100)
 					close(r.receiver)
 					close(r.connection)
 					running = false
@@ -133,6 +135,12 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 	if prevState != r.connectionState {
 		log.Println("From ", prevState, " to ", r.connectionState)
 		r.connection <- r.connectionState
+	}
+}
+
+func (r *radioDevice) clearBuffer() {
+	for i := 0; i < 10; i++ {
+		r.radio.Receive()
 	}
 }
 
