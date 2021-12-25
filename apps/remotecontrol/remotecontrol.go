@@ -6,8 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/marksaravi/drone-go/devices/radio"
+	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -33,6 +34,8 @@ type remoteControl struct {
 	btnTopRight      button
 	btnBottomLeft    button
 	btnBottomRight   button
+	buzzer           *piezobuzzer.Buzzer
+	connectionState  radio.ConnectionState
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
@@ -60,6 +63,7 @@ func NewRemoteControl(
 	btnTopLeft, btnTopRight button,
 	btnBottomLeft, btnBottomRight button,
 	commandPerSecond int,
+	buzzer *piezobuzzer.Buzzer,
 ) *remoteControl {
 	return &remoteControl{
 		radio:            radio,
@@ -74,6 +78,7 @@ func NewRemoteControl(
 		btnBottomLeft:    btnBottomLeft,
 		btnBottomRight:   btnBottomRight,
 		commandPerSecond: commandPerSecond,
+		buzzer:           buzzer,
 	}
 }
 
@@ -84,29 +89,63 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		dataReadTicker := utils.NewTicker(ctx, "Remote Control", rc.commandPerSecond)
-		connection := rc.radio.GetConnection()
 		log.Println("Waiting for connection...")
+		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
+		var lastReading time.Time = time.Now()
+
+		var connectionState radio.ConnectionState
+		var connectionChanOpen bool = true
+		var flightCommands models.FlightCommands
+		var receiverChanOpen bool = true
 		var running bool = true
-		for running && dataReadTicker != nil {
+
+		for running || connectionChanOpen || receiverChanOpen {
+			if running && time.Since(lastReading) >= commandInterval {
+				lastReading = time.Now()
+				rc.radio.Transmit(rc.read())
+			}
+
+			select {
+			case flightCommands, receiverChanOpen = <-rc.radio.GetReceiver():
+				if receiverChanOpen {
+					log.Println("flight command: ", flightCommands.PayloadType)
+				}
+			default:
+			}
+
+			select {
+			case connectionState, connectionChanOpen = <-rc.radio.GetConnection():
+				if connectionChanOpen {
+					rc.setRadioConnectionState(connectionState)
+				}
+			default:
+			}
+
 			select {
 			case <-ctx.Done():
-				rc.radio.CloseTransmitter()
-				running = false
-			case connected := <-connection:
-				if connected {
-					log.Println("Connected to Drone")
-				} else {
-					log.Println("Lost connection to Drone")
+				if running {
+					rc.radio.CloseTransmitter()
+					running = false
 				}
-			case _, ok := <-dataReadTicker:
-				if !ok {
-					dataReadTicker = nil
-				} else {
-					fc := rc.read()
-					rc.radio.Transmit(fc)
-				}
+			default:
 			}
 		}
 	}()
+}
+
+func (rc *remoteControl) setRadioConnectionState(connectionState radio.ConnectionState) {
+	rc.connectionState = connectionState
+	switch rc.connectionState {
+	case radio.CONNECTED:
+		log.Println("Connected to Drone.")
+		rc.buzzer.Stop()
+		rc.buzzer.PlayNotes(piezobuzzer.ConnectedSound)
+	case radio.DISCONNECTED:
+		log.Println("Waiting for connection.")
+		rc.buzzer.Stop()
+		rc.buzzer.PlayNotes(piezobuzzer.DisconnectedSound)
+	case radio.LOST:
+		log.Println("Connection is lost.")
+		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
+	}
 }

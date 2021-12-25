@@ -13,7 +13,10 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
+	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/utils"
+	"periph.io/x/periph/conn/gpio"
+	"periph.io/x/periph/conn/gpio/gpioreg"
 )
 
 func main() {
@@ -78,6 +81,8 @@ func main() {
 	btnBottomLeft := devices.NewButton(gpioBottomLeft)
 	gpioBottomRight := hardware.NewGPIOSwitch(buttonsConfis.BottomRight)
 	btnBottomRight := devices.NewButton(gpioBottomRight)
+	var buzzerPin gpio.PinOut = gpioreg.ByName(configs.BuzzerGPIO)
+	buzzer := piezobuzzer.NewBuzzer(buzzerPin)
 
 	remoteControl := remotecontrol.NewRemoteControl(
 		radioDev,
@@ -86,6 +91,7 @@ func main() {
 		btnToptLeft, btnTopRight,
 		btnBottomLeft, btnBottomRight,
 		configs.CommandPerSecond,
+		buzzer,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

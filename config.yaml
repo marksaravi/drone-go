@@ -93,6 +93,7 @@ remote-control:
     spi:
       bus-number: 1
       chip-select: 2  
+  buzzer-gpio: 'GPIO5'
 
 logger:
   enabled: true

@@ -10,17 +10,28 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+type ConnectionState = int
+
 const (
-	DATA_PAYLOAD byte = iota
-	HEART_BEAT_PAYLOAD
+	IDLE ConnectionState = iota
+	CONNECTED
+	DISCONNECTED
+	LOST
+)
+
+const (
+	NO_PAYLOAD byte = iota
+	DATA_PAYLOAD
+	HEARTBEAT_PAYLOAD
+	RECEIVER_OFF
 )
 
 type radioDevice struct {
 	transmitter           chan models.FlightCommands
 	receiver              chan models.FlightCommands
-	connection            chan bool
+	connection            chan ConnectionState
 	radio                 models.RadioLink
-	connected             bool
+	connectionState       ConnectionState
 	lastSentHeartBeat     time.Time
 	lastReceivedHeartBeat time.Time
 	heartBeatTimeout      time.Duration
@@ -28,64 +39,70 @@ type radioDevice struct {
 
 func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 	heartBeatTimeout := time.Duration(heartBeatTimeoutMs * int(time.Millisecond))
+	hearBeatInit := time.Now().Add(-heartBeatTimeout * 2)
 	return &radioDevice{
 		transmitter:           make(chan models.FlightCommands),
 		receiver:              make(chan models.FlightCommands),
-		connection:            make(chan bool),
+		connection:            make(chan ConnectionState),
 		radio:                 radio,
 		heartBeatTimeout:      heartBeatTimeout,
-		connected:             false,
-		lastSentHeartBeat:     time.Now(),
-		lastReceivedHeartBeat: time.Now().Add(-heartBeatTimeout * 2),
+		connectionState:       IDLE,
+		lastSentHeartBeat:     hearBeatInit,
+		lastReceivedHeartBeat: hearBeatInit,
 	}
 }
 
-func (r *radioDevice) transmit(data models.FlightCommands) {
+func (r *radioDevice) transmitPayload(payload models.Payload) {
 	r.lastSentHeartBeat = time.Now()
 	r.radio.TransmitterOn()
-	r.radio.Transmit(utils.SerializeFlightCommand(data))
+	r.radio.Transmit(payload)
 	r.radio.ReceiverOn()
 }
 
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Radio...")
+	r.clearBuffer()
 
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
 		var running bool = true
 		var transmitterChannelOpen bool = true
-		var flightCommands models.FlightCommands
 		for running || transmitterChannelOpen {
 
 			if running {
 				payload, available := r.radio.Receive()
 				if available {
-					r.receiver <- utils.DeserializeFlightCommand(payload)
+					payloadType := payload[0]
+					r.setConnectionState(available, payloadType)
+					if payloadType == DATA_PAYLOAD {
+						flightCommands := utils.DeserializeFlightCommand(payload)
+						r.receiver <- flightCommands
+					}
+				} else {
+					r.setConnectionState(false, NO_PAYLOAD)
 				}
-				r.setConnection(available)
 			}
 
 			select {
-			case flightCommands, transmitterChannelOpen = <-r.transmitter:
+			case flightCommands, ok := <-r.transmitter:
+				transmitterChannelOpen = ok
 				if transmitterChannelOpen {
-					r.transmit(flightCommands)
+					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
 				}
 			default:
-				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-					r.transmit(models.FlightCommands{
-						Id:   0,
-						Type: HEART_BEAT_PAYLOAD,
-						Time: time.Now().UnixNano(),
-					})
-				}
 			}
 
 			select {
 			case <-ctx.Done():
 				if running {
 					log.Println("Closing receiver and connection")
+					for i := 0; i < 3; i++ {
+						r.transmitPayload(genPayload(RECEIVER_OFF))
+						time.Sleep(time.Millisecond * 50)
+					}
+					time.Sleep(time.Millisecond * 100)
 					close(r.receiver)
 					close(r.connection)
 					running = false
@@ -93,36 +110,58 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 			}
 
+			if running {
+				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+					r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
+				}
+			}
 		}
 	}()
 }
 
+func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
+	prevState := r.connectionState
+	if available {
+		r.connectionState = CONNECTED
+		r.lastReceivedHeartBeat = time.Now()
+		if payloadType == RECEIVER_OFF {
+			r.connectionState = DISCONNECTED
+		}
+	} else {
+		if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout && r.connectionState == CONNECTED {
+			r.connectionState = LOST
+		}
+	}
+	if prevState != r.connectionState {
+		log.Println("From ", prevState, " to ", r.connectionState)
+		r.connection <- r.connectionState
+	}
+}
+
+func (r *radioDevice) clearBuffer() {
+	for i := 0; i < 10; i++ {
+		r.radio.Receive()
+	}
+}
+
 func (r *radioDevice) Transmit(data models.FlightCommands) {
-	// r.transmitter <- data
+	r.transmitter <- data
 }
 
 func (r *radioDevice) CloseTransmitter() {
 	close(r.transmitter)
 }
 
-func (r *radioDevice) setConnection(available bool) {
-	connected := false
-	if available {
-		r.lastReceivedHeartBeat = time.Now()
-	}
-	if time.Since(r.lastReceivedHeartBeat) < r.heartBeatTimeout {
-		connected = true
-	}
-	if connected != r.connected {
-		r.connected = connected
-		r.connection <- connected
-	}
-}
-
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
 	return r.receiver
 }
 
-func (r *radioDevice) GetConnection() <-chan bool {
+func (r *radioDevice) GetConnection() <-chan int {
 	return r.connection
+}
+
+func genPayload(payloadType byte) models.Payload {
+	var payload models.Payload
+	payload[0] = payloadType
+	return models.Payload(payload)
 }

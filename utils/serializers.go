@@ -8,9 +8,9 @@ import (
 
 const RADIO_PAYLOAD_SIZE int = 32
 
-func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
+func SerializeFlightCommand(flightCommands models.FlightCommands) models.Payload {
 	var buf bytes.Buffer
-	typeBytes := [1]byte{flightCommands.Type}
+	typeBytes := [1]byte{flightCommands.PayloadType}
 	idBytes := UInt32ToBytes(flightCommands.Id)
 	timeBytes := Int64ToBytes(flightCommands.Time)
 	rollBytes := Float32ToBytes(flightCommands.Roll)
@@ -27,6 +27,7 @@ func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
 		false,
 		false,
 	})
+	buf.Write(typeBytes[:])
 	buf.Write(idBytes[:])
 	buf.Write(timeBytes[:])
 	buf.Write(rollBytes[:])
@@ -34,27 +35,27 @@ func SerializeFlightCommand(flightCommands models.FlightCommands) [32]byte {
 	buf.Write(yawBytes[:])
 	buf.Write(throttleBytes[:])
 	buf.WriteByte(bottons)
-	buf.Write(typeBytes[:])
-	var payload [32]byte
+
+	var payload models.Payload
 	copy(payload[:], buf.Bytes())
 	return payload
 }
 
-func DeserializeFlightCommand(payload [32]byte) models.FlightCommands {
-	buttons := BoolArrayFromByte(payload[28])
+func DeserializeFlightCommand(payload models.Payload) models.FlightCommands {
+	buttons := BoolArrayFromByte(payload[29])
 	return models.FlightCommands{
-		Id:                UInt32FromBytes(SliceToArray4(payload[0:4])),
-		Time:              Int64FromBytes(SliceToArray8(payload[4:12])),
-		Roll:              Float32FromBytes(SliceToArray4(payload[12:16])),
-		Pitch:             Float32FromBytes(SliceToArray4(payload[16:20])),
-		Yaw:               Float32FromBytes(SliceToArray4(payload[20:24])),
-		Throttle:          Float32FromBytes(SliceToArray4(payload[24:28])),
+		PayloadType:       payload[0],
+		Id:                UInt32FromBytes(SliceToArray4(payload[1:5])),
+		Time:              Int64FromBytes(SliceToArray8(payload[5:13])),
+		Roll:              Float32FromBytes(SliceToArray4(payload[13:17])),
+		Pitch:             Float32FromBytes(SliceToArray4(payload[17:21])),
+		Yaw:               Float32FromBytes(SliceToArray4(payload[21:25])),
+		Throttle:          Float32FromBytes(SliceToArray4(payload[25:29])),
 		ButtonFrontLeft:   buttons[0],
 		ButtonFrontRight:  buttons[1],
 		ButtonTopLeft:     buttons[2],
 		ButtonTopRight:    buttons[3],
 		ButtonBottomLeft:  buttons[4],
 		ButtonBottomRight: buttons[5],
-		Type:              payload[29],
 	}
 }
