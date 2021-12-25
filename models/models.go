@@ -21,7 +21,7 @@ type ImuRotations struct {
 }
 
 type FlightCommands struct {
-	Type              byte
+	PayloadType       byte
 	Id                uint32
 	Time              int64
 	Roll              float32
