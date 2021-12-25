@@ -122,7 +122,6 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 	if available {
 		r.connectionState = CONNECTED
 		r.lastReceivedHeartBeat = time.Now()
-		log.Printf("data: %d\n", payloadType)
 		if payloadType == RECEIVER_OFF {
 			r.connectionState = DISCONNECTED
 		}
