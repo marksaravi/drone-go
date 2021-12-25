@@ -13,7 +13,8 @@ import (
 type ConnectionState = int
 
 const (
-	CONNECTED ConnectionState = iota
+	IDLE ConnectionState = iota
+	CONNECTED
 	DISCONNECTED
 	LOST
 )
@@ -45,7 +46,7 @@ func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 		connection:            make(chan ConnectionState),
 		radio:                 radio,
 		heartBeatTimeout:      heartBeatTimeout,
-		connectionState:       DISCONNECTED,
+		connectionState:       IDLE,
 		lastSentHeartBeat:     hearBeatInit,
 		lastReceivedHeartBeat: hearBeatInit,
 	}
@@ -88,9 +89,6 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
 				}
 			default:
-				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-					r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
-				}
 			}
 
 			select {
@@ -105,6 +103,11 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 			}
 
+			if running {
+				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+					r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
+				}
+			}
 		}
 	}()
 }
@@ -123,6 +126,7 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 		}
 	}
 	if prevState != r.connectionState {
+		log.Println("From ", prevState, " to ", r.connectionState)
 		r.connection <- r.connectionState
 	}
 }

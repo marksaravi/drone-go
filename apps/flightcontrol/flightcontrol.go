@@ -63,7 +63,14 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case connectionState, connectionChanOpen = <-fc.radio.GetConnection():
 				if connectionChanOpen {
-					log.Println("Connected: ", connectionState)
+					switch connectionState {
+					case radio.CONNECTED:
+						log.Println("Connected")
+					case radio.DISCONNECTED:
+						log.Println("Disconnected")
+					case radio.LOST:
+						log.Println("Lost")
+					}
 				}
 			default:
 			}
