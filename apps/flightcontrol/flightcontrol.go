@@ -50,7 +50,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		var flightCommands models.FlightCommands
 		var connectionChanOpen bool = true
-		var connected int = radio.DISCONNECTED
+		var connectionState radio.ConnectionState = radio.DISCONNECTED
 		var receiverChanOpen bool = true
 		var running bool = true
 		fc.imu.ResetTime()
@@ -61,9 +61,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 
 			select {
-			case connected, connectionChanOpen = <-fc.radio.GetConnection():
+			case connectionState, connectionChanOpen = <-fc.radio.GetConnection():
 				if connectionChanOpen {
-					log.Println("Connected: ", connected)
+					log.Println("Connected: ", connectionState)
 				}
 			default:
 			}

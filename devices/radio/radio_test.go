@@ -47,7 +47,7 @@ func TestConnectedToDisconnectByReceiverOff(t *testing.T) {
 
 func TestConnectedToLostByTimeout(t *testing.T) {
 	timeoutMS := 500
-	r := NewRadio(nil, 500)
+	r := NewRadio(nil, timeoutMS)
 	r.connectionState = CONNECTED
 	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
 	go func() {
