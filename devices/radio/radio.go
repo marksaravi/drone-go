@@ -79,6 +79,8 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 						flightCommands := utils.DeserializeFlightCommand(payload)
 						r.receiver <- flightCommands
 					}
+				} else {
+					r.setConnectionState(false, NO_PAYLOAD)
 				}
 			}
 
@@ -95,7 +97,10 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case <-ctx.Done():
 				if running {
 					log.Println("Closing receiver and connection")
-					r.transmitPayload(genPayload(RECEIVER_OFF))
+					for i := 0; i < 3; i++ {
+						r.transmitPayload(genPayload(RECEIVER_OFF))
+						time.Sleep(50)
+					}
 					close(r.receiver)
 					close(r.connection)
 					running = false
@@ -117,6 +122,7 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 	if available {
 		r.connectionState = CONNECTED
 		r.lastReceivedHeartBeat = time.Now()
+		log.Printf("data: %d\n", payloadType)
 		if payloadType == RECEIVER_OFF {
 			r.connectionState = DISCONNECTED
 		}
