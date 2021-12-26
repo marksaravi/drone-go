@@ -23,7 +23,6 @@ func WaitToAbortByENTER(ctx context.Context, cancel context.CancelFunc, wg *sync
 		}
 	}()
 	go func(cancel context.CancelFunc) {
-		defer wg.Done()
 		defer log.Println("Aborting by user ENTER")
 		fmt.Scanln()
 		cancel()
