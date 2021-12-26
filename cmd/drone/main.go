@@ -44,7 +44,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	utils.WaitToAbortByENTER(ctx, cancel, &wg)
+	utils.WaitToAbortByENTER(cancel)
 	radioDev.Start(ctx, &wg)
 	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)

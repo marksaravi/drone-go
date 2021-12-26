@@ -65,7 +65,7 @@ func newLogger(
 	return &logger
 }
 
-func (l *udpLogger) send(imuRotations models.ImuRotations) {
+func (l *udpLogger) sendUDP(imuRotations models.ImuRotations) {
 	data := imuDataToBytes(imuRotations)
 	l.buffer.Write(data)
 	l.bufferCounter++
@@ -132,7 +132,9 @@ func (l *udpLogger) Send(data models.ImuRotations) {
 		return
 	}
 	if l.dataChannel != nil {
-		l.dataChannel <- data
+		go func() {
+			l.dataChannel <- data
+		}()
 	}
 }
 
@@ -151,7 +153,7 @@ func (l *udpLogger) Start(wg *sync.WaitGroup) {
 		var imuData models.ImuRotations
 		for loggerChanOpen {
 			imuData, loggerChanOpen = <-l.dataChannel
-			l.send(imuData)
+			l.sendUDP(imuData)
 		}
 	}()
 }
