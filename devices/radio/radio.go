@@ -154,6 +154,7 @@ func (r *radioDevice) clearBuffer() {
 }
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
+	data.PayloadType = DATA_PAYLOAD
 	r.transmitter <- data
 }
 

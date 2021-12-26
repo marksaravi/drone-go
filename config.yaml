@@ -60,7 +60,7 @@ flight-control:
   power-breaker: 'GPIO17'
 
 remote-control:
-  command-per-sec: 40
+  command-per-sec: 25
   joysticks:
     roll:
       channel: 4
