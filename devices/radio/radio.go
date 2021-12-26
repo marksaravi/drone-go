@@ -32,6 +32,7 @@ type radioDevice struct {
 	connection            chan ConnectionState
 	radio                 models.RadioLink
 	connectionState       ConnectionState
+	ConnectionStateLock   sync.Mutex
 	lastSentHeartBeat     time.Time
 	lastReceivedHeartBeat time.Time
 	heartBeatTimeout      time.Duration
@@ -120,6 +121,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
+	r.ConnectionStateLock.Lock()
+	defer r.ConnectionStateLock.Unlock()
+
 	prevState := r.connectionState
 	if available {
 		r.connectionState = CONNECTED
@@ -138,7 +142,10 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 }
 
 func (r *radioDevice) SuppressLostConnection() {
-	log.Println("suppressing lost connection...")
+	go func() {
+		log.Println("suppressing lost connection...")
+		r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
+	}()
 }
 func (r *radioDevice) clearBuffer() {
 	for i := 0; i < 10; i++ {
