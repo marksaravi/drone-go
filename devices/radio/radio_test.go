@@ -51,7 +51,7 @@ func TestConnectedToDisconnectByReceiverOff(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, RECEIVER_OFF)
+	r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
 	if r.connectionState != DISCONNECTED {
 		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
 	}
@@ -93,7 +93,7 @@ func TestLostToDisconnectByData(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, RECEIVER_OFF)
+	r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
 	if r.connectionState != DISCONNECTED {
 		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
 	}

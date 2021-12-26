@@ -22,20 +22,22 @@ type joystick interface {
 var id uint32 = 0
 
 type remoteControl struct {
-	commandPerSecond int
-	radio            models.Radio
-	roll             joystick
-	pitch            joystick
-	yaw              joystick
-	throttle         joystick
-	btnFrontLeft     button
-	btnFrontRight    button
-	btnTopLeft       button
-	btnTopRight      button
-	btnBottomLeft    button
-	btnBottomRight   button
-	buzzer           *piezobuzzer.Buzzer
-	connectionState  radio.ConnectionState
+	commandPerSecond                int
+	radio                           models.Radio
+	roll                            joystick
+	pitch                           joystick
+	yaw                             joystick
+	throttle                        joystick
+	btnFrontLeft                    button
+	btnFrontRight                   button
+	btnTopLeft                      button
+	btnTopRight                     button
+	btnBottomLeft                   button
+	btnBottomRight                  button
+	buzzer                          *piezobuzzer.Buzzer
+	connectionState                 radio.ConnectionState
+	shutdownCountdown               time.Time
+	suppressLostConnectionCountdown time.Time
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
@@ -82,7 +84,7 @@ func NewRemoteControl(
 	}
 }
 
-func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
+func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel context.CancelFunc) {
 	wg.Add(1)
 
 	go func() {
@@ -102,7 +104,10 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		for running || connectionChanOpen || receiverChanOpen {
 			if running && time.Since(lastReading) >= commandInterval {
 				lastReading = time.Now()
-				rc.radio.Transmit(rc.read())
+				fc := rc.read()
+				rc.radio.Transmit(fc)
+				rc.shutdownPressed(fc.ButtonBottomRight, cancel)
+				rc.suppressLostConnectionPressed(fc.ButtonBottomLeft)
 			}
 
 			select {

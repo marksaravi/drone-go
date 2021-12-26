@@ -23,7 +23,7 @@ const (
 	NO_PAYLOAD byte = iota
 	DATA_PAYLOAD
 	HEARTBEAT_PAYLOAD
-	RECEIVER_OFF
+	RECEIVER_OFF_PAYLOAD
 )
 
 type radioDevice struct {
@@ -32,6 +32,7 @@ type radioDevice struct {
 	connection            chan ConnectionState
 	radio                 models.RadioLink
 	connectionState       ConnectionState
+	ConnectionStateLock   sync.Mutex
 	lastSentHeartBeat     time.Time
 	lastReceivedHeartBeat time.Time
 	heartBeatTimeout      time.Duration
@@ -99,7 +100,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running {
 					log.Println("Closing receiver and connection")
 					for i := 0; i < 3; i++ {
-						r.transmitPayload(genPayload(RECEIVER_OFF))
+						r.transmitPayload(genPayload(RECEIVER_OFF_PAYLOAD))
 						time.Sleep(time.Millisecond * 50)
 					}
 					time.Sleep(time.Millisecond * 100)
@@ -120,11 +121,14 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
+	r.ConnectionStateLock.Lock()
+	defer r.ConnectionStateLock.Unlock()
+
 	prevState := r.connectionState
 	if available {
 		r.connectionState = CONNECTED
 		r.lastReceivedHeartBeat = time.Now()
-		if payloadType == RECEIVER_OFF {
+		if payloadType == RECEIVER_OFF_PAYLOAD {
 			r.connectionState = DISCONNECTED
 		}
 	} else {
@@ -133,11 +137,16 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 		}
 	}
 	if prevState != r.connectionState {
-		log.Println("From ", prevState, " to ", r.connectionState)
 		r.connection <- r.connectionState
 	}
 }
 
+func (r *radioDevice) SuppressLostConnection() {
+	go func() {
+		log.Println("suppressing lost connection...")
+		r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
+	}()
+}
 func (r *radioDevice) clearBuffer() {
 	for i := 0; i < 10; i++ {
 		r.radio.Receive()

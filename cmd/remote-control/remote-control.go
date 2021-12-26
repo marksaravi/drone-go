@@ -98,8 +98,8 @@ func main() {
 	var waitGroup sync.WaitGroup
 
 	radioDev.Start(ctx, &waitGroup)
-	remoteControl.Start(ctx, &waitGroup)
-	utils.WaitToAbortByENTER(cancel, &waitGroup)
+	remoteControl.Start(ctx, &waitGroup, cancel)
+	utils.WaitToAbortByENTER(ctx, cancel, &waitGroup)
 	waitGroup.Wait()
 	log.Println("Remote Control stopped")
 }
