@@ -50,6 +50,7 @@ type Radio interface {
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan int
 	CloseTransmitter()
+	SuppressLostConnection()
 }
 
 type Logger interface {

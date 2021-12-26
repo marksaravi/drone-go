@@ -22,21 +22,22 @@ type joystick interface {
 var id uint32 = 0
 
 type remoteControl struct {
-	commandPerSecond  int
-	radio             models.Radio
-	roll              joystick
-	pitch             joystick
-	yaw               joystick
-	throttle          joystick
-	btnFrontLeft      button
-	btnFrontRight     button
-	btnTopLeft        button
-	btnTopRight       button
-	btnBottomLeft     button
-	btnBottomRight    button
-	buzzer            *piezobuzzer.Buzzer
-	connectionState   radio.ConnectionState
-	shutdownCountdown time.Time
+	commandPerSecond                int
+	radio                           models.Radio
+	roll                            joystick
+	pitch                           joystick
+	yaw                             joystick
+	throttle                        joystick
+	btnFrontLeft                    button
+	btnFrontRight                   button
+	btnTopLeft                      button
+	btnTopRight                     button
+	btnBottomLeft                   button
+	btnBottomRight                  button
+	buzzer                          *piezobuzzer.Buzzer
+	connectionState                 radio.ConnectionState
+	shutdownCountdown               time.Time
+	suppressLostConnectionCountdown time.Time
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
@@ -105,7 +106,8 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 				lastReading = time.Now()
 				fc := rc.read()
 				rc.radio.Transmit(fc)
-				rc.processShutdownPressed(fc.ButtonBottomRight, cancel)
+				rc.shutdownPressed(fc.ButtonBottomRight, cancel)
+				rc.suppressLostConnectionPressed(fc.ButtonBottomLeft)
 			}
 
 			select {
