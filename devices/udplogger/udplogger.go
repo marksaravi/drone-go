@@ -25,7 +25,6 @@ type udpLogger struct {
 	dataPerPacket    int
 	bufferCounter    int
 	dataChannel      chan models.ImuRotations
-	dataChannelLock  sync.Mutex
 }
 
 func newLogger(
@@ -122,28 +121,16 @@ func NewUdpLogger() *udpLogger {
 }
 
 func (l *udpLogger) Close() {
-	if !l.enabled {
-		return
+	if l.enabled {
+		close(l.dataChannel)
+		l.dataChannel = nil
 	}
-	l.dataChannelLock.Lock()
-	close(l.dataChannel)
-	l.dataChannelLock.Unlock()
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
-	if !l.enabled {
-		return
+	if !l.enabled && l.dataChannel != nil {
+		l.dataChannel <- data
 	}
-
-	go func() {
-		l.dataChannelLock.Lock()
-		defer l.dataChannelLock.Unlock()
-
-		if l.dataChannel != nil {
-			l.dataChannel <- data
-		}
-	}()
-
 }
 
 func (l *udpLogger) Start(wg *sync.WaitGroup) {
