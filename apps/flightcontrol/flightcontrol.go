@@ -50,16 +50,16 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
-		var transmitterOpen bool = true
+		var running bool = true
 
 		fc.imu.ResetTime()
-		for transmitterOpen || connectionChanOpen || commandChanOpen {
+		for running || connectionChanOpen || commandChanOpen {
 			select {
 			case <-ctx.Done():
-				if transmitterOpen {
+				if running {
 					fc.radio.CloseTransmitter()
 					fc.logger.Close()
-					transmitterOpen = false
+					running = false
 				}
 
 			case flightCommands, ok := <-fc.radio.GetReceiver():
@@ -77,7 +77,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 			}
 
-			if commandChanOpen {
+			if running && commandChanOpen {
 				rotations, imuDataAvailable := fc.imu.ReadRotations()
 				if imuDataAvailable {
 					fc.logger.Send(rotations)
