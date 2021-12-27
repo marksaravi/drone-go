@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type imu interface {
@@ -48,54 +48,61 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
 
-		var flightCommands models.FlightCommands
+		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
-		var connectionState radio.ConnectionState = radio.DISCONNECTED
-		var receiverChanOpen bool = true
-		var running bool = true
+		var transmitterOpen bool = true
+
 		fc.imu.ResetTime()
-		for running || connectionChanOpen || receiverChanOpen {
-			rotations, imuDataAvailable := fc.imu.ReadRotations()
-			if running && imuDataAvailable {
-				fc.logger.Send(rotations)
-			}
-
-			select {
-			case connectionState, connectionChanOpen = <-fc.radio.GetConnection():
-				if connectionChanOpen {
-					switch connectionState {
-					case radio.CONNECTED:
-						log.Println("Connected")
-					case radio.DISCONNECTED:
-						log.Println("Disconnected")
-					case radio.LOST:
-						log.Println("Lost")
-					}
-				}
-			default:
-			}
-
-			select {
-			case flightCommands, receiverChanOpen = <-fc.radio.GetReceiver():
-				if receiverChanOpen {
-					utils.SerializeFlightCommand(flightCommands)
-				}
-			default:
-			}
-
+		for transmitterOpen || connectionChanOpen || commandChanOpen {
 			select {
 			case <-ctx.Done():
-				if running {
+				if transmitterOpen {
 					fc.radio.CloseTransmitter()
 					fc.logger.Close()
-					running = false
+					transmitterOpen = false
 				}
+
+			case flightCommands, ok := <-fc.radio.GetReceiver():
+				if ok {
+					showFlightCommands(flightCommands)
+				}
+				commandChanOpen = ok
+
+			case connectionState, ok := <-fc.radio.GetConnection():
+				if ok {
+					showConnectionState(connectionState)
+				}
+				connectionChanOpen = ok
+
 			default:
+			}
+
+			if commandChanOpen {
+				rotations, imuDataAvailable := fc.imu.ReadRotations()
+				if imuDataAvailable {
+					fc.logger.Send(rotations)
+				}
 			}
 		}
 	}()
 }
 
-func showFLightCommands(fc models.FlightCommands) {
-	log.Printf("%8.2f, %8.2f, %t, %t", fc.Roll, fc.Pitch, fc.ButtonFrontLeft, fc.ButtonTopLeft)
+func showConnectionState(connectionState radio.ConnectionState) {
+	switch connectionState {
+	case radio.CONNECTED:
+		log.Println("Connected")
+	case radio.DISCONNECTED:
+		log.Println("Disconnected")
+	case radio.LOST:
+		log.Println("Lost")
+	}
+}
+
+var lastShowFlightCommands time.Time
+
+func showFlightCommands(fc models.FlightCommands) {
+	if time.Since(lastShowFlightCommands) >= time.Second/2 {
+		lastShowFlightCommands = time.Now()
+		log.Printf("%8.2f, %8.2f, %8.2f, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc, fc.Yaw, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
+	}
 }
