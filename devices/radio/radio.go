@@ -118,7 +118,7 @@ func (r *radioDevice) receivePayload() {
 }
 
 func (r *radioDevice) sendHeartbeat() {
-	if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
+	if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/4 {
 		r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
 	}
 }
