@@ -91,48 +91,40 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		log.Println("Waiting for connection...")
+		// log.Println("Waiting for connection...")
 		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
+
+		var receiverChanOpen bool = true
+		var connectionChanOpen bool = true
+		var transmitterOpen bool = true
 		var lastReading time.Time = time.Now()
 
-		var connectionState radio.ConnectionState
-		var connectionChanOpen bool = true
-		var flightCommands models.FlightCommands
-		var receiverChanOpen bool = true
-		var running bool = true
+		for transmitterOpen || connectionChanOpen || receiverChanOpen {
+			select {
+			case <-ctx.Done():
+				if transmitterOpen {
+					rc.radio.CloseTransmitter()
+					transmitterOpen = false
+				}
 
-		for running || connectionChanOpen || receiverChanOpen {
-			if running && time.Since(lastReading) >= commandInterval {
+			case _, ok := <-rc.radio.GetReceiver():
+				receiverChanOpen = ok
+
+			case connectionState, ok := <-rc.radio.GetConnection():
+				if ok {
+					rc.setRadioConnectionState(connectionState)
+				}
+				connectionChanOpen = ok
+
+			default:
+			}
+
+			if transmitterOpen && time.Since(lastReading) >= commandInterval {
 				lastReading = time.Now()
 				fc := rc.read()
 				rc.radio.Transmit(fc)
 				rc.shutdownPressed(fc.ButtonBottomRight, cancel)
 				rc.suppressLostConnectionPressed(fc.ButtonBottomLeft)
-			}
-
-			select {
-			case flightCommands, receiverChanOpen = <-rc.radio.GetReceiver():
-				if receiverChanOpen {
-					log.Println("flight command: ", flightCommands.PayloadType)
-				}
-			default:
-			}
-
-			select {
-			case connectionState, connectionChanOpen = <-rc.radio.GetConnection():
-				if connectionChanOpen {
-					rc.setRadioConnectionState(connectionState)
-				}
-			default:
-			}
-
-			select {
-			case <-ctx.Done():
-				if running {
-					rc.radio.CloseTransmitter()
-					running = false
-				}
-			default:
 			}
 		}
 	}()
