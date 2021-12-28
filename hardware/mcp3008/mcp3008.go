@@ -1,20 +1,18 @@
 package mcp3008
 
 import (
-	"log"
-
 	"periph.io/x/periph/conn/spi"
 )
 
 type mcp3008dev struct {
 	spiConn       spi.Conn
 	channel       int
-	valueRange    byte
+	valueRange    uint16
 	digitalOffset uint16
-	value         byte
+	value         uint16
 }
 
-func NewMCP3008(spiConn spi.Conn, channel int, valueRange byte, digitalOffset uint16) *mcp3008dev {
+func NewMCP3008(spiConn spi.Conn, channel int, valueRange uint16, digitalOffset uint16) *mcp3008dev {
 	return &mcp3008dev{
 		spiConn:       spiConn,
 		channel:       channel,
@@ -23,7 +21,7 @@ func NewMCP3008(spiConn spi.Conn, channel int, valueRange byte, digitalOffset ui
 	}
 }
 
-func (dev *mcp3008dev) Read() byte {
+func (dev *mcp3008dev) Read() uint16 {
 	ch := byte(dev.channel)
 	if ch > 7 {
 		ch = 0
@@ -35,7 +33,6 @@ func (dev *mcp3008dev) Read() byte {
 	if err != nil {
 		return dev.value
 	}
-	digitalValue = digitalValue - dev.digitalOffset
-	log.Println(digitalValue)
+	dev.value = digitalValue - dev.digitalOffset
 	return dev.value
 }

@@ -16,7 +16,7 @@ type button interface {
 }
 
 type joystick interface {
-	Read() byte
+	Read() uint16
 }
 
 type remoteControl struct {
@@ -40,10 +40,10 @@ type remoteControl struct {
 
 func (rc *remoteControl) read() models.FlightCommands {
 	return models.FlightCommands{
-		Roll:              rc.roll.Read(),
-		Pitch:             rc.pitch.Read(),
-		Yaw:               rc.yaw.Read(),
-		Throttle:          rc.throttle.Read(),
+		Roll:              uint8(rc.roll.Read()),
+		Pitch:             uint8(rc.pitch.Read()),
+		Yaw:               uint8(rc.yaw.Read()),
+		Throttle:          uint8(rc.throttle.Read()),
 		ButtonFrontLeft:   rc.btnFrontLeft.Read(),
 		ButtonFrontRight:  rc.btnFrontRight.Read(),
 		ButtonTopLeft:     rc.btnTopLeft.Read(),

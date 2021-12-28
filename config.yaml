@@ -74,6 +74,7 @@ remote-control:
     throttle:
       channel: 5
       digital-offset: 0
+    digital-range: 1024
     value-range: 250
     spi:
       bus-number: 0
