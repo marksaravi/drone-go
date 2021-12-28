@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
@@ -23,7 +22,6 @@ func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
 	configs := config.ReadConfigs().RemoteControl
-	fmt.Println(configs)
 	radioConfigs := configs.Radio
 	joysticksConfigs := configs.Joysticks
 	buttonsConfis := configs.Buttons
@@ -44,24 +42,28 @@ func main() {
 	xAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		joysticksConfigs.VRef,
+		joysticksConfigs.Range,
 		joysticksConfigs.Roll.Channel,
 		joysticksConfigs.Roll.ZeroOffset,
 	)
 	yAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		joysticksConfigs.VRef,
+		joysticksConfigs.Range,
 		joysticksConfigs.Pitch.Channel,
 		joysticksConfigs.Pitch.ZeroOffset,
 	)
 	zAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		joysticksConfigs.VRef,
+		joysticksConfigs.Range,
 		joysticksConfigs.Yaw.Channel,
 		joysticksConfigs.Yaw.ZeroOffset,
 	)
 	throttleAlogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		joysticksConfigs.VRef,
+		joysticksConfigs.Range,
 		joysticksConfigs.Throttle.Channel,
 		joysticksConfigs.Throttle.ZeroOffset,
 	)

@@ -76,6 +76,7 @@ type remoteControl struct {
 		Yaw      joystick  `yaml:"yaw"`
 		Throttle joystick  `yaml:"throttle"`
 		VRef     float32   `yaml:"v-ref"`
+		Range    byte      `yaml:"range"`
 		SPI      spiConfig `yaml:"spi"`
 	} `yaml:"joysticks"`
 	Buttons struct {

@@ -75,6 +75,7 @@ remote-control:
       channel: 5
       zero-offset: 0
     v-ref: 5
+    range: 250
     spi:
       bus-number: 0
       chip-select: 0

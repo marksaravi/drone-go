@@ -5,19 +5,21 @@ import (
 )
 
 type mcp3008dev struct {
-	spiConn   spi.Conn
-	channel   int
-	vRef      float32
-	zeroValue float32
-	voltage   float32
+	spiConn    spi.Conn
+	channel    int
+	vRef       float32
+	valueRange byte
+	zeroValue  float32
+	value      byte
 }
 
-func NewMCP3008(spiConn spi.Conn, vRef float32, channel int, zeroValue float32) *mcp3008dev {
+func NewMCP3008(spiConn spi.Conn, vRef float32, valueRange byte, channel int, zeroValue float32) *mcp3008dev {
 	return &mcp3008dev{
-		spiConn:   spiConn,
-		channel:   channel,
-		vRef:      vRef,
-		zeroValue: zeroValue,
+		spiConn:    spiConn,
+		channel:    channel,
+		vRef:       vRef,
+		valueRange: valueRange,
+		zeroValue:  zeroValue,
 	}
 }
 
@@ -31,8 +33,13 @@ func (dev *mcp3008dev) Read() byte {
 	err := dev.spiConn.Tx(w, r)
 	var digitalValue uint16 = uint16(r[2]) | (uint16(r[1]) << 8 & 0b0000001100000000)
 	if err != nil {
-		return byte(dev.voltage)
+		return dev.value
 	}
-	dev.voltage = (float32(digitalValue) / 1024 * dev.vRef) - dev.zeroValue
-	return byte(dev.voltage)
+	voltage := (float32(digitalValue) / 1024 * dev.vRef) - dev.zeroValue
+	if voltage < 0 {
+		voltage = 0
+	}
+	value := voltage / dev.vRef * float32(dev.valueRange)
+	dev.value = byte(value)
+	return dev.value
 }
