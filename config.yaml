@@ -64,16 +64,16 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      zero-value: 2.1582031250
+      zero-offset: 2.1582031250
     pitch:
       channel: 2
-      zero-value: 2.2656250000
+      zero-offset: 2.2656250000
     yaw:
       channel: 3
-      zero-value: 2.2119140625
+      zero-offset: 2.2119140625
     throttle:
       channel: 5
-      zero-value: 0
+      zero-offset: 0
     v-ref: 5
     spi:
       bus-number: 0

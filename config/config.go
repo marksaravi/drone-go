@@ -64,8 +64,8 @@ type flightControl struct {
 }
 
 type joystick struct {
-	Channel   int     `yaml:"channel"`
-	ZeroValue float32 `yaml:"zero-value"`
+	Channel    int     `yaml:"channel"`
+	ZeroOffset float32 `yaml:"zero-offset"`
 }
 
 type remoteControl struct {
