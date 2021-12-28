@@ -64,8 +64,8 @@ type flightControl struct {
 }
 
 type joystick struct {
-	Channel       int    `yaml:"channel"`
-	DigitalOffset uint16 `yaml:"digital-offset"`
+	Channel  int    `yaml:"channel"`
+	MidValue uint16 `yaml:"mid-value"`
 }
 
 type remoteControl struct {

@@ -64,16 +64,16 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      digital-offset: 0
+      mid-value: 0
     pitch:
       channel: 2
-      digital-offset: 0
+      mid-value: 0
     yaw:
       channel: 3
-      digital-offset: 0
+      mid-value: 0
     throttle:
       channel: 5
-      digital-offset: 0
+      mid-value: 0
     digital-range: 1024
     value-range: 250
     spi:

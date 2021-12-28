@@ -39,17 +39,28 @@ type remoteControl struct {
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
+	roll := rc.roll.Read()
+	pitch := rc.pitch.Read()
+	yaw := rc.yaw.Read()
+	throttle := rc.throttle.Read()
+	buttonFrontLeft := rc.btnFrontLeft.Read()
+	buttonFrontRight := rc.btnFrontRight.Read()
+	buttonTopLeft := rc.btnTopLeft.Read()
+	buttonTopRight := rc.btnTopRight.Read()
+	buttonBottomLeft := rc.btnBottomLeft.Read()
+	buttonBottomRight := rc.btnBottomRight.Read()
+
 	return models.FlightCommands{
-		Roll:              uint8(rc.roll.Read()),
-		Pitch:             uint8(rc.pitch.Read()),
-		Yaw:               uint8(rc.yaw.Read()),
-		Throttle:          uint8(rc.throttle.Read()),
-		ButtonFrontLeft:   rc.btnFrontLeft.Read(),
-		ButtonFrontRight:  rc.btnFrontRight.Read(),
-		ButtonTopLeft:     rc.btnTopLeft.Read(),
-		ButtonTopRight:    rc.btnTopRight.Read(),
-		ButtonBottomLeft:  rc.btnBottomLeft.Read(),
-		ButtonBottomRight: rc.btnBottomRight.Read(),
+		Roll:              uint8(roll),
+		Pitch:             uint8(pitch),
+		Yaw:               uint8(yaw),
+		Throttle:          uint8(throttle),
+		ButtonFrontLeft:   buttonFrontLeft,
+		ButtonFrontRight:  buttonFrontRight,
+		ButtonTopLeft:     buttonTopLeft,
+		ButtonTopRight:    buttonTopRight,
+		ButtonBottomLeft:  buttonBottomLeft,
+		ButtonBottomRight: buttonBottomRight,
 	}
 }
 
