@@ -5,23 +5,25 @@ import (
 )
 
 type mcp3008dev struct {
-	spiConn       spi.Conn
-	channel       int
-	valueRange    uint16
-	digitalOffset uint16
-	value         uint16
+	spiConn      spi.Conn
+	channel      int
+	valueRange   int
+	digitalRange int
+	midValue     int
+	value        int
 }
 
-func NewMCP3008(spiConn spi.Conn, channel int, valueRange uint16, digitalOffset uint16) *mcp3008dev {
+func NewMCP3008(spiConn spi.Conn, channel int, valueRange int, digitalRange int, midValue int) *mcp3008dev {
 	return &mcp3008dev{
-		spiConn:       spiConn,
-		channel:       channel,
-		valueRange:    valueRange,
-		digitalOffset: digitalOffset,
+		spiConn:      spiConn,
+		channel:      channel,
+		valueRange:   valueRange,
+		digitalRange: digitalRange,
+		midValue:     midValue,
 	}
 }
 
-func (dev *mcp3008dev) Read() uint16 {
+func (dev *mcp3008dev) Read() int {
 	ch := byte(dev.channel)
 	if ch > 7 {
 		ch = 0
@@ -33,6 +35,6 @@ func (dev *mcp3008dev) Read() uint16 {
 	if err != nil {
 		return dev.value
 	}
-	dev.value = digitalValue - dev.digitalOffset
+	dev.value = int(digitalValue) - dev.midValue
 	return dev.value
 }

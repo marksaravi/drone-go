@@ -64,13 +64,13 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      mid-value: 0
+      mid-value: -49
     pitch:
       channel: 2
-      mid-value: 0
+      mid-value: -27
     yaw:
       channel: 3
-      mid-value: 0
+      mid-value: -37
     throttle:
       channel: 5
       mid-value: 0

@@ -1,15 +1,15 @@
 package devices
 
 type analogtodigital interface {
-	Read() uint16
+	Read() int
 }
 
 type joystickInput struct {
 	input analogtodigital
-	value uint16
+	value int
 }
 
-func (js *joystickInput) Read() uint16 {
+func (js *joystickInput) Read() int {
 	js.value = js.input.Read()
 	return js.value
 }
