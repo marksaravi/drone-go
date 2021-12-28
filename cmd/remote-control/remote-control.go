@@ -41,31 +41,27 @@ func main() {
 	)
 	xAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		joysticksConfigs.VRef,
-		joysticksConfigs.Range,
 		joysticksConfigs.Roll.Channel,
-		joysticksConfigs.Roll.ZeroOffset,
+		joysticksConfigs.ValueRange,
+		joysticksConfigs.Roll.DigitalOffset,
 	)
 	yAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		joysticksConfigs.VRef,
-		joysticksConfigs.Range,
 		joysticksConfigs.Pitch.Channel,
-		joysticksConfigs.Pitch.ZeroOffset,
+		joysticksConfigs.ValueRange,
+		joysticksConfigs.Pitch.DigitalOffset,
 	)
 	zAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		joysticksConfigs.VRef,
-		joysticksConfigs.Range,
 		joysticksConfigs.Yaw.Channel,
-		joysticksConfigs.Yaw.ZeroOffset,
+		joysticksConfigs.ValueRange,
+		joysticksConfigs.Yaw.DigitalOffset,
 	)
 	throttleAlogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
-		joysticksConfigs.VRef,
-		joysticksConfigs.Range,
 		joysticksConfigs.Throttle.Channel,
-		joysticksConfigs.Throttle.ZeroOffset,
+		joysticksConfigs.ValueRange,
+		joysticksConfigs.Throttle.DigitalOffset,
 	)
 	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor)
 	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor)

@@ -64,20 +64,19 @@ type flightControl struct {
 }
 
 type joystick struct {
-	Channel    int     `yaml:"channel"`
-	ZeroOffset float32 `yaml:"zero-offset"`
+	Channel       int    `yaml:"channel"`
+	DigitalOffset uint16 `yaml:"digital-offset"`
 }
 
 type remoteControl struct {
 	CommandPerSecond int `yaml:"command-per-sec"`
 	Joysticks        struct {
-		Roll     joystick  `yaml:"roll"`
-		Pitch    joystick  `yaml:"pitch"`
-		Yaw      joystick  `yaml:"yaw"`
-		Throttle joystick  `yaml:"throttle"`
-		VRef     float32   `yaml:"v-ref"`
-		Range    byte      `yaml:"range"`
-		SPI      spiConfig `yaml:"spi"`
+		Roll       joystick  `yaml:"roll"`
+		Pitch      joystick  `yaml:"pitch"`
+		Yaw        joystick  `yaml:"yaw"`
+		Throttle   joystick  `yaml:"throttle"`
+		ValueRange byte      `yaml:"value-range"`
+		SPI        spiConfig `yaml:"spi"`
 	} `yaml:"joysticks"`
 	Buttons struct {
 		FrontLeft   string `yaml:"front-left"`
