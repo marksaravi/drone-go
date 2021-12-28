@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/marksaravi/drone-go/constants"
+)
 
 type XYZ struct {
 	X float64
@@ -21,13 +25,12 @@ type ImuRotations struct {
 }
 
 type FlightCommands struct {
-	PayloadType       byte
-	Id                uint32
-	Time              int64
-	Roll              float32
-	Pitch             float32
-	Yaw               float32
-	Throttle          float32
+	PayloadType       uint8
+	Id                uint8
+	Roll              uint8
+	Pitch             uint8
+	Yaw               uint8
+	Throttle          uint8
 	ButtonFrontLeft   bool
 	ButtonFrontRight  bool
 	ButtonTopLeft     bool
@@ -36,7 +39,7 @@ type FlightCommands struct {
 	ButtonBottomRight bool
 }
 
-type Payload = [32]byte
+type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
 type RadioLink interface {
 	ReceiverOn()

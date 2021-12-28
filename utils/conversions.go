@@ -36,6 +36,10 @@ func UInt32FromBytes(bytes [4]byte) uint32 {
 	return binary.LittleEndian.Uint32(bytes[:])
 }
 
+func JoystickVoltageToByte(voltage float32) byte {
+	return byte(voltage / 5 * 255)
+}
+
 func Float32ToBytes(f float32) [4]byte {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.LittleEndian, f)

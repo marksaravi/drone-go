@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
@@ -62,7 +63,6 @@ const (
 )
 
 const ADDRESS_SIZE int = 5
-const PAYLOAD_SIZE byte = 32
 
 type radioMode int
 
@@ -223,7 +223,7 @@ func (radio *nrf204l01) Receive() (models.Payload, bool) {
 		return models.Payload{}, false
 	}
 	payload := models.Payload{}
-	data, err := readSPI(R_RX_PAYLOAD, int(PAYLOAD_SIZE), radio.conn)
+	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
 	copy(payload[:], data)
 	radio.resetDR()
 	if err != nil {
@@ -251,7 +251,7 @@ func (radio *nrf204l01) Transmit(payload models.Payload) error {
 	}
 	radio.ce.Out(gpio.Low)
 	radio.writeRegister(TX_ADDR, radio.address)
-	if len(payload) < int(PAYLOAD_SIZE) {
+	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
 	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
@@ -320,7 +320,7 @@ func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, erro
 func (radio *nrf204l01) setPayloadSize() {
 	var i byte
 	for i = 0; i < 6; i++ {
-		radio.writeRegisterByte(RX_PW_P0+i, PAYLOAD_SIZE)
+		radio.writeRegisterByte(RX_PW_P0+i, constants.RADIO_PAYLOAD_SIZE)
 	}
 }
 

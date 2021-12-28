@@ -19,8 +19,6 @@ type joystick interface {
 	Read() float32
 }
 
-var id uint32 = 0
-
 type remoteControl struct {
 	commandPerSecond                int
 	radio                           models.Radio
@@ -41,10 +39,7 @@ type remoteControl struct {
 }
 
 func (rc *remoteControl) read() models.FlightCommands {
-	id++
 	return models.FlightCommands{
-		Id:                id,
-		Time:              time.Now().UnixNano(),
 		Roll:              rc.roll.Read(),
 		Pitch:             rc.pitch.Read(),
 		Yaw:               rc.yaw.Read(),

@@ -30,11 +30,10 @@ func main() {
 	var id uint32 = 0
 	for range time.Tick(time.Millisecond * 20) {
 		flightCommands := models.FlightCommands{
-			Id:       id,
-			Roll:     roll,
-			Pitch:    -34.53,
+			Roll:     14,
+			Pitch:    15,
 			Yaw:      0,
-			Throttle: 13.45,
+			Throttle: 17,
 		}
 		id++
 		err := radio.Transmit(utils.SerializeFlightCommand(flightCommands))
