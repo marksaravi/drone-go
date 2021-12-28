@@ -21,7 +21,7 @@ func NewMCP3008(spiConn spi.Conn, vRef float32, channel int, zeroValue float32) 
 	}
 }
 
-func (dev *mcp3008dev) Read() float32 {
+func (dev *mcp3008dev) Read() byte {
 	ch := byte(dev.channel)
 	if ch > 7 {
 		ch = 0
@@ -31,8 +31,8 @@ func (dev *mcp3008dev) Read() float32 {
 	err := dev.spiConn.Tx(w, r)
 	var digitalValue uint16 = uint16(r[2]) | (uint16(r[1]) << 8 & 0b0000001100000000)
 	if err != nil {
-		return dev.voltage
+		return byte(dev.voltage)
 	}
 	dev.voltage = (float32(digitalValue) / 1024 * dev.vRef) - dev.zeroValue
-	return dev.voltage
+	return byte(dev.voltage)
 }

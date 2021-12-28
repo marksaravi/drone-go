@@ -1,15 +1,15 @@
 package devices
 
 type analogtodigital interface {
-	Read() float32
+	Read() byte
 }
 
 type joystickInput struct {
 	input analogtodigital
-	value float32
+	value byte
 }
 
-func (js *joystickInput) Read() float32 {
+func (js *joystickInput) Read() byte {
 	js.value = js.input.Read()
 	return js.value
 }
