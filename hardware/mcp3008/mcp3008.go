@@ -5,7 +5,6 @@ import (
 )
 
 const (
-	DIGITAL_MIN_VALUE uint16 = 0
 	DIGITAL_MAX_VALUE uint16 = 1024
 )
 
@@ -19,7 +18,7 @@ func NewMCP3008(spiConn spi.Conn, channel int, midValue int) *mcp3008dev {
 	return &mcp3008dev{
 		spiConn: spiConn,
 		channel: channel,
-		value:   DIGITAL_MIN_VALUE,
+		value:   0,
 	}
 }
 
