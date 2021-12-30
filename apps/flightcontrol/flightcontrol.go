@@ -103,6 +103,6 @@ var lastShowFlightCommands time.Time
 func showFlightCommands(fc models.FlightCommands) {
 	if time.Since(lastShowFlightCommands) >= time.Second/2 {
 		lastShowFlightCommands = time.Now()
-		log.Printf("%8.2f, %8.2f, %8.2f, %8.2f, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
+		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
 	}
 }
