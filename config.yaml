@@ -64,18 +64,17 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      mid-value: 463
+      mid-value: 462
     pitch:
       channel: 2
-      mid-value: 485
+      mid-value: 484
     yaw:
       channel: 3
-      mid-value: 475
+      mid-value: 472
     throttle:
       channel: 5
       mid-value: 0
-    digital-range: 1024
-    value-range: 250
+    max-value: 250
     spi:
       bus-number: 0
       chip-select: 0
