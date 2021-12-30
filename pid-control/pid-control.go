@@ -92,15 +92,11 @@ func (pid *pidControl) Throttles() map[uint8]float32 {
 	return pid.throttles
 }
 
-func convert(value float32, conversion analogToDigitalConversion) float64 {
-	return float64(value)*conversion.ratio + conversion.offset
-}
-
 func flightControlCommandToPIDCommand(c models.FlightCommands, conversions analogToDigitalConversions) pidCommands {
 	return pidCommands{
-		roll:     convert(c.Roll, conversions.roll),
-		pitch:    convert(c.Pitch, conversions.pitch),
-		yaw:      convert(c.Yaw, conversions.yaw),
-		throttle: convert(c.Throttle, conversions.throttle),
+		roll:     float64(c.Roll),
+		pitch:    float64(c.Pitch),
+		yaw:      float64(c.Yaw),
+		throttle: float64(c.Throttle),
 	}
 }

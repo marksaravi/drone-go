@@ -68,33 +68,10 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
+
 		var running bool = true
-		var transmitterChannelOpen bool = true
-		for running || transmitterChannelOpen {
-
-			if running {
-				payload, available := r.radio.Receive()
-				if available {
-					payloadType := payload[0]
-					r.setConnectionState(available, payloadType)
-					if payloadType == DATA_PAYLOAD {
-						flightCommands := utils.DeserializeFlightCommand(payload)
-						r.receiver <- flightCommands
-					}
-				} else {
-					r.setConnectionState(false, NO_PAYLOAD)
-				}
-			}
-
-			select {
-			case flightCommands, ok := <-r.transmitter:
-				transmitterChannelOpen = ok
-				if transmitterChannelOpen {
-					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
-				}
-			default:
-			}
-
+		var transmitterOpen bool = true
+		for running || transmitterOpen {
 			select {
 			case <-ctx.Done():
 				if running {
@@ -108,16 +85,42 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					close(r.connection)
 					running = false
 				}
+
+			case flightCommands, ok := <-r.transmitter:
+				if ok {
+					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
+				}
+				transmitterOpen = ok
+
 			default:
 			}
 
 			if running {
-				if transmitterChannelOpen && time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/2 {
-					r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
-				}
+				r.receivePayload()
+				r.sendHeartbeat()
 			}
 		}
 	}()
+}
+
+func (r *radioDevice) receivePayload() {
+	payload, available := r.radio.Receive()
+	if available {
+		payloadType := payload[0]
+		r.setConnectionState(available, payloadType)
+		if payloadType == DATA_PAYLOAD {
+			flightCommands := utils.DeserializeFlightCommand(payload)
+			r.receiver <- flightCommands
+		}
+	} else {
+		r.setConnectionState(false, NO_PAYLOAD)
+	}
+}
+
+func (r *radioDevice) sendHeartbeat() {
+	if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/4 {
+		r.transmitPayload(genPayload(HEARTBEAT_PAYLOAD))
+	}
 }
 
 func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
@@ -154,6 +157,7 @@ func (r *radioDevice) clearBuffer() {
 }
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
+	data.PayloadType = DATA_PAYLOAD
 	r.transmitter <- data
 }
 

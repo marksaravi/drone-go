@@ -60,21 +60,21 @@ flight-control:
   power-breaker: 'GPIO17'
 
 remote-control:
-  command-per-sec: 40
+  command-per-sec: 25
   joysticks:
     roll:
       channel: 4
-      zero-value: 2.1582031250
+      mid-value: 462
     pitch:
       channel: 2
-      zero-value: 2.2656250000
+      mid-value: 484
     yaw:
       channel: 3
-      zero-value: 2.2119140625
+      mid-value: 472
     throttle:
       channel: 5
-      zero-value: 0
-    v-ref: 5
+      mid-value: 0
+    max-value: 250
     spi:
       bus-number: 0
       chip-select: 0
