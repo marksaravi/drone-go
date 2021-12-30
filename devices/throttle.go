@@ -2,16 +2,18 @@ package devices
 
 type throttleInput struct {
 	input analogtodigital
-	value int
+	scale float64
 }
 
-func (js *throttleInput) Read() int {
-	digitalValue := js.input.Read()
-	return int(digitalValue)
+func (t *throttleInput) Read() uint16 {
+	digitalValue := t.input.Read()
+	return uint16(float64(digitalValue) * t.scale)
 }
 
-func NewThrottleInput(input analogtodigital) *throttleInput {
+func NewThrottle(input analogtodigital, digitalMaxValue uint16, maxValue uint16) *throttleInput {
+	scale := float64(maxValue) / float64(digitalMaxValue)
 	return &throttleInput{
 		input: input,
+		scale: scale,
 	}
 }

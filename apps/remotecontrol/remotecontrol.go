@@ -16,7 +16,7 @@ type button interface {
 }
 
 type joystick interface {
-	Read() int
+	Read() uint16
 }
 
 type remoteControl struct {

@@ -14,7 +14,7 @@ type mcp3008dev struct {
 	value   uint16
 }
 
-func NewMCP3008(spiConn spi.Conn, channel int, midValue int) *mcp3008dev {
+func NewMCP3008(spiConn spi.Conn, channel int) *mcp3008dev {
 	return &mcp3008dev{
 		spiConn: spiConn,
 		channel: channel,

@@ -4,25 +4,28 @@ import "math"
 
 type analogtodigital interface {
 	Read() uint16
-	GetDigitalMaxValue() uint16
 }
 
 type joystickInput struct {
 	input        analogtodigital
+	scale        float64
 	aCoefficient float64
 	bCoefficient float64
 }
 
-func (js *joystickInput) Read() int {
+func (js *joystickInput) Read() uint16 {
 	digitalValue := js.input.Read()
-	return int(digitalValue)
+	return calcValue(digitalValue, js.aCoefficient, js.bCoefficient, js.scale)
 }
 
-func NewJoystick(input analogtodigital, digitakMidValue uint16) *joystickInput {
-	calcCoefficients(digitakMidValue, input.GetDigitalMaxValue())
-
+func NewJoystick(input analogtodigital, digitalMaxValue uint16, digitakMidValue uint16, maxValue uint16) *joystickInput {
+	aCoefficient, bCoefficient := calcCoefficients(digitakMidValue, digitalMaxValue)
+	scale := float64(maxValue) / float64(digitalMaxValue)
 	return &joystickInput{
-		input: input,
+		input:        input,
+		scale:        scale,
+		aCoefficient: aCoefficient,
+		bCoefficient: bCoefficient,
 	}
 }
 
@@ -45,8 +48,8 @@ func calcCoefficients(digitalMidValue uint16, digitalMaxValue uint16) (float64, 
 	return float64(aCoefficient), float64(bCoefficient)
 }
 
-func calcValue(digitalValue uint16, aCoefficient float64, bCoefficient float64) uint16 {
+func calcValue(digitalValue uint16, aCoefficient float64, bCoefficient float64, scale float64) uint16 {
 	x := float64(digitalValue)
 	value := aCoefficient*x*x + bCoefficient*x
-	return uint16(value)
+	return uint16(value * scale)
 }

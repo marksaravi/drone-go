@@ -12,7 +12,7 @@ func TestJoystickCalcCoefficients(t *testing.T) {
 func TestJoystickCalcValue(t *testing.T) {
 	var digitalMidValue uint16 = 485
 	a, b := calcCoefficients(digitalMidValue, 1024)
-	got := calcValue(digitalMidValue, a, b)
+	got := calcValue(digitalMidValue, a, b, 1)
 	if got != 512 {
 		t.Fatalf("failed with %d", got)
 	}
