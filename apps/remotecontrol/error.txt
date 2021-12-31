@@ -1,0 +1,30 @@
+
+03:51:47.045874 Aborting by user ENTER
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [semacquire]:
+sync.runtime_Semacquire(0x1498678)
+        /usr/local/go/src/runtime/sema.go:56 +0x34
+sync.(*WaitGroup).Wait(0x1498670)
+        /usr/local/go/src/sync/waitgroup.go:130 +0x94
+main.main()
+        /home/pi/go/src/drone-go/cmd/remote-control/remote-control.go:107 +0xc50
+
+goroutine 33 [chan send]:
+github.com/marksaravi/drone-go/devices/radio.(*radioDevice).setConnectionState(0x14bc050, 0x1, 0x3)
+        /home/pi/go/src/drone-go/devices/radio/radio.go:143 +0x184
+github.com/marksaravi/drone-go/devices/radio.(*radioDevice).receivePayload(0x14bc050)
+        /home/pi/go/src/drone-go/devices/radio/radio.go:110 +0x88
+github.com/marksaravi/drone-go/devices/radio.(*radioDevice).Start.func1(0x1498670, {0x1d9b84, 0x14c4030}, 0x14bc050)
+        /home/pi/go/src/drone-go/devices/radio/radio.go:99 +0x2b0
+created by github.com/marksaravi/drone-go/devices/radio.(*radioDevice).Start
+        /home/pi/go/src/drone-go/devices/radio/radio.go:68 +0xc4
+
+goroutine 34 [chan send]:
+github.com/marksaravi/drone-go/devices/radio.(*radioDevice).Transmit(0x14bc050, {0x1, 0x200, 0x1ff, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, ...})
+        /home/pi/go/src/drone-go/devices/radio/radio.go:161 +0x4c
+github.com/marksaravi/drone-go/apps/remotecontrol.(*remoteControl).Start.func1(0x1498670, 0x14cc000, {0x1d9b84, 0x14c4030}, 0x149a0d8)
+        /home/pi/go/src/drone-go/apps/remotecontrol/remotecontrol.go:145 +0x370
+created by github.com/marksaravi/drone-go/apps/remotecontrol.(*remoteControl).Start
+        /home/pi/go/src/drone-go/apps/remotecontrol/remotecontrol.go:110 +0x60
+exit status 2

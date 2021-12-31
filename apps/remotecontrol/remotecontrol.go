@@ -16,7 +16,7 @@ type button interface {
 }
 
 type oledDisplay interface {
-	WriteString(msg string, x, y int)
+	Println(msg string, y int)
 }
 
 type joystick interface {
@@ -155,17 +155,17 @@ func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.W
 	switch rc.connectionState {
 	case radio.CONNECTED:
 		log.Println("Connected to Drone.")
-		rc.display.WriteString("Connected", 0, 0)
+		rc.display.Println("Connected!", 3)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.ConnectedSound)
 	case radio.DISCONNECTED:
 		log.Println("Waiting for connection.")
-		rc.display.WriteString("Idle", 0, 0)
+		rc.display.Println("Waiting...", 3)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
 	case radio.LOST:
 		log.Println("Connection is lost.")
-		rc.display.WriteString("Lost the Drone", 0, 0)
+		rc.display.Println("Drone is Lost", 3)
 		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)
 	}
 }
