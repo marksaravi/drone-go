@@ -74,14 +74,12 @@ var DisconnectedSound = Notes{
 type Buzzer struct {
 	playing bool
 	out     gpio.PinOut
-	stop    chan bool
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
 	buzzer := &Buzzer{
 		playing: false,
 		out:     out,
-		stop:    nil,
 	}
 	buzzer.out.Out(gpio.High)
 
@@ -115,10 +113,10 @@ func (b *Buzzer) playNotes(notes Notes) {
 }
 
 func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound SoundWave) {
-	if b.stop != nil {
+	if b.playing {
 		return
 	}
-	b.stop = make(chan bool)
+	b.playing = true
 	wg.Add(1)
 
 	go func() {
@@ -133,7 +131,7 @@ func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound So
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
-		for {
+		for b.playing {
 			freq := baseFrequency + devFrequency*math.Exp(t)
 			t += dT
 			if t >= maxT {
@@ -151,25 +149,18 @@ func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound So
 			for time.Since(onTime) < period {
 			}
 			select {
-			case <-b.stop:
-				return
 			case <-ctx.Done():
-				return
+				b.playing = false
 			default:
 			}
 		}
-
 	}()
 }
 
 func (b *Buzzer) Stop() {
-	if b.stop != nil {
-		b.stop <- true
-	}
+	b.playing = false
 }
 
 func (b *Buzzer) stopWaveGenerator() {
 	b.out.Out(gpio.Low)
-	close(b.stop)
-	b.stop = nil
 }
