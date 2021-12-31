@@ -91,7 +91,7 @@ func NewBuzzer(out gpio.PinOut) *Buzzer {
 	return buzzer
 }
 
-func (b *Buzzer) PlayNote(note Note) {
+func (b *Buzzer) playNote(note Note) {
 	start := time.Now()
 
 	freq := note.Frequency * math.Pow(2, float64(note.Octet))
@@ -107,9 +107,13 @@ func (b *Buzzer) PlayNote(note Note) {
 	}
 }
 
-func (b *Buzzer) PlayNotes(notes Notes) {
+func (b *Buzzer) PlaySound(notes Notes) {
+	b.playNotes(notes)
+}
+
+func (b *Buzzer) playNotes(notes Notes) {
 	for _, note := range notes {
-		b.PlayNote(note)
+		b.playNote(note)
 	}
 }
 

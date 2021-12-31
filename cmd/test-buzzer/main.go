@@ -21,7 +21,7 @@ func main() {
 	buzzer.WaveGenerator(piezobuzzer.SirenSound)
 	fmt.Scanln()
 	buzzer.Stop()
-	buzzer.PlayNotes(piezobuzzer.ConnectedSound)
+	buzzer.PlaySound(piezobuzzer.ConnectedSound)
 	fmt.Scanln()
-	buzzer.PlayNotes(piezobuzzer.DisconnectedSound)
+	buzzer.PlaySound(piezobuzzer.DisconnectedSound)
 }
