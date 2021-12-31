@@ -56,10 +56,10 @@ func main() {
 		analogToDigitalSPIConn,
 		joysticksConfigs.Throttle.Channel,
 	)
-	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Roll.MidValue, joysticksConfigs.ValueRange)
-	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Pitch.MidValue, joysticksConfigs.ValueRange)
-	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Yaw.MidValue, joysticksConfigs.ValueRange)
-	throttle := devices.NewThrottle(throttleAlogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.ValueRange)
+	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Roll.Offset)
+	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Pitch.Offset)
+	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Yaw.Offset)
+	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Throttle.Offset)
 	gpioFrontLeft := hardware.NewGPIOSwitch(buttonsConfis.FrontLeft)
 	btnFrontLeft := devices.NewButton(gpioFrontLeft)
 	gpioFrontRight := hardware.NewGPIOSwitch(buttonsConfis.FrontRight)
