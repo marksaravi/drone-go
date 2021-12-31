@@ -74,24 +74,19 @@ var DisconnectedSound = Notes{
 type Buzzer struct {
 	playing bool
 	out     gpio.PinOut
-	cancel  context.CancelFunc
-	wg      *sync.WaitGroup
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
-	var wg sync.WaitGroup
 	buzzer := &Buzzer{
 		playing: false,
 		out:     out,
-		cancel:  nil,
-		wg:      &wg,
 	}
 	buzzer.out.Out(gpio.High)
 
 	return buzzer
 }
 
-func (b *Buzzer) PlayNote(note Note) {
+func (b *Buzzer) playNote(note Note) {
 	start := time.Now()
 
 	freq := note.Frequency * math.Pow(2, float64(note.Octet))
@@ -107,23 +102,27 @@ func (b *Buzzer) PlayNote(note Note) {
 	}
 }
 
-func (b *Buzzer) PlayNotes(notes Notes) {
+func (b *Buzzer) PlaySound(notes Notes) {
+	b.playNotes(notes)
+}
+
+func (b *Buzzer) playNotes(notes Notes) {
 	for _, note := range notes {
-		b.PlayNote(note)
+		b.playNote(note)
 	}
 }
 
-func (b *Buzzer) WaveGenerator(sound SoundWave) {
+func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound SoundWave) {
 	if b.playing {
 		return
 	}
-	cx, cancel := context.WithCancel(context.Background())
-	b.cancel = cancel
+	b.playing = true
+	wg.Add(1)
 
-	go func(ctx context.Context, buzzer *Buzzer) {
-		defer b.wg.Done()
-		b.playing = true
-		b.wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer b.stopWaveGenerator()
+
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
@@ -140,13 +139,13 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 				on = !on
 			}
 			if on {
-				buzzer.out.Out(gpio.High)
+				b.out.Out(gpio.High)
 			}
 			period := time.Second / time.Duration(freq)
 			onTime := time.Now()
 			for time.Since(onTime) < 100*time.Microsecond {
 			}
-			buzzer.out.Out(gpio.Low)
+			b.out.Out(gpio.Low)
 			for time.Since(onTime) < period {
 			}
 			select {
@@ -155,14 +154,13 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 			default:
 			}
 		}
-		buzzer.out.Out(gpio.Low)
-	}(cx, b)
+	}()
 }
 
 func (b *Buzzer) Stop() {
-	if b.cancel != nil {
-		b.cancel()
-		b.cancel = nil
-	}
-	b.wg.Wait()
+	b.playing = false
+}
+
+func (b *Buzzer) stopWaveGenerator() {
+	b.out.Out(gpio.Low)
 }

@@ -51,7 +51,7 @@ flight-control:
       3: 12
   radio:
     rx-tx-address: '03896'
-    power-dbm: '-12dbm'
+    power-dbm: '-18dbm'
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
@@ -64,17 +64,16 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      mid-value: 462
+      offset: 50
     pitch:
       channel: 2
-      mid-value: 484
+      offset: 27
     yaw:
       channel: 3
-      mid-value: 472
+      offset: 39
     throttle:
       channel: 5
-      mid-value: 0
-    max-value: 250
+      offset: -1
     spi:
       bus-number: 0
       chip-select: 0
@@ -87,12 +86,13 @@ remote-control:
     bottom-right: 'GPIO23'
   radio:
     rx-tx-address: '03896'
-    power-dbm: '-12dbm'
+    power-dbm: '-18dbm'
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
       bus-number: 1
-      chip-select: 2  
+      chip-select: 2
+  display-i2c-address: 0x3D
   buzzer-gpio: 'GPIO5'
 
 logger:

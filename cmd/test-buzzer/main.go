@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"sync"
 
 	"github.com/marksaravi/drone-go/hardware"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
@@ -11,17 +13,22 @@ import (
 
 func main() {
 	hardware.InitHost()
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
 	var pin gpio.PinOut = gpioreg.ByName("GPIO5")
 	buzzer := piezobuzzer.NewBuzzer(pin)
 	fmt.Println("Warning sound, press ENTER to next sound")
-	buzzer.WaveGenerator(piezobuzzer.WarningSound)
+	buzzer.WaveGenerator(ctx, &wg, piezobuzzer.WarningSound)
 	fmt.Scanln()
-	buzzer.Stop()
+	cancel()
+	wg.Wait()
+	ctx, cancel = context.WithCancel(context.Background())
 	fmt.Println("Siren sound, press ENTER to stop")
-	buzzer.WaveGenerator(piezobuzzer.SirenSound)
+	buzzer.WaveGenerator(ctx, &wg, piezobuzzer.SirenSound)
 	fmt.Scanln()
 	buzzer.Stop()
-	buzzer.PlayNotes(piezobuzzer.ConnectedSound)
+	buzzer.PlaySound(piezobuzzer.ConnectedSound)
 	fmt.Scanln()
-	buzzer.PlayNotes(piezobuzzer.DisconnectedSound)
+	buzzer.PlaySound(piezobuzzer.DisconnectedSound)
+	cancel()
 }

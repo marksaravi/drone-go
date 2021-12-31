@@ -63,7 +63,20 @@ func (d *SSD1306) Draw() error {
 	return err
 }
 
-func (d *SSD1306) SetPixel(row, col int) error {
+func (d *SSD1306) clearPixel(row, col int) error {
+	if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
+		return errors.New("coordinates out of range")
+	}
+	absIndex := (row/8)*d.Options.Width + col
+	maskIndex := row % 8
+	maskValue := byte(1) << byte(maskIndex)
+	maskValue = ^maskValue
+
+	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
+	return nil
+}
+
+func (d *SSD1306) SetPixel(row, col int, pixel byte) error {
 	if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
 		return errors.New("coordinates out of range")
 	}
@@ -71,7 +84,13 @@ func (d *SSD1306) SetPixel(row, col int) error {
 	maskIndex := row % 8
 	maskValue := byte(1) << byte(maskIndex)
 
-	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] | maskValue
+	if pixel == 1 {
+		d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] | maskValue
+	} else {
+		maskValue = ^maskValue
+		d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
+	}
+
 	return nil
 }
 
@@ -84,8 +103,23 @@ func (d *SSD1306) WriteChar(charCode, x, y int) error {
 	char := MonoFont.fontData[charCode]
 	for row := 0; row < MonoFont.height; row++ {
 		for col := 0; col < MonoFont.width; col++ {
+			d.SetPixel(row+yOffset, col+xOffset, char[row][col])
+		}
+	}
+	return nil
+}
+
+func (d *SSD1306) clearChar(charCode, x, y int) error {
+	if charCode < 32 || charCode > 126 {
+		return errors.New("char code out of range")
+	}
+	var xOffset = MonoFont.width*x + 4
+	var yOffset = (MonoFont.height + 5) * y
+	char := MonoFont.fontData[charCode]
+	for row := 0; row < MonoFont.height; row++ {
+		for col := 0; col < MonoFont.width; col++ {
 			if char[row][col] > 0 {
-				d.SetPixel(row+yOffset, col+xOffset)
+				d.clearPixel(row+yOffset, col+xOffset)
 			}
 		}
 	}
@@ -93,6 +127,17 @@ func (d *SSD1306) WriteChar(charCode, x, y int) error {
 }
 
 func (d *SSD1306) WriteString(msg string, x, y int) {
+	d.writeString(msg, x, y)
+	d.Draw()
+}
+
+func (d *SSD1306) Println(msg string, y int) {
+	d.writeString("              ", 0, y)
+	d.writeString(msg, 0, y)
+	d.Draw()
+}
+
+func (d *SSD1306) writeString(msg string, x, y int) {
 	charCodes := []byte(msg)
 	for i := 0; i < len(charCodes); i++ {
 		d.WriteChar(int(charCodes[i]), x+i, y)

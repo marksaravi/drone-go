@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"periph.io/x/periph/conn/i2c"
@@ -24,8 +25,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	oled.WriteString("Hello Mark!", 0, 0)
+	oled.Println("!000000000000!", 0)
+	time.Sleep(time.Second)
+	oled.Println("Hello Mark!", 0)
 	oled.WriteString("Disconnected", 0, 1)
 	oled.WriteString("T: 15.7%", 0, 2)
-	oled.Draw()
 }

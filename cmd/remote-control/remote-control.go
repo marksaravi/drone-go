@@ -13,9 +13,12 @@ import (
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
+	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
+	"periph.io/x/periph/conn/i2c"
+	"periph.io/x/periph/conn/i2c/i2creg"
 )
 
 func main() {
@@ -27,6 +30,15 @@ func main() {
 	joysticksConfigs := configs.Joysticks
 	buttonsConfis := configs.Buttons
 	hardware.InitHost()
+
+	oledConn, err := i2creg.Open("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer oledConn.Close()
+	oledDev := &i2c.Dev{Addr: configs.DisplayAddress, Bus: oledConn}
+	oled := ssd1306.NewSSD1306(oledDev, ssd1306.DefaultOptions)
+	oled.Init()
 
 	radioNRF204 := nrf204.NewRadio(
 		radioConfigs.SPI.BusNumber,
@@ -56,10 +68,10 @@ func main() {
 		analogToDigitalSPIConn,
 		joysticksConfigs.Throttle.Channel,
 	)
-	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Roll.MidValue, joysticksConfigs.ValueRange)
-	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Pitch.MidValue, joysticksConfigs.ValueRange)
-	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.Yaw.MidValue, joysticksConfigs.ValueRange)
-	throttle := devices.NewThrottle(throttleAlogToDigitalConvertor, mcp3008.DIGITAL_MAX_VALUE, joysticksConfigs.ValueRange)
+	roll := devices.NewJoystick(xAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Roll.Offset)
+	pitch := devices.NewJoystick(yAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Pitch.Offset)
+	yaw := devices.NewJoystick(zAxisAnalogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Yaw.Offset)
+	throttle := devices.NewJoystick(throttleAlogToDigitalConvertor, int(mcp3008.DIGITAL_MAX_VALUE), joysticksConfigs.Throttle.Offset)
 	gpioFrontLeft := hardware.NewGPIOSwitch(buttonsConfis.FrontLeft)
 	btnFrontLeft := devices.NewButton(gpioFrontLeft)
 	gpioFrontRight := hardware.NewGPIOSwitch(buttonsConfis.FrontRight)
@@ -82,6 +94,7 @@ func main() {
 		btnToptLeft, btnTopRight,
 		btnBottomLeft, btnBottomRight,
 		configs.CommandPerSecond,
+		oled,
 		buzzer,
 	)
 

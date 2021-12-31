@@ -6,15 +6,14 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
-func TestFlighCommandsToByteArray(t *testing.T) {
+func TestSerializeFlightCommand(t *testing.T) {
 
 	got := SerializeFlightCommand(models.FlightCommands{
 		PayloadType:       27,
-		Id:                133,
-		Roll:              12,
-		Pitch:             13,
-		Yaw:               112,
-		Throttle:          250,
+		Roll:              369,
+		Pitch:             815,
+		Yaw:               519,
+		Throttle:          1020,
 		ButtonFrontLeft:   true,
 		ButtonFrontRight:  false,
 		ButtonTopLeft:     true,
@@ -22,21 +21,20 @@ func TestFlighCommandsToByteArray(t *testing.T) {
 		ButtonBottomLeft:  false,
 		ButtonBottomRight: true,
 	})
-	want := models.Payload{27, 133, 12, 13, 112, 250, 37, 0}
+	want := models.Payload{27, 0, 37, 113, 47, 7, 252, 237}
 	if !compareByteArrays(got[:], want[:]) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
 
-func TestFlighCommandsFromByteArray(t *testing.T) {
-	got := DeserializeFlightCommand(models.Payload{33, 133, 44, 45, 46, 47, 37, 0})
+func TestDeserializeFlightCommand(t *testing.T) {
+	got := DeserializeFlightCommand(models.Payload{33, 0, 37, 47, 251, 200, 0, 108})
 	want := models.FlightCommands{
 		PayloadType:       33,
-		Id:                133,
-		Roll:              44,
-		Pitch:             45,
-		Yaw:               46,
-		Throttle:          47,
+		Roll:              47,
+		Pitch:             1019,
+		Yaw:               712,
+		Throttle:          256,
 		ButtonFrontLeft:   true,
 		ButtonFrontRight:  false,
 		ButtonTopLeft:     true,
