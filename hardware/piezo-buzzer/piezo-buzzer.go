@@ -74,17 +74,14 @@ var DisconnectedSound = Notes{
 type Buzzer struct {
 	playing bool
 	out     gpio.PinOut
-	cancel  context.CancelFunc
-	wg      *sync.WaitGroup
+	stop    chan bool
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
-	var wg sync.WaitGroup
 	buzzer := &Buzzer{
 		playing: false,
 		out:     out,
-		cancel:  nil,
-		wg:      &wg,
+		stop:    nil,
 	}
 	buzzer.out.Out(gpio.High)
 
@@ -117,17 +114,17 @@ func (b *Buzzer) playNotes(notes Notes) {
 	}
 }
 
-func (b *Buzzer) WaveGenerator(sound SoundWave) {
-	if b.playing {
+func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound SoundWave) {
+	if b.stop != nil {
 		return
 	}
-	cx, cancel := context.WithCancel(context.Background())
-	b.cancel = cancel
+	b.stop = make(chan bool)
+	wg.Add(1)
 
-	go func(ctx context.Context, buzzer *Buzzer) {
-		defer b.wg.Done()
-		b.playing = true
-		b.wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer b.stopWaveGenerator()
+
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
@@ -136,7 +133,7 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
-		for b.playing {
+		for {
 			freq := baseFrequency + devFrequency*math.Exp(t)
 			t += dT
 			if t >= maxT {
@@ -144,29 +141,35 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 				on = !on
 			}
 			if on {
-				buzzer.out.Out(gpio.High)
+				b.out.Out(gpio.High)
 			}
 			period := time.Second / time.Duration(freq)
 			onTime := time.Now()
 			for time.Since(onTime) < 100*time.Microsecond {
 			}
-			buzzer.out.Out(gpio.Low)
+			b.out.Out(gpio.Low)
 			for time.Since(onTime) < period {
 			}
 			select {
+			case <-b.stop:
+				return
 			case <-ctx.Done():
-				b.playing = false
+				return
 			default:
 			}
 		}
-		buzzer.out.Out(gpio.Low)
-	}(cx, b)
+
+	}()
 }
 
 func (b *Buzzer) Stop() {
-	if b.cancel != nil {
-		b.cancel()
-		b.cancel = nil
+	if b.stop != nil {
+		b.stop <- true
 	}
-	b.wg.Wait()
+}
+
+func (b *Buzzer) stopWaveGenerator() {
+	b.out.Out(gpio.Low)
+	close(b.stop)
+	b.stop = nil
 }
