@@ -93,6 +93,11 @@ func (d *SSD1306) WriteChar(charCode, x, y int) error {
 }
 
 func (d *SSD1306) WriteString(msg string, x, y int) {
+	d.writeString(msg, x, y)
+	d.Draw()
+}
+
+func (d *SSD1306) writeString(msg string, x, y int) {
 	charCodes := []byte(msg)
 	for i := 0; i < len(charCodes); i++ {
 		d.WriteChar(int(charCodes[i]), x+i, y)

@@ -85,8 +85,9 @@ type remoteControl struct {
 		BottomLeft  string `yaml:"bottom-left"`
 		BottomRight string `yaml:"bottom-right"`
 	} `yaml:"buttons"`
-	Radio      radioConfig `yaml:"radio"`
-	BuzzerGPIO string      `yaml:"buzzer-gpio"`
+	Radio          radioConfig `yaml:"radio"`
+	DisplayAddress uint16      `yaml:"display-i2c-address"`
+	BuzzerGPIO     string      `yaml:"buzzer-gpio"`
 }
 
 type offsets struct {

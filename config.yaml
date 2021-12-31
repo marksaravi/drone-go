@@ -91,7 +91,8 @@ remote-control:
     heart-beat-timeout-ms: 1000
     spi:
       bus-number: 1
-      chip-select: 2  
+      chip-select: 2
+  display-i2c-address: 0x3D
   buzzer-gpio: 'GPIO5'
 
 logger:

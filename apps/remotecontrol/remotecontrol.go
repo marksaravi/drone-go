@@ -15,6 +15,10 @@ type button interface {
 	Read() bool
 }
 
+type oledDisplay interface {
+	WriteString(msg string, x, y int)
+}
+
 type joystick interface {
 	Read() int
 }
@@ -32,11 +36,14 @@ type remoteControl struct {
 	btnTopRight                     button
 	btnBottomLeft                   button
 	btnBottomRight                  button
+	display                         oledDisplay
 	buzzer                          *piezobuzzer.Buzzer
 	connectionState                 radio.ConnectionState
 	shutdownCountdown               time.Time
 	suppressLostConnectionCountdown time.Time
 }
+
+var lastPrinted time.Time = time.Now()
 
 func (rc *remoteControl) read() models.FlightCommands {
 	roll := rc.roll.Read()
@@ -49,6 +56,11 @@ func (rc *remoteControl) read() models.FlightCommands {
 	buttonTopRight := rc.btnTopRight.Read()
 	buttonBottomLeft := rc.btnBottomLeft.Read()
 	buttonBottomRight := rc.btnBottomRight.Read()
+
+	if time.Since(lastPrinted) >= time.Second/4 {
+		lastPrinted = time.Now()
+		log.Printf("%6d, %6d, %6d, %6d\n", roll, pitch, yaw, throttle)
+	}
 
 	return models.FlightCommands{
 		Roll:              uint16(roll),
@@ -71,6 +83,7 @@ func NewRemoteControl(
 	btnTopLeft, btnTopRight button,
 	btnBottomLeft, btnBottomRight button,
 	commandPerSecond int,
+	display oledDisplay,
 	buzzer *piezobuzzer.Buzzer,
 ) *remoteControl {
 	return &remoteControl{
@@ -86,6 +99,7 @@ func NewRemoteControl(
 		btnBottomLeft:    btnBottomLeft,
 		btnBottomRight:   btnBottomRight,
 		commandPerSecond: commandPerSecond,
+		display:          display,
 		buzzer:           buzzer,
 	}
 }
@@ -118,7 +132,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 
 			case connectionState, ok := <-rc.radio.GetConnection():
 				if ok {
-					rc.setRadioConnectionState(connectionState)
+					rc.setRadioConnectionState(ctx, wg, connectionState)
 				}
 				connectionChanOpen = ok
 
@@ -136,19 +150,22 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 	}()
 }
 
-func (rc *remoteControl) setRadioConnectionState(connectionState radio.ConnectionState) {
+func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.WaitGroup, connectionState radio.ConnectionState) {
 	rc.connectionState = connectionState
 	switch rc.connectionState {
 	case radio.CONNECTED:
 		log.Println("Connected to Drone.")
+		rc.display.WriteString("Connected", 0, 0)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.ConnectedSound)
 	case radio.DISCONNECTED:
 		log.Println("Waiting for connection.")
+		rc.display.WriteString("Idle", 0, 0)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
 	case radio.LOST:
 		log.Println("Connection is lost.")
-		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
+		rc.display.WriteString("Lost the Drone", 0, 0)
+		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)
 	}
 }
