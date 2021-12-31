@@ -26,11 +26,10 @@ type ImuRotations struct {
 
 type FlightCommands struct {
 	PayloadType       uint8
-	Id                uint8
-	Roll              uint8
-	Pitch             uint8
-	Yaw               uint8
-	Throttle          uint8
+	Roll              uint16
+	Pitch             uint16
+	Yaw               uint16
+	Throttle          uint16
 	ButtonFrontLeft   bool
 	ButtonFrontRight  bool
 	ButtonTopLeft     bool
