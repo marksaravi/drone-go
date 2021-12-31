@@ -28,13 +28,13 @@ func TestSerializeFlightCommand(t *testing.T) {
 }
 
 func TestDeserializeFlightCommand(t *testing.T) {
-	got := DeserializeFlightCommand(models.Payload{33, 0, 37, 247, 247, 247, 247, 255})
+	got := DeserializeFlightCommand(models.Payload{33, 0, 37, 47, 251, 200, 0, 108})
 	want := models.FlightCommands{
 		PayloadType:       33,
-		Roll:              1015,
-		Pitch:             1015,
-		Yaw:               1015,
-		Throttle:          1015,
+		Roll:              47,
+		Pitch:             1019,
+		Yaw:               712,
+		Throttle:          256,
 		ButtonFrontLeft:   true,
 		ButtonFrontRight:  false,
 		ButtonTopLeft:     true,
