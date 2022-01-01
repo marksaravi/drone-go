@@ -1,4 +1,6 @@
 package constants
 
+import "github.com/marksaravi/drone-go/hardware/mcp3008"
+
 const RADIO_PAYLOAD_SIZE uint8 = 8
-const JOYSTICK_RESOLUTION = 250
+const JOYSTICK_RESOLUTION = mcp3008.DIGITAL_MAX_VALUE
