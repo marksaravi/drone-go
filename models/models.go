@@ -60,4 +60,4 @@ type Logger interface {
 	Close()
 }
 
-type Throttles = map[uint8]float32
+type Throttles = map[uint8]float64

@@ -16,9 +16,9 @@ type imu interface {
 }
 
 type pidControl interface {
-	ApplyFlightCommands(flightCommands models.FlightCommands)
-	ApplyRotations(rotations models.ImuRotations)
-	Throttles() map[uint8]float32
+	SetFlightCommands(flightCommands models.FlightCommands) models.Throttles
+	SetRotations(rotations models.ImuRotations) models.Throttles
+	Throttles() models.Throttles
 }
 
 type flightControl struct {

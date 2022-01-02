@@ -49,10 +49,10 @@ func (mc *motorsControl) Off() {
 	mc.powerbreaker.SetLow()
 }
 
-func (mc *motorsControl) SetThrottles(throttles map[uint8]float32) {
+func (mc *motorsControl) SetThrottles(throttles models.Throttles) {
 	var motor uint8
 	for motor = 0; motor < NUM_OF_MOTORS; motor++ {
-		mc.setThrottle(motor, throttles[uint8(motor)])
+		mc.setThrottle(motor, float32(throttles[uint8(motor)]))
 	}
 }
 
@@ -81,9 +81,9 @@ func NewESC() *motorsControl {
 	return esc
 }
 
-func NewThrottleChannel(wg *sync.WaitGroup) (chan<- map[uint8]float32, chan<- bool) {
+func NewThrottleChannel(wg *sync.WaitGroup) (chan<- models.Throttles, chan<- bool) {
 	wg.Add(1)
-	throttleChannel := make(chan map[uint8]float32)
+	throttleChannel := make(chan map[uint8]float64)
 	onOff := make(chan bool)
 	esc := NewESC()
 	go escRoutine(wg, esc, throttleChannel, onOff)
