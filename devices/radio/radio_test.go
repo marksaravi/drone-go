@@ -7,7 +7,7 @@ import (
 
 func TestIdleToConnectByData(t *testing.T) {
 	r := NewRadio(nil, 500)
-	r.connectionState = IDLE
+	r.connectionState = DISCONNECTED
 	go func() {
 		<-r.connection
 	}()
@@ -66,15 +66,15 @@ func TestConnectedToLostByTimeout(t *testing.T) {
 		<-r.connection
 	}()
 	r.setConnectionState(false, NO_PAYLOAD)
-	if r.connectionState != LOST {
-		t.Fatalf("Wanted LOST, got %v", r.connectionState)
+	if r.connectionState != CONNECTION_LOST {
+		t.Fatalf("Wanted CONNECTION_LOST, got %v", r.connectionState)
 	}
 }
 
 func TestLostToConnectByData(t *testing.T) {
 	timeoutMS := 500
 	r := NewRadio(nil, timeoutMS)
-	r.connectionState = LOST
+	r.connectionState = CONNECTION_LOST
 	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
 	go func() {
 		<-r.connection
@@ -88,7 +88,7 @@ func TestLostToConnectByData(t *testing.T) {
 func TestLostToDisconnectByData(t *testing.T) {
 	timeoutMS := 500
 	r := NewRadio(nil, timeoutMS)
-	r.connectionState = LOST
+	r.connectionState = CONNECTION_LOST
 	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
 	go func() {
 		<-r.connection

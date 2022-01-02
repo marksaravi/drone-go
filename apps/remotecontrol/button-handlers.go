@@ -27,6 +27,5 @@ func (rc *remoteControl) suppressLostConnectionPressed(pressed bool) {
 	if time.Since(rc.suppressLostConnectionCountdown) > alertResetTimeout {
 		rc.suppressLostConnectionCountdown = time.Now().AddDate(1, 0, 0)
 		log.Println("suppressing...")
-		rc.radio.SuppressLostConnection()
 	}
 }

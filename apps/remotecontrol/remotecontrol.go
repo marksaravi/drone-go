@@ -163,7 +163,7 @@ func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.W
 		rc.display.Println("Waiting...", 3)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
-	case radio.LOST:
+	case radio.CONNECTION_LOST:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
 		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)
