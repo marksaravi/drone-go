@@ -11,7 +11,7 @@ func TestIdleToConnectByData(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, DATA_PAYLOAD)
+	r.setConnectionState(COMMAND)
 	if r.connectionState != CONNECTED {
 		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
 	}
@@ -23,7 +23,7 @@ func TestDisconneToConnectByData(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, DATA_PAYLOAD)
+	r.setConnectionState(COMMAND)
 	if r.connectionState != CONNECTED {
 		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
 	}
@@ -35,7 +35,7 @@ func TestDisconneToConnectByHeartBeat(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, HEARTBEAT_PAYLOAD)
+	r.setConnectionState(HEARTBEAT)
 	select {
 	case <-r.connection:
 	default:
@@ -51,7 +51,7 @@ func TestConnectedToDisconnectByReceiverOff(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
+	r.setConnectionState(RECEIVER_OFF)
 	if r.connectionState != DISCONNECTED {
 		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
 	}
@@ -65,7 +65,7 @@ func TestConnectedToLostByTimeout(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(false, NO_PAYLOAD)
+	r.setConnectionState(NO_COMMAND)
 	if r.connectionState != CONNECTION_LOST {
 		t.Fatalf("Wanted CONNECTION_LOST, got %v", r.connectionState)
 	}
@@ -79,7 +79,7 @@ func TestLostToConnectByData(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, DATA_PAYLOAD)
+	r.setConnectionState(COMMAND)
 	if r.connectionState != CONNECTED {
 		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
 	}
@@ -93,7 +93,7 @@ func TestLostToDisconnectByData(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(true, RECEIVER_OFF_PAYLOAD)
+	r.setConnectionState(RECEIVER_OFF)
 	if r.connectionState != DISCONNECTED {
 		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
 	}
@@ -107,7 +107,7 @@ func TestDisconnectedToDisconnectedByTimeout(t *testing.T) {
 	go func() {
 		<-r.connection
 	}()
-	r.setConnectionState(false, NO_PAYLOAD)
+	r.setConnectionState(NO_COMMAND)
 	if r.connectionState != DISCONNECTED {
 		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
 	}

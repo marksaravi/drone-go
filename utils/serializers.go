@@ -11,7 +11,7 @@ func shift2Bytes(x uint16, shift uint8) byte {
 
 func SerializeFlightCommand(flightCommands models.FlightCommands) models.Payload {
 
-	var payloadType byte = flightCommands.PayloadType
+	var payloadType byte = flightCommands.Type
 	var reserverd byte = 0
 	bottons := BoolArrayToByte([8]bool{
 		flightCommands.ButtonFrontLeft,
@@ -53,7 +53,7 @@ func DeserializeFlightCommand(payload models.Payload) models.FlightCommands {
 	buttons := BoolArrayFromByte(payload[2])
 
 	return models.FlightCommands{
-		PayloadType:       payload[0],
+		Type:              payload[0],
 		Roll:              to10bits(payload[3], payload[7], 0),
 		Pitch:             to10bits(payload[4], payload[7], 2),
 		Yaw:               to10bits(payload[5], payload[7], 4),
