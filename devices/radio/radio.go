@@ -119,6 +119,10 @@ func (r *radioDevice) closeRadio() {
 	}
 	var receiverOffPayload models.Payload
 	receiverOffPayload[0] = RECEIVER_OFF
+	for i := 0; i < 5; i++ {
+		r.radio.Transmit(receiverOffPayload)
+		time.Sleep(time.Millisecond * 50)
+	}
 	close(r.transmitter)
 	close(r.receiver)
 	close(r.connection)

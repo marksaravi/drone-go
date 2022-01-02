@@ -57,7 +57,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case <-ctx.Done():
 				if running {
-					fc.radio.CloseTransmitter()
+					fc.radio.Close()
 					fc.logger.Close()
 					running = false
 				}
@@ -93,7 +93,7 @@ func showConnectionState(connectionState radio.ConnectionState) {
 		log.Println("Connected")
 	case radio.DISCONNECTED:
 		log.Println("Disconnected")
-	case radio.LOST:
+	case radio.CONNECTION_LOST:
 		log.Println("Lost")
 	}
 }
