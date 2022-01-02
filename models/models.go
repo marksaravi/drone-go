@@ -41,9 +41,7 @@ type FlightCommands struct {
 type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
 type RadioLink interface {
-	ReceiverOn()
 	Receive() (Payload, bool)
-	TransmitterOn()
 	Transmit(Payload) error
 }
 

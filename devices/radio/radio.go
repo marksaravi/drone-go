@@ -55,9 +55,7 @@ func NewRadio(radio models.RadioLink, heartBeatTimeoutMs int) *radioDevice {
 
 func (r *radioDevice) transmitPayload(payload models.Payload) {
 	r.lastSentHeartBeat = time.Now()
-	r.radio.TransmitterOn()
 	r.radio.Transmit(payload)
-	r.radio.ReceiverOn()
 }
 
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -76,11 +74,6 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case <-ctx.Done():
 				if running {
 					log.Println("Closing receiver and connection")
-					for i := 0; i < 3; i++ {
-						r.transmitPayload(genPayload(RECEIVER_OFF_PAYLOAD))
-						time.Sleep(time.Millisecond * 50)
-					}
-					time.Sleep(time.Millisecond * 100)
 					close(r.receiver)
 					r.receiver = nil
 					close(r.connection)
@@ -126,24 +119,24 @@ func (r *radioDevice) sendHeartbeat() {
 }
 
 func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
-	r.ConnectionStateLock.Lock()
-	defer r.ConnectionStateLock.Unlock()
+	// r.ConnectionStateLock.Lock()
+	// defer r.ConnectionStateLock.Unlock()
 
-	prevState := r.connectionState
-	if available {
-		r.connectionState = CONNECTED
-		r.lastReceivedHeartBeat = time.Now()
-		if payloadType == RECEIVER_OFF_PAYLOAD {
-			r.connectionState = DISCONNECTED
-		}
-	} else {
-		if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout && r.connectionState == CONNECTED {
-			r.connectionState = LOST
-		}
-	}
-	if prevState != r.connectionState && r.connection != nil {
-		r.connection <- r.connectionState
-	}
+	// prevState := r.connectionState
+	// if available {
+	// 	r.connectionState = CONNECTED
+	// 	r.lastReceivedHeartBeat = time.Now()
+	// 	if payloadType == RECEIVER_OFF_PAYLOAD {
+	// 		r.connectionState = DISCONNECTED
+	// 	}
+	// } else {
+	// 	if time.Since(r.lastReceivedHeartBeat) > r.heartBeatTimeout && r.connectionState == CONNECTED {
+	// 		r.connectionState = LOST
+	// 	}
+	// }
+	// if prevState != r.connectionState && r.connection != nil {
+	// 	r.connection <- r.connectionState
+	// }
 }
 
 func (r *radioDevice) SuppressLostConnection() {
@@ -170,6 +163,11 @@ func (r *radioDevice) Transmit(data models.FlightCommands) {
 }
 
 func (r *radioDevice) CloseTransmitter() {
+	for i := 0; i < 3; i++ {
+		r.transmitPayload(genPayload(RECEIVER_OFF_PAYLOAD))
+		time.Sleep(time.Millisecond * 50)
+	}
+	time.Sleep(time.Millisecond * 100)
 	close(r.transmitter)
 	r.transmitter = nil
 }

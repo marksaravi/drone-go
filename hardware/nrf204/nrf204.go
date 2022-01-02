@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -79,7 +78,53 @@ type nrf204l01 struct {
 	isReceiver bool
 }
 
-func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *nrf204l01 {
+func NewRadio(
+	spiBusNum int,
+	spiChipSelect int,
+	spiChipEnabledGPIO string,
+	rxTxAddress string,
+	powerDb string,
+) models.RadioLink {
+	radioSPIConn := hardware.NewSPIConnection(
+		spiBusNum,
+		spiChipSelect,
+	)
+	fmt.Println(rxTxAddress)
+	radio := newNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
+	return radio
+}
+
+func (radio *nrf204l01) Receive() (models.Payload, bool) {
+	radio.receiverOn()
+	if !radio.isDataAvailable() {
+		return models.Payload{}, false
+	}
+	payload := models.Payload{}
+	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
+	copy(payload[:], data)
+	radio.resetDR()
+	if err != nil {
+		return models.Payload{}, false
+	}
+	return payload, true
+}
+
+func (radio *nrf204l01) Transmit(payload models.Payload) error {
+	radio.transmitterOn()
+	radio.ce.Out(gpio.Low)
+	radio.writeRegister(TX_ADDR, radio.address)
+	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
+		return fmt.Errorf("payload size error %d", len(payload))
+	}
+	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	radio.ce.Out(gpio.High)
+	time.Sleep(time.Millisecond)
+	radio.ce.Out(gpio.Low)
+	radio.receiverOn()
+	return err
+}
+
+func newNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *nrf204l01 {
 	address := []byte(rxTxAddress)
 	lenAddress := len(address)
 	if lenAddress != ADDRESS_SIZE {
@@ -95,22 +140,6 @@ func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *n
 	}
 	radio.init()
 	return &radio
-}
-
-func NewRadio(
-	spiBusNum int,
-	spiChipSelect int,
-	spiChipEnabledGPIO string,
-	rxTxAddress string,
-	powerDb string,
-) models.RadioLink {
-	radioSPIConn := hardware.NewSPIConnection(
-		spiBusNum,
-		spiChipSelect,
-	)
-	fmt.Println(rxTxAddress)
-	radio := NewNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
-	return radio
 }
 
 func dbmStrToDBm(dbm string) byte {
@@ -181,7 +210,10 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 	radio.writeRegisterByte(RF_SETUP, setup)
 }
 
-func (radio *nrf204l01) TransmitterOn() {
+func (radio *nrf204l01) transmitterOn() {
+	if !radio.isReceiver {
+		return
+	}
 	radio.isReceiver = false
 	radio.ce.Out(gpio.Low)
 	radio.setRetries(5, 0)
@@ -193,7 +225,10 @@ func (radio *nrf204l01) TransmitterOn() {
 	radio.ce.Out(gpio.Low)
 }
 
-func (radio *nrf204l01) ReceiverOn() {
+func (radio *nrf204l01) receiverOn() {
+	if radio.isReceiver {
+		return
+	}
 	radio.isReceiver = true
 	radio.ce.Out(gpio.Low)
 	radio.setPower(ON)
@@ -218,19 +253,6 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) Receive() (models.Payload, bool) {
-	if !radio.isDataAvailable() {
-		return models.Payload{}, false
-	}
-	payload := models.Payload{}
-	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
-	copy(payload[:], data)
-	radio.resetDR()
-	if err != nil {
-		return models.Payload{}, false
-	}
-	return payload, true
-}
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
 	w := make([]byte, datalen+1)
@@ -243,22 +265,6 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 
 	err := conn.Tx(w, r)
 	return r, err
-}
-
-func (radio *nrf204l01) Transmit(payload models.Payload) error {
-	if radio.isReceiver {
-		return errors.New("not in transmit mode")
-	}
-	radio.ce.Out(gpio.Low)
-	radio.writeRegister(TX_ADDR, radio.address)
-	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
-		return fmt.Errorf("payload size error %d", len(payload))
-	}
-	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
-	radio.ce.Out(gpio.High)
-	time.Sleep(time.Millisecond)
-	radio.ce.Out(gpio.Low)
-	return err
 }
 
 func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
