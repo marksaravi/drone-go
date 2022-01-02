@@ -82,7 +82,9 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					}
 					time.Sleep(time.Millisecond * 100)
 					close(r.receiver)
+					r.receiver = nil
 					close(r.connection)
+					r.connection = nil
 					running = false
 				}
 
@@ -108,7 +110,7 @@ func (r *radioDevice) receivePayload() {
 	if available {
 		payloadType := payload[0]
 		r.setConnectionState(available, payloadType)
-		if payloadType == DATA_PAYLOAD {
+		if payloadType == DATA_PAYLOAD && r.receiver != nil {
 			flightCommands := utils.DeserializeFlightCommand(payload)
 			r.receiver <- flightCommands
 		}
@@ -139,7 +141,7 @@ func (r *radioDevice) setConnectionState(available bool, payloadType byte) {
 			r.connectionState = LOST
 		}
 	}
-	if prevState != r.connectionState {
+	if prevState != r.connectionState && r.connection != nil {
 		r.connection <- r.connectionState
 	}
 }
@@ -158,11 +160,14 @@ func (r *radioDevice) clearBuffer() {
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
 	data.PayloadType = DATA_PAYLOAD
-	r.transmitter <- data
+	if r.transmitter != nil {
+		r.transmitter <- data
+	}
 }
 
 func (r *radioDevice) CloseTransmitter() {
 	close(r.transmitter)
+	r.transmitter = nil
 }
 
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
