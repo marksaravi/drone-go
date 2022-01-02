@@ -123,7 +123,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 			select {
 			case <-ctx.Done():
 				if transmitterOpen {
-					rc.radio.CloseTransmitter()
+					rc.radio.Close()
 					transmitterOpen = false
 				}
 
@@ -143,8 +143,8 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 				lastReading = time.Now()
 				fc := rc.read()
 				rc.radio.Transmit(fc)
-				rc.shutdownPressed(fc.ButtonBottomRight, cancel)
-				rc.suppressLostConnectionPressed(fc.ButtonBottomLeft)
+				rc.actOnShutdownButtonState(fc.ButtonBottomRight, cancel)
+				rc.actOnSuppressLostConnectionButtonState(fc.ButtonBottomLeft)
 			}
 		}
 	}()
@@ -163,7 +163,7 @@ func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.W
 		rc.display.Println("Waiting...", 3)
 		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
-	case radio.LOST:
+	case radio.CONNECTION_LOST:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
 		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)

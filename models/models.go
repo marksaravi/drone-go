@@ -24,8 +24,10 @@ type ImuRotations struct {
 	ReadInterval  time.Duration
 }
 
+type FlightCommandType = uint8
+
 type FlightCommands struct {
-	PayloadType       uint8
+	Type              FlightCommandType
 	Roll              uint16
 	Pitch             uint16
 	Yaw               uint16
@@ -41,9 +43,7 @@ type FlightCommands struct {
 type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
 type RadioLink interface {
-	ReceiverOn()
 	Receive() (Payload, bool)
-	TransmitterOn()
 	Transmit(Payload) error
 }
 
@@ -51,7 +51,7 @@ type Radio interface {
 	Transmit(FlightCommands)
 	GetReceiver() <-chan FlightCommands
 	GetConnection() <-chan int
-	CloseTransmitter()
+	Close()
 	SuppressLostConnection()
 }
 
