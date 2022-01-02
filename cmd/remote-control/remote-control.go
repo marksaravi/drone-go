@@ -101,7 +101,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var waitGroup sync.WaitGroup
 
-	radioDev.Start(ctx, &waitGroup)
+	radioDev.Start(&waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
 	utils.WaitToAbortByENTER(cancel)
 	waitGroup.Wait()

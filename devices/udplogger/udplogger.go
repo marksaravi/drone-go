@@ -123,7 +123,6 @@ func NewUdpLogger() *udpLogger {
 func (l *udpLogger) Close() {
 	if l.enabled {
 		close(l.dataChannel)
-		l.dataChannel = nil
 	}
 }
 

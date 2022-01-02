@@ -9,7 +9,7 @@ import (
 func TestSerializeFlightCommand(t *testing.T) {
 
 	got := SerializeFlightCommand(models.FlightCommands{
-		PayloadType:       27,
+		Type:              27,
 		Roll:              369,
 		Pitch:             815,
 		Yaw:               519,
@@ -30,7 +30,7 @@ func TestSerializeFlightCommand(t *testing.T) {
 func TestDeserializeFlightCommand(t *testing.T) {
 	got := DeserializeFlightCommand(models.Payload{33, 0, 37, 47, 251, 200, 0, 108})
 	want := models.FlightCommands{
-		PayloadType:       33,
+		Type:              33,
 		Roll:              47,
 		Pitch:             1019,
 		Yaw:               712,

@@ -21,7 +21,6 @@ func main() {
 		radioConfigs.RxTxAddress,
 		radioConfigs.PowerDBm,
 	)
-	radio.TransmitterOn()
 	var roll float32 = 0
 	var altitude float32 = 0
 	var motorsEngaged bool = false
