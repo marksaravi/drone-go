@@ -159,6 +159,7 @@ func (r *radioDevice) clearBuffer() {
 			break
 		}
 	}
+	log.Println("Radio buffer is cleared.")
 }
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
