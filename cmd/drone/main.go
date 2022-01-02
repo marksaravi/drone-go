@@ -19,7 +19,9 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	radioConfigs := config.ReadConfigs().FlightControl.Radio
+	configs := config.ReadConfigs().FlightControl
+	radioConfigs := configs.Radio
+	pidConfigs := configs.PID
 
 	hardware.InitHost()
 
@@ -34,7 +36,15 @@ func main() {
 	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()
-	pid := pidcontrol.NewPIDControl()
+	pid := pidcontrol.NewPIDControl(
+		pidConfigs.PGain,
+		pidConfigs.IGain,
+		pidConfigs.DGain,
+		pidConfigs.MaxRoll,
+		pidConfigs.MaxPitch,
+		pidConfigs.MaxYaw,
+		pidConfigs.MaxThrottle,
+	)
 	flightControl := flightcontrol.NewFlightControl(
 		pid,
 		imudev,

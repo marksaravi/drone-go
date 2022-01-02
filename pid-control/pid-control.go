@@ -1,7 +1,6 @@
 package pidcontrol
 
 import (
-	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 )
@@ -22,33 +21,40 @@ type pidControl struct {
 	state            pidState
 	targetState      pidState
 	rotationsHistory []models.ImuRotations
+	maxRoll          float64
+	maxPitch         float64
+	maxYaw           float64
+	maxThrottle      float64
 	throttles        models.Throttles
+	emergencyStop    bool
 }
 
-func NewPIDControl() *pidControl {
-	configs := config.ReadConfigs().FlightControl.PID
+func NewPIDControl(pGain, iGain, dGain, maxRoll, maxPitch, maxYaw, maxThrottle float64) *pidControl {
 	return &pidControl{
-		pGain:            configs.PGain,
-		iGain:            configs.IGain,
-		dGain:            configs.DGain,
+		pGain:            pGain,
+		iGain:            iGain,
+		dGain:            dGain,
+		maxRoll:          maxRoll,
+		maxPitch:         maxPitch,
+		maxYaw:           maxYaw,
+		maxThrottle:      maxThrottle,
 		rotationsHistory: make([]models.ImuRotations, ROTATIONS_HISTORY_SIZE),
 		throttles:        models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
+		emergencyStop:    false,
 	}
 }
 
-func (pid *pidControl) SetFlightCommands(flightCommands models.FlightCommands) models.Throttles {
+func (pid *pidControl) SetFlightCommands(flightCommands models.FlightCommands) {
 	pid.targetState = flightControlCommandToPIDCommand(flightCommands)
 	pid.calcThrottles()
-	return pid.throttles
 }
 
-func (pid *pidControl) SetRotations(rotations models.ImuRotations) models.Throttles {
+func (pid *pidControl) SetRotations(rotations models.ImuRotations) {
 	for i := 1; i < ROTATIONS_HISTORY_SIZE; i++ {
 		pid.rotationsHistory[i] = pid.rotationsHistory[i-1]
 	}
 	pid.rotationsHistory[0] = rotations
 	pid.calcThrottles()
-	return pid.throttles
 }
 
 func (pid *pidControl) calcThrottles() {
@@ -62,7 +68,24 @@ func (pid *pidControl) calcThrottles() {
 }
 
 func (pid *pidControl) Throttles() models.Throttles {
+	if pid.emergencyStop {
+		pid.applyEmergencyStop()
+	}
+
 	return pid.throttles
+}
+
+func (pid *pidControl) SetEmergencyStop(stop bool) {
+	pid.emergencyStop = stop
+}
+
+func (pid *pidControl) applyEmergencyStop() {
+	pid.targetState = pidState{
+		roll:     0,
+		pitch:    0,
+		yaw:      0,
+		throttle: 0,
+	}
 }
 
 func flightControlCommandToPIDCommand(c models.FlightCommands) pidState {

@@ -16,9 +16,10 @@ type imu interface {
 }
 
 type pidControl interface {
-	SetFlightCommands(flightCommands models.FlightCommands) models.Throttles
-	SetRotations(rotations models.ImuRotations) models.Throttles
+	SetFlightCommands(flightCommands models.FlightCommands)
+	SetRotations(rotations models.ImuRotations)
 	Throttles() models.Throttles
+	SetEmergencyStop(stop bool)
 }
 
 type flightControl struct {

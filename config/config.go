@@ -24,13 +24,13 @@ type flightControl struct {
 	ImuDataPerSecond   int `yaml:"imu-data-per-second"`
 	EscUpdatePerSecond int `yaml:"esc-update-per-second"`
 	PID                struct {
-		PGain                 float64                   `yaml:"p-gain"`
-		IGain                 float64                   `yaml:"i-gain"`
-		DGain                 float64                   `yaml:"d-gain"`
-		AnalogInputToRoll     analogToDigitalConversion `yaml:"analog-input-to-roll-conversion"`
-		AnalogInputToPitch    analogToDigitalConversion `yaml:"analog-input-to-pitch-conversion"`
-		AnalogInputToYaw      analogToDigitalConversion `yaml:"analog-input-to-yaw-conversion"`
-		AnalogInputToThrottle analogToDigitalConversion `yaml:"analog-input-to-throttle-conversion"`
+		PGain       float64 `yaml:"p-gain"`
+		IGain       float64 `yaml:"i-gain"`
+		DGain       float64 `yaml:"d-gain"`
+		MaxRoll     float64 `yaml:"max-roll"`
+		MaxPitch    float64 `yaml:"max-pitch"`
+		MaxYaw      float64 `yaml:"max-yaw"`
+		MaxThrottle float64 `yaml:"max-throttle"`
 	} `yaml:"pid"`
 	Imu struct {
 		SPI           spiConfig `yaml:"spi"`
