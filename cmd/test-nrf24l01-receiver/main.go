@@ -22,7 +22,6 @@ func main() {
 		radioConfigs.PowerDBm,
 	)
 
-	radio.ReceiverOn()
 	var numReceive int = 0
 	start := time.Now()
 	var flightCommands models.FlightCommands

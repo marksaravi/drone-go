@@ -89,7 +89,6 @@ func NewRadio(
 		spiBusNum,
 		spiChipSelect,
 	)
-	fmt.Println(rxTxAddress)
 	radio := newNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
 	return radio
 }
@@ -139,6 +138,7 @@ func newNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *n
 		isReceiver: true,
 	}
 	radio.init()
+	radio.receiverOn()
 	return &radio
 }
 
