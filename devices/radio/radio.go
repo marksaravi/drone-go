@@ -67,7 +67,9 @@ func (r *radioDevice) Start(wg *sync.WaitGroup) {
 
 		r.clearBuffer()
 
-		for r.transmitter != nil || r.receiver != nil {
+		var running bool = true
+
+		for running {
 			select {
 			case flightCommands, ok := <-r.transmitter:
 				if ok {
@@ -78,16 +80,14 @@ func (r *radioDevice) Start(wg *sync.WaitGroup) {
 			default:
 			}
 
-			if !r.isActive && r.transmitter != nil {
+			if !r.isActive && running {
 				close(r.transmitter)
-				r.transmitter = nil
 				close(r.receiver)
-				r.receiver = nil
 				close(r.connection)
-				r.connection = nil
+				running = false
 			}
 
-			if r.receiver != nil {
+			if running {
 				payload, available := r.radio.Receive()
 				if available {
 					log.Println("RADIO received: ", payload[0])
