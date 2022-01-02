@@ -128,7 +128,7 @@ func (l *udpLogger) Close() {
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
-	if !l.enabled && l.dataChannel != nil {
+	if l.enabled && l.dataChannel != nil {
 		l.dataChannel <- data
 	}
 }
