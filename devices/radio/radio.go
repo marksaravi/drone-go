@@ -63,12 +63,12 @@ func (r *radioDevice) transmitPayload(payload models.Payload) {
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Radio...")
-	r.clearBuffer()
 
 	go func() {
 		defer wg.Done()
 		defer log.Println("Radio is stopped...")
 
+		r.clearBuffer()
 		var running bool = true
 		var transmitterOpen bool = true
 		for running || transmitterOpen {
@@ -153,8 +153,11 @@ func (r *radioDevice) SuppressLostConnection() {
 	}()
 }
 func (r *radioDevice) clearBuffer() {
-	for i := 0; i < 10; i++ {
-		r.radio.Receive()
+	for {
+		_, available := r.radio.Receive()
+		if !available {
+			break
+		}
 	}
 }
 
