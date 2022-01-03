@@ -64,7 +64,7 @@ func (e *escDev) SetThrottle(channel uint8, throttle float64) {
 }
 
 func (e *escDev) Close() {
-	if !e.isActive {
+	if e.isActive {
 		close(e.throttlesChan)
 	}
 }
@@ -77,14 +77,18 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 		defer log.Println("ESC is closed")
 
 		for e.isActive {
-			throttels, ok := <-e.throttlesChan
-			if ok {
-				var ch uint8
-				for ch = 0; ch < NUM_OF_ESC; ch++ {
-					e.pwmDev.SetThrottle(int(ch), float32(throttels[ch]))
+			select {
+			case throttels, ok := <-e.throttlesChan:
+				log.Println(ok)
+				if ok {
+					var ch uint8
+					for ch = 0; ch < NUM_OF_ESC; ch++ {
+						e.pwmDev.SetThrottle(int(ch), float32(throttels[ch]))
+					}
+				} else {
+					e.isActive = false
 				}
-			} else {
-				e.isActive = false
+			default:
 			}
 		}
 	}()
