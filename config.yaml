@@ -36,7 +36,7 @@ flight-control:
   esc:
     i2c-dev: '/dev/i2c-1'
     max-throttle: 15
-    motors-esc-mappings:
+    pwm-device-to-esc-mappings:
       0: 0
       1: 4
       2: 8

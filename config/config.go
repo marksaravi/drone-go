@@ -55,9 +55,9 @@ type flightControl struct {
 		LowPassFilterCoefficient    float64 `yaml:"lowpass-filter-coefficient"`
 	} `yaml:"imu"`
 	ESC struct {
-		I2CDev           string      `yaml:"i2c-dev"`
-		MaxThrottle      float32     `yaml:"max-throttle"`
-		MotorESCMappings map[int]int `yaml:"motors-esc-mappings"`
+		I2CDev                 string      `yaml:"i2c-dev"`
+		MaxThrottle            float32     `yaml:"max-throttle"`
+		PwmDeviceToESCMappings map[int]int `yaml:"pwm-device-to-esc-mappings"`
 	} `yaml:"esc"`
 	Radio        radioConfig `yaml:"radio"`
 	PowerBreaker string      `yaml:"power-breaker"`
