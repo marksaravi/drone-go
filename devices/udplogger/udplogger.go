@@ -116,7 +116,7 @@ func NewUdpLogger() *udpLogger {
 		loggerConfigs.IP,
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
-		flightControl.ImuDataPerSecond,
+		flightControl.Imu.DataPerSecond,
 	)
 }
 

@@ -15,6 +15,14 @@ type imu interface {
 	ReadRotations() (models.ImuRotations, bool)
 }
 
+type esc interface {
+	On()
+	Off()
+	Close()
+	SetThrottles(models.Throttles)
+	SetThrottle(motor uint8, throttle float64)
+}
+
 type pidControl interface {
 	SetFlightCommands(flightCommands models.FlightCommands)
 	SetRotations(rotations models.ImuRotations)
@@ -25,6 +33,7 @@ type pidControl interface {
 type flightControl struct {
 	pid    pidControl
 	imu    imu
+	esc    esc
 	radio  models.Radio
 	logger models.Logger
 }
@@ -32,6 +41,7 @@ type flightControl struct {
 func NewFlightControl(
 	pid pidControl,
 	imu imu,
+	esc esc,
 	radio models.Radio,
 	logger models.Logger,
 ) *flightControl {
@@ -48,7 +58,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
+		defer fc.esc.Off()
 
+		fc.esc.On()
 		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
 		var running bool = true
@@ -58,6 +70,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case <-ctx.Done():
 				if running {
+					fc.esc.Close()
 					fc.radio.Close()
 					fc.logger.Close()
 					running = false
@@ -65,6 +78,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiver():
 				if ok {
+					fc.pid.SetFlightCommands(flightCommands)
 					showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok

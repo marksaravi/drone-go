@@ -1,6 +1,5 @@
 flight-control:
-  imu-data-per-second: 3200
-  esc-update-per-second: 100
+  
   pid:
     p-gain: 0
     i-gain: 0
@@ -10,6 +9,7 @@ flight-control:
     max-yaw: 15
     max-throttle: 15
   imu:
+    data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
@@ -36,6 +36,7 @@ flight-control:
   esc:
     i2c-dev: '/dev/i2c-1'
     max-throttle: 15
+    update-per-second: 100
     pwm-device-to-esc-mappings:
       0: 0
       1: 4

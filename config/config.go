@@ -21,9 +21,7 @@ type radioConfig struct {
 }
 
 type flightControl struct {
-	ImuDataPerSecond   int `yaml:"imu-data-per-second"`
-	EscUpdatePerSecond int `yaml:"esc-update-per-second"`
-	PID                struct {
+	PID struct {
 		PGain       float64 `yaml:"p-gain"`
 		IGain       float64 `yaml:"i-gain"`
 		DGain       float64 `yaml:"d-gain"`
@@ -33,8 +31,10 @@ type flightControl struct {
 		MaxThrottle float64 `yaml:"max-throttle"`
 	} `yaml:"pid"`
 	Imu struct {
-		SPI           spiConfig `yaml:"spi"`
-		Accelerometer struct {
+		DataPerSecond               int     `yaml:"data-per-second"`
+		AccLowPassFilterCoefficient float64 `yaml:"acc-lowpass-filter-coefficient"`
+		LowPassFilterCoefficient    float64 `yaml:"lowpass-filter-coefficient"`
+		Accelerometer               struct {
 			SensitivityLevel     string  `yaml:"sensitivity-level"`
 			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
 			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`
@@ -51,13 +51,13 @@ type flightControl struct {
 		Magnetometer struct {
 			SensitivityLevel string `yaml:"sensitivity-level"`
 		} `yaml:"magnetometer"`
-		AccLowPassFilterCoefficient float64 `yaml:"acc-lowpass-filter-coefficient"`
-		LowPassFilterCoefficient    float64 `yaml:"lowpass-filter-coefficient"`
+		SPI spiConfig `yaml:"spi"`
 	} `yaml:"imu"`
 	ESC struct {
 		I2CDev                 string      `yaml:"i2c-dev"`
 		MaxThrottle            float32     `yaml:"max-throttle"`
 		PwmDeviceToESCMappings map[int]int `yaml:"pwm-device-to-esc-mappings"`
+		UpdatePerSecond        int         `yaml:"update-per-second"`
 	} `yaml:"esc"`
 	Radio        radioConfig `yaml:"radio"`
 	PowerBreaker string      `yaml:"power-breaker"`
