@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
@@ -48,6 +47,7 @@ func NewFlightControl(
 	return &flightControl{
 		pid:    pid,
 		imu:    imu,
+		esc:    esc,
 		radio:  radio,
 		logger: logger,
 	}
@@ -79,7 +79,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case flightCommands, ok := <-fc.radio.GetReceiver():
 				if ok {
 					fc.pid.SetFlightCommands(flightCommands)
-					showFlightCommands(flightCommands)
+					// showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok
 
@@ -96,6 +96,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				rotations, imuDataAvailable := fc.imu.ReadRotations()
 				if imuDataAvailable {
 					fc.pid.SetRotations(rotations)
+					fc.esc.SetThrottles(fc.pid.Throttles())
 					fc.logger.Send(rotations)
 				}
 			}
@@ -114,11 +115,11 @@ func showConnectionState(connectionState radio.ConnectionState) {
 	}
 }
 
-var lastShowFlightCommands time.Time
+// var lastShowFlightCommands time.Time
 
-func showFlightCommands(fc models.FlightCommands) {
-	if time.Since(lastShowFlightCommands) >= time.Second/2 {
-		lastShowFlightCommands = time.Now()
-		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
-	}
-}
+// func showFlightCommands(fc models.FlightCommands) {
+// 	if time.Since(lastShowFlightCommands) >= time.Second/2 {
+// 		lastShowFlightCommands = time.Now()
+// 		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
+// 	}
+// }

@@ -30,9 +30,10 @@ type escDev struct {
 	lastUpdate             time.Time
 	updateInterval         time.Duration
 	isActive               bool
+	debug                  bool
 }
 
-func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, pwmDeviceToESCMappings map[int]int) *escDev {
+func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, pwmDeviceToESCMappings map[int]int, debug bool) *escDev {
 	return &escDev{
 		pwmDev:                 pwmDev,
 		powerbreaker:           powerbreaker,
@@ -41,6 +42,7 @@ func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, p
 		lastUpdate:             time.Now(),
 		updateInterval:         time.Second / time.Duration(updatesPerSecond),
 		isActive:               true,
+		debug:                  debug,
 	}
 }
 
@@ -87,10 +89,12 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 			throttels, ok := <-e.throttlesChan
 			if ok {
 				showThrottles(throttels)
-				// var ch uint8
-				// for ch = 0; ch < NUM_OF_ESC; ch++ {
-				// 	e.pwmDev.SetThrottle(e.pwmDeviceToESCMappings[int(ch)], float32(throttels[ch]))
-				// }
+				if !e.debug {
+					var ch uint8
+					for ch = 0; ch < NUM_OF_ESC; ch++ {
+						e.pwmDev.SetThrottle(e.pwmDeviceToESCMappings[int(ch)], float32(throttels[ch]))
+					}
+				}
 			} else {
 				e.isActive = false
 			}

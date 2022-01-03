@@ -21,7 +21,8 @@ type radioConfig struct {
 }
 
 type flightControl struct {
-	PID struct {
+	Debug bool `yaml:"debug"`
+	PID   struct {
 		PGain       float64 `yaml:"p-gain"`
 		IGain       float64 `yaml:"i-gain"`
 		DGain       float64 `yaml:"d-gain"`

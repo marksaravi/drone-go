@@ -1,5 +1,5 @@
 flight-control:
-  
+  debug: false
   pid:
     p-gain: 0
     i-gain: 0
