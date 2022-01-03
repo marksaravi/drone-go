@@ -77,6 +77,7 @@ func (e *escDev) Close() {
 
 func (e *escDev) Start(wg *sync.WaitGroup) {
 	wg.Add(1)
+	log.Println("Starting ESC...")
 
 	go func() {
 		defer wg.Done()

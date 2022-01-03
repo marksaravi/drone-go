@@ -14,6 +14,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	pidcontrol "github.com/marksaravi/drone-go/pid-control"
@@ -50,6 +51,7 @@ func main() {
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings)
 
 	pid := pidcontrol.NewPIDControl(
+		configs.Imu.DataPerSecond,
 		pidConfigs.PGain,
 		pidConfigs.IGain,
 		pidConfigs.DGain,
@@ -57,6 +59,7 @@ func main() {
 		pidConfigs.MaxPitch,
 		pidConfigs.MaxYaw,
 		pidConfigs.MaxThrottle,
+		mcp3008.DIGITAL_MAX_VALUE,
 	)
 	flightControl := flightcontrol.NewFlightControl(
 		pid,
@@ -71,6 +74,7 @@ func main() {
 	utils.WaitToAbortByENTER(cancel)
 	radioDev.Start(&wg)
 	logger.Start(&wg)
+	esc.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
 }
