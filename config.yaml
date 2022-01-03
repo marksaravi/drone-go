@@ -4,9 +4,9 @@ flight-control:
     p-gain: 0
     i-gain: 0
     d-gain: 0
-    max-roll: 15
-    max-pitch: 15
-    max-yaw: 15
+    max-roll: 5
+    max-pitch: 5
+    max-yaw: 5
     max-throttle: 15
   imu:
     data-per-second: 3200

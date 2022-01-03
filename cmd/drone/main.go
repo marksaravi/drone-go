@@ -47,7 +47,7 @@ func main() {
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.MaxThrottle)
-	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.PwmDeviceToESCMappings)
+	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings)
 
 	pid := pidcontrol.NewPIDControl(
 		pidConfigs.PGain,

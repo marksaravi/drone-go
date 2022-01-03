@@ -23,16 +23,18 @@ type pwmDevice interface {
 type escDev struct {
 	pwmDev                 pwmDevice
 	powerbreaker           powerbreaker
+	updatesPerSecond       int
 	pwmDeviceToESCMappings map[int]int
 	throttels              models.Throttles
 	throttlesChan          chan models.Throttles
 	isActive               bool
 }
 
-func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, pwmDeviceToESCMappings map[int]int) *escDev {
+func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, pwmDeviceToESCMappings map[int]int) *escDev {
 	return &escDev{
 		pwmDev:                 pwmDev,
 		powerbreaker:           powerbreaker,
+		updatesPerSecond:       updatesPerSecond,
 		pwmDeviceToESCMappings: pwmDeviceToESCMappings,
 		throttlesChan:          make(chan models.Throttles),
 		isActive:               true,

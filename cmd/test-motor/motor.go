@@ -33,7 +33,7 @@ func main() {
 	const steps int = 10
 	var dThrottle float64 = maxThrottle / float64(steps)
 	var throttle float64 = 0
-	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.PwmDeviceToESCMappings)
+	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.UpdatePerSecond, configs.ESC.PwmDeviceToESCMappings)
 	var wg sync.WaitGroup
 	esc.Start(&wg)
 	esc.On()
