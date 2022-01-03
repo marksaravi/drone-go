@@ -1,7 +1,6 @@
 package pidcontrol
 
 import (
-	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -15,37 +14,39 @@ type pidState struct {
 }
 
 type pidControl struct {
-	pGain            float64
-	iGain            float64
-	dGain            float64
-	state            pidState
-	targetState      pidState
-	rotationsHistory []models.ImuRotations
-	maxRoll          float64
-	maxPitch         float64
-	maxYaw           float64
-	maxThrottle      float64
-	throttles        models.Throttles
-	emergencyStop    bool
+	pGain                   float64
+	iGain                   float64
+	dGain                   float64
+	state                   pidState
+	targetState             pidState
+	rotationsHistory        []models.ImuRotations
+	maxJoystickDigitalValue float64
+	maxRoll                 float64
+	maxPitch                float64
+	maxYaw                  float64
+	maxThrottle             float64
+	throttles               models.Throttles
+	emergencyStop           bool
 }
 
-func NewPIDControl(pGain, iGain, dGain, maxRoll, maxPitch, maxYaw, maxThrottle float64) *pidControl {
+func NewPIDControl(pGain, iGain, dGain, maxRoll, maxPitch, maxYaw, maxThrottle float64, maxJoystickDigitalValue uint16) *pidControl {
 	return &pidControl{
-		pGain:            pGain,
-		iGain:            iGain,
-		dGain:            dGain,
-		maxRoll:          maxRoll,
-		maxPitch:         maxPitch,
-		maxYaw:           maxYaw,
-		maxThrottle:      maxThrottle,
-		rotationsHistory: make([]models.ImuRotations, ROTATIONS_HISTORY_SIZE),
-		throttles:        models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
-		emergencyStop:    false,
+		pGain:                   pGain,
+		iGain:                   iGain,
+		dGain:                   dGain,
+		maxRoll:                 maxRoll,
+		maxPitch:                maxPitch,
+		maxYaw:                  maxYaw,
+		maxThrottle:             maxThrottle,
+		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
+		rotationsHistory:        make([]models.ImuRotations, ROTATIONS_HISTORY_SIZE),
+		throttles:               models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
+		emergencyStop:           false,
 	}
 }
 
 func (pid *pidControl) SetFlightCommands(flightCommands models.FlightCommands) {
-	pid.targetState = flightControlCommandToPIDCommand(flightCommands)
+	pid.targetState = pid.flightControlCommandToPIDCommand(flightCommands)
 	pid.calcThrottles()
 }
 
@@ -88,13 +89,21 @@ func (pid *pidControl) applyEmergencyStop() {
 	}
 }
 
-func flightControlCommandToPIDCommand(c models.FlightCommands) pidState {
-	midValue := float64(constants.JOYSTICK_RESOLUTION / 2)
+func (pid *pidControl) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {
+	normalizedDigitalValue := float64(joystickDigitalValue) - pid.maxJoystickDigitalValue/2
+	return normalizedDigitalValue / pid.maxJoystickDigitalValue * maxValue
+}
+
+func (pid *pidControl) throttleToPidThrottle(joystickDigitalValue uint16) float64 {
+	return float64(joystickDigitalValue) / pid.maxJoystickDigitalValue * pid.maxThrottle
+}
+
+func (pid *pidControl) flightControlCommandToPIDCommand(c models.FlightCommands) pidState {
 
 	return pidState{
-		roll:     float64(c.Roll) - midValue,
-		pitch:    float64(c.Pitch) - midValue,
-		yaw:      float64(c.Yaw) - midValue,
-		throttle: float64(c.Throttle),
+		roll:     pid.joystickToPidValue(c.Roll, pid.maxRoll),
+		pitch:    pid.joystickToPidValue(c.Pitch, pid.maxPitch),
+		yaw:      pid.joystickToPidValue(c.Yaw, pid.maxYaw),
+		throttle: pid.throttleToPidThrottle(c.Throttle),
 	}
 }
