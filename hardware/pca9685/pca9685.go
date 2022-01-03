@@ -8,8 +8,8 @@ import (
 )
 
 type powerbreaker interface {
-	SetHigh()
-	SetLow()
+	Connect()
+	Disconnect()
 }
 
 //PCA9685Address is i2c address of device
@@ -216,13 +216,13 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
 	fmt.Println("turn on ESCs")
 	pwmDev.setAllPWM(MaxPW)
 	time.Sleep(1 * time.Second)
-	powerbreaker.SetHigh()
+	powerbreaker.Connect()
 	time.Sleep(12 * time.Second)
 	fmt.Println("setting min pulse width: ", MinPW)
 	pwmDev.setAllPWM(MinPW)
 	time.Sleep(12 * time.Second)
 	fmt.Println("turn off ESCs")
-	powerbreaker.SetLow()
+	powerbreaker.Disconnect()
 	time.Sleep(1 * time.Second)
 	pwmDev.setAllPWM(0)
 }
