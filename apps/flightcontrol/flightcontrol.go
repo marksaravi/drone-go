@@ -95,6 +95,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			if running && commandChanOpen {
 				rotations, imuDataAvailable := fc.imu.ReadRotations()
 				if imuDataAvailable {
+					fc.pid.SetRotations(rotations)
 					fc.logger.Send(rotations)
 				}
 			}
