@@ -70,13 +70,13 @@ var DisconnectedSound = Notes{
 }
 
 type Buzzer struct {
-	playing bool
+	playing int
 	out     gpio.PinOut
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
 	buzzer := &Buzzer{
-		playing: false,
+		playing: 0,
 		out:     out,
 	}
 	buzzer.out.Out(gpio.High)
@@ -114,11 +114,8 @@ func (b *Buzzer) playNotes(notes Notes) {
 }
 
 func (b *Buzzer) WaveGenerator(sound SoundWave) {
-	if b.playing {
-		return
-	}
-	b.playing = true
-
+	b.playing++
+	id := b.playing
 	go func() {
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
@@ -128,7 +125,7 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
-		for b.playing {
+		for b.playing == id {
 			freq := baseFrequency + devFrequency*math.Exp(t)
 			t += dT
 			if t >= maxT {
@@ -151,5 +148,5 @@ func (b *Buzzer) WaveGenerator(sound SoundWave) {
 }
 
 func (b *Buzzer) Stop() {
-	b.playing = false
+	b.playing++
 }
