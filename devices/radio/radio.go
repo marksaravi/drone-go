@@ -65,7 +65,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
 		defer wg.Done()
-		defer log.Println("Radio is stopped...")
+		defer log.Println("Radio is stopped.")
 
 		r.clearBuffer()
 		var running bool = true
@@ -75,7 +75,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case <-ctx.Done():
 				if running {
 					r.closeRadio()
-					log.Println("Closing receiver and connection...")
+					log.Println("Closing Receiver and Connection...")
 					close(r.receiver)
 					close(r.connection)
 					running = false
@@ -118,6 +118,7 @@ func (r *radioDevice) Transmit(data models.FlightCommands) {
 }
 
 func (r *radioDevice) Close() {
+	log.Println("Closing Transmitter...")
 	close(r.transmitter)
 }
 

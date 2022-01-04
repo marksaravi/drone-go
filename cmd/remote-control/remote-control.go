@@ -105,5 +105,4 @@ func main() {
 	remoteControl.Start(ctx, &waitGroup, cancel)
 	utils.WaitToAbortByENTER(cancel)
 	waitGroup.Wait()
-	log.Println("Remote Control stopped")
 }

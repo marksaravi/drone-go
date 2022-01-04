@@ -123,7 +123,6 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 				if transmitterOpen {
 					transmitterOpen = false
 					rc.radio.Close()
-					log.Println("CLOSING RADIO")
 				}
 
 			case _, ok := <-rc.radio.GetReceiver():
