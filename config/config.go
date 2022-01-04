@@ -56,7 +56,7 @@ type flightControl struct {
 	} `yaml:"imu"`
 	ESC struct {
 		I2CDev                 string      `yaml:"i2c-dev"`
-		MaxThrottle            float32     `yaml:"max-throttle"`
+		SafetyMaxThrottle      float32     `yaml:"safety-max-throttle"`
 		PwmDeviceToESCMappings map[int]int `yaml:"pwm-device-to-esc-mappings"`
 		UpdatePerSecond        int         `yaml:"update-per-second"`
 	} `yaml:"esc"`

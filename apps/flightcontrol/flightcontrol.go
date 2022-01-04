@@ -19,7 +19,6 @@ type esc interface {
 	Off()
 	Close()
 	SetThrottles(models.Throttles)
-	SetThrottle(motor uint8, throttle float64)
 }
 
 type pidControl interface {

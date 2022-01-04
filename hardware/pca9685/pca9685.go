@@ -46,11 +46,11 @@ const (
 )
 
 type pca9685Dev struct {
-	name        string
-	address     uint8
-	connection  *i2c.Dev
-	frequency   float32
-	maxThrottle float32
+	name              string
+	address           uint8
+	connection        *i2c.Dev
+	frequency         float32
+	safetyMaxThrottle float32
 }
 
 func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
@@ -194,8 +194,11 @@ func (d *pca9685Dev) init() error {
 
 //SetThrottle sets PWM for a channel
 func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
-	if throttle > 100 || throttle > d.maxThrottle || throttle < 0 {
-		return
+	if throttle < 0 {
+		throttle = 0
+	}
+	if throttle > d.safetyMaxThrottle {
+		throttle = d.safetyMaxThrottle
 	}
 	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
 }
@@ -228,12 +231,18 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, maxThrottle float32) (*pca9685Dev, error) {
+func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (*pca9685Dev, error) {
+	if safetyMaxThrottle > 50 { // Hardcoded safety fow now. Will change after flight tests
+		safetyMaxThrottle = 50
+	}
+	if safetyMaxThrottle < 0 {
+		safetyMaxThrottle = 0
+	}
 	dev := &pca9685Dev{
-		name:        "pca9685Dev",
-		address:     address,
-		connection:  connection,
-		maxThrottle: maxThrottle,
+		name:              "pca9685Dev",
+		address:           address,
+		connection:        connection,
+		safetyMaxThrottle: safetyMaxThrottle,
 	}
 	dev.init()
 	return dev, nil

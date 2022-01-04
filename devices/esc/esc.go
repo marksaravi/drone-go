@@ -25,7 +25,6 @@ type escDev struct {
 	pwmDev                 pwmDevice
 	powerbreaker           powerbreaker
 	pwmDeviceToESCMappings map[int]int
-	throttels              models.Throttles
 	throttlesChan          chan models.Throttles
 	lastUpdate             time.Time
 	updateInterval         time.Duration
@@ -60,14 +59,6 @@ func (e *escDev) SetThrottles(throttles models.Throttles) {
 	if e.isActive && time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
 		e.throttlesChan <- throttles
-	}
-}
-
-func (e *escDev) SetThrottle(channel uint8, throttle float64) {
-	if e.isActive {
-		throttels := e.throttels
-		throttels[channel] = throttle
-		e.throttlesChan <- throttels
 	}
 }
 

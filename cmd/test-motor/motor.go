@@ -27,7 +27,7 @@ func main() {
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.MaxThrottle)
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.SafetyMaxThrottle)
 
 	const maxThrottle float64 = 10
 	const steps int = 10
