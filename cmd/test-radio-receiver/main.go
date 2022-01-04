@@ -26,8 +26,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radiodev models.Radio) {
 	var counter int = 0
 	var start time.Time = time.Now()
 
-	var running bool = true
-	for running {
+	for {
 		select {
 		case <-ctx.Done():
 			radiodev.Close()
@@ -57,7 +56,6 @@ func process(ctx context.Context, wg *sync.WaitGroup, radiodev models.Radio) {
 					counter = 0
 				}
 			}
-		default:
 		}
 	}
 }
