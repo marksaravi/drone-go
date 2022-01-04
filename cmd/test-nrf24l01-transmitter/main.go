@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -21,7 +22,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 	defer wg.Done()
 	wg.Add(1)
 
-	interval := time.Second / 50
+	interval := time.Second / 200
 	start := time.Now()
 	var id byte = 0
 
@@ -47,6 +48,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 }
 
 func main() {
+	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
 	radioConfigs := config.ReadConfigs().FlightControl.Radio
 	nrf204dev := nrf204.NewRadio(

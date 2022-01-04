@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
@@ -256,8 +255,6 @@ func (radio *nrf204l01) Transmit(payload models.Payload) error {
 	}
 	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
 	radio.ce.Out(gpio.High)
-	time.Sleep(time.Millisecond)
-	radio.ce.Out(gpio.Low)
 	return err
 }
 
