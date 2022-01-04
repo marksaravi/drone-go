@@ -78,25 +78,7 @@ type nrf204l01 struct {
 	isReceiver bool
 }
 
-func NewNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *nrf204l01 {
-	address := []byte(rxTxAddress)
-	lenAddress := len(address)
-	if lenAddress != ADDRESS_SIZE {
-		log.Fatal("Rx Address for Radio link is incorrect")
-	}
-
-	radio := nrf204l01{
-		ce:         initPin(CE),
-		address:    address,
-		conn:       conn,
-		powerDBm:   dbmStrToDBm(powerDBm),
-		isReceiver: true,
-	}
-	radio.init()
-	return &radio
-}
-
-func NewRadio(
+func NewNRF204(
 	spiBusNum int,
 	spiChipSelect int,
 	spiChipEnabledGPIO string,
@@ -107,9 +89,15 @@ func NewRadio(
 		spiBusNum,
 		spiChipSelect,
 	)
-	fmt.Println(rxTxAddress)
-	radio := NewNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
-	return radio
+
+	radio := nrf204l01{
+		address:    []byte(rxTxAddress),
+		ce:         initPin(spiChipEnabledGPIO),
+		conn:       radioSPIConn,
+		powerDBm:   dbmStrToDBm(powerDb),
+		isReceiver: true,
+	}
+	return &radio
 }
 
 func (radio *nrf204l01) Receive() (models.Payload, bool) {

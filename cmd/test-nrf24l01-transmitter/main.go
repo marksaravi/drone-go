@@ -52,7 +52,7 @@ func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
 	radioConfigs := config.ReadConfigs().FlightControl.Radio
-	nrf204dev := nrf204.NewRadio(
+	nrf204dev := nrf204.NewNRF204(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
