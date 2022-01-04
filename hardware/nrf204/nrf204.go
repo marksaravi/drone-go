@@ -102,7 +102,7 @@ func NewNRF204(
 	return &radio
 }
 
-func (radio *nrf204l01) Receive() (models.Payload, bool) {
+func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
 	if !radio.isReceiver {
 		radio.receiverOn()
 	}
@@ -119,7 +119,7 @@ func (radio *nrf204l01) Receive() (models.Payload, bool) {
 	return payload, true
 }
 
-func (radio *nrf204l01) Transmit(payload models.Payload) error {
+func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
