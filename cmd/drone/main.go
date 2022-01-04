@@ -31,7 +31,7 @@ func main() {
 
 	hardware.InitHost()
 
-	radioNRF204 := nrf204.NewRadio(
+	radioNRF204 := nrf204.NewNRF204(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
@@ -72,7 +72,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel)
-	radioDev.Start(&wg)
+	radioDev.Start(ctx, &wg)
 	logger.Start(&wg)
 	esc.Start(&wg)
 	flightControl.Start(ctx, &wg)

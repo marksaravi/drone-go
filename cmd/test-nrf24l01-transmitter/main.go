@@ -14,8 +14,8 @@ import (
 )
 
 type radioLink interface {
-	Receive() (models.Payload, bool)
-	Transmit(models.Payload) error
+	TransmitPayload(models.Payload) error
+	ReceivePayload() (models.Payload, bool)
 }
 
 func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
@@ -36,8 +36,8 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 				start = time.Now()
 				var payload models.Payload
 				payload[0] = id
-				radio.Transmit(payload)
-				radio.Receive()
+				radio.TransmitPayload(payload)
+				radio.ReceivePayload()
 				id++
 				if id > 250 {
 					id = 0

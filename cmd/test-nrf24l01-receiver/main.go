@@ -14,8 +14,8 @@ import (
 )
 
 type radioLink interface {
-	Receive() (models.Payload, bool)
-	Transmit(models.Payload) error
+	TransmitPayload(models.Payload) error
+	ReceivePayload() (models.Payload, bool)
 }
 
 func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
@@ -35,7 +35,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 		case <-ctx.Done():
 			running = false
 		default:
-			payload, available := radio.Receive()
+			payload, available := radio.ReceivePayload()
 			if available {
 				total++
 				counter++
