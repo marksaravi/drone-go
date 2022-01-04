@@ -112,6 +112,57 @@ func NewRadio(
 	return radio
 }
 
+func (radio *nrf204l01) TransmitterOn() {
+	radio.isReceiver = false
+	radio.ce.Out(gpio.Low)
+	radio.setRetries(5, 0)
+	radio.clearStatus()
+	radio.setRx(OFF)
+	radio.flushRx()
+	radio.flushTx()
+	radio.setPower(ON)
+	radio.ce.Out(gpio.Low)
+}
+
+func (radio *nrf204l01) ReceiverOn() {
+	radio.isReceiver = true
+	radio.ce.Out(gpio.Low)
+	radio.setPower(ON)
+	radio.clearStatus()
+	radio.setRx(ON)
+	radio.flushRx()
+	radio.flushTx()
+	radio.ce.Out(gpio.High)
+}
+
+func (radio *nrf204l01) Receive() (models.Payload, bool) {
+	if !radio.isDataAvailable() {
+		return models.Payload{}, false
+	}
+	payload := models.Payload{}
+	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
+	copy(payload[:], data)
+	radio.resetDR()
+	if err != nil {
+		return models.Payload{}, false
+	}
+	return payload, true
+}
+
+func (radio *nrf204l01) Transmit(payload models.Payload) error {
+	if radio.isReceiver {
+		return errors.New("not in transmit mode")
+	}
+	radio.ce.Out(gpio.Low)
+	radio.writeRegister(TX_ADDR, radio.address)
+	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
+		return fmt.Errorf("payload size error %d", len(payload))
+	}
+	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	radio.ce.Out(gpio.High)
+	return err
+}
+
 func dbmStrToDBm(dbm string) byte {
 	switch dbm {
 	case "-18dbm":
@@ -180,29 +231,6 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 	radio.writeRegisterByte(RF_SETUP, setup)
 }
 
-func (radio *nrf204l01) TransmitterOn() {
-	radio.isReceiver = false
-	radio.ce.Out(gpio.Low)
-	radio.setRetries(5, 0)
-	radio.clearStatus()
-	radio.setRx(OFF)
-	radio.flushRx()
-	radio.flushTx()
-	radio.setPower(ON)
-	radio.ce.Out(gpio.Low)
-}
-
-func (radio *nrf204l01) ReceiverOn() {
-	radio.isReceiver = true
-	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
-	radio.clearStatus()
-	radio.setRx(ON)
-	radio.flushRx()
-	radio.flushTx()
-	radio.ce.Out(gpio.High)
-}
-
 func (radio *nrf204l01) isDataAvailable() bool {
 	// get implied RX FIFO empty flag from status byte
 	status := radio.getStatus()
@@ -217,19 +245,6 @@ func (radio *nrf204l01) getStatus() byte {
 	return status
 }
 
-func (radio *nrf204l01) Receive() (models.Payload, bool) {
-	if !radio.isDataAvailable() {
-		return models.Payload{}, false
-	}
-	payload := models.Payload{}
-	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
-	copy(payload[:], data)
-	radio.resetDR()
-	if err != nil {
-		return models.Payload{}, false
-	}
-	return payload, true
-}
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
 	w := make([]byte, datalen+1)
@@ -242,20 +257,6 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 
 	err := conn.Tx(w, r)
 	return r, err
-}
-
-func (radio *nrf204l01) Transmit(payload models.Payload) error {
-	if radio.isReceiver {
-		return errors.New("not in transmit mode")
-	}
-	radio.ce.Out(gpio.Low)
-	radio.writeRegister(TX_ADDR, radio.address)
-	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
-		return fmt.Errorf("payload size error %d", len(payload))
-	}
-	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
-	radio.ce.Out(gpio.High)
-	return err
 }
 
 func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
