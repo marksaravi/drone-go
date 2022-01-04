@@ -137,8 +137,10 @@ func (radio *nrf204l01) Transmit(payload models.Payload) error {
 		radio.transmitterOn()
 	}
 	radio.ce.Out(gpio.Low)
-	radio.writeRegister(TX_ADDR, radio.address)
-	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	_, err := radio.writeRegister(TX_ADDR, radio.address)
+	if err == nil {
+		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	}
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
 	radio.receiverOn()
