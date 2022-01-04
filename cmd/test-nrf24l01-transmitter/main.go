@@ -26,7 +26,6 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 	start := time.Now()
 	var id byte = 0
 
-	// radio.TransmitterOn()
 	var running bool = true
 	for running {
 		select {
@@ -51,7 +50,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
-	radioConfigs := config.ReadConfigs().FlightControl.Radio
+	radioConfigs := config.ReadConfigs().RemoteControl.Radio
 	nrf204dev := nrf204.NewNRF204(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
