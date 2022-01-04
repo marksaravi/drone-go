@@ -54,7 +54,7 @@ type pca9685Dev struct {
 	safetyMaxThrottle float32
 }
 
-const MAX_STARTER_THROTTLE float32 = 5
+const SAFE_THROTTLE_START float32 = 5
 
 // NewPCA9685Driver creates new pca9685Dev driver
 func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (*pca9685Dev, error) {
@@ -100,7 +100,7 @@ func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
 	if throttle > d.safetyMaxThrottle {
 		throttle = d.safetyMaxThrottle
 	}
-	if d.throttels[channel] == 0 && throttle > MAX_STARTER_THROTTLE {
+	if d.throttels[channel] == 0 && throttle > SAFE_THROTTLE_START {
 		return // Another safety measure to make sure throttle always starts from low
 	}
 	d.throttels[channel] = throttle
