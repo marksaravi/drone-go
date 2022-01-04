@@ -89,14 +89,13 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				connectionChanOpen = ok
 
 			default:
-			}
-
-			if running && commandChanOpen {
-				rotations, imuDataAvailable := fc.imu.ReadRotations()
-				if imuDataAvailable {
-					fc.pid.SetRotations(rotations)
-					fc.esc.SetThrottles(fc.pid.Throttles())
-					fc.logger.Send(rotations)
+				if running && commandChanOpen {
+					rotations, imuDataAvailable := fc.imu.ReadRotations()
+					if imuDataAvailable {
+						fc.pid.SetRotations(rotations)
+						fc.esc.SetThrottles(fc.pid.Throttles())
+						fc.logger.Send(rotations)
+					}
 				}
 			}
 		}
