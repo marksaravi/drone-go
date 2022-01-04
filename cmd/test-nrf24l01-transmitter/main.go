@@ -8,7 +8,6 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
@@ -22,31 +21,17 @@ func main() {
 		radioConfigs.PowerDBm,
 	)
 	radio.TransmitterOn()
-	var roll float32 = 0
-	var altitude float32 = 0
-	var motorsEngaged bool = false
-	var numSend int = 0
-	start := time.Now()
-	var id uint32 = 0
-	for range time.Tick(time.Millisecond * 20) {
-		flightCommands := models.FlightCommands{
-			Roll:     14,
-			Pitch:    15,
-			Yaw:      0,
-			Throttle: 17,
-		}
+	var id byte = 0
+	for range time.Tick(time.Second / 50) {
+		var payload models.Payload
+		payload[0] = id
 		id++
-		err := radio.Transmit(utils.SerializeFlightCommand(flightCommands))
+		if id > 250 {
+			id = 0
+		}
+		err := radio.Transmit(payload)
 		if err != nil {
 			fmt.Println(err)
-		}
-		roll += 0.3
-		altitude += 1.34
-		motorsEngaged = !motorsEngaged
-		numSend++
-		if time.Since(start) >= time.Second {
-			start = time.Now()
-			fmt.Println("send ", numSend, " (", flightCommands, ")")
 		}
 	}
 }
