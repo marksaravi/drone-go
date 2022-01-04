@@ -1,9 +1,9 @@
 package nrf204
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
@@ -112,30 +112,10 @@ func NewRadio(
 	return radio
 }
 
-func (radio *nrf204l01) TransmitterOn() {
-	radio.isReceiver = false
-	radio.ce.Out(gpio.Low)
-	radio.setRetries(5, 0)
-	radio.clearStatus()
-	radio.setRx(OFF)
-	radio.flushRx()
-	radio.flushTx()
-	radio.setPower(ON)
-	radio.ce.Out(gpio.Low)
-}
-
-func (radio *nrf204l01) ReceiverOn() {
-	radio.isReceiver = true
-	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
-	radio.clearStatus()
-	radio.setRx(ON)
-	radio.flushRx()
-	radio.flushTx()
-	radio.ce.Out(gpio.High)
-}
-
 func (radio *nrf204l01) Receive() (models.Payload, bool) {
+	if !radio.isReceiver {
+		radio.receiverOn()
+	}
 	if !radio.isDataAvailable() {
 		return models.Payload{}, false
 	}
@@ -150,17 +130,42 @@ func (radio *nrf204l01) Receive() (models.Payload, bool) {
 }
 
 func (radio *nrf204l01) Transmit(payload models.Payload) error {
-	if radio.isReceiver {
-		return errors.New("not in transmit mode")
-	}
-	radio.ce.Out(gpio.Low)
-	radio.writeRegister(TX_ADDR, radio.address)
 	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
+	if radio.isReceiver {
+		radio.transmitterOn()
+	}
+	radio.ce.Out(gpio.Low)
+	radio.writeRegister(TX_ADDR, radio.address)
 	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
 	radio.ce.Out(gpio.High)
+	time.Sleep(time.Millisecond)
+	radio.receiverOn()
 	return err
+}
+
+func (radio *nrf204l01) transmitterOn() {
+	radio.isReceiver = false
+	radio.ce.Out(gpio.Low)
+	radio.setRetries(5, 0)
+	radio.clearStatus()
+	radio.setRx(OFF)
+	radio.flushRx()
+	radio.flushTx()
+	radio.setPower(ON)
+	radio.ce.Out(gpio.High)
+}
+
+func (radio *nrf204l01) receiverOn() {
+	radio.isReceiver = true
+	radio.ce.Out(gpio.Low)
+	radio.setPower(ON)
+	radio.clearStatus()
+	radio.setRx(ON)
+	radio.flushRx()
+	radio.flushTx()
+	radio.ce.Out(gpio.High)
 }
 
 func dbmStrToDBm(dbm string) byte {
