@@ -1,7 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/config"
@@ -11,41 +13,54 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+type radioLink interface {
+	TransmitPayload(models.Payload) error
+	ReceivePayload() (models.Payload, bool)
+}
+
+func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
+	defer wg.Done()
+	wg.Add(1)
+
+	interval := time.Second / 400
+	start := time.Now()
+	var id byte = 0
+
+	var running bool = true
+	for running {
+		select {
+		case <-ctx.Done():
+			running = false
+		default:
+			if time.Since(start) >= interval {
+				start = time.Now()
+				var payload models.Payload
+				payload[0] = id
+				radio.TransmitPayload(payload)
+				radio.ReceivePayload()
+				id++
+				if id > 250 {
+					id = 0
+				}
+			}
+		}
+	}
+}
+
 func main() {
+	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
-	radioConfigs := config.ReadConfigs().FlightControl.Radio
-	radio := nrf204.NewRadio(
+	radioConfigs := config.ReadConfigs().RemoteControl.Radio
+	nrf204dev := nrf204.NewNRF204(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 		radioConfigs.PowerDBm,
 	)
-	var roll float32 = 0
-	var altitude float32 = 0
-	var motorsEngaged bool = false
-	var numSend int = 0
-	start := time.Now()
-	var id uint32 = 0
-	for range time.Tick(time.Millisecond * 20) {
-		flightCommands := models.FlightCommands{
-			Roll:     14,
-			Pitch:    15,
-			Yaw:      0,
-			Throttle: 17,
-		}
-		id++
-		err := radio.Transmit(utils.SerializeFlightCommand(flightCommands))
-		if err != nil {
-			fmt.Println(err)
-		}
-		roll += 0.3
-		altitude += 1.34
-		motorsEngaged = !motorsEngaged
-		numSend++
-		if time.Since(start) >= time.Second {
-			start = time.Now()
-			fmt.Println("send ", numSend, " (", flightCommands, ")")
-		}
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	go process(ctx, &wg, nrf204dev)
+	utils.WaitToAbortByENTER(cancel)
+	wg.Wait()
 }

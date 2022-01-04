@@ -78,23 +78,34 @@ type nrf204l01 struct {
 	isReceiver bool
 }
 
-func NewRadio(
+func NewNRF204(
 	spiBusNum int,
 	spiChipSelect int,
 	spiChipEnabledGPIO string,
 	rxTxAddress string,
 	powerDb string,
-) models.RadioLink {
+) *nrf204l01 {
 	radioSPIConn := hardware.NewSPIConnection(
 		spiBusNum,
 		spiChipSelect,
 	)
-	radio := newNRF204(rxTxAddress, spiChipEnabledGPIO, powerDb, radioSPIConn)
-	return radio
+
+	radio := nrf204l01{
+		address:    []byte(rxTxAddress),
+		ce:         initPin(spiChipEnabledGPIO),
+		conn:       radioSPIConn,
+		powerDBm:   dbmStrToDBm(powerDb),
+		isReceiver: true,
+	}
+	radio.init()
+	radio.receiverOn()
+	return &radio
 }
 
-func (radio *nrf204l01) Receive() (models.Payload, bool) {
-	radio.receiverOn()
+func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
+	if !radio.isReceiver {
+		radio.receiverOn()
+	}
 	if !radio.isDataAvailable() {
 		return models.Payload{}, false
 	}
@@ -108,38 +119,45 @@ func (radio *nrf204l01) Receive() (models.Payload, bool) {
 	return payload, true
 }
 
-func (radio *nrf204l01) Transmit(payload models.Payload) error {
-	radio.transmitterOn()
-	radio.ce.Out(gpio.Low)
-	radio.writeRegister(TX_ADDR, radio.address)
+func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
 		return fmt.Errorf("payload size error %d", len(payload))
 	}
-	_, err := writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	if radio.isReceiver {
+		radio.transmitterOn()
+	}
+	radio.ce.Out(gpio.Low)
+	_, err := radio.writeRegister(TX_ADDR, radio.address)
+	if err == nil {
+		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+	}
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
-	radio.ce.Out(gpio.Low)
 	radio.receiverOn()
 	return err
 }
 
-func newNRF204(rxTxAddress string, CE string, powerDBm string, conn spi.Conn) *nrf204l01 {
-	address := []byte(rxTxAddress)
-	lenAddress := len(address)
-	if lenAddress != ADDRESS_SIZE {
-		log.Fatal("Rx Address for Radio link is incorrect")
-	}
+func (radio *nrf204l01) transmitterOn() {
+	radio.isReceiver = false
+	radio.ce.Out(gpio.Low)
+	radio.setRetries(5, 0)
+	radio.clearStatus()
+	radio.setRx(OFF)
+	radio.flushRx()
+	radio.flushTx()
+	radio.setPower(ON)
+	radio.ce.Out(gpio.High)
+}
 
-	radio := nrf204l01{
-		ce:         initPin(CE),
-		address:    address,
-		conn:       conn,
-		powerDBm:   dbmStrToDBm(powerDBm),
-		isReceiver: true,
-	}
-	radio.init()
-	radio.receiverOn()
-	return &radio
+func (radio *nrf204l01) receiverOn() {
+	radio.isReceiver = true
+	radio.ce.Out(gpio.Low)
+	radio.setPower(ON)
+	radio.clearStatus()
+	radio.setRx(ON)
+	radio.flushRx()
+	radio.flushTx()
+	radio.ce.Out(gpio.High)
 }
 
 func dbmStrToDBm(dbm string) byte {
@@ -208,35 +226,6 @@ func (radio *nrf204l01) setPALevel(rfPower byte) {
 	setup, _ := radio.readRegisterByte(RF_SETUP)
 	setup = (setup & 0b11110001) | (rfPower << 1)
 	radio.writeRegisterByte(RF_SETUP, setup)
-}
-
-func (radio *nrf204l01) transmitterOn() {
-	if !radio.isReceiver {
-		return
-	}
-	radio.isReceiver = false
-	radio.ce.Out(gpio.Low)
-	radio.setRetries(5, 0)
-	radio.clearStatus()
-	radio.setRx(OFF)
-	radio.flushRx()
-	radio.flushTx()
-	radio.setPower(ON)
-	radio.ce.Out(gpio.Low)
-}
-
-func (radio *nrf204l01) receiverOn() {
-	if radio.isReceiver {
-		return
-	}
-	radio.isReceiver = true
-	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
-	radio.clearStatus()
-	radio.setRx(ON)
-	radio.flushRx()
-	radio.flushTx()
-	radio.ce.Out(gpio.High)
 }
 
 func (radio *nrf204l01) isDataAvailable() bool {

@@ -40,7 +40,7 @@ func main() {
 	oled := ssd1306.NewSSD1306(oledDev, ssd1306.DefaultOptions)
 	oled.Init()
 
-	radioNRF204 := nrf204.NewRadio(
+	radioNRF204 := nrf204.NewNRF204(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
@@ -101,7 +101,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var waitGroup sync.WaitGroup
 
-	radioDev.Start(&waitGroup)
+	radioDev.Start(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
 	utils.WaitToAbortByENTER(cancel)
 	waitGroup.Wait()
