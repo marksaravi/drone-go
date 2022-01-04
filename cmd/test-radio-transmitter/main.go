@@ -18,14 +18,14 @@ func process(ctx context.Context, wg *sync.WaitGroup, radiodev models.Radio) {
 	defer wg.Done()
 	wg.Add(1)
 
-	interval := time.Second / 400
+	interval := time.Second / 4
 	start := time.Now()
 	var id byte = 0
 
-	var running bool = true
-	for running {
+	for {
 		select {
 		case <-ctx.Done():
+			radiodev.Close()
 			return
 		case connection, ok := <-radiodev.GetConnection():
 			if ok {
@@ -78,7 +78,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	radio.Start(&wg)
+	radio.Start(ctx, &wg)
 	go process(ctx, &wg, radio)
 	utils.WaitToAbortByENTER(cancel)
 	wg.Wait()
