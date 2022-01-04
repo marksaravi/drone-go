@@ -101,7 +101,10 @@ func (b *Buzzer) playNote(note Note) {
 }
 
 func (b *Buzzer) PlaySound(notes Notes) {
-	b.playNotes(notes)
+	b.Stop()
+	go func() {
+		b.playNotes(notes)
+	}()
 }
 
 func (b *Buzzer) playNotes(notes Notes) {
