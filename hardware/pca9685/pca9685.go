@@ -50,7 +50,88 @@ type pca9685Dev struct {
 	address           uint8
 	connection        *i2c.Dev
 	frequency         float32
+	throttels         map[int]float32
 	safetyMaxThrottle float32
+}
+
+const MAX_STARTER_THROTTLE float32 = 5
+
+// NewPCA9685Driver creates new pca9685Dev driver
+func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (*pca9685Dev, error) {
+	if safetyMaxThrottle > 50 { // Hardcoded safety fow now. Will change after flight tests
+		safetyMaxThrottle = 50
+	}
+	if safetyMaxThrottle < 0 {
+		safetyMaxThrottle = 0
+	}
+	dev := &pca9685Dev{
+		name:              "pca9685Dev",
+		address:           address,
+		connection:        connection,
+		safetyMaxThrottle: safetyMaxThrottle,
+		throttels: map[int]float32{
+			0:  0,
+			1:  0,
+			2:  0,
+			3:  0,
+			4:  0,
+			5:  0,
+			6:  0,
+			7:  0,
+			8:  0,
+			9:  0,
+			10: 0,
+			11: 0,
+			12: 0,
+			13: 0,
+			14: 0,
+			15: 0,
+		},
+	}
+	dev.init()
+	return dev, nil
+}
+
+//SetThrottle sets PWM for a channel
+func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
+	if throttle < 0 {
+		throttle = 0
+	}
+	if throttle > d.safetyMaxThrottle {
+		throttle = d.safetyMaxThrottle
+	}
+	if d.throttels[channel] == 0 && throttle > MAX_STARTER_THROTTLE {
+		return // Another safety measure to make sure throttle always starts from low
+	}
+	d.throttels[channel] = throttle
+	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
+}
+
+//Calibrate
+func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
+	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("setting max pulse width: ", MaxPW)
+	fmt.Println("turn on ESCs")
+	pwmDev.setAllPWM(MaxPW)
+	time.Sleep(1 * time.Second)
+	powerbreaker.Connect()
+	time.Sleep(12 * time.Second)
+	fmt.Println("setting min pulse width: ", MinPW)
+	pwmDev.setAllPWM(MinPW)
+	time.Sleep(12 * time.Second)
+	fmt.Println("turn off ESCs")
+	powerbreaker.Disconnect()
+	time.Sleep(1 * time.Second)
+	pwmDev.setAllPWM(0)
 }
 
 func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
@@ -190,60 +271,4 @@ func (d *pca9685Dev) init() error {
 	time.Sleep(5 * time.Millisecond)
 	d.setFrequency(Frequency)
 	return err
-}
-
-//SetThrottle sets PWM for a channel
-func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
-	if throttle < 0 {
-		throttle = 0
-	}
-	if throttle > d.safetyMaxThrottle {
-		throttle = d.safetyMaxThrottle
-	}
-	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
-}
-
-//Calibrate
-func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
-	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("setting max pulse width: ", MaxPW)
-	fmt.Println("turn on ESCs")
-	pwmDev.setAllPWM(MaxPW)
-	time.Sleep(1 * time.Second)
-	powerbreaker.Connect()
-	time.Sleep(12 * time.Second)
-	fmt.Println("setting min pulse width: ", MinPW)
-	pwmDev.setAllPWM(MinPW)
-	time.Sleep(12 * time.Second)
-	fmt.Println("turn off ESCs")
-	powerbreaker.Disconnect()
-	time.Sleep(1 * time.Second)
-	pwmDev.setAllPWM(0)
-}
-
-// NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (*pca9685Dev, error) {
-	if safetyMaxThrottle > 50 { // Hardcoded safety fow now. Will change after flight tests
-		safetyMaxThrottle = 50
-	}
-	if safetyMaxThrottle < 0 {
-		safetyMaxThrottle = 0
-	}
-	dev := &pca9685Dev{
-		name:              "pca9685Dev",
-		address:           address,
-		connection:        connection,
-		safetyMaxThrottle: safetyMaxThrottle,
-	}
-	dev.init()
-	return dev, nil
 }
