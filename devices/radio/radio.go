@@ -66,38 +66,43 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Radio is stopped...")
 
 		r.clearBuffer()
-
-		for {
+		var running bool = true
+		var transmitting bool = true
+		for running || transmitting {
 			select {
 			case <-ctx.Done():
-				r.closeRadio()
-				log.Println("Closing receiver and connection...")
-				close(r.receiver)
-				close(r.connection)
-				return
+				if running {
+					r.closeRadio()
+					log.Println("Closing receiver and connection...")
+					close(r.receiver)
+					close(r.connection)
+					running = false
+				}
 
 			case flightCommands, ok := <-r.transmitter:
 				if ok {
 					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
 				}
-
+				transmitting = ok
 			default:
-				payload, available := r.radiolink.ReceivePayload()
-				if payload[0] == COMMAND {
-					r.receiver <- utils.DeserializeFlightCommand(payload)
-				}
-				if available {
-					r.setConnectionState(payload[0])
-				} else {
-					r.setConnectionState(NO_COMMAND)
+				if running {
+					payload, available := r.radiolink.ReceivePayload()
+					if payload[0] == COMMAND {
+						r.receiver <- utils.DeserializeFlightCommand(payload)
+					}
+					if available {
+						r.setConnectionState(payload[0])
+					} else {
+						r.setConnectionState(NO_COMMAND)
+					}
+					if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/10 {
+						r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
+							Type: HEARTBEAT,
+						}))
+					}
 				}
 			}
 
-			if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/10 {
-				r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
-					Type: HEARTBEAT,
-				}))
-			}
 		}
 	}()
 }
