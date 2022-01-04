@@ -44,7 +44,7 @@ flight-control:
       3: 12
   radio:
     rx-tx-address: '03896'
-    power-dbm: '-18dbm'
+    power-dbm: '-12dbm'
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
@@ -53,7 +53,7 @@ flight-control:
   power-breaker: 'GPIO17'
 
 remote-control:
-  command-per-sec: 25
+  command-per-sec: 40
   joysticks:
     roll:
       channel: 4
@@ -79,7 +79,7 @@ remote-control:
     bottom-right: 'GPIO23'
   radio:
     rx-tx-address: '03896'
-    power-dbm: '-18dbm'
+    power-dbm: '-12dbm'
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
