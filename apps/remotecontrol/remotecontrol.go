@@ -57,7 +57,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 	buttonBottomLeft := rc.btnBottomLeft.Read()
 	buttonBottomRight := rc.btnBottomRight.Read()
 
-	if time.Since(lastPrinted) >= time.Second/4 {
+	if time.Since(lastPrinted) >= time.Second {
 		lastPrinted = time.Now()
 		log.Printf("%6d, %6d, %6d, %6d\n", roll, pitch, yaw, throttle)
 	}
@@ -166,6 +166,6 @@ func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.W
 	case radio.CONNECTION_LOST:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
-		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)
+		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
 	}
 }

@@ -1,9 +1,7 @@
 package piezobuzzer
 
 import (
-	"context"
 	"math"
-	"sync"
 	"time"
 
 	"periph.io/x/periph/conn/gpio"
@@ -112,17 +110,13 @@ func (b *Buzzer) playNotes(notes Notes) {
 	}
 }
 
-func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound SoundWave) {
+func (b *Buzzer) WaveGenerator(sound SoundWave) {
 	if b.playing {
 		return
 	}
 	b.playing = true
-	wg.Add(1)
 
 	go func() {
-		defer wg.Done()
-		defer b.stopWaveGenerator()
-
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
@@ -148,19 +142,11 @@ func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound So
 			b.out.Out(gpio.Low)
 			for time.Since(onTime) < period {
 			}
-			select {
-			case <-ctx.Done():
-				b.playing = false
-			default:
-			}
 		}
+		b.out.Out(gpio.Low)
 	}()
 }
 
 func (b *Buzzer) Stop() {
 	b.playing = false
-}
-
-func (b *Buzzer) stopWaveGenerator() {
-	b.out.Out(gpio.Low)
 }
