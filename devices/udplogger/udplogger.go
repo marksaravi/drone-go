@@ -116,7 +116,7 @@ func NewUdpLogger() *udpLogger {
 		loggerConfigs.IP,
 		loggerConfigs.Port,
 		loggerConfigs.PacketsPerSecond,
-		flightControl.ImuDataPerSecond,
+		flightControl.Imu.DataPerSecond,
 	)
 }
 
@@ -127,7 +127,7 @@ func (l *udpLogger) Close() {
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
-	if !l.enabled && l.dataChannel != nil {
+	if l.enabled && l.dataChannel != nil {
 		l.dataChannel <- data
 	}
 }

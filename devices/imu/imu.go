@@ -148,7 +148,7 @@ func NewImu() *imudevice {
 	)
 	return NewImuMems(
 		imuMems,
-		configs.ImuDataPerSecond,
+		imuConfig.DataPerSecond,
 		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)

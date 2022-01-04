@@ -1,23 +1,15 @@
 flight-control:
-  imu-data-per-second: 3200
-  esc-update-per-second: 100
+  debug: false
   pid:
     p-gain: 0
     i-gain: 0
     d-gain: 0
-    analog-input-to-roll-conversion:
-      ratio: 0.1
-      offset: 0
-    analog-input-to-pitch-conversion:
-      ratio: 0.1
-      offset: 0
-    analog-input-to-yaw-conversion:
-      ratio: 0.1
-      offset: 0
-    analog-input-to-throttle-conversion: 
-      ratio: 0.1
-      offset: 0
+    max-roll: 5
+    max-pitch: 5
+    max-yaw: 5
+    max-throttle: 30
   imu:
+    data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
@@ -43,8 +35,9 @@ flight-control:
       chip-select: 0
   esc:
     i2c-dev: '/dev/i2c-1'
-    max-throttle: 15
-    motors-esc-mappings:
+    safety-max-throttle: 15
+    update-per-second: 50
+    pwm-device-to-esc-mappings:
       0: 0
       1: 4
       2: 8
@@ -97,6 +90,6 @@ remote-control:
 
 logger:
   enabled: true
-  ip: 192.168.1.104
+  ip: 192.168.1.101
   port: 6431
   packets-per-second: 50

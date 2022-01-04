@@ -1,102 +1,127 @@
 package pidcontrol
 
 import (
-	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/models"
 )
 
-type analogToDigitalConversion struct {
-	ratio  float64
-	offset float64
-}
-type analogToDigitalConversions struct {
-	roll     analogToDigitalConversion
-	pitch    analogToDigitalConversion
-	yaw      analogToDigitalConversion
-	throttle analogToDigitalConversion
-}
-
-type pidCommands struct {
+type pidTargetState struct {
 	roll     float64
 	pitch    float64
 	yaw      float64
 	throttle float64
 }
 
+type pidState struct {
+	roll      float64
+	pitch     float64
+	yaw       float64
+	throttles models.Throttles
+}
+
 type pidControl struct {
-	pGain       float64
-	iGain       float64
-	dGain       float64
-	conversions analogToDigitalConversions
-	commands    pidCommands
-
-	rotations     models.ImuRotations
-	prevRotations models.ImuRotations
-	throttles     map[uint8]float32
+	imuDataPerSecond        int
+	imuDataBufferSize       int
+	pGain                   float64
+	iGain                   float64
+	dGain                   float64
+	targetState             pidTargetState
+	state                   pidState
+	rotationsHistory        []models.ImuRotations
+	maxJoystickDigitalValue float64
+	maxRoll                 float64
+	maxPitch                float64
+	maxYaw                  float64
+	maxThrottle             float64
+	emergencyStop           bool
 }
 
-func NewPIDControl() *pidControl {
-	configs := config.ReadConfigs().FlightControl.PID
+func NewPIDControl(imuDataPerSecond int, pGain, iGain, dGain, maxRoll, maxPitch, maxYaw, maxThrottle float64, maxJoystickDigitalValue uint16) *pidControl {
+	imuDataBufferSize := 2
 	return &pidControl{
-		pGain: configs.PGain,
-		iGain: configs.IGain,
-		dGain: configs.DGain,
-		conversions: analogToDigitalConversions{
-			roll: analogToDigitalConversion{
-				ratio:  configs.AnalogInputToRoll.Ratio,
-				offset: configs.AnalogInputToRoll.Offset,
-			},
-			pitch: analogToDigitalConversion{
-				ratio:  configs.AnalogInputToPitch.Ratio,
-				offset: configs.AnalogInputToPitch.Offset,
-			},
-			yaw: analogToDigitalConversion{
-				ratio:  configs.AnalogInputToYaw.Ratio,
-				offset: configs.AnalogInputToYaw.Offset,
-			},
-			throttle: analogToDigitalConversion{
-				ratio:  configs.AnalogInputToThrottle.Ratio,
-				offset: configs.AnalogInputToThrottle.Offset,
-			},
+		imuDataPerSecond:        imuDataPerSecond,
+		imuDataBufferSize:       imuDataBufferSize,
+		pGain:                   pGain,
+		iGain:                   iGain,
+		dGain:                   dGain,
+		maxRoll:                 maxRoll,
+		maxPitch:                maxPitch,
+		maxYaw:                  maxYaw,
+		maxThrottle:             maxThrottle,
+		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
+		rotationsHistory:        make([]models.ImuRotations, imuDataBufferSize),
+		targetState: pidTargetState{
+			roll:     0,
+			pitch:    0,
+			yaw:      0,
+			throttle: 0,
 		},
-		throttles: map[uint8]float32{0: 0, 1: 0, 2: 0, 3: 0},
+		state: pidState{
+			roll:      0,
+			pitch:     0,
+			yaw:       0,
+			throttles: models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
+		},
+		emergencyStop: false,
 	}
 }
 
-func (pid *pidControl) ApplyFlightCommands(flightCommands models.FlightCommands) {
-	commands := flightControlCommandToPIDCommand(flightCommands, pid.conversions)
-	pid.calcThrottlesByCommands(commands)
+func (pid *pidControl) SetFlightCommands(flightCommands models.FlightCommands) {
+	pid.targetState = pid.flightControlCommandToPIDCommand(flightCommands)
+	pid.calcThrottles()
 }
 
-func (pid *pidControl) ApplyRotations(rotations models.ImuRotations) {
-	pid.calcThrottlesByFlightData(rotations)
+func (pid *pidControl) SetRotations(rotations models.ImuRotations) {
+	for i := 1; i < pid.imuDataBufferSize; i++ {
+		pid.rotationsHistory[i] = pid.rotationsHistory[i-1]
+	}
+	pid.rotationsHistory[0] = rotations
+	pid.calcThrottles()
 }
 
-func (pid *pidControl) calcThrottlesByFlightData(rotations models.ImuRotations) {
-	pid.prevRotations = pid.rotations
-	pid.rotations = rotations
-}
-
-func (pid *pidControl) calcThrottlesByCommands(commands pidCommands) {
-	pid.commands = commands
-	t := float32(pid.commands.throttle)
-	pid.throttles = map[uint8]float32{
-		0: t,
-		1: t,
-		2: t,
-		3: t,
+func (pid *pidControl) calcThrottles() {
+	t := pid.targetState.throttle
+	pid.state = pidState{
+		throttles: models.Throttles{
+			0: t,
+			1: t,
+			2: t,
+			3: t,
+		},
 	}
 }
 
-func (pid *pidControl) Throttles() map[uint8]float32 {
-	return pid.throttles
+func (pid *pidControl) Throttles() models.Throttles {
+	return pid.state.throttles
 }
 
-func flightControlCommandToPIDCommand(c models.FlightCommands, conversions analogToDigitalConversions) pidCommands {
-	return pidCommands{
-		roll:     float64(c.Roll),
-		pitch:    float64(c.Pitch),
-		yaw:      float64(c.Yaw),
-		throttle: float64(c.Throttle),
+func (pid *pidControl) SetEmergencyStop(stop bool) {
+	pid.emergencyStop = stop
+}
+
+// func (pid *pidControl) applyEmergencyStop() {
+// 	pid.targetState = pidTargetState{
+// 		roll:     0,
+// 		pitch:    0,
+// 		yaw:      0,
+// 		throttle: 0,
+// 	}
+// }
+
+func (pid *pidControl) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {
+	normalizedDigitalValue := float64(joystickDigitalValue) - pid.maxJoystickDigitalValue/2
+	return normalizedDigitalValue / pid.maxJoystickDigitalValue * maxValue
+}
+
+func (pid *pidControl) throttleToPidThrottle(joystickDigitalValue uint16) float64 {
+	return float64(joystickDigitalValue) / pid.maxJoystickDigitalValue * pid.maxThrottle
+}
+
+func (pid *pidControl) flightControlCommandToPIDCommand(c models.FlightCommands) pidTargetState {
+
+	return pidTargetState{
+		roll:     pid.joystickToPidValue(c.Roll, pid.maxRoll),
+		pitch:    pid.joystickToPidValue(c.Pitch, pid.maxPitch),
+		yaw:      pid.joystickToPidValue(c.Yaw, pid.maxYaw),
+		throttle: pid.throttleToPidThrottle(c.Throttle),
 	}
 }
