@@ -1,6 +1,9 @@
 package pidcontrol
 
 import (
+	"log"
+	"time"
+
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -67,6 +70,7 @@ func NewPIDControl(imuDataPerSecond int, pGain, iGain, dGain, maxRoll, maxPitch,
 
 func (pid *pidControl) SetFlightCommands(flightCommands models.FlightCommands) {
 	pid.targetState = pid.flightControlCommandToPIDCommand(flightCommands)
+	showStates(pid.targetState)
 	pid.calcThrottles()
 }
 
@@ -123,5 +127,14 @@ func (pid *pidControl) flightControlCommandToPIDCommand(c models.FlightCommands)
 		pitch:    pid.joystickToPidValue(c.Pitch, pid.maxPitch),
 		yaw:      pid.joystickToPidValue(c.Yaw, pid.maxYaw),
 		throttle: pid.throttleToPidThrottle(c.Throttle),
+	}
+}
+
+var lastPrint time.Time = time.Now()
+
+func showStates(s pidTargetState) {
+	if time.Since(lastPrint) > time.Second/2 {
+		lastPrint = time.Now()
+		log.Printf("roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n", s.roll, s.pitch, s.yaw, s.throttle)
 	}
 }

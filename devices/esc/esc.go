@@ -79,7 +79,7 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 		for e.isActive {
 			throttels, ok := <-e.throttlesChan
 			if ok {
-				showThrottles(throttels)
+				// showThrottles(throttels)
 				if !e.debug {
 					var ch uint8
 					for ch = 0; ch < NUM_OF_ESC; ch++ {
@@ -99,11 +99,11 @@ func (e *escDev) offAll() {
 	}
 }
 
-var lastPrint time.Time = time.Now()
+// var lastPrint time.Time = time.Now()
 
-func showThrottles(throttles models.Throttles) {
-	if time.Since(lastPrint) > time.Second/2 {
-		lastPrint = time.Now()
-		log.Printf("0: %6.2f, 1: %6.2f, 2: %6.2f, 3: %6.2f\n", throttles[0], throttles[1], throttles[2], throttles[3])
-	}
-}
+// func showThrottles(throttles models.Throttles) {
+// 	if time.Since(lastPrint) > time.Second/2 {
+// 		lastPrint = time.Now()
+// 		log.Printf("0: %6.2f, 1: %6.2f, 2: %6.2f, 3: %6.2f\n", throttles[0], throttles[1], throttles[2], throttles[3])
+// 	}
+// }
