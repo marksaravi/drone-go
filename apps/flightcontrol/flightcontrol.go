@@ -21,7 +21,7 @@ type esc interface {
 	SetThrottles(models.Throttles)
 }
 
-type pidControl interface {
+type pidControls interface {
 	SetFlightCommands(flightCommands models.FlightCommands)
 	SetRotations(rotations models.ImuRotations)
 	Throttles() models.Throttles
@@ -29,7 +29,7 @@ type pidControl interface {
 }
 
 type flightControl struct {
-	pid    pidControl
+	pid    pidControls
 	imu    imu
 	esc    esc
 	radio  models.Radio
@@ -37,7 +37,7 @@ type flightControl struct {
 }
 
 func NewFlightControl(
-	pid pidControl,
+	pid pidControls,
 	imu imu,
 	esc esc,
 	radio models.Radio,

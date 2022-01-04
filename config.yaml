@@ -35,7 +35,7 @@ flight-control:
       chip-select: 0
   esc:
     i2c-dev: '/dev/i2c-1'
-    safety-max-throttle: 15
+    safety-max-throttle: 10
     update-per-second: 50
     pwm-device-to-esc-mappings:
       0: 0

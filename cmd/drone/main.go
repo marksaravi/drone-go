@@ -17,7 +17,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	pidcontrol "github.com/marksaravi/drone-go/pid-control"
+	"github.com/marksaravi/drone-go/pid"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -50,7 +50,7 @@ func main() {
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.SafetyMaxThrottle)
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings, configs.Debug)
 
-	pid := pidcontrol.NewPIDControl(
+	pidcontrols := pid.NewPIDControls(
 		configs.Imu.DataPerSecond,
 		pidConfigs.PGain,
 		pidConfigs.IGain,
@@ -62,7 +62,7 @@ func main() {
 		mcp3008.DIGITAL_MAX_VALUE,
 	)
 	flightControl := flightcontrol.NewFlightControl(
-		pid,
+		pidcontrols,
 		imudev,
 		esc,
 		radioDev,
