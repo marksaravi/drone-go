@@ -22,7 +22,7 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 	defer wg.Done()
 	wg.Add(1)
 
-	interval := time.Second / 200
+	interval := time.Second / 400
 	start := time.Now()
 	var id byte = 0
 

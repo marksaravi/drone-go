@@ -97,6 +97,8 @@ func NewNRF204(
 		powerDBm:   dbmStrToDBm(powerDb),
 		isReceiver: true,
 	}
+	radio.init()
+	radio.receiverOn()
 	return &radio
 }
 
