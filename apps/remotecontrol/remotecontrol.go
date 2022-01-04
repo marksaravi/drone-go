@@ -111,9 +111,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		// log.Println("Waiting for connection...")
-		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
-
+		var readingInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
 		var receiverChanOpen bool = true
 		var connectionChanOpen bool = true
 		var transmitterOpen bool = true
@@ -139,7 +137,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 			default:
 			}
 
-			if transmitterOpen && time.Since(lastReading) >= commandInterval {
+			if transmitterOpen && time.Since(lastReading) >= readingInterval {
 				lastReading = time.Now()
 				fc := rc.read()
 				rc.radio.Transmit(fc)
