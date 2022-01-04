@@ -57,7 +57,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 	buttonBottomLeft := rc.btnBottomLeft.Read()
 	buttonBottomRight := rc.btnBottomRight.Read()
 
-	if time.Since(lastPrinted) >= time.Second/4 {
+	if time.Since(lastPrinted) >= time.Second {
 		lastPrinted = time.Now()
 		log.Printf("%6d, %6d, %6d, %6d\n", roll, pitch, yaw, throttle)
 	}
@@ -111,9 +111,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 		defer wg.Done()
 		defer log.Println("Remote Control is stopped.")
 
-		// log.Println("Waiting for connection...")
-		var commandInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
-
+		var readingInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
 		var receiverChanOpen bool = true
 		var connectionChanOpen bool = true
 		var transmitterOpen bool = true
@@ -139,7 +137,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 			default:
 			}
 
-			if transmitterOpen && time.Since(lastReading) >= commandInterval {
+			if transmitterOpen && time.Since(lastReading) >= readingInterval {
 				lastReading = time.Now()
 				fc := rc.read()
 				rc.radio.Transmit(fc)
@@ -156,16 +154,14 @@ func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.W
 	case radio.CONNECTED:
 		log.Println("Connected to Drone.")
 		rc.display.Println("Connected!", 3)
-		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.ConnectedSound)
 	case radio.DISCONNECTED:
 		log.Println("Waiting for connection.")
 		rc.display.Println("Waiting...", 3)
-		rc.buzzer.Stop()
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
 	case radio.CONNECTION_LOST:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
-		rc.buzzer.WaveGenerator(ctx, wg, piezobuzzer.WarningSound)
+		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
 	}
 }

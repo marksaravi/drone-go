@@ -132,9 +132,11 @@ func (d *SSD1306) WriteString(msg string, x, y int) {
 }
 
 func (d *SSD1306) Println(msg string, y int) {
-	d.writeString("              ", 0, y)
-	d.writeString(msg, 0, y)
-	d.Draw()
+	go func() {
+		d.writeString("              ", 0, y)
+		d.writeString(msg, 0, y)
+		d.Draw()
+	}()
 }
 
 func (d *SSD1306) writeString(msg string, x, y int) {

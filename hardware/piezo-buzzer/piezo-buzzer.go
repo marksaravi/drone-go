@@ -1,9 +1,7 @@
 package piezobuzzer
 
 import (
-	"context"
 	"math"
-	"sync"
 	"time"
 
 	"periph.io/x/periph/conn/gpio"
@@ -72,13 +70,13 @@ var DisconnectedSound = Notes{
 }
 
 type Buzzer struct {
-	playing bool
+	playing int
 	out     gpio.PinOut
 }
 
 func NewBuzzer(out gpio.PinOut) *Buzzer {
 	buzzer := &Buzzer{
-		playing: false,
+		playing: 0,
 		out:     out,
 	}
 	buzzer.out.Out(gpio.High)
@@ -103,7 +101,10 @@ func (b *Buzzer) playNote(note Note) {
 }
 
 func (b *Buzzer) PlaySound(notes Notes) {
-	b.playNotes(notes)
+	b.Stop()
+	go func() {
+		b.playNotes(notes)
+	}()
 }
 
 func (b *Buzzer) playNotes(notes Notes) {
@@ -112,17 +113,10 @@ func (b *Buzzer) playNotes(notes Notes) {
 	}
 }
 
-func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound SoundWave) {
-	if b.playing {
-		return
-	}
-	b.playing = true
-	wg.Add(1)
-
+func (b *Buzzer) WaveGenerator(sound SoundWave) {
+	b.playing++
+	id := b.playing
 	go func() {
-		defer wg.Done()
-		defer b.stopWaveGenerator()
-
 		const multiplier float64 = 1
 		var baseFrequency float64 = sound.BaseFrequency * multiplier
 		var devFrequency float64 = sound.DevFrequency * multiplier
@@ -131,7 +125,7 @@ func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound So
 		var dT = (maxT - minT) / sound.Steps //set to 500 for siren alarm
 		var t float64 = minT
 		on := true
-		for b.playing {
+		for b.playing == id {
 			freq := baseFrequency + devFrequency*math.Exp(t)
 			t += dT
 			if t >= maxT {
@@ -148,19 +142,11 @@ func (b *Buzzer) WaveGenerator(ctx context.Context, wg *sync.WaitGroup, sound So
 			b.out.Out(gpio.Low)
 			for time.Since(onTime) < period {
 			}
-			select {
-			case <-ctx.Done():
-				b.playing = false
-			default:
-			}
 		}
+		b.out.Out(gpio.Low)
 	}()
 }
 
 func (b *Buzzer) Stop() {
-	b.playing = false
-}
-
-func (b *Buzzer) stopWaveGenerator() {
-	b.out.Out(gpio.Low)
+	b.playing++
 }
