@@ -121,8 +121,9 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 			select {
 			case <-ctx.Done():
 				if transmitterOpen {
-					rc.radio.Close()
 					transmitterOpen = false
+					rc.radio.Close()
+					log.Println("CLOSING RADIO")
 				}
 
 			case _, ok := <-rc.radio.GetReceiver():
@@ -130,25 +131,24 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 
 			case connectionState, ok := <-rc.radio.GetConnection():
 				if ok {
-					rc.setRadioConnectionState(ctx, wg, connectionState)
+					rc.setRadioConnectionState(connectionState)
 				}
 				connectionChanOpen = ok
 
 			default:
-			}
-
-			if transmitterOpen && time.Since(lastReading) >= readingInterval {
-				lastReading = time.Now()
-				fc := rc.read()
-				rc.radio.Transmit(fc)
-				rc.actOnShutdownButtonState(fc.ButtonBottomRight, cancel)
-				rc.actOnSuppressLostConnectionButtonState(fc.ButtonBottomLeft)
+				if transmitterOpen && time.Since(lastReading) >= readingInterval {
+					lastReading = time.Now()
+					fc := rc.read()
+					rc.radio.Transmit(fc)
+					rc.actOnShutdownButtonState(fc.ButtonBottomRight, cancel)
+					rc.actOnSuppressLostConnectionButtonState(fc.ButtonBottomLeft)
+				}
 			}
 		}
 	}()
 }
 
-func (rc *remoteControl) setRadioConnectionState(ctx context.Context, wg *sync.WaitGroup, connectionState radio.ConnectionState) {
+func (rc *remoteControl) setRadioConnectionState(connectionState radio.ConnectionState) {
 	rc.connectionState = connectionState
 	switch rc.connectionState {
 	case radio.CONNECTED:

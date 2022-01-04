@@ -40,6 +40,7 @@ type radioDevice struct {
 	lastSentHeartBeat     time.Time
 	lastReceivedHeartBeat time.Time
 	heartBeatTimeout      time.Duration
+	suppressAlarm         bool
 }
 
 func NewRadio(radiolink radioLink, heartBeatTimeoutMs int) *radioDevice {
@@ -54,6 +55,7 @@ func NewRadio(radiolink radioLink, heartBeatTimeoutMs int) *radioDevice {
 		connectionState:       IDLE,
 		lastSentHeartBeat:     hearBeatInit,
 		lastReceivedHeartBeat: hearBeatInit,
+		suppressAlarm:         false,
 	}
 }
 
@@ -95,6 +97,10 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					} else {
 						r.setConnectionState(NO_COMMAND)
 					}
+					if r.suppressAlarm {
+						r.setConnectionState(RECEIVER_OFF)
+						r.suppressAlarm = false
+					}
 					if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/10 {
 						r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
 							Type: HEARTBEAT,
@@ -102,7 +108,6 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					}
 				}
 			}
-
 		}
 	}()
 }
@@ -117,6 +122,9 @@ func (r *radioDevice) Close() {
 }
 
 func (r *radioDevice) SuppressLostConnection() {
+	if !r.suppressAlarm {
+		r.suppressAlarm = true
+	}
 }
 
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
