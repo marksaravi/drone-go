@@ -53,43 +53,45 @@ type pca9685Dev struct {
 	frequency         float32
 	throttels         [16]float32
 	mappings          map[int]int
-	safetyMaxThrottle float32
+	safeMaxThrottle   float32
 	safeStartThrottle float32
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, safetyMaxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
+func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, safeMaxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
 	dev := &pca9685Dev{
 		name:              "pca9685Dev",
 		address:           address,
 		connection:        connection,
 		safeStartThrottle: safeStartThrottle,
-		safetyMaxThrottle: safetyMaxThrottle,
+		safeMaxThrottle:   safeMaxThrottle,
 		mappings:          mappings,
 	}
 	dev.init()
 	return dev, nil
 }
 
+func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float32) {
+	if d.throttels[channel] == 0 && baseThrottle > d.safeStartThrottle {
+		return
+	}
+	throttle := baseThrottle + dThrottle
+	if throttle < 0 {
+		throttle = 0
+	}
+	if throttle > d.safeMaxThrottle {
+		throttle = d.safeMaxThrottle
+	}
+	d.throttels[channel] = throttle
+}
+
 //SetThrottle sets PWM for a channel
 func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
-	// if throttle < 0 {
-	// 	throttle = 0
-	// }
-	// if throttle > d.safetyMaxThrottle {
-	// 	throttle = d.safetyMaxThrottle
-	// }
-	// if d.throttels[channel] == 0 && throttle > d.safeStartThrottle {
-	// 	throttle = 0 // Another safety measure to make sure throttle always starts from low
-	// }
-	// d.throttels[channel] = throttle
 	for i := 0; i < len(throttles.DThrottles); i++ {
-		throttle := throttles.BaseThrottle + throttles.DThrottles[i]
 		channel := d.mappings[i]
-		d.throttels[channel] = throttle
-		d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
+		d.throttleSafeSet(channel, throttles.BaseThrottle, throttles.DThrottles[i])
+		d.setPWM(channel, MinPW+d.throttels[channel]/100*(MaxPW-MinPW))
 	}
-
 }
 
 //Calibrate
