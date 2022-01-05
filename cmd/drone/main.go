@@ -17,7 +17,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	pidcontrol "github.com/marksaravi/drone-go/pid-control"
+	"github.com/marksaravi/drone-go/pid"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -47,22 +47,24 @@ func main() {
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.SafetyMaxThrottle)
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.SafeStartThrottle, configs.MaxThrottle)
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings, configs.Debug)
 
-	pid := pidcontrol.NewPIDControl(
-		configs.Imu.DataPerSecond,
+	pidcontrols := pid.NewPIDControls(
 		pidConfigs.PGain,
 		pidConfigs.IGain,
 		pidConfigs.DGain,
 		pidConfigs.MaxRoll,
 		pidConfigs.MaxPitch,
 		pidConfigs.MaxYaw,
-		pidConfigs.MaxThrottle,
+		float64(configs.MaxThrottle),
 		mcp3008.DIGITAL_MAX_VALUE,
+		pidConfigs.AxisAlignmentAngle,
+		pidConfigs.CalibrationGain,
+		pidConfigs.CalibrationStep,
 	)
 	flightControl := flightcontrol.NewFlightControl(
-		pid,
+		pidcontrols,
 		imudev,
 		esc,
 		radioDev,
