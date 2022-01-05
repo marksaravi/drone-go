@@ -7,6 +7,8 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
+const EMERGENCY_STOP_DURATION = time.Second * 2
+
 type pidState struct {
 	roll     float64
 	pitch    float64
@@ -34,7 +36,8 @@ type pidControls struct {
 	calibrationGain         string
 	calibrationStep         float64
 	calibrationStepApplied  bool
-	emergencyStop           bool
+	emergencyStopTimeout    time.Time
+	emergencyStopStart      float64
 }
 
 func NewPIDControls(
@@ -74,7 +77,8 @@ func NewPIDControls(
 		calibrationGain:        calibrationGain,
 		calibrationStep:        calibrationStep,
 		calibrationStepApplied: false,
-		emergencyStop:          false,
+		emergencyStopTimeout:   time.Now().Add(time.Second * 86400),
+		emergencyStopStart:     0,
 	}
 }
 
@@ -97,6 +101,7 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 }
 
 func (c *pidControls) calcThrottles() {
+	c.applyEmergencyStop()
 	rollFrontThrottle, rollBackThrottle := c.roll.calc(c.state.roll, c.targetState.roll, c.targetState.throttle, &c.gains)
 	pitchFrontThrottle, pitchBackThrottle := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.targetState.throttle, &c.gains)
 	// c.yaw.calc(0, 0, &c.gains) // not applying yaw yet
@@ -112,11 +117,25 @@ func (c *pidControls) Throttles() models.Throttles {
 	return c.throttles
 }
 
-func (c *pidControls) SetEmergencyStop(stop bool) {
-	c.emergencyStop = stop
+func (c *pidControls) InitiateEmergencyStop(stop bool) {
+	if stop {
+		c.emergencyStopTimeout = time.Now()
+		c.emergencyStopStart = c.targetState.throttle
+	} else {
+		c.emergencyStopTimeout = time.Now().Add(time.Second * 86400)
+	}
 }
 
 func (c *pidControls) applyEmergencyStop() {
+	dur := time.Since(c.emergencyStopTimeout)
+	if dur > EMERGENCY_STOP_DURATION {
+		dur = EMERGENCY_STOP_DURATION
+	}
+	if dur > 0 {
+		k := float64(EMERGENCY_STOP_DURATION-dur) / float64(EMERGENCY_STOP_DURATION)
+
+		c.targetState.throttle = c.emergencyStopStart * k
+	}
 }
 
 func (c *pidControls) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {

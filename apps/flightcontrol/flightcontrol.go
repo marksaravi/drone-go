@@ -25,7 +25,7 @@ type pidControls interface {
 	SetFlightCommands(flightCommands models.FlightCommands)
 	SetRotations(rotations models.ImuRotations)
 	Throttles() models.Throttles
-	SetEmergencyStop(stop bool)
+	InitiateEmergencyStop(stop bool)
 }
 
 type flightControl struct {
@@ -85,6 +85,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case connectionState, ok := <-fc.radio.GetConnection():
 				if ok {
 					showConnectionState(connectionState)
+					fc.pid.InitiateEmergencyStop(connectionState != radio.CONNECTED)
 				}
 				connectionChanOpen = ok
 
