@@ -51,6 +51,7 @@ type pca9685Dev struct {
 	address           uint8
 	connection        *i2c.Dev
 	frequency         float32
+	baseThrottle      float32
 	throttels         [16]float32
 	mappings          map[int]int
 	maxThrottle       float32
@@ -66,13 +67,14 @@ func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, maxThrott
 		safeStartThrottle: safeStartThrottle,
 		maxThrottle:       maxThrottle,
 		mappings:          mappings,
+		baseThrottle:      0,
 	}
 	dev.init()
 	return dev, nil
 }
 
 func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float32) {
-	if d.throttels[channel] == 0 && baseThrottle > d.safeStartThrottle {
+	if d.baseThrottle == 0 && baseThrottle > d.safeStartThrottle {
 		return
 	}
 	throttle := baseThrottle + dThrottle
@@ -82,6 +84,7 @@ func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float3
 	if throttle > d.maxThrottle {
 		throttle = d.maxThrottle
 	}
+	d.baseThrottle = baseThrottle
 	d.throttels[channel] = throttle
 }
 
