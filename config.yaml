@@ -3,9 +3,9 @@ flight-control:
   max-throttle: 15
   safe-start-throttle: 5
   pid:
-    p-gain: 0.1
-    i-gain: 0.1
-    d-gain: 0.1
+    p-gain: 0
+    i-gain: 0
+    d-gain: 0
     max-roll: 5
     max-pitch: 5
     max-yaw: 5

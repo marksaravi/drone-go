@@ -18,5 +18,5 @@ func main() {
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open(escConfigs.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pca9685.Calibrate(i2cConn, powerBreaker)
+	pca9685.Calibrate(i2cConn, powerBreaker, configs.ESC.PwmDeviceToESCMappings)
 }

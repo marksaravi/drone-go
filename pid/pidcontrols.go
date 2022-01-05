@@ -73,7 +73,15 @@ func NewPIDControls(
 			yaw:      0,
 			throttle: 0,
 		},
-		throttles:              models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
+		throttles: models.Throttles{
+			BaseThrottle: 0,
+			DThrottles: map[int]float32{
+				0: 0,
+				1: 0,
+				2: 0,
+				3: 0,
+			},
+		},
 		calibrationGain:        calibrationGain,
 		calibrationStep:        calibrationStep,
 		calibrationStepApplied: false,
@@ -102,14 +110,17 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollFrontThrottle, rollBackThrottle := c.roll.calc(c.state.roll, c.targetState.roll, c.targetState.throttle, &c.gains)
-	pitchFrontThrottle, pitchBackThrottle := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.targetState.throttle, &c.gains)
+	rollFrontThrottle, rollBackThrottle := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
+	pitchFrontThrottle, pitchBackThrottle := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
 	// c.yaw.calc(0, 0, &c.gains) // not applying yaw yet
 	c.throttles = models.Throttles{
-		0: rollFrontThrottle,
-		1: pitchFrontThrottle,
-		2: rollBackThrottle,
-		3: pitchBackThrottle,
+		BaseThrottle: float32(c.targetState.throttle),
+		DThrottles: map[int]float32{
+			0: float32(rollFrontThrottle),
+			1: float32(pitchFrontThrottle),
+			2: float32(rollBackThrottle),
+			3: float32(pitchBackThrottle),
+		},
 	}
 }
 
