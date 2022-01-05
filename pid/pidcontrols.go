@@ -23,6 +23,7 @@ type pidControls struct {
 	throttles               models.Throttles
 	maxJoystickDigitalValue float64
 	throttleLimit           float64
+	axisAlignmentAngle      float64
 	emergencyStop           bool
 }
 
@@ -30,6 +31,7 @@ func NewPIDControls(
 	pGain, iGain, dGain float64,
 	limitRoll, limitPitch, limitYaw, throttleLimit float64,
 	maxJoystickDigitalValue uint16,
+	axisAlignmentAngle float64,
 ) *pidControls {
 
 	return &pidControls{
@@ -38,6 +40,7 @@ func NewPIDControls(
 		yaw:                     NewPIDControl(pGain, iGain, dGain, limitYaw),
 		throttleLimit:           throttleLimit,
 		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
+		axisAlignmentAngle:      axisAlignmentAngle,
 		targetState: pidState{
 			roll:     0,
 			pitch:    0,

@@ -23,13 +23,14 @@ type radioConfig struct {
 type flightControl struct {
 	Debug bool `yaml:"debug"`
 	PID   struct {
-		PGain       float64 `yaml:"p-gain"`
-		IGain       float64 `yaml:"i-gain"`
-		DGain       float64 `yaml:"d-gain"`
-		MaxRoll     float64 `yaml:"max-roll"`
-		MaxPitch    float64 `yaml:"max-pitch"`
-		MaxYaw      float64 `yaml:"max-yaw"`
-		MaxThrottle float64 `yaml:"max-throttle"`
+		PGain              float64 `yaml:"p-gain"`
+		IGain              float64 `yaml:"i-gain"`
+		DGain              float64 `yaml:"d-gain"`
+		MaxRoll            float64 `yaml:"max-roll"`
+		MaxPitch           float64 `yaml:"max-pitch"`
+		MaxYaw             float64 `yaml:"max-yaw"`
+		MaxThrottle        float64 `yaml:"max-throttle"`
+		AxisAlignmentAngle float64 `yaml:"axis-alignment-angle"`
 	} `yaml:"pid"`
 	Imu struct {
 		DataPerSecond               int     `yaml:"data-per-second"`

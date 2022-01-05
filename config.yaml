@@ -8,6 +8,7 @@ flight-control:
     max-pitch: 5
     max-yaw: 5
     max-throttle: 30
+    axis-alignment-angle: 45
   imu:
     data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005

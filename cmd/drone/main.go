@@ -59,6 +59,7 @@ func main() {
 		pidConfigs.MaxYaw,
 		pidConfigs.MaxThrottle,
 		mcp3008.DIGITAL_MAX_VALUE,
+		pidConfigs.AxisAlignmentAngle,
 	)
 	flightControl := flightcontrol.NewFlightControl(
 		pidcontrols,
