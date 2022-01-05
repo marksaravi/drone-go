@@ -110,6 +110,11 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("Transmit recovered", r)
+			}
+		}()
 		data.Type = COMMAND
 		r.transmitter <- data
 	}()
