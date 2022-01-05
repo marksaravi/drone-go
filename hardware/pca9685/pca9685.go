@@ -52,12 +52,11 @@ type pca9685Dev struct {
 	frequency         float32
 	throttels         map[int]float32
 	safetyMaxThrottle float32
+	safeStartThrottle float32
 }
 
-const SAFE_THROTTLE_START float32 = 5
-
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (*pca9685Dev, error) {
+func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, safetyMaxThrottle float32) (*pca9685Dev, error) {
 	if safetyMaxThrottle > 50 { // Hardcoded safety fow now. Will change after flight tests
 		safetyMaxThrottle = 50
 	}
@@ -68,6 +67,7 @@ func NewPCA9685(address uint8, connection *i2c.Dev, safetyMaxThrottle float32) (
 		name:              "pca9685Dev",
 		address:           address,
 		connection:        connection,
+		safeStartThrottle: safeStartThrottle,
 		safetyMaxThrottle: safetyMaxThrottle,
 		throttels: map[int]float32{
 			0:  0,
@@ -100,8 +100,8 @@ func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
 	if throttle > d.safetyMaxThrottle {
 		throttle = d.safetyMaxThrottle
 	}
-	if d.throttels[channel] == 0 && throttle > SAFE_THROTTLE_START {
-		return // Another safety measure to make sure throttle always starts from low
+	if d.throttels[channel] == 0 && throttle > d.safeStartThrottle {
+		throttle = 0 // Another safety measure to make sure throttle always starts from low
 	}
 	d.throttels[channel] = throttle
 	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
@@ -109,7 +109,7 @@ func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
 
 //Calibrate
 func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
-	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0)
+	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0, 0)
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -21,19 +21,22 @@ type radioConfig struct {
 }
 
 type flightControl struct {
-	Debug bool `yaml:"debug"`
-	PID   struct {
+	Debug             bool    `yaml:"debug"`
+	MaxThrottle       float32 `yaml:"max-throttle"`
+	SafeStartThrottle float32 `yaml:"safe-start-throttle"`
+
+	PID struct {
 		PGain              float64 `yaml:"p-gain"`
 		IGain              float64 `yaml:"i-gain"`
 		DGain              float64 `yaml:"d-gain"`
 		MaxRoll            float64 `yaml:"max-roll"`
 		MaxPitch           float64 `yaml:"max-pitch"`
 		MaxYaw             float64 `yaml:"max-yaw"`
-		MaxThrottle        float64 `yaml:"max-throttle"`
 		AxisAlignmentAngle float64 `yaml:"axis-alignment-angle"`
 		CalibrationGain    string  `yaml:"calibration-gain"`
 		CalibrationStep    float64 `yaml:"calibration-step"`
 	} `yaml:"pid"`
+
 	Imu struct {
 		DataPerSecond               int     `yaml:"data-per-second"`
 		AccLowPassFilterCoefficient float64 `yaml:"acc-lowpass-filter-coefficient"`
@@ -45,6 +48,7 @@ type flightControl struct {
 			Averaging            int     `yaml:"averaging"`
 			Offsets              offsets `yaml:"offsets"`
 		} `yaml:"accelerometer"`
+
 		Gyroscope struct {
 			SensitivityLevel     string  `yaml:"sensitivity-level"`
 			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
@@ -52,19 +56,23 @@ type flightControl struct {
 			Averaging            int     `yaml:"averaging"`
 			Offsets              offsets `yaml:"offsets"`
 		} `yaml:"gyroscope"`
+
 		Magnetometer struct {
 			SensitivityLevel string `yaml:"sensitivity-level"`
 		} `yaml:"magnetometer"`
+
 		SPI spiConfig `yaml:"spi"`
 	} `yaml:"imu"`
+
 	ESC struct {
 		I2CDev                 string      `yaml:"i2c-dev"`
-		SafetyMaxThrottle      float32     `yaml:"safety-max-throttle"`
 		PwmDeviceToESCMappings map[int]int `yaml:"pwm-device-to-esc-mappings"`
 		UpdatePerSecond        int         `yaml:"update-per-second"`
 	} `yaml:"esc"`
-	Radio        radioConfig `yaml:"radio"`
-	PowerBreaker string      `yaml:"power-breaker"`
+
+	Radio radioConfig `yaml:"radio"`
+
+	PowerBreaker string `yaml:"power-breaker"`
 }
 
 type joystick struct {
@@ -74,13 +82,15 @@ type joystick struct {
 
 type remoteControl struct {
 	CommandPerSecond int `yaml:"command-per-sec"`
-	Joysticks        struct {
+
+	Joysticks struct {
 		Roll     joystick  `yaml:"roll"`
 		Pitch    joystick  `yaml:"pitch"`
 		Yaw      joystick  `yaml:"yaw"`
 		Throttle joystick  `yaml:"throttle"`
 		SPI      spiConfig `yaml:"spi"`
 	} `yaml:"joysticks"`
+
 	Buttons struct {
 		FrontLeft   string `yaml:"front-left"`
 		FrontRight  string `yaml:"front-right"`
@@ -89,6 +99,7 @@ type remoteControl struct {
 		BottomLeft  string `yaml:"bottom-left"`
 		BottomRight string `yaml:"bottom-right"`
 	} `yaml:"buttons"`
+
 	Radio          radioConfig `yaml:"radio"`
 	DisplayAddress uint16      `yaml:"display-i2c-address"`
 	BuzzerGPIO     string      `yaml:"buzzer-gpio"`

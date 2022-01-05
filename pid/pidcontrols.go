@@ -84,7 +84,6 @@ func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 	if c.calibrationGain != "none" {
 		c.calibrateGain(c.calibrationGain, flightCommands.ButtonTopLeft, flightCommands.ButtonTopRight)
 	}
-	c.calcThrottles()
 }
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
@@ -98,12 +97,14 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 }
 
 func (c *pidControls) calcThrottles() {
-	t := c.targetState.throttle
+	rollFrontThrottle, rollBackThrottle := c.roll.calc(c.state.roll, c.targetState.roll, c.targetState.throttle, &c.gains)
+	pitchFrontThrottle, pitchBackThrottle := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.targetState.throttle, &c.gains)
+	// c.yaw.calc(0, 0, &c.gains) // not applying yaw yet
 	c.throttles = models.Throttles{
-		0: t,
-		1: t,
-		2: t,
-		3: t,
+		0: rollFrontThrottle,
+		1: pitchFrontThrottle,
+		2: rollBackThrottle,
+		3: pitchBackThrottle,
 	}
 }
 
@@ -115,14 +116,8 @@ func (c *pidControls) SetEmergencyStop(stop bool) {
 	c.emergencyStop = stop
 }
 
-// func (c *pidControls) applyEmergencyStop() {
-// 	c.targetState = pidTargetState{
-// 		roll:     0,
-// 		pitch:    0,
-// 		yaw:      0,
-// 		throttle: 0,
-// 	}
-// }
+func (c *pidControls) applyEmergencyStop() {
+}
 
 func (c *pidControls) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {
 	normalizedDigitalValue := float64(joystickDigitalValue) - c.maxJoystickDigitalValue/2

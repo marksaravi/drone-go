@@ -47,7 +47,7 @@ func main() {
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.ESC.SafetyMaxThrottle)
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.SafeStartThrottle, configs.MaxThrottle)
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
@@ -57,7 +57,7 @@ func main() {
 		pidConfigs.MaxRoll,
 		pidConfigs.MaxPitch,
 		pidConfigs.MaxYaw,
-		pidConfigs.MaxThrottle,
+		float64(configs.MaxThrottle),
 		mcp3008.DIGITAL_MAX_VALUE,
 		pidConfigs.AxisAlignmentAngle,
 		pidConfigs.CalibrationGain,
