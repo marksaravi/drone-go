@@ -31,6 +31,8 @@ type flightControl struct {
 		MaxYaw             float64 `yaml:"max-yaw"`
 		MaxThrottle        float64 `yaml:"max-throttle"`
 		AxisAlignmentAngle float64 `yaml:"axis-alignment-angle"`
+		CalibrationGain    string  `yaml:"calibration-gain"`
+		CalibrationStep    float64 `yaml:"calibration-step"`
 	} `yaml:"pid"`
 	Imu struct {
 		DataPerSecond               int     `yaml:"data-per-second"`

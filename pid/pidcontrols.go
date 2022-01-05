@@ -14,7 +14,14 @@ type pidState struct {
 	throttle float64
 }
 
+type gains struct {
+	P float64
+	I float64
+	D float64
+}
+
 type pidControls struct {
+	gains                   gains
 	roll                    *pidControl
 	pitch                   *pidControl
 	yaw                     *pidControl
@@ -24,6 +31,9 @@ type pidControls struct {
 	maxJoystickDigitalValue float64
 	throttleLimit           float64
 	axisAlignmentAngle      float64
+	calibrationGain         string
+	calibrationStep         float64
+	calibrationStepApplied  bool
 	emergencyStop           bool
 }
 
@@ -32,12 +42,19 @@ func NewPIDControls(
 	limitRoll, limitPitch, limitYaw, throttleLimit float64,
 	maxJoystickDigitalValue uint16,
 	axisAlignmentAngle float64,
+	calibrationGain string,
+	calibrationStep float64,
 ) *pidControls {
 
 	return &pidControls{
-		roll:                    NewPIDControl(pGain, iGain, dGain, limitRoll),
-		pitch:                   NewPIDControl(pGain, iGain, dGain, limitPitch),
-		yaw:                     NewPIDControl(pGain, iGain, dGain, limitYaw),
+		gains: gains{
+			P: pGain,
+			I: iGain,
+			D: dGain,
+		},
+		roll:                    NewPIDControl(limitRoll),
+		pitch:                   NewPIDControl(limitPitch),
+		yaw:                     NewPIDControl(limitYaw),
 		throttleLimit:           throttleLimit,
 		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
 		axisAlignmentAngle:      axisAlignmentAngle,
@@ -53,14 +70,20 @@ func NewPIDControls(
 			yaw:      0,
 			throttle: 0,
 		},
-		throttles:     models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
-		emergencyStop: false,
+		throttles:              models.Throttles{0: 0, 1: 0, 2: 0, 3: 0},
+		calibrationGain:        calibrationGain,
+		calibrationStep:        calibrationStep,
+		calibrationStepApplied: false,
+		emergencyStop:          false,
 	}
 }
 
 func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 	c.targetState = c.flightControlCommandToPIDCommand(flightCommands)
 	showStates(c.state, c.targetState)
+	if c.calibrationGain != "none" {
+		c.calibrateGain(c.calibrationGain, flightCommands.ButtonTopLeft, flightCommands.ButtonTopRight)
+	}
 	c.calcThrottles()
 }
 
@@ -111,13 +134,40 @@ func (c *pidControls) throttleToPidThrottle(joystickDigitalValue uint16) float64
 }
 
 func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands) pidState {
-
 	return pidState{
 		roll:     c.joystickToPidValue(fc.Roll, c.roll.limit),
 		pitch:    c.joystickToPidValue(fc.Pitch, c.pitch.limit),
 		yaw:      c.joystickToPidValue(fc.Yaw, c.yaw.limit),
 		throttle: c.throttleToPidThrottle(fc.Throttle),
 	}
+}
+
+func (c *pidControls) calibrateGain(gain string, down, up bool) {
+	if !down && !up {
+		c.calibrationStepApplied = false
+		return
+	}
+	if c.calibrationStepApplied {
+		return
+	}
+	var step float64 = c.calibrationStep
+	if down {
+		step = -step
+	}
+	var value float64 = 0
+	switch gain {
+	case "P":
+		c.gains.P += step
+		value = c.gains.P
+	case "I":
+		c.gains.I += step
+		value = c.gains.I
+	case "D":
+		c.gains.D += step
+		value = c.gains.D
+	}
+	log.Printf("%s Gain is changed to %6.2f\n", gain, value)
+	c.calibrationStepApplied = true
 }
 
 var lastPrint time.Time = time.Now()
