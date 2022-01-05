@@ -15,11 +15,9 @@ type pidState struct {
 }
 
 type pidControls struct {
-	rollPid                 *pidControl
-	pitchPid                *pidControl
-	yawPid                  *pidControl
-	imuDataPerSecond        int
-	imuDataBufferSize       int
+	roll                    *pidControl
+	pitch                   *pidControl
+	yaw                     *pidControl
 	targetState             pidState
 	state                   pidState
 	throttles               models.Throttles
@@ -29,19 +27,15 @@ type pidControls struct {
 }
 
 func NewPIDControls(
-	imuDataPerSecond int,
 	pGain, iGain, dGain float64,
 	limitRoll, limitPitch, limitYaw, throttleLimit float64,
 	maxJoystickDigitalValue uint16,
 ) *pidControls {
 
-	imuDataBufferSize := 2
 	return &pidControls{
-		rollPid:                 NewPIDControl(pGain, iGain, dGain, limitRoll),
-		pitchPid:                NewPIDControl(pGain, iGain, dGain, limitPitch),
-		yawPid:                  NewPIDControl(pGain, iGain, dGain, limitYaw),
-		imuDataPerSecond:        imuDataPerSecond,
-		imuDataBufferSize:       imuDataBufferSize,
+		roll:                    NewPIDControl(pGain, iGain, dGain, limitRoll),
+		pitch:                   NewPIDControl(pGain, iGain, dGain, limitPitch),
+		yaw:                     NewPIDControl(pGain, iGain, dGain, limitYaw),
 		throttleLimit:           throttleLimit,
 		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
 		targetState: pidState{
@@ -110,9 +104,9 @@ func (pidcontrols *pidControls) throttleToPidThrottle(joystickDigitalValue uint1
 func (pidcontrols *pidControls) flightControlCommandToPIDCommand(c models.FlightCommands) pidState {
 
 	return pidState{
-		roll:     pidcontrols.joystickToPidValue(c.Roll, pidcontrols.rollPid.limit),
-		pitch:    pidcontrols.joystickToPidValue(c.Pitch, pidcontrols.pitchPid.limit),
-		yaw:      pidcontrols.joystickToPidValue(c.Yaw, pidcontrols.yawPid.limit),
+		roll:     pidcontrols.joystickToPidValue(c.Roll, pidcontrols.roll.limit),
+		pitch:    pidcontrols.joystickToPidValue(c.Pitch, pidcontrols.pitch.limit),
+		yaw:      pidcontrols.joystickToPidValue(c.Yaw, pidcontrols.yaw.limit),
 		throttle: pidcontrols.throttleToPidThrottle(c.Throttle),
 	}
 }

@@ -51,7 +51,6 @@ func main() {
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.ESC.PwmDeviceToESCMappings, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
-		configs.Imu.DataPerSecond,
 		pidConfigs.PGain,
 		pidConfigs.IGain,
 		pidConfigs.DGain,
