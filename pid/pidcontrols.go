@@ -58,19 +58,20 @@ func NewPIDControls(
 	}
 }
 
-func (pidcontrols *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
-	pidcontrols.targetState = pidcontrols.flightControlCommandToPIDCommand(flightCommands)
-	showStates(pidcontrols.targetState)
-	pidcontrols.calcThrottles()
+func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
+	c.targetState = c.flightControlCommandToPIDCommand(flightCommands)
+	showStates(c.state, c.targetState)
+	c.calcThrottles()
 }
 
-func (pidcontrols *pidControls) SetRotations(rotations models.ImuRotations) {
-	pidcontrols.calcThrottles()
+func (c *pidControls) SetRotations(rotations models.ImuRotations) {
+	c.state = pidState{}
+	c.calcThrottles()
 }
 
-func (pidcontrols *pidControls) calcThrottles() {
-	t := pidcontrols.targetState.throttle
-	pidcontrols.throttles = models.Throttles{
+func (c *pidControls) calcThrottles() {
+	t := c.targetState.throttle
+	c.throttles = models.Throttles{
 		0: t,
 		1: t,
 		2: t,
@@ -78,16 +79,16 @@ func (pidcontrols *pidControls) calcThrottles() {
 	}
 }
 
-func (pidcontrols *pidControls) Throttles() models.Throttles {
-	return pidcontrols.throttles
+func (c *pidControls) Throttles() models.Throttles {
+	return c.throttles
 }
 
-func (pidcontrols *pidControls) SetEmergencyStop(stop bool) {
-	pidcontrols.emergencyStop = stop
+func (c *pidControls) SetEmergencyStop(stop bool) {
+	c.emergencyStop = stop
 }
 
-// func (pidcontrols *pidControls) applyEmergencyStop() {
-// 	pidcontrols.targetState = pidTargetState{
+// func (c *pidControls) applyEmergencyStop() {
+// 	c.targetState = pidTargetState{
 // 		roll:     0,
 // 		pitch:    0,
 // 		yaw:      0,
@@ -95,30 +96,31 @@ func (pidcontrols *pidControls) SetEmergencyStop(stop bool) {
 // 	}
 // }
 
-func (pidcontrols *pidControls) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {
-	normalizedDigitalValue := float64(joystickDigitalValue) - pidcontrols.maxJoystickDigitalValue/2
-	return normalizedDigitalValue / pidcontrols.maxJoystickDigitalValue * maxValue
+func (c *pidControls) joystickToPidValue(joystickDigitalValue uint16, maxValue float64) float64 {
+	normalizedDigitalValue := float64(joystickDigitalValue) - c.maxJoystickDigitalValue/2
+	return normalizedDigitalValue / c.maxJoystickDigitalValue * maxValue
 }
 
-func (pidcontrols *pidControls) throttleToPidThrottle(joystickDigitalValue uint16) float64 {
-	return float64(joystickDigitalValue) / pidcontrols.maxJoystickDigitalValue * pidcontrols.throttleLimit
+func (c *pidControls) throttleToPidThrottle(joystickDigitalValue uint16) float64 {
+	return float64(joystickDigitalValue) / c.maxJoystickDigitalValue * c.throttleLimit
 }
 
-func (pidcontrols *pidControls) flightControlCommandToPIDCommand(c models.FlightCommands) pidState {
+func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands) pidState {
 
 	return pidState{
-		roll:     pidcontrols.joystickToPidValue(c.Roll, pidcontrols.roll.limit),
-		pitch:    pidcontrols.joystickToPidValue(c.Pitch, pidcontrols.pitch.limit),
-		yaw:      pidcontrols.joystickToPidValue(c.Yaw, pidcontrols.yaw.limit),
-		throttle: pidcontrols.throttleToPidThrottle(c.Throttle),
+		roll:     c.joystickToPidValue(fc.Roll, c.roll.limit),
+		pitch:    c.joystickToPidValue(fc.Pitch, c.pitch.limit),
+		yaw:      c.joystickToPidValue(fc.Yaw, c.yaw.limit),
+		throttle: c.throttleToPidThrottle(fc.Throttle),
 	}
 }
 
 var lastPrint time.Time = time.Now()
 
-func showStates(s pidState) {
+func showStates(a, t pidState) {
 	if time.Since(lastPrint) > time.Second/2 {
 		lastPrint = time.Now()
-		log.Printf("roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n", s.roll, s.pitch, s.yaw, s.throttle)
+		log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f    ", a.roll, a.pitch, a.yaw, a.throttle)
+		log.Printf("target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n", t.roll, t.pitch, t.yaw, t.throttle)
 	}
 }
