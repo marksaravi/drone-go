@@ -53,18 +53,18 @@ type pca9685Dev struct {
 	frequency         float32
 	throttels         [16]float32
 	mappings          map[int]int
-	safeMaxThrottle   float32
+	maxThrottle       float32
 	safeStartThrottle float32
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, safeMaxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
+func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, maxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
 	dev := &pca9685Dev{
 		name:              "pca9685Dev",
 		address:           address,
 		connection:        connection,
 		safeStartThrottle: safeStartThrottle,
-		safeMaxThrottle:   safeMaxThrottle,
+		maxThrottle:       maxThrottle,
 		mappings:          mappings,
 	}
 	dev.init()
@@ -79,8 +79,8 @@ func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float3
 	if throttle < 0 {
 		throttle = 0
 	}
-	if throttle > d.safeMaxThrottle {
-		throttle = d.safeMaxThrottle
+	if throttle > d.maxThrottle {
+		throttle = d.maxThrottle
 	}
 	d.throttels[channel] = throttle
 }
