@@ -66,6 +66,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Radio is stopped.")
 
+		var heartbeatInterval = r.heartBeatTimeout / 10
 		r.clearBuffer()
 		var running bool = true
 		var transmitting bool = true
@@ -96,7 +97,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					} else {
 						r.setConnectionState(NO_COMMAND)
 					}
-					if time.Since(r.lastSentHeartBeat) >= r.heartBeatTimeout/10 {
+					if time.Since(r.lastSentHeartBeat) >= heartbeatInterval {
 						r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
 							Type: HEARTBEAT,
 						}))

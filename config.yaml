@@ -1,9 +1,9 @@
 flight-control:
   debug: false
   pid:
-    p-gain: 0
-    i-gain: 0
-    d-gain: 0
+    p-gain: 1
+    i-gain: 1
+    d-gain: 1
     max-roll: 5
     max-pitch: 5
     max-yaw: 5

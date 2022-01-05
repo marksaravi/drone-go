@@ -65,7 +65,12 @@ func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 }
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
-	c.state = pidState{}
+	c.state = pidState{
+		roll:     rotations.Rotations.Roll,
+		pitch:    rotations.Rotations.Pitch,
+		yaw:      rotations.Rotations.Yaw,
+		throttle: 0,
+	}
 	c.calcThrottles()
 }
 
@@ -120,7 +125,6 @@ var lastPrint time.Time = time.Now()
 func showStates(a, t pidState) {
 	if time.Since(lastPrint) > time.Second/2 {
 		lastPrint = time.Now()
-		log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f    ", a.roll, a.pitch, a.yaw, a.throttle)
-		log.Printf("target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n", t.roll, t.pitch, t.yaw, t.throttle)
+		log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n    ", a.roll, a.pitch, a.yaw, a.throttle, t.roll, t.pitch, t.yaw, t.throttle)
 	}
 }
