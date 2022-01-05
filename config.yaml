@@ -3,7 +3,7 @@ flight-control:
   max-throttle: 15
   safe-start-throttle: 5
   pid:
-    p-gain: 0
+    p-gain: 0.5
     i-gain: 0
     d-gain: 0
     max-roll: 5

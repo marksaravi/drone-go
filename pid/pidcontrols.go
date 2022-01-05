@@ -2,6 +2,7 @@ package pid
 
 import (
 	"log"
+	"math"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -110,16 +111,19 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollFrontThrottle, rollBackThrottle := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
-	pitchFrontThrottle, pitchBackThrottle := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
+	roll := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
+	pitch := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
+	a := math.Pi / 4
+	np := math.Cos(a)*roll - math.Sin(a)*pitch
+	nr := math.Sin(a)*roll + math.Cos(a)*pitch
 	// c.yaw.calc(0, 0, &c.gains) // not applying yaw yet
 	c.throttles = models.Throttles{
 		BaseThrottle: float32(c.targetState.throttle),
 		DThrottles: map[int]float32{
-			0: float32(rollFrontThrottle),
-			1: float32(pitchFrontThrottle),
-			2: float32(rollBackThrottle),
-			3: float32(pitchBackThrottle),
+			0: float32(-nr / 2),
+			1: float32(np / 2),
+			2: float32(nr / 2),
+			3: float32(-np / 2),
 		},
 	}
 }

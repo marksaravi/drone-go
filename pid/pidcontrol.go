@@ -14,11 +14,9 @@ func NewPIDControl(limit float64) *pidControl {
 	}
 }
 
-func (c *pidControl) calc(rotation, targetRotation float64, gains *gains) (float64, float64) {
+func (c *pidControl) calc(rotation, targetRotation float64, gains *gains) float64 {
 	rotationDiff := targetRotation - rotation
 	p := gains.P * rotationDiff
 	sum := p
-	front := -sum / 2
-	back := sum / 2
-	return front, back
+	return sum
 }
