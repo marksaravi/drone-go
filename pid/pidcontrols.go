@@ -15,6 +15,7 @@ type pidState struct {
 	pitch    float64
 	yaw      float64
 	throttle float64
+	dt       time.Duration
 }
 
 type gains struct {
@@ -75,6 +76,7 @@ func NewPIDControls(
 			pitch:    0,
 			yaw:      0,
 			throttle: 0,
+			dt:       0,
 		},
 		throttles: models.Throttles{
 			BaseThrottle: 0,
@@ -110,6 +112,7 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 		pitch:    rotations.Rotations.Pitch,
 		yaw:      rotations.Rotations.Yaw,
 		throttle: 0,
+		dt:       rotations.ReadInterval,
 	}
 	c.calcThrottles()
 }
@@ -118,8 +121,8 @@ func (c *pidControls) calcPID() (float64, float64) {
 	if c.targetState.throttle < c.safeStartThrottle {
 		return 0, 0
 	}
-	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
-	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
+	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, c.state.dt, &c.gains)
+	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.state.dt, &c.gains)
 	return rollPID, pitchPID
 }
 
@@ -182,9 +185,9 @@ func (c *pidControls) throttleToPidThrottle(joystickDigitalValue uint16) float64
 
 func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands) pidState {
 	return pidState{
-		roll:     c.joystickToPidValue(fc.Roll, c.roll.limit),
-		pitch:    c.joystickToPidValue(fc.Pitch, c.pitch.limit),
-		yaw:      c.joystickToPidValue(fc.Yaw, c.yaw.limit),
+		roll:     c.joystickToPidValue(fc.Roll, c.roll.inputLimit),
+		pitch:    c.joystickToPidValue(fc.Pitch, c.pitch.inputLimit),
+		yaw:      c.joystickToPidValue(fc.Yaw, c.yaw.inputLimit),
 		throttle: c.throttleToPidThrottle(fc.Throttle),
 	}
 }

@@ -3,13 +3,13 @@ flight-control:
   max-throttle: 15
   safe-start-throttle: 5
   pid:
-    p-gain: 0.5
+    p-gain: 0
     i-gain: 0
     d-gain: 0
     max-roll: 5
     max-pitch: 5
     max-yaw: 5
-    max-i: 10
+    max-i: 5
     axis-alignment-angle: 45
     calibration-gain: 'P'
     calibration-step: 0.1
