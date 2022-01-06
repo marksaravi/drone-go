@@ -41,7 +41,7 @@ const (
 )
 
 const (
-	Frequency float32 = 400
+	Frequency float32 = 384
 	MinPW     float32 = 0.001
 	MaxPW     float32 = 0.002
 )
@@ -52,7 +52,7 @@ type pca9685Dev struct {
 	connection        *i2c.Dev
 	frequency         float32
 	baseThrottle      float32
-	throttels         [16]float32
+	throttles         [16]float32
 	mappings          map[int]int
 	maxThrottle       float32
 	safeStartThrottle float32
@@ -85,7 +85,7 @@ func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float3
 		throttle = d.maxThrottle
 	}
 	d.baseThrottle = baseThrottle
-	d.throttels[channel] = throttle
+	d.throttles[channel] = throttle
 }
 
 //SetThrottle sets PWM for a channel
@@ -93,8 +93,13 @@ func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
 	for i := 0; i < len(throttles.DThrottles); i++ {
 		channel := d.mappings[i]
 		d.throttleSafeSet(channel, throttles.BaseThrottle, throttles.DThrottles[i])
-		d.setPWM(channel, MinPW+d.throttels[channel]/100*(MaxPW-MinPW))
+		d.SetThrottle(channel, d.throttles[channel])
 	}
+}
+
+func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
+	pulseWidth := MinPW + throttle/100*(MaxPW-MinPW)
+	d.setPWM(channel, pulseWidth)
 }
 
 //Calibrate
