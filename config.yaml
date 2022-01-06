@@ -9,6 +9,7 @@ flight-control:
     max-roll: 5
     max-pitch: 5
     max-yaw: 5
+    max-i: 10
     axis-alignment-angle: 45
     calibration-gain: 'P'
     calibration-step: 0.1

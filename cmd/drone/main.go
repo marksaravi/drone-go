@@ -57,6 +57,7 @@ func main() {
 		pidConfigs.MaxRoll,
 		pidConfigs.MaxPitch,
 		pidConfigs.MaxYaw,
+		pidConfigs.MaxI,
 		float64(configs.MaxThrottle),
 		float64(configs.SafeStartThrottle),
 		mcp3008.DIGITAL_MAX_VALUE,

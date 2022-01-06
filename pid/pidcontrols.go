@@ -44,7 +44,7 @@ type pidControls struct {
 
 func NewPIDControls(
 	pGain, iGain, dGain float64,
-	limitRoll, limitPitch, limitYaw, throttleLimit, safeStartThrottle float64,
+	limitRoll, limitPitch, limitYaw, limitI, throttleLimit, safeStartThrottle float64,
 	maxJoystickDigitalValue uint16,
 	axisAlignmentAngle float64,
 	calibrationGain string,
@@ -57,9 +57,9 @@ func NewPIDControls(
 			I: iGain,
 			D: dGain,
 		},
-		roll:                    NewPIDControl(limitRoll),
-		pitch:                   NewPIDControl(limitPitch),
-		yaw:                     NewPIDControl(limitYaw),
+		roll:                    NewPIDControl(limitRoll, limitI),
+		pitch:                   NewPIDControl(limitPitch, limitI),
+		yaw:                     NewPIDControl(limitYaw, limitI),
 		throttleLimit:           throttleLimit,
 		safeStartThrottle:       safeStartThrottle,
 		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
@@ -133,7 +133,7 @@ func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
 	rollPID, pitchPID := c.calcPID()
-	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, 45)
+	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, c.axisAlignmentAngle)
 
 	c.throttles = models.Throttles{
 		BaseThrottle: float32(c.targetState.throttle),
