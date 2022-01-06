@@ -1,6 +1,8 @@
 package pid
 
-import "time"
+import (
+	"time"
+)
 
 type axisControl struct {
 	previousInput float64
@@ -29,7 +31,7 @@ func (ac *axisControl) getI(input, gain float64) float64 {
 }
 
 func (ac *axisControl) getD(input, gain float64, dt time.Duration) float64 {
-	d := (input - ac.previousInput) / float64(dt) * gain
+	d := (input - ac.previousInput) / float64(dt) * 1000000000 * gain
 
 	ac.previousInput = input
 	return d
