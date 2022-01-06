@@ -25,9 +25,9 @@ type gains struct {
 
 type pidControls struct {
 	gains                   gains
-	roll                    *pidControl
-	pitch                   *pidControl
-	yaw                     *pidControl
+	roll                    *axisControl
+	pitch                   *axisControl
+	yaw                     *axisControl
 	targetState             pidState
 	state                   pidState
 	throttles               models.Throttles
