@@ -94,11 +94,14 @@ func NewPIDControls(
 }
 
 func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
-	c.targetState = c.flightControlCommandToPIDCommand(flightCommands)
-	showStates(c.state, c.targetState)
 	if c.calibrationGain != "none" {
+		flightCommands.Roll = 0
+		flightCommands.Pitch = 0
+		flightCommands.Yaw = 0
 		c.calibrateGain(c.calibrationGain, flightCommands.ButtonTopLeft, flightCommands.ButtonTopRight)
 	}
+	c.targetState = c.flightControlCommandToPIDCommand(flightCommands)
+	showStates(c.state, c.targetState)
 }
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
@@ -112,6 +115,9 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 }
 
 func (c *pidControls) calcPID() (float64, float64) {
+	if c.targetState.throttle < c.safeStartThrottle {
+		return 0, 0
+	}
 	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
 	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
 	return rollPID, pitchPID
