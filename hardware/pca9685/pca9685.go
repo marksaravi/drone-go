@@ -42,8 +42,8 @@ const (
 
 const (
 	Frequency float32 = 384
-	MinPW     float32 = 0.001
-	MaxPW     float32 = 0.002
+	MinPW     float32 = 0.000995
+	MaxPW     float32 = 0.00199
 )
 
 type pca9685Dev struct {
