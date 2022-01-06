@@ -4,7 +4,7 @@ import "testing"
 
 func TestJoystickToPidValue(t *testing.T) {
 	var digitalValue uint16 = 64
-	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 1024, 0, "", 0)
+	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 1024, 0, "", 0)
 	var want float64 = -7
 	got := pidcontrols.joystickToPidValue(digitalValue, pidcontrols.roll.limit)
 	if got != want {
@@ -15,7 +15,7 @@ func TestJoystickToPidValue(t *testing.T) {
 
 func TestThrottleToPidThrottle(t *testing.T) {
 	var digitalValue uint16 = 64
-	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 1024, 0, "", 0)
+	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 1024, 0, "", 0)
 	var want float64 = 1
 	got := pidcontrols.throttleToPidThrottle(digitalValue)
 	if got != want {

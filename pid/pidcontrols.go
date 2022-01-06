@@ -33,6 +33,7 @@ type pidControls struct {
 	throttles               models.Throttles
 	maxJoystickDigitalValue float64
 	throttleLimit           float64
+	safeStartThrottle       float64
 	axisAlignmentAngle      float64
 	calibrationGain         string
 	calibrationStep         float64
@@ -43,7 +44,7 @@ type pidControls struct {
 
 func NewPIDControls(
 	pGain, iGain, dGain float64,
-	limitRoll, limitPitch, limitYaw, throttleLimit float64,
+	limitRoll, limitPitch, limitYaw, throttleLimit, safeStartThrottle float64,
 	maxJoystickDigitalValue uint16,
 	axisAlignmentAngle float64,
 	calibrationGain string,
@@ -60,6 +61,7 @@ func NewPIDControls(
 		pitch:                   NewPIDControl(limitPitch),
 		yaw:                     NewPIDControl(limitYaw),
 		throttleLimit:           throttleLimit,
+		safeStartThrottle:       safeStartThrottle,
 		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
 		axisAlignmentAngle:      axisAlignmentAngle,
 		targetState: pidState{
@@ -109,14 +111,24 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.calcThrottles()
 }
 
+func (c *pidControls) calcPID() (float64, float64) {
+	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
+	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
+	return rollPID, pitchPID
+}
+
+func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float64) {
+	arad := angle / 180.0 * math.Pi
+	np := math.Cos(arad)*rollPID - math.Sin(arad)*pitchPID
+	nr := math.Sin(arad)*rollPID + math.Cos(arad)*pitchPID
+	return nr, np
+}
+
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	roll := c.roll.calc(c.state.roll, c.targetState.roll, &c.gains)
-	pitch := c.pitch.calc(c.state.pitch, c.targetState.pitch, &c.gains)
-	a := math.Pi / 4
-	np := math.Cos(a)*roll - math.Sin(a)*pitch
-	nr := math.Sin(a)*roll + math.Cos(a)*pitch
-	// c.yaw.calc(0, 0, &c.gains) // not applying yaw yet
+	rollPID, pitchPID := c.calcPID()
+	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, 45)
+
 	c.throttles = models.Throttles{
 		BaseThrottle: float32(c.targetState.throttle),
 		DThrottles: map[int]float32{
