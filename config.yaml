@@ -61,13 +61,13 @@ remote-control:
   joysticks:
     roll:
       channel: 4
-      offset: 50
+      offset: -50
     pitch:
       channel: 2
-      offset: 27
+      offset: -28
     yaw:
       channel: 3
-      offset: 39
+      offset: -43
     throttle:
       channel: 5
       offset: -1
