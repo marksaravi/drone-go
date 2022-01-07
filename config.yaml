@@ -14,7 +14,7 @@ flight-control:
     max-yaw: 15
     max-i: 5
     axis-alignment-angle: 45
-    calibration-gain: 'i'
+    calibration-gain: 'yaw-i'
     calibration-step: 0.0001
   imu:
     data-per-second: 3200

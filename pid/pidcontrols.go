@@ -3,6 +3,7 @@ package pid
 import (
 	"log"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -26,6 +27,7 @@ type gains struct {
 
 type pidControls struct {
 	gains                   gains
+	yawGains                gains
 	roll                    *axisControl
 	pitch                   *axisControl
 	yaw                     *axisControl
@@ -68,6 +70,11 @@ func NewPIDControls(settings PIDSettings) *pidControls {
 			P: settings.RollPitchPGain,
 			I: settings.RollPitchIGain,
 			D: settings.RollPitchDGain,
+		},
+		yawGains: gains{
+			P: settings.YawPGain,
+			I: settings.YawIGain,
+			D: settings.YawDGain,
 		},
 		roll:                    NewPIDControl(settings.LimitRoll, settings.LimitI),
 		pitch:                   NewPIDControl(settings.LimitPitch, settings.LimitI),
@@ -125,13 +132,14 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.calcThrottles()
 }
 
-func (c *pidControls) calcPID() (float64, float64) {
+func (c *pidControls) calcPID() (float64, float64, float64) {
 	if c.targetState.throttle < c.safeStartThrottle {
-		return 0, 0
+		return 0, 0, 0
 	}
 	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, c.state.dt, &c.gains)
 	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.state.dt, &c.gains)
-	return rollPID, pitchPID
+	yawPID := c.yaw.calc(c.state.yaw, c.targetState.yaw, c.state.dt, &c.yawGains)
+	return rollPID, pitchPID, yawPID
 }
 
 func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float64) {
@@ -143,16 +151,16 @@ func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollPID, pitchPID := c.calcPID()
+	rollPID, pitchPID, yawPID := c.calcPID()
 	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, c.axisAlignmentAngle)
 
 	c.throttles = models.Throttles{
 		BaseThrottle: float32(c.targetState.throttle),
 		DThrottles: map[int]float32{
-			0: float32(-nr / 2),
-			1: float32(np / 2),
-			2: float32(nr / 2),
-			3: float32(-np / 2),
+			0: float32(-nr/2) + float32(yawPID/2),
+			1: float32(np/2) - float32(yawPID/2),
+			2: float32(nr/2) + float32(yawPID/2),
+			3: float32(-np/2) - float32(yawPID/2),
 		},
 	}
 }
@@ -213,16 +221,25 @@ func (c *pidControls) calibrateGain(gain string, down, up bool) {
 		step = -step
 	}
 	var value float64 = 0
-	switch gain {
-	case "p":
+	switch strings.ToLower(gain) {
+	case "roll-p":
 		c.gains.P += step
 		value = c.gains.P
-	case "i":
+	case "roll-i":
 		c.gains.I += step
 		value = c.gains.I
-	case "d":
+	case "roll-d":
 		c.gains.D += step
 		value = c.gains.D
+	case "yaw-p":
+		c.yawGains.P += step
+		value = c.yawGains.P
+	case "yaw-i":
+		c.yawGains.I += step
+		value = c.yawGains.I
+	case "yaw-d":
+		c.yawGains.D += step
+		value = c.yawGains.D
 	}
 	log.Printf("%s Gain is changed to %8.6f\n", gain, value)
 	c.calibrationStepApplied = true
