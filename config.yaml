@@ -3,11 +3,14 @@ flight-control:
   max-throttle: 60
   safe-start-throttle: 5
   pid:
-    p-gain: 2
-    i-gain: 0005
-    d-gain: 0.4
+    roll-pitch-p-gain: 2
+    roll-pitch-i-gain: 0005
+    roll-pitch-d-gain: 0.4
     max-roll: 15
     max-pitch: 15
+    yaw-p-gain: 0
+    yaw-i-gain: 0
+    yaw-d-gain: 0
     max-yaw: 15
     max-i: 5
     axis-alignment-angle: 45

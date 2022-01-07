@@ -51,9 +51,9 @@ func main() {
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
-		pidConfigs.PGain,
-		pidConfigs.IGain,
-		pidConfigs.DGain,
+		pidConfigs.RollPitchPGain,
+		pidConfigs.RollPitchIGain,
+		pidConfigs.RollPitchDGain,
 		pidConfigs.MaxRoll,
 		pidConfigs.MaxPitch,
 		pidConfigs.MaxYaw,

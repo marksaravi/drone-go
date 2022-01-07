@@ -26,11 +26,14 @@ type flightControl struct {
 	SafeStartThrottle float32 `yaml:"safe-start-throttle"`
 
 	PID struct {
-		PGain              float64 `yaml:"p-gain"`
-		IGain              float64 `yaml:"i-gain"`
-		DGain              float64 `yaml:"d-gain"`
+		RollPitchPGain     float64 `yaml:"roll-pitch-p-gain"`
+		RollPitchIGain     float64 `yaml:"roll-pitch-i-gain"`
+		RollPitchDGain     float64 `yaml:"roll-pitch-d-gain"`
 		MaxRoll            float64 `yaml:"max-roll"`
 		MaxPitch           float64 `yaml:"max-pitch"`
+		YawPGain           float64 `yaml:"yaw-p-gain"`
+		YawIGain           float64 `yaml:"yaw-i-gain"`
+		YawDGain           float64 `yaml:"yaw-d-gain"`
 		MaxYaw             float64 `yaml:"max-yaw"`
 		MaxI               float64 `yaml:"max-i"`
 		AxisAlignmentAngle float64 `yaml:"axis-alignment-angle"`
