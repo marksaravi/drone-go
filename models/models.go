@@ -55,4 +55,7 @@ type Logger interface {
 	Close()
 }
 
-type Throttles = map[uint8]float64
+type Throttles struct {
+	BaseThrottle float32
+	DThrottles   map[int]float32
+}

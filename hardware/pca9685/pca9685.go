@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/i2c"
 )
 
@@ -40,9 +41,9 @@ const (
 )
 
 const (
-	Frequency float32 = 400
-	MinPW     float32 = 0.001
-	MaxPW     float32 = 0.002
+	Frequency float32 = 384
+	MinPW     float32 = 0.000995
+	MaxPW     float32 = 0.00199
 )
 
 type pca9685Dev struct {
@@ -50,66 +51,60 @@ type pca9685Dev struct {
 	address           uint8
 	connection        *i2c.Dev
 	frequency         float32
-	throttels         map[int]float32
-	safetyMaxThrottle float32
+	baseThrottle      float32
+	throttles         [16]float32
+	mappings          map[int]int
+	maxThrottle       float32
 	safeStartThrottle float32
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, safetyMaxThrottle float32) (*pca9685Dev, error) {
-	if safetyMaxThrottle > 50 { // Hardcoded safety fow now. Will change after flight tests
-		safetyMaxThrottle = 50
-	}
-	if safetyMaxThrottle < 0 {
-		safetyMaxThrottle = 0
-	}
+func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, maxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
 	dev := &pca9685Dev{
 		name:              "pca9685Dev",
 		address:           address,
 		connection:        connection,
 		safeStartThrottle: safeStartThrottle,
-		safetyMaxThrottle: safetyMaxThrottle,
-		throttels: map[int]float32{
-			0:  0,
-			1:  0,
-			2:  0,
-			3:  0,
-			4:  0,
-			5:  0,
-			6:  0,
-			7:  0,
-			8:  0,
-			9:  0,
-			10: 0,
-			11: 0,
-			12: 0,
-			13: 0,
-			14: 0,
-			15: 0,
-		},
+		maxThrottle:       maxThrottle,
+		mappings:          mappings,
+		baseThrottle:      0,
 	}
 	dev.init()
 	return dev, nil
 }
 
-//SetThrottle sets PWM for a channel
-func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
+func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float32) {
+	if d.baseThrottle == 0 && baseThrottle > d.safeStartThrottle {
+		return
+	}
+	throttle := baseThrottle + dThrottle
 	if throttle < 0 {
 		throttle = 0
 	}
-	if throttle > d.safetyMaxThrottle {
-		throttle = d.safetyMaxThrottle
+	if throttle > d.maxThrottle {
+		throttle = d.maxThrottle
 	}
-	if d.throttels[channel] == 0 && throttle > d.safeStartThrottle {
-		throttle = 0 // Another safety measure to make sure throttle always starts from low
+	d.baseThrottle = baseThrottle
+	d.throttles[channel] = throttle
+}
+
+//SetThrottle sets PWM for a channel
+func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
+	for i := 0; i < len(throttles.DThrottles); i++ {
+		channel := d.mappings[i]
+		d.throttleSafeSet(channel, throttles.BaseThrottle, throttles.DThrottles[i])
+		d.SetThrottle(channel, d.throttles[channel])
 	}
-	d.throttels[channel] = throttle
-	d.setPWM(channel, MinPW+throttle/100*(MaxPW-MinPW))
+}
+
+func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
+	pulseWidth := MinPW + throttle/100*(MaxPW-MinPW)
+	d.setPWM(channel, pulseWidth)
 }
 
 //Calibrate
-func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
-	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0, 0)
+func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int) {
+	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0, 0, mappings)
 	if err != nil {
 		fmt.Println(err)
 		return

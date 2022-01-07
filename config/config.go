@@ -32,6 +32,7 @@ type flightControl struct {
 		MaxRoll            float64 `yaml:"max-roll"`
 		MaxPitch           float64 `yaml:"max-pitch"`
 		MaxYaw             float64 `yaml:"max-yaw"`
+		MaxI               float64 `yaml:"max-i"`
 		AxisAlignmentAngle float64 `yaml:"axis-alignment-angle"`
 		CalibrationGain    string  `yaml:"calibration-gain"`
 		CalibrationStep    float64 `yaml:"calibration-step"`

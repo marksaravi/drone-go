@@ -18,30 +18,28 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottle(int, float32)
+	SetThrottles(models.Throttles)
 }
 
 type escDev struct {
-	pwmDev                 pwmDevice
-	powerbreaker           powerbreaker
-	pwmDeviceToESCMappings map[int]int
-	throttlesChan          chan models.Throttles
-	lastUpdate             time.Time
-	updateInterval         time.Duration
-	isActive               bool
-	debug                  bool
+	pwmDev         pwmDevice
+	powerbreaker   powerbreaker
+	throttlesChan  chan models.Throttles
+	lastUpdate     time.Time
+	updateInterval time.Duration
+	isActive       bool
+	debug          bool
 }
 
-func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, pwmDeviceToESCMappings map[int]int, debug bool) *escDev {
+func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, debug bool) *escDev {
 	return &escDev{
-		pwmDev:                 pwmDev,
-		powerbreaker:           powerbreaker,
-		pwmDeviceToESCMappings: pwmDeviceToESCMappings,
-		throttlesChan:          make(chan models.Throttles),
-		lastUpdate:             time.Now(),
-		updateInterval:         time.Second / time.Duration(updatesPerSecond),
-		isActive:               true,
-		debug:                  debug,
+		pwmDev:         pwmDev,
+		powerbreaker:   powerbreaker,
+		throttlesChan:  make(chan models.Throttles),
+		lastUpdate:     time.Now(),
+		updateInterval: time.Second / time.Duration(updatesPerSecond),
+		isActive:       true,
+		debug:          debug,
 	}
 }
 
@@ -81,10 +79,7 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 			if ok {
 				// showThrottles(throttels)
 				if !e.debug {
-					var ch uint8
-					for ch = 0; ch < NUM_OF_ESC; ch++ {
-						e.pwmDev.SetThrottle(e.pwmDeviceToESCMappings[int(ch)], float32(throttels[ch]))
-					}
+					e.pwmDev.SetThrottles(throttels)
 				}
 			} else {
 				e.isActive = false
@@ -95,7 +90,10 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 
 func (e *escDev) offAll() {
 	if e.isActive {
-		e.throttlesChan <- models.Throttles{0: 0, 1: 0, 2: 0, 3: 0}
+		e.throttlesChan <- models.Throttles{
+			BaseThrottle: 0,
+			DThrottles:   map[int]float32{0: 0, 1: 0, 2: 0, 3: 0},
+		}
 	}
 }
 
