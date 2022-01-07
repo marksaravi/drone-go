@@ -40,13 +40,13 @@ func main() {
 	esc.On()
 	time.Sleep(3 * time.Second)
 	throttles := models.Throttles{
-		BaseThrottle: 0,
-		DThrottles:   map[int]float32{0: 0, 1: 0, 2: 0, 3: 0},
+		Throttle:          0,
+		ControlsVariables: map[int]float32{0: 0, 1: 0, 2: 0, 3: 0},
 	}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
 			log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			throttles.DThrottles[*motor] = throttle
+			throttles.ControlsVariables[*motor] = throttle
 			esc.SetThrottles(throttles)
 			time.Sleep(250 * time.Millisecond)
 			throttle += dThrottle

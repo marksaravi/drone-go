@@ -90,9 +90,9 @@ func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float3
 
 //SetThrottle sets PWM for a channel
 func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
-	for i := 0; i < len(throttles.DThrottles); i++ {
+	for i := 0; i < len(throttles.ControlsVariables); i++ {
 		channel := d.mappings[i]
-		d.throttleSafeSet(channel, throttles.BaseThrottle, throttles.DThrottles[i])
+		d.throttleSafeSet(channel, throttles.Throttle, throttles.ControlsVariables[i])
 		d.SetThrottle(channel, d.throttles[channel])
 	}
 }

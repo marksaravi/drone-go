@@ -97,8 +97,8 @@ func NewPIDControls(settings PIDSettings) *pidControls {
 			dt:       0,
 		},
 		throttles: models.Throttles{
-			BaseThrottle: 0,
-			DThrottles: map[int]float32{
+			Throttle: 0,
+			ControlsVariables: map[int]float32{
 				0: 0,
 				1: 0,
 				2: 0,
@@ -155,8 +155,8 @@ func (c *pidControls) calcThrottles() {
 	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, c.axisAlignmentAngle)
 
 	c.throttles = models.Throttles{
-		BaseThrottle: float32(c.targetState.throttle),
-		DThrottles: map[int]float32{
+		Throttle: float32(c.targetState.throttle),
+		ControlsVariables: map[int]float32{
 			0: float32(-nr/2) + float32(yawPID/2),
 			1: float32(np/2) - float32(yawPID/2),
 			2: float32(nr/2) + float32(yawPID/2),
