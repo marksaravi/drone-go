@@ -51,19 +51,24 @@ func main() {
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
-		pidConfigs.RollPitchPGain,
-		pidConfigs.RollPitchIGain,
-		pidConfigs.RollPitchDGain,
-		pidConfigs.MaxRoll,
-		pidConfigs.MaxPitch,
-		pidConfigs.MaxYaw,
-		pidConfigs.MaxI,
-		float64(configs.MaxThrottle),
-		float64(configs.SafeStartThrottle),
-		mcp3008.DIGITAL_MAX_VALUE,
-		pidConfigs.AxisAlignmentAngle,
-		pidConfigs.CalibrationGain,
-		pidConfigs.CalibrationStep,
+		pid.PIDSettings{
+			RollPitchPGain:          pidConfigs.RollPitchPGain,
+			RollPitchIGain:          pidConfigs.RollPitchIGain,
+			RollPitchDGain:          pidConfigs.RollPitchDGain,
+			YawPGain:                pidConfigs.YawPGain,
+			YawIGain:                pidConfigs.YawIGain,
+			YawDGain:                pidConfigs.YawDGain,
+			LimitRoll:               pidConfigs.MaxRoll,
+			LimitPitch:              pidConfigs.MaxPitch,
+			LimitYaw:                pidConfigs.MaxYaw,
+			LimitI:                  pidConfigs.MaxI,
+			ThrottleLimit:           float64(configs.MaxThrottle),
+			SafeStartThrottle:       float64(configs.SafeStartThrottle),
+			MaxJoystickDigitalValue: mcp3008.DIGITAL_MAX_VALUE,
+			AxisAlignmentAngle:      pidConfigs.AxisAlignmentAngle,
+			CalibrationGain:         pidConfigs.CalibrationGain,
+			CalibrationStep:         pidConfigs.CalibrationStep,
+		},
 	)
 	flightControl := flightcontrol.NewFlightControl(
 		pidcontrols,

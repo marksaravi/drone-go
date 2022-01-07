@@ -42,29 +42,40 @@ type pidControls struct {
 	emergencyStopTimeout    time.Time
 	emergencyStopStart      float64
 }
+type PIDSettings struct {
+	RollPitchPGain          float64
+	RollPitchIGain          float64
+	RollPitchDGain          float64
+	YawPGain                float64
+	YawIGain                float64
+	YawDGain                float64
+	LimitRoll               float64
+	LimitPitch              float64
+	LimitYaw                float64
+	LimitI                  float64
+	ThrottleLimit           float64
+	SafeStartThrottle       float64
+	MaxJoystickDigitalValue uint16
+	AxisAlignmentAngle      float64
+	CalibrationGain         string
+	CalibrationStep         float64
+}
 
-func NewPIDControls(
-	pGain, iGain, dGain float64,
-	limitRoll, limitPitch, limitYaw, limitI, throttleLimit, safeStartThrottle float64,
-	maxJoystickDigitalValue uint16,
-	axisAlignmentAngle float64,
-	calibrationGain string,
-	calibrationStep float64,
-) *pidControls {
+func NewPIDControls(settings PIDSettings) *pidControls {
 
 	return &pidControls{
 		gains: gains{
-			P: pGain,
-			I: iGain,
-			D: dGain,
+			P: settings.RollPitchPGain,
+			I: settings.RollPitchIGain,
+			D: settings.RollPitchDGain,
 		},
-		roll:                    NewPIDControl(limitRoll, limitI),
-		pitch:                   NewPIDControl(limitPitch, limitI),
-		yaw:                     NewPIDControl(limitYaw, limitI),
-		throttleLimit:           throttleLimit,
-		safeStartThrottle:       safeStartThrottle,
-		maxJoystickDigitalValue: float64(maxJoystickDigitalValue),
-		axisAlignmentAngle:      axisAlignmentAngle,
+		roll:                    NewPIDControl(settings.LimitRoll, settings.LimitI),
+		pitch:                   NewPIDControl(settings.LimitPitch, settings.LimitI),
+		yaw:                     NewPIDControl(settings.LimitYaw, settings.LimitI),
+		throttleLimit:           settings.ThrottleLimit,
+		safeStartThrottle:       settings.SafeStartThrottle,
+		maxJoystickDigitalValue: float64(settings.MaxJoystickDigitalValue),
+		axisAlignmentAngle:      settings.AxisAlignmentAngle,
 		targetState: pidState{
 			roll:     0,
 			pitch:    0,
@@ -87,8 +98,8 @@ func NewPIDControls(
 				3: 0,
 			},
 		},
-		calibrationGain:        calibrationGain,
-		calibrationStep:        calibrationStep,
+		calibrationGain:        settings.CalibrationGain,
+		calibrationStep:        settings.CalibrationStep,
 		calibrationStepApplied: false,
 		emergencyStopTimeout:   time.Now().Add(time.Second * 86400),
 		emergencyStopStart:     0,
