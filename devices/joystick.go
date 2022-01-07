@@ -11,9 +11,9 @@ type joystickInput struct {
 }
 
 func (js *joystickInput) Read() int {
-	digitalValue := int(js.input.Read()) + js.offset
-	if digitalValue > js.maxValue {
-		return js.maxValue
+	digitalValue := int(js.input.Read()) - js.offset
+	if digitalValue > (js.maxValue - 1) {
+		return js.maxValue - 1
 	}
 	if digitalValue < 0 {
 		return 0
