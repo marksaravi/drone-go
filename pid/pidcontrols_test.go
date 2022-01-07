@@ -4,9 +4,9 @@ import "testing"
 
 func TestJoystickToPidValue(t *testing.T) {
 	var digitalValue uint16 = 64
-	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 1024, 0, "", 0)
+	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 10, 1024, 0, "", 0)
 	var want float64 = -7
-	got := pidcontrols.joystickToPidValue(digitalValue, pidcontrols.roll.limit)
+	got := pidcontrols.joystickToPidValue(digitalValue, pidcontrols.roll.inputLimit)
 	if got != want {
 		t.Fatalf("Wanted %3.2f, got %3.2f", want, got)
 	}
@@ -15,7 +15,7 @@ func TestJoystickToPidValue(t *testing.T) {
 
 func TestThrottleToPidThrottle(t *testing.T) {
 	var digitalValue uint16 = 64
-	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 1024, 0, "", 0)
+	pidcontrols := NewPIDControls(0, 0, 0, 16, 16, 16, 16, 5, 10, 1024, 0, "", 0)
 	var want float64 = 1
 	got := pidcontrols.throttleToPidThrottle(digitalValue)
 	if got != want {

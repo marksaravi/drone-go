@@ -26,6 +26,7 @@ type pidControls interface {
 	SetRotations(rotations models.ImuRotations)
 	Throttles() models.Throttles
 	InitiateEmergencyStop(stop bool)
+	PrintGains()
 }
 
 type flightControl struct {
@@ -57,6 +58,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer log.Println("Flight Control is stopped...")
+		defer fc.pid.PrintGains()
 		defer fc.esc.Off()
 
 		fc.esc.On()

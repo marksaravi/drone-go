@@ -97,9 +97,6 @@ func NewPIDControls(
 
 func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 	if c.calibrationGain != "none" {
-		flightCommands.Roll = 0
-		flightCommands.Pitch = 0
-		flightCommands.Yaw = 0
 		c.calibrateGain(c.calibrationGain, flightCommands.ButtonTopLeft, flightCommands.ButtonTopRight)
 	}
 	c.targetState = c.flightControlCommandToPIDCommand(flightCommands)
@@ -206,24 +203,28 @@ func (c *pidControls) calibrateGain(gain string, down, up bool) {
 	}
 	var value float64 = 0
 	switch gain {
-	case "P":
+	case "p":
 		c.gains.P += step
 		value = c.gains.P
-	case "I":
+	case "i":
 		c.gains.I += step
 		value = c.gains.I
-	case "D":
+	case "d":
 		c.gains.D += step
 		value = c.gains.D
 	}
-	log.Printf("%s Gain is changed to %6.2f\n", gain, value)
+	log.Printf("%s Gain is changed to %8.6f\n", gain, value)
 	c.calibrationStepApplied = true
+}
+
+func (c *pidControls) PrintGains() {
+	log.Printf("P: %8.6f, I: %8.6f, D: %8.6f,\n", c.gains.P, c.gains.I, c.gains.D)
 }
 
 var lastPrint time.Time = time.Now()
 
 func showStates(a, t pidState) {
-	if time.Since(lastPrint) > time.Second/2 {
+	if time.Since(lastPrint) > time.Second*2 {
 		lastPrint = time.Now()
 		log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n    ", a.roll, a.pitch, a.yaw, a.throttle, t.roll, t.pitch, t.yaw, t.throttle)
 	}

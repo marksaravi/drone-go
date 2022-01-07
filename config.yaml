@@ -1,18 +1,18 @@
 flight-control:
   debug: false
-  max-throttle: 15
+  max-throttle: 60
   safe-start-throttle: 5
   pid:
-    p-gain: 0
-    i-gain: 0
-    d-gain: 0
-    max-roll: 5
-    max-pitch: 5
-    max-yaw: 5
+    p-gain: 2
+    i-gain: 0005
+    d-gain: 0.4
+    max-roll: 15
+    max-pitch: 15
+    max-yaw: 15
     max-i: 5
     axis-alignment-angle: 45
-    calibration-gain: 'P'
-    calibration-step: 0.1
+    calibration-gain: 'i'
+    calibration-step: 0.0001
   imu:
     data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
