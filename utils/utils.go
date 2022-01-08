@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 )
 
 func WaitToAbortByENTER(cancel context.CancelFunc) {
@@ -15,16 +16,28 @@ func WaitToAbortByENTER(cancel context.CancelFunc) {
 	}(cancel)
 }
 
+var lastWarning time.Time = time.Now()
+
+func limitWarning(less bool, limit float64) {
+	if time.Since(lastWarning) > time.Second/2 {
+		lastWarning = time.Now()
+		if less {
+			log.Println("value is less than ", limit)
+		} else {
+			log.Println("value is more than ", limit)
+		}
+	}
+}
 func ApplyLimit(x, min, max float64, genwarning bool) float64 {
 	if x < min {
 		if genwarning {
-			log.Println("value is less than ", min)
+			limitWarning(true, min)
 		}
 		return min
 	}
 	if x > max {
 		if genwarning {
-			log.Println("value is more than ", max)
+			limitWarning(false, max)
 		}
 		return max
 	}
