@@ -197,6 +197,14 @@ func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands)
 }
 
 func (c *pidControls) calibrateGain(gain string, down, up bool) {
+	addStep := func(x, step float64) float64 {
+		nvalue := x + step
+		if nvalue < 0 {
+			nvalue = x
+		}
+		log.Printf("%s Gain is changed to %8.6f\n", gain, nvalue)
+		return nvalue
+	}
 	if !down && !up {
 		c.calibrationStepApplied = false
 		return
@@ -208,28 +216,21 @@ func (c *pidControls) calibrateGain(gain string, down, up bool) {
 	if down {
 		step = -step
 	}
-	var value float64 = 0
+
 	switch strings.ToLower(gain) {
 	case "roll-p":
-		c.gains.P += step
-		value = c.gains.P
+		c.gains.P = addStep(c.gains.P, step)
 	case "roll-i":
-		c.gains.I += step
-		value = c.gains.I
+		c.gains.I = addStep(c.gains.I, step)
 	case "roll-d":
-		c.gains.D += step
-		value = c.gains.D
+		c.gains.D = addStep(c.gains.D, step)
 	case "yaw-p":
-		c.yawGains.P += step
-		value = c.yawGains.P
+		c.yawGains.P = addStep(c.yawGains.P, step)
 	case "yaw-i":
-		c.yawGains.I += step
-		value = c.yawGains.I
+		c.yawGains.I = addStep(c.yawGains.I, step)
 	case "yaw-d":
-		c.yawGains.D += step
-		value = c.yawGains.D
+		c.yawGains.D = addStep(c.yawGains.D, step)
 	}
-	log.Printf("%s Gain is changed to %8.6f\n", gain, value)
 	c.calibrationStepApplied = true
 }
 
