@@ -88,7 +88,7 @@ func main() {
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel)
 	radioDev.Start(ctx, &wg)
-	logger.Start(&wg)
+	// logger.Start(&wg)
 	esc.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
