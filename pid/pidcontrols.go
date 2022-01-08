@@ -133,9 +133,6 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 }
 
 func (c *pidControls) calcPID(roll, pitch, yaw float64) (float64, float64, float64) {
-	if c.targetState.throttle < c.safeStartThrottle {
-		return 0, 0, 0
-	}
 	rollPID := c.roll.calc(roll, c.state.dt, &c.gains)
 	pitchPID := c.pitch.calc(pitch, c.state.dt, &c.gains)
 	yawPID := c.yaw.calc(c.state.yaw-c.targetState.yaw, c.state.dt, &c.yawGains)
