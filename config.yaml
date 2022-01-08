@@ -4,9 +4,9 @@ flight-control:
   safe-start-throttle: 10
   control-variable-range: 20
   pid:
-    roll-pitch-p-gain: 0
+    roll-pitch-p-gain: 1.3
     roll-pitch-i-gain: 0
-    roll-pitch-d-gain: 0
+    roll-pitch-d-gain: 1.8
     max-roll: 10
     max-pitch: 10
     yaw-p-gain: 0.5
@@ -15,7 +15,7 @@ flight-control:
     max-yaw: 15
     max-i: 10
     axis-alignment-angle: 45
-    calibration-gain: 'yaw-d'
+    calibration-gain: 'roll-d'
     calibration-step: 0.1
   imu:
     data-per-second: 3200
