@@ -4,12 +4,12 @@ flight-control:
   safe-start-throttle: 5
   control-variable-range: 30
   pid:
-    roll-pitch-p-gain: 2.8
-    roll-pitch-i-gain: 90
-    roll-pitch-d-gain: 1.4
-    yaw-p-gain: 0.1
-    yaw-i-gain: 1
-    yaw-d-gain: 0.2
+    roll-pitch-p-gain: 0
+    roll-pitch-i-gain: 0
+    roll-pitch-d-gain: 0
+    yaw-p-gain: 0
+    yaw-i-gain: 0
+    yaw-d-gain: 0
     max-roll: 10
     max-pitch: 10
     max-yaw: 10
