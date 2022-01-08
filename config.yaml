@@ -18,7 +18,7 @@ flight-control:
     calibration-gain: 'roll-p'
     calibration-step: 0.1
   imu:
-    data-per-second: 3200
+    data-per-second: 1000
     acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
