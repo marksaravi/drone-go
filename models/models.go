@@ -17,11 +17,12 @@ type Rotations struct {
 }
 
 type ImuRotations struct {
-	Accelerometer Rotations
-	Gyroscope     Rotations
-	Rotations     Rotations
-	ReadTime      time.Time
-	ReadInterval  time.Duration
+	Accelerometer        Rotations
+	Gyroscope            Rotations
+	Rotations            Rotations
+	TransformedRotations Rotations
+	ReadTime             time.Time
+	ReadInterval         time.Duration
 }
 
 type FlightCommandType = uint8

@@ -2,7 +2,6 @@ package pid
 
 import (
 	"log"
-	"math"
 	"strings"
 	"time"
 
@@ -123,9 +122,9 @@ func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.state = pidState{
-		roll:     rotations.Rotations.Roll,
-		pitch:    rotations.Rotations.Pitch,
-		yaw:      rotations.Rotations.Yaw,
+		roll:     rotations.TransformedRotations.Roll,
+		pitch:    rotations.TransformedRotations.Pitch,
+		yaw:      rotations.TransformedRotations.Yaw,
 		throttle: 0,
 		dt:       rotations.ReadInterval,
 	}
@@ -139,17 +138,9 @@ func (c *pidControls) calcPID(roll, pitch, yaw float64) (float64, float64, float
 	return rollPID, pitchPID, yawPID
 }
 
-func applySensoreZaxisRotation(roll, pitch, angle float64) (float64, float64) {
-	arad := angle / 180.0 * math.Pi
-	nPitch := math.Cos(arad)*roll - math.Sin(arad)*pitch
-	nRoll := math.Sin(arad)*roll + math.Cos(arad)*pitch
-	return nRoll, nPitch
-}
-
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	nRoll, nPitch := applySensoreZaxisRotation(c.state.roll-c.targetState.roll, c.state.pitch-c.targetState.pitch, c.axisAlignmentAngle)
-	rollPID, pitchPID, yawPID := c.calcPID(nRoll, nPitch, c.state.yaw-c.targetState.yaw)
+	rollPID, pitchPID, yawPID := c.calcPID(c.state.roll-c.targetState.roll, c.state.pitch-c.targetState.pitch, c.state.yaw-c.targetState.yaw)
 
 	c.throttles = models.Throttles{
 		Throttle: c.targetState.throttle,

@@ -102,8 +102,8 @@ func (d *pca9685Dev) SetThrottle(channel int, throttle, controlVariable float64)
 }
 
 func (d *pca9685Dev) validateThrottle(throttle, controlVariable float64) float64 {
-	t := utils.ApplyLimit(throttle, 0, d.maxThrottle, true)
-	v := utils.ApplyLimit(controlVariable, d.controlVariableMin, d.controlVariableMax, true)
+	t := utils.ApplyLimit(throttle, 0, d.maxThrottle, false)
+	v := utils.ApplyLimit(controlVariable, d.controlVariableMin, d.controlVariableMax, false)
 	if t <= d.safeStartThrottle {
 		v = 0
 	}

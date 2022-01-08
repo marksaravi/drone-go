@@ -48,6 +48,17 @@ func (imu *imudevice) ResetTime() {
 	imu.lastReading = time.Now()
 }
 
+func applySensoreZaxisRotation(r models.Rotations, angle float64) models.Rotations {
+	arad := angle / 180.0 * math.Pi
+	nPitch := math.Cos(arad)*r.Roll - math.Sin(arad)*r.Pitch
+	nRoll := math.Sin(arad)*r.Roll + math.Cos(arad)*r.Pitch
+	return models.Rotations{
+		Roll:  nRoll,
+		Pitch: nPitch,
+		Yaw:   r.Yaw,
+	}
+}
+
 func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	if time.Since(imu.lastReading) < imu.readingInterval {
 		return models.ImuRotations{}, false
@@ -70,12 +81,14 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.lastReading = now
+	transformed := applySensoreZaxisRotation(imu.rotations, 45)
 	return models.ImuRotations{
-		Accelerometer: accRotations,
-		Gyroscope:     imu.gyro,
-		Rotations:     imu.rotations,
-		ReadTime:      now,
-		ReadInterval:  diff,
+		Accelerometer:        accRotations,
+		Gyroscope:            imu.gyro,
+		Rotations:            imu.rotations,
+		TransformedRotations: transformed,
+		ReadTime:             now,
+		ReadInterval:         diff,
 	}, true
 }
 
