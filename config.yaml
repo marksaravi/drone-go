@@ -4,7 +4,7 @@ flight-control:
   safe-start-throttle: 10
   control-variable-range: 20
   pid:
-    roll-pitch-p-gain: 0
+    roll-pitch-p-gain: 1
     roll-pitch-i-gain: 0
     roll-pitch-d-gain: 0
     yaw-p-gain: 0
