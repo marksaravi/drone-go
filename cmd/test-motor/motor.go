@@ -43,7 +43,6 @@ func main() {
 	var throttle float64 = 0
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.UpdatePerSecond, false)
 	var wg sync.WaitGroup
-	esc.Start(&wg)
 	esc.On()
 	time.Sleep(3 * time.Second)
 	throttles := models.Throttles{
@@ -62,7 +61,6 @@ func main() {
 		dThrottle = -dThrottle
 	}
 	esc.Off()
-	esc.Close()
 	wg.Wait()
 	log.Println("finished")
 }
