@@ -8,8 +8,8 @@ flight-control:
     roll-pitch-i-gain: 90
     roll-pitch-d-gain: 1.4
     yaw-p-gain: 0.1
-    yaw-i-gain: 0
-    yaw-d-gain: 0
+    yaw-i-gain: 1
+    yaw-d-gain: 0.2
     max-roll: 10
     max-pitch: 10
     max-yaw: 10
