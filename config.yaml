@@ -5,10 +5,10 @@ flight-control:
   control-variable-range: 40
   pid:
     roll-pitch-p-gain: 2.5
-    roll-pitch-i-gain: 0.001
+    roll-pitch-i-gain: 0.0025
     roll-pitch-d-gain: 0.5
-    max-roll: 10
-    max-pitch: 10
+    max-roll: 3
+    max-pitch: 3
     yaw-p-gain: 0.2
     yaw-i-gain: 0.000001
     yaw-d-gain: 0.2
