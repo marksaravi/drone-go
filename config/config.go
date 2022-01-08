@@ -21,9 +21,10 @@ type radioConfig struct {
 }
 
 type flightControl struct {
-	Debug             bool    `yaml:"debug"`
-	MaxThrottle       float32 `yaml:"max-throttle"`
-	SafeStartThrottle float32 `yaml:"safe-start-throttle"`
+	Debug                bool    `yaml:"debug"`
+	MaxThrottle          float64 `yaml:"max-throttle"`
+	SafeStartThrottle    float64 `yaml:"safe-start-throttle"`
+	ControlVariableRange float64 `yaml:"control-variable-range"`
 
 	PID struct {
 		RollPitchPGain     float64 `yaml:"roll-pitch-p-gain"`

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 )
 
@@ -41,70 +42,78 @@ const (
 )
 
 const (
-	Frequency float32 = 384
-	MinPW     float32 = 0.000995
-	MaxPW     float32 = 0.00199
+	Frequency            float64 = 384
+	MinPW                float64 = 0.000995
+	MaxPW                float64 = 0.00199
+	MaxAllowedThrottle   float64 = 65
+	MinSafeStartThrottle float64 = 5
 )
 
 type pca9685Dev struct {
-	name              string
-	address           uint8
-	connection        *i2c.Dev
-	frequency         float32
-	baseThrottle      float32
-	throttles         [16]float32
-	mappings          map[int]int
-	maxThrottle       float32
-	safeStartThrottle float32
+	name               string
+	address            uint8
+	connection         *i2c.Dev
+	frequency          float64
+	channelMappings    map[int]int
+	maxThrottle        float64
+	controlVariableMin float64
+	controlVariableMax float64
+	safeStartThrottle  float64
+	throttle           float64
+}
+
+type PCA9685Settings struct {
+	Connection           *i2c.Dev
+	ChannelMappings      map[int]int
+	SafeStartThrottle    float64
+	MaxThrottle          float64
+	ControlVariableRange float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
-func NewPCA9685(address uint8, connection *i2c.Dev, safeStartThrottle, maxThrottle float32, mappings map[int]int) (*pca9685Dev, error) {
+func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
+	validateSettings(&settings)
 	dev := &pca9685Dev{
-		name:              "pca9685Dev",
-		address:           address,
-		connection:        connection,
-		safeStartThrottle: safeStartThrottle,
-		maxThrottle:       maxThrottle,
-		mappings:          mappings,
-		baseThrottle:      0,
+		name:               "pca9685Dev",
+		address:            PCA9685Address,
+		connection:         settings.Connection,
+		safeStartThrottle:  settings.SafeStartThrottle,
+		maxThrottle:        settings.MaxThrottle,
+		channelMappings:    settings.ChannelMappings,
+		controlVariableMin: -settings.ControlVariableRange / 2,
+		controlVariableMax: settings.ControlVariableRange / 2,
+		throttle:           0,
 	}
 	dev.init()
 	return dev, nil
 }
 
-func (d *pca9685Dev) throttleSafeSet(channel int, baseThrottle, dThrottle float32) {
-	if d.baseThrottle == 0 && baseThrottle > d.safeStartThrottle {
-		return
-	}
-	throttle := baseThrottle + dThrottle
-	if throttle < 0 {
-		throttle = 0
-	}
-	if throttle > d.maxThrottle {
-		throttle = d.maxThrottle
-	}
-	d.baseThrottle = baseThrottle
-	d.throttles[channel] = throttle
-}
-
-//SetThrottle sets PWM for a channel
 func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
-	for i := 0; i < len(throttles.ControlsVariables); i++ {
-		channel := d.mappings[i]
-		d.throttleSafeSet(channel, throttles.Throttle, throttles.ControlsVariables[i])
-		d.SetThrottle(channel, d.throttles[channel])
+	for i := 0; i < len(throttles.ControlVariables); i++ {
+		channel := d.channelMappings[i]
+		d.SetThrottle(channel, throttles.Throttle, throttles.ControlVariables[i])
 	}
 }
 
-func (d *pca9685Dev) SetThrottle(channel int, throttle float32) {
-	pulseWidth := MinPW + throttle/100*(MaxPW-MinPW)
+func (d *pca9685Dev) SetThrottle(channel int, throttle, controlVariable float64) {
+	t := d.validateThrottle(throttle, controlVariable)
+	pulseWidth := MinPW + t/100*(MaxPW-MinPW)
 	d.setPWM(channel, pulseWidth)
+}
+
+func (d *pca9685Dev) validateThrottle(throttle, controlVariable float64) float64 {
+	t := utils.ApplyLimit(throttle, 0, d.maxThrottle, true)
+	v := utils.ApplyLimit(controlVariable, d.controlVariableMin, d.controlVariableMax, true)
+	if t <= d.safeStartThrottle {
+		v = 0
+	}
+
+	return utils.ApplyLimit(v+t, 0, MaxAllowedThrottle, false)
 }
 
 //Calibrate
 func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int) {
-	pwmDev, err := NewPCA9685(PCA9685Address, i2cConn, 0, 0, mappings)
+	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, SafeStartThrottle: MinSafeStartThrottle, MaxThrottle: MinSafeStartThrottle + 1, ChannelMappings: mappings})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -129,6 +138,18 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int
 	pwmDev.setAllPWM(0)
 }
 
+func validateSettings(settings *PCA9685Settings) {
+	if settings.SafeStartThrottle < MinSafeStartThrottle {
+		panic(fmt.Errorf("safe start throttle must be a positive number and more than %6.1f", MinSafeStartThrottle))
+	}
+	if settings.MaxThrottle <= settings.SafeStartThrottle {
+		panic(fmt.Errorf("max throttle must be a more than %6.1f", settings.SafeStartThrottle))
+	}
+	if settings.MaxThrottle+settings.ControlVariableRange/2 > MaxAllowedThrottle {
+		panic(fmt.Errorf("throttle + control variable must be less than %6.1f", MaxAllowedThrottle))
+	}
+}
+
 func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
 	read := make([]byte, 1)
 	write := []byte{offset}
@@ -142,14 +163,14 @@ func (d *pca9685Dev) writeByte(offset uint8, b uint8) error {
 	return err
 }
 
-func getOffTime(frequency float32, pulseWidth float32) (on uint16, off uint16) {
-	period := float32(1) / frequency
+func getOffTime(frequency float64, pulseWidth float64) (on uint16, off uint16) {
+	period := float64(1) / frequency
 	on = 0
 	off = uint16(pulseWidth / period * 4096)
 	return
 }
 
-func (d *pca9685Dev) setPWM(channel int, pulseWidth float32) (err error) {
+func (d *pca9685Dev) setPWM(channel int, pulseWidth float64) (err error) {
 	on, off := getOffTime(d.frequency, pulseWidth)
 	addresses := []byte{
 		byte(PCA9685LED0OnL + 4*channel),
@@ -174,10 +195,10 @@ func (d *pca9685Dev) setPWM(channel int, pulseWidth float32) (err error) {
 }
 
 // SetPWMFreq sets the PWM frequency in Hz
-func (d *pca9685Dev) setFrequency(freq float32) error {
+func (d *pca9685Dev) setFrequency(freq float64) error {
 	d.frequency = freq
 	// IC oscillator frequency is 25 MHz
-	var prescalevel float32 = 24576000
+	var prescalevel float64 = 24576000
 	// Find frequency of PWM waveform
 	prescalevel /= 4096
 	// Ratio between desired frequency and maximum
@@ -216,7 +237,7 @@ func (d *pca9685Dev) setFrequency(freq float32) error {
 	return nil
 }
 
-func (d *pca9685Dev) setAllPWM(pulseWidth float32) (err error) {
+func (d *pca9685Dev) setAllPWM(pulseWidth float64) (err error) {
 	on, off := getOffTime(d.frequency, pulseWidth)
 	if err := d.writeByte(byte(PCA9685AlliedOnL), byte(on)&0xFF); err != nil {
 		return err

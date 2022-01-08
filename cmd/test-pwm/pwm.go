@@ -21,9 +21,15 @@ func main() {
 	configs := config.ReadConfigs().FlightControl
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.SafeStartThrottle, configs.MaxThrottle, configs.ESC.PwmDeviceToESCMappings)
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
+		Connection:           i2cConn,
+		SafeStartThrottle:    configs.SafeStartThrottle,
+		MaxThrottle:          configs.MaxThrottle,
+		ControlVariableRange: configs.ControlVariableRange,
+		ChannelMappings:      configs.ESC.PwmDeviceToESCMappings,
+	})
 
-	pwmDev.SetThrottle(*motor, 0)
+	pwmDev.SetThrottle(*motor, configs.SafeStartThrottle+1, 0)
 	fmt.Scanln()
 	log.Println("finished")
 }

@@ -1,7 +1,8 @@
 flight-control:
   debug: false
-  max-throttle: 60
+  max-throttle: 35
   safe-start-throttle: 5
+  control-variable-range: 30 
   pid:
     roll-pitch-p-gain: 2
     roll-pitch-i-gain: 0005

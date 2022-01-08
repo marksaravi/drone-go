@@ -14,3 +14,19 @@ func WaitToAbortByENTER(cancel context.CancelFunc) {
 		cancel()
 	}(cancel)
 }
+
+func ApplyLimit(x, min, max float64, genwarning bool) float64 {
+	if x < min {
+		if genwarning {
+			log.Println("value is less than ", min)
+		}
+		return min
+	}
+	if x > max {
+		if genwarning {
+			log.Println("value is more than ", max)
+		}
+		return max
+	}
+	return x
+}

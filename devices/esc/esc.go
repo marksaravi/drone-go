@@ -91,8 +91,8 @@ func (e *escDev) Start(wg *sync.WaitGroup) {
 func (e *escDev) offAll() {
 	if e.isActive {
 		e.throttlesChan <- models.Throttles{
-			Throttle:          0,
-			ControlsVariables: map[int]float32{0: 0, 1: 0, 2: 0, 3: 0},
+			Throttle:         0,
+			ControlVariables: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 		}
 	}
 }
