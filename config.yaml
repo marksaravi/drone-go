@@ -4,19 +4,19 @@ flight-control:
   safe-start-throttle: 10
   control-variable-range: 20
   pid:
-    roll-pitch-p-gain: 1
+    roll-pitch-p-gain: 1.2
     roll-pitch-i-gain: 0
-    roll-pitch-d-gain: 0
-    yaw-p-gain: 0
-    yaw-i-gain: 0
-    yaw-d-gain: 0
+    roll-pitch-d-gain: 1.3
+    yaw-p-gain: 1
+    yaw-i-gain: 0.0001
+    yaw-d-gain: 0.2
     max-roll: 10
     max-pitch: 10
     max-yaw: 10
     max-i: 10
     beam-to-axis-ratio: 0.7071067811865475
     calibration-gain: 'roll-d'
-    calibration-step: 0
+    calibration-step: 0.1
   imu:
     data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
