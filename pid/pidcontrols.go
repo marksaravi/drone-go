@@ -144,15 +144,15 @@ func (c *pidControls) calcThrottles() {
 	tRoll, tPitch := utils.TransformRollPitch(c.targetState.roll, c.targetState.pitch, 45)
 	rollPID, pitchPID, yawPID := c.calcPID(c.state.roll-tRoll, c.state.pitch-tPitch, c.state.yaw-c.targetState.yaw)
 
-	motor0roll := rollPID / 2 * c.beamToAxisRatio
-	motor3roll := rollPID / 2 * c.beamToAxisRatio
-	motor1roll := -rollPID / 2 * c.beamToAxisRatio
-	motor2roll := -rollPID / 2 * c.beamToAxisRatio
+	motor0roll := rollPID / 2
+	motor3roll := rollPID / 2
+	motor1roll := -rollPID / 2
+	motor2roll := -rollPID / 2
 
-	motor0pitch := pitchPID / 2 * c.beamToAxisRatio
-	motor1pitch := pitchPID / 2 * c.beamToAxisRatio
-	motor2pitch := -pitchPID / 2 * c.beamToAxisRatio
-	motor3pitch := -pitchPID / 2 * c.beamToAxisRatio
+	motor0pitch := pitchPID / 2
+	motor1pitch := pitchPID / 2
+	motor2pitch := -pitchPID / 2
+	motor3pitch := -pitchPID / 2
 
 	c.throttles = models.Throttles{
 		Throttle: c.targetState.throttle,
