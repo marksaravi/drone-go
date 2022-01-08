@@ -8,6 +8,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20948"
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type rotationsChanges struct {
@@ -49,9 +50,7 @@ func (imu *imudevice) ResetTime() {
 }
 
 func applySensoreZaxisRotation(r models.Rotations, angle float64) models.Rotations {
-	arad := angle / 180.0 * math.Pi
-	nPitch := math.Cos(arad)*r.Roll - math.Sin(arad)*r.Pitch
-	nRoll := math.Sin(arad)*r.Roll + math.Cos(arad)*r.Pitch
+	nRoll, nPitch := utils.TransformRollPitch(r.Roll, r.Pitch, angle)
 	return models.Rotations{
 		Roll:  nRoll,
 		Pitch: nPitch,

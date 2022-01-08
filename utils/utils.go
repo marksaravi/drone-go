@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"time"
 )
 
@@ -42,4 +43,11 @@ func ApplyLimit(x, min, max float64, genwarning bool) float64 {
 		return max
 	}
 	return x
+}
+
+func TransformRollPitch(roll, pitch, angle float64) (float64, float64) {
+	arad := angle / 180.0 * math.Pi
+	nPitch := math.Cos(arad)*roll - math.Sin(arad)*pitch
+	nRoll := math.Sin(arad)*roll + math.Cos(arad)*pitch
+	return nRoll, nPitch
 }

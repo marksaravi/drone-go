@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
@@ -140,7 +141,8 @@ func (c *pidControls) calcPID(roll, pitch, yaw float64) (float64, float64, float
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollPID, pitchPID, yawPID := c.calcPID(c.state.roll-c.targetState.roll, c.state.pitch-c.targetState.pitch, c.state.yaw-c.targetState.yaw)
+	tRoll, tPitch := utils.TransformRollPitch(c.targetState.roll, c.targetState.pitch, 45)
+	rollPID, pitchPID, yawPID := c.calcPID(c.state.roll-tRoll, c.state.pitch-tPitch, c.state.yaw-c.targetState.yaw)
 
 	c.throttles = models.Throttles{
 		Throttle: c.targetState.throttle,
