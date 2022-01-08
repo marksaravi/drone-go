@@ -50,7 +50,7 @@ func (imu *imudevice) ResetTime() {
 }
 
 func applySensoreZaxisRotation(r models.Rotations, angle float64) models.Rotations {
-	nRoll, nPitch := utils.TransformRollPitch(r.Roll, r.Pitch, angle)
+	nRoll, nPitch := utils.TransformRollPitch(r.Roll-1, r.Pitch-0.6, angle) // TODO move offsets to configs
 	return models.Rotations{
 		Roll:  nRoll,
 		Pitch: nPitch,
