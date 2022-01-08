@@ -71,7 +71,7 @@ func main() {
 			ThrottleLimit:           float64(configs.MaxThrottle),
 			SafeStartThrottle:       float64(configs.SafeStartThrottle),
 			MaxJoystickDigitalValue: mcp3008.DIGITAL_MAX_VALUE,
-			AxisAlignmentAngle:      pidConfigs.AxisAlignmentAngle,
+			BeamToAxisRatio:         pidConfigs.BeamToAxisRatio,
 			CalibrationGain:         pidConfigs.CalibrationGain,
 			CalibrationStep:         pidConfigs.CalibrationStep,
 		},

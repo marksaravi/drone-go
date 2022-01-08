@@ -37,7 +37,7 @@ type pidControls struct {
 	maxJoystickDigitalValue float64
 	throttleLimit           float64
 	safeStartThrottle       float64
-	axisAlignmentAngle      float64
+	beamToAxisRatio         float64
 	calibrationGain         string
 	calibrationStep         float64
 	calibrationStepApplied  bool
@@ -58,7 +58,7 @@ type PIDSettings struct {
 	ThrottleLimit           float64
 	SafeStartThrottle       float64
 	MaxJoystickDigitalValue uint16
-	AxisAlignmentAngle      float64
+	BeamToAxisRatio         float64
 	CalibrationGain         string
 	CalibrationStep         float64
 }
@@ -82,7 +82,7 @@ func NewPIDControls(settings PIDSettings) *pidControls {
 		throttleLimit:           settings.ThrottleLimit,
 		safeStartThrottle:       settings.SafeStartThrottle,
 		maxJoystickDigitalValue: float64(settings.MaxJoystickDigitalValue),
-		axisAlignmentAngle:      settings.AxisAlignmentAngle,
+		beamToAxisRatio:         settings.BeamToAxisRatio,
 		targetState: pidState{
 			roll:     0,
 			pitch:    0,
