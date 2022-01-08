@@ -246,7 +246,7 @@ func (c *pidControls) calibrateGain(gain string, down, up bool) {
 }
 
 func (c *pidControls) PrintGains() {
-	log.Printf("P: %8.6f, I: %8.6f, D: %8.6f,\n", c.gains.P, c.gains.I, c.gains.D)
+	log.Printf("P: %8.6f, I: %8.6f, D: %8.6f, yP: %8.6f, yI: %8.6f, yD: %8.6f\n", c.gains.P, c.gains.I, c.gains.D, c.yawGains.P, c.yawGains.I, c.yawGains.D)
 }
 
 var lastPrint time.Time = time.Now()
