@@ -8,7 +8,6 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20948"
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type rotationsChanges struct {
@@ -49,15 +48,6 @@ func (imu *imudevice) ResetTime() {
 	imu.lastReading = time.Now()
 }
 
-func applySensoreZaxisRotation(r models.Rotations, angle float64) models.Rotations {
-	nRoll, nPitch := utils.TransformRollPitch(r.Roll-1, r.Pitch-0.6, angle) // TODO move offsets to configs
-	return models.Rotations{
-		Roll:  nRoll,
-		Pitch: nPitch,
-		Yaw:   r.Yaw,
-	}
-}
-
 func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	if time.Since(imu.lastReading) < imu.readingInterval {
 		return models.ImuRotations{}, false
@@ -80,14 +70,12 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.lastReading = now
-	transformed := applySensoreZaxisRotation(imu.rotations, 45)
 	return models.ImuRotations{
-		Accelerometer:        accRotations,
-		Gyroscope:            imu.gyro,
-		Rotations:            imu.rotations,
-		TransformedRotations: transformed,
-		ReadTime:             now,
-		ReadInterval:         diff,
+		Accelerometer: accRotations,
+		Gyroscope:     imu.gyro,
+		Rotations:     imu.rotations,
+		ReadTime:      now,
+		ReadInterval:  diff,
 	}, true
 }
 

@@ -123,9 +123,9 @@ func (c *pidControls) SetFlightCommands(flightCommands models.FlightCommands) {
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.state = pidState{
-		roll:     rotations.TransformedRotations.Roll,
-		pitch:    rotations.TransformedRotations.Pitch,
-		yaw:      rotations.TransformedRotations.Yaw,
+		roll:     rotations.Rotations.Roll,
+		pitch:    rotations.Rotations.Pitch,
+		yaw:      rotations.Rotations.Yaw,
 		throttle: 0,
 		dt:       rotations.ReadInterval,
 	}
