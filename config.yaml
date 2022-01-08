@@ -6,7 +6,7 @@ flight-control:
   pid:
     roll-pitch-p-gain: 1.5
     roll-pitch-i-gain: 0
-    roll-pitch-d-gain: 0.5
+    roll-pitch-d-gain: 0.3
     max-roll: 20
     max-pitch: 20
     yaw-p-gain: 0.2
@@ -15,7 +15,7 @@ flight-control:
     max-yaw: 15
     max-i: 13.5
     axis-alignment-angle: 45
-    calibration-gain: 'roll-p'
+    calibration-gain: 'roll-d'
     calibration-step: 0.1
   imu:
     data-per-second: 3200
