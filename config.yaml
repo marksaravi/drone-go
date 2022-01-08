@@ -1,21 +1,22 @@
 flight-control:
   debug: false
-  max-throttle: 60
+  max-throttle: 40
   safe-start-throttle: 5
+  control-variable-range: 30
   pid:
-    roll-pitch-p-gain: 2
-    roll-pitch-i-gain: 0005
-    roll-pitch-d-gain: 0.4
-    max-roll: 15
-    max-pitch: 15
-    yaw-p-gain: 0
-    yaw-i-gain: 0
-    yaw-d-gain: 0
-    max-yaw: 15
-    max-i: 5
-    axis-alignment-angle: 45
-    calibration-gain: 'i'
-    calibration-step: 0.0001
+    roll-pitch-p-gain: 2.8
+    roll-pitch-i-gain: 90
+    roll-pitch-d-gain: 1.4
+    yaw-p-gain: 0.1
+    yaw-i-gain: 1
+    yaw-d-gain: 0.2
+    max-roll: 10
+    max-pitch: 10
+    max-yaw: 10
+    max-i: 10
+    beam-to-axis-ratio: 0.7071067811865475
+    calibration-gain: 'roll-p'
+    calibration-step: 0.1
   imu:
     data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005
@@ -65,12 +66,15 @@ remote-control:
     roll:
       channel: 4
       offset: -50
+      dir: 1
     pitch:
       channel: 2
       offset: -28
+      dir: -1
     yaw:
       channel: 3
       offset: -43
+      dir: 1
     throttle:
       channel: 5
       offset: -1
@@ -96,7 +100,7 @@ remote-control:
   buzzer-gpio: 'GPIO5'
 
 logger:
-  enabled: true
+  enabled: false
   ip: 192.168.1.101
   port: 6431
   packets-per-second: 50

@@ -24,8 +24,8 @@ func (ac *axisControl) getP(input, gain float64) float64 {
 	return input * gain
 }
 
-func (ac *axisControl) getI(input, gain float64) float64 {
-	ac.iMemory = limitToMax(input*gain+ac.iMemory, ac.iMemoryLimit)
+func (ac *axisControl) getI(input float64, gain float64, dt time.Duration) float64 {
+	ac.iMemory = limitToMax(input*gain*float64(dt)/1000000000+ac.iMemory, ac.iMemoryLimit)
 
 	return ac.iMemory
 }
@@ -37,10 +37,9 @@ func (ac *axisControl) getD(input, gain float64, dt time.Duration) float64 {
 	return d
 }
 
-func (ac *axisControl) calc(rotation, targetRotation float64, dt time.Duration, gains *gains) float64 {
-	input := targetRotation - rotation
+func (ac *axisControl) calc(input float64, dt time.Duration, gains *gains) float64 {
 	p := ac.getP(input, gains.P)
-	i := ac.getI(input, gains.I)
+	i := ac.getI(input, gains.I, dt)
 	d := ac.getD(input, gains.D, dt)
 	sum := p + i + d
 	return sum

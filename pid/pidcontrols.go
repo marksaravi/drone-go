@@ -2,7 +2,7 @@ package pid
 
 import (
 	"log"
-	"math"
+	"strings"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -26,6 +26,7 @@ type gains struct {
 
 type pidControls struct {
 	gains                   gains
+	yawGains                gains
 	roll                    *axisControl
 	pitch                   *axisControl
 	yaw                     *axisControl
@@ -35,7 +36,7 @@ type pidControls struct {
 	maxJoystickDigitalValue float64
 	throttleLimit           float64
 	safeStartThrottle       float64
-	axisAlignmentAngle      float64
+	beamToAxisRatio         float64
 	calibrationGain         string
 	calibrationStep         float64
 	calibrationStepApplied  bool
@@ -56,7 +57,7 @@ type PIDSettings struct {
 	ThrottleLimit           float64
 	SafeStartThrottle       float64
 	MaxJoystickDigitalValue uint16
-	AxisAlignmentAngle      float64
+	BeamToAxisRatio         float64
 	CalibrationGain         string
 	CalibrationStep         float64
 }
@@ -69,13 +70,18 @@ func NewPIDControls(settings PIDSettings) *pidControls {
 			I: settings.RollPitchIGain,
 			D: settings.RollPitchDGain,
 		},
+		yawGains: gains{
+			P: settings.YawPGain,
+			I: settings.YawIGain,
+			D: settings.YawDGain,
+		},
 		roll:                    NewPIDControl(settings.LimitRoll, settings.LimitI),
 		pitch:                   NewPIDControl(settings.LimitPitch, settings.LimitI),
 		yaw:                     NewPIDControl(settings.LimitYaw, settings.LimitI),
 		throttleLimit:           settings.ThrottleLimit,
 		safeStartThrottle:       settings.SafeStartThrottle,
 		maxJoystickDigitalValue: float64(settings.MaxJoystickDigitalValue),
-		axisAlignmentAngle:      settings.AxisAlignmentAngle,
+		beamToAxisRatio:         settings.BeamToAxisRatio,
 		targetState: pidState{
 			roll:     0,
 			pitch:    0,
@@ -90,8 +96,8 @@ func NewPIDControls(settings PIDSettings) *pidControls {
 			dt:       0,
 		},
 		throttles: models.Throttles{
-			BaseThrottle: 0,
-			DThrottles: map[int]float32{
+			Throttle: 0,
+			ControlVariables: map[int]float64{
 				0: 0,
 				1: 0,
 				2: 0,
@@ -125,34 +131,38 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.calcThrottles()
 }
 
-func (c *pidControls) calcPID() (float64, float64) {
-	if c.targetState.throttle < c.safeStartThrottle {
-		return 0, 0
-	}
-	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, c.state.dt, &c.gains)
-	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.state.dt, &c.gains)
-	return rollPID, pitchPID
-}
-
-func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float64) {
-	arad := angle / 180.0 * math.Pi
-	np := math.Cos(arad)*rollPID - math.Sin(arad)*pitchPID
-	nr := math.Sin(arad)*rollPID + math.Cos(arad)*pitchPID
-	return nr, np
+func (c *pidControls) calcPID(roll, pitch, yaw float64) (float64, float64, float64) {
+	rollPID := c.roll.calc(roll, c.state.dt, &c.gains)
+	pitchPID := c.pitch.calc(pitch, c.state.dt, &c.gains)
+	yawPID := c.yaw.calc(c.state.yaw-c.targetState.yaw, c.state.dt, &c.yawGains)
+	return rollPID, pitchPID, yawPID
 }
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollPID, pitchPID := c.calcPID()
-	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, c.axisAlignmentAngle)
+	rollPID, pitchPID, yawPID := c.calcPID(
+		c.state.roll-c.targetState.roll,
+		c.state.pitch-c.targetState.pitch,
+		c.state.yaw-c.targetState.yaw,
+	)
+
+	motor0roll := rollPID / 2
+	motor3roll := rollPID / 2
+	motor1roll := -rollPID / 2
+	motor2roll := -rollPID / 2
+
+	motor0pitch := pitchPID / 2
+	motor1pitch := pitchPID / 2
+	motor2pitch := -pitchPID / 2
+	motor3pitch := -pitchPID / 2
 
 	c.throttles = models.Throttles{
-		BaseThrottle: float32(c.targetState.throttle),
-		DThrottles: map[int]float32{
-			0: float32(-nr / 2),
-			1: float32(np / 2),
-			2: float32(nr / 2),
-			3: float32(-np / 2),
+		Throttle: c.targetState.throttle,
+		ControlVariables: map[int]float64{
+			0: motor0roll + motor0pitch + yawPID/2,
+			1: motor1roll + motor1pitch - yawPID/2,
+			2: motor2roll + motor2pitch + yawPID/2,
+			3: motor3roll + motor3pitch - yawPID/2,
 		},
 	}
 }
@@ -201,6 +211,14 @@ func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands)
 }
 
 func (c *pidControls) calibrateGain(gain string, down, up bool) {
+	addStep := func(x, step float64) float64 {
+		nvalue := x + step
+		if nvalue < 0 {
+			nvalue = x
+		}
+		log.Printf("%s Gain is changed to %8.6f\n", gain, nvalue)
+		return nvalue
+	}
 	if !down && !up {
 		c.calibrationStepApplied = false
 		return
@@ -212,24 +230,26 @@ func (c *pidControls) calibrateGain(gain string, down, up bool) {
 	if down {
 		step = -step
 	}
-	var value float64 = 0
-	switch gain {
-	case "p":
-		c.gains.P += step
-		value = c.gains.P
-	case "i":
-		c.gains.I += step
-		value = c.gains.I
-	case "d":
-		c.gains.D += step
-		value = c.gains.D
+
+	switch strings.ToLower(gain) {
+	case "roll-p":
+		c.gains.P = addStep(c.gains.P, step)
+	case "roll-i":
+		c.gains.I = addStep(c.gains.I, step)
+	case "roll-d":
+		c.gains.D = addStep(c.gains.D, step)
+	case "yaw-p":
+		c.yawGains.P = addStep(c.yawGains.P, step)
+	case "yaw-i":
+		c.yawGains.I = addStep(c.yawGains.I, step)
+	case "yaw-d":
+		c.yawGains.D = addStep(c.yawGains.D, step)
 	}
-	log.Printf("%s Gain is changed to %8.6f\n", gain, value)
 	c.calibrationStepApplied = true
 }
 
 func (c *pidControls) PrintGains() {
-	log.Printf("P: %8.6f, I: %8.6f, D: %8.6f,\n", c.gains.P, c.gains.I, c.gains.D)
+	log.Printf("P: %8.6f, I: %8.6f, D: %8.6f, yP: %8.6f, yI: %8.6f, yD: %8.6f\n", c.gains.P, c.gains.I, c.gains.D, c.yawGains.P, c.yawGains.I, c.yawGains.D)
 }
 
 var lastPrint time.Time = time.Now()

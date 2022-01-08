@@ -47,7 +47,13 @@ func main() {
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Address, i2cConn, configs.SafeStartThrottle, configs.MaxThrottle, configs.ESC.PwmDeviceToESCMappings)
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
+		Connection:           i2cConn,
+		SafeStartThrottle:    configs.SafeStartThrottle,
+		MaxThrottle:          configs.MaxThrottle,
+		ControlVariableRange: configs.ControlVariableRange,
+		ChannelMappings:      configs.ESC.PwmDeviceToESCMappings,
+	})
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
@@ -65,7 +71,7 @@ func main() {
 			ThrottleLimit:           float64(configs.MaxThrottle),
 			SafeStartThrottle:       float64(configs.SafeStartThrottle),
 			MaxJoystickDigitalValue: mcp3008.DIGITAL_MAX_VALUE,
-			AxisAlignmentAngle:      pidConfigs.AxisAlignmentAngle,
+			BeamToAxisRatio:         pidConfigs.BeamToAxisRatio,
 			CalibrationGain:         pidConfigs.CalibrationGain,
 			CalibrationStep:         pidConfigs.CalibrationStep,
 		},
@@ -82,7 +88,7 @@ func main() {
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel)
 	radioDev.Start(ctx, &wg)
-	logger.Start(&wg)
+	// logger.Start(&wg)
 	esc.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
