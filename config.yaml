@@ -9,14 +9,14 @@ flight-control:
     roll-pitch-d-gain: 0
     max-roll: 10
     max-pitch: 10
-    yaw-p-gain: 0
-    yaw-i-gain: -0.0001
-    yaw-d-gain: -0.4
+    yaw-p-gain: 0.5
+    yaw-i-gain: 0.0001
+    yaw-d-gain: 0.5
     max-yaw: 15
     max-i: 10
     axis-alignment-angle: 45
-    calibration-gain: 'roll-i'
-    calibration-step: 0.001
+    calibration-gain: 'yaw-d'
+    calibration-step: 0.1
   imu:
     data-per-second: 3200
     acc-lowpass-filter-coefficient: 0.005

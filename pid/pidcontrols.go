@@ -152,15 +152,15 @@ func applySensoreZaxisRotation(roll, pitch, angle float64) (float64, float64) {
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
 	nRoll, nPitch := applySensoreZaxisRotation(c.state.roll-c.targetState.roll, c.state.pitch-c.targetState.pitch, c.axisAlignmentAngle)
-	rollPID, pitchPID, _ := c.calcPID(nRoll, nPitch, c.state.yaw-c.targetState.yaw)
+	rollPID, pitchPID, yawPID := c.calcPID(nRoll, nPitch, c.state.yaw-c.targetState.yaw)
 
 	c.throttles = models.Throttles{
 		Throttle: c.targetState.throttle,
 		ControlVariables: map[int]float64{
-			0: rollPID / 2,
-			1: -pitchPID / 2,
-			2: -rollPID / 2,
-			3: pitchPID / 2,
+			0: rollPID/2 + yawPID/2,
+			1: -pitchPID/2 - yawPID/2,
+			2: -rollPID/2 + yawPID/2,
+			3: pitchPID/2 - yawPID/2,
 		},
 	}
 }
