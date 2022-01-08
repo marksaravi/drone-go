@@ -132,35 +132,35 @@ func (c *pidControls) SetRotations(rotations models.ImuRotations) {
 	c.calcThrottles()
 }
 
-func (c *pidControls) calcPID() (float64, float64, float64) {
+func (c *pidControls) calcPID(roll, pitch, yaw float64) (float64, float64, float64) {
 	if c.targetState.throttle < c.safeStartThrottle {
 		return 0, 0, 0
 	}
-	rollPID := c.roll.calc(c.state.roll, c.targetState.roll, c.state.dt, &c.gains)
-	pitchPID := c.pitch.calc(c.state.pitch, c.targetState.pitch, c.state.dt, &c.gains)
-	yawPID := c.yaw.calc(c.state.yaw, c.targetState.yaw, c.state.dt, &c.yawGains)
+	rollPID := c.roll.calc(roll, c.state.dt, &c.gains)
+	pitchPID := c.pitch.calc(pitch, c.state.dt, &c.gains)
+	yawPID := c.yaw.calc(c.state.yaw-c.targetState.yaw, c.state.dt, &c.yawGains)
 	return rollPID, pitchPID, yawPID
 }
 
-func applySensoreZaxisRotation(rollPID, pitchPID, angle float64) (float64, float64) {
+func applySensoreZaxisRotation(roll, pitch, angle float64) (float64, float64) {
 	arad := angle / 180.0 * math.Pi
-	np := math.Cos(arad)*rollPID - math.Sin(arad)*pitchPID
-	nr := math.Sin(arad)*rollPID + math.Cos(arad)*pitchPID
-	return nr, np
+	nPitch := math.Cos(arad)*roll - math.Sin(arad)*pitch
+	nRoll := math.Sin(arad)*roll + math.Cos(arad)*pitch
+	return nRoll, nPitch
 }
 
 func (c *pidControls) calcThrottles() {
 	c.applyEmergencyStop()
-	rollPID, pitchPID, yawPID := c.calcPID()
-	nr, np := applySensoreZaxisRotation(rollPID, pitchPID, c.axisAlignmentAngle)
+	nRoll, nPitch := applySensoreZaxisRotation(c.state.roll-c.targetState.roll, c.state.pitch-c.targetState.pitch, c.axisAlignmentAngle)
+	rollPID, pitchPID, _ := c.calcPID(nRoll, nPitch, c.state.yaw-c.targetState.yaw)
 
 	c.throttles = models.Throttles{
 		Throttle: c.targetState.throttle,
 		ControlVariables: map[int]float64{
-			0: -nr/2 + yawPID/2,
-			1: np/2 - yawPID/2,
-			2: nr/2 + yawPID/2,
-			3: -np/2 - yawPID/2,
+			0: rollPID / 2,
+			1: -pitchPID / 2,
+			2: -rollPID / 2,
+			3: pitchPID / 2,
 		},
 	}
 }

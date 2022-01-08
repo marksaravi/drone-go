@@ -37,8 +37,7 @@ func (ac *axisControl) getD(input, gain float64, dt time.Duration) float64 {
 	return d
 }
 
-func (ac *axisControl) calc(rotation, targetRotation float64, dt time.Duration, gains *gains) float64 {
-	input := targetRotation - rotation
+func (ac *axisControl) calc(input float64, dt time.Duration, gains *gains) float64 {
 	p := ac.getP(input, gains.P)
 	i := ac.getI(input, gains.I)
 	d := ac.getD(input, gains.D, dt)
