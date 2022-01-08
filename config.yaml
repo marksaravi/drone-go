@@ -10,8 +10,8 @@ flight-control:
     max-roll: 10
     max-pitch: 10
     yaw-p-gain: 0.2
-    yaw-i-gain: 0.0001
-    yaw-d-gain: 0
+    yaw-i-gain: 0.000001
+    yaw-d-gain: 0.2
     max-yaw: 15
     max-i: 40
     axis-alignment-angle: 45
