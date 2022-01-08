@@ -15,7 +15,7 @@ flight-control:
     max-yaw: 15
     max-i: 13.5
     axis-alignment-angle: 45
-    calibration-gain: 'roll-p'
+    calibration-gain: 'roll-d'
     calibration-step: 0.1
   imu:
     data-per-second: 3200
@@ -66,12 +66,15 @@ remote-control:
     roll:
       channel: 4
       offset: -50
+      dir: 1
     pitch:
       channel: 2
       offset: -28
+      dir: -1
     yaw:
       channel: 3
       offset: -43
+      dir: 1
     throttle:
       channel: 5
       offset: -1

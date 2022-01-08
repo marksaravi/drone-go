@@ -7,6 +7,7 @@ type analogtodigital interface {
 type joystickInput struct {
 	input    analogtodigital
 	offset   int
+	dir      int
 	maxValue int
 }
 
@@ -18,13 +19,14 @@ func (js *joystickInput) Read() int {
 	if digitalValue < 0 {
 		return 0
 	}
-	return digitalValue
+	return digitalValue * js.dir
 }
 
-func NewJoystick(input analogtodigital, maxValue int, offset int) *joystickInput {
+func NewJoystick(input analogtodigital, maxValue int, offset int, dir int) *joystickInput {
 	return &joystickInput{
 		input:    input,
 		maxValue: maxValue,
 		offset:   offset,
+		dir:      dir,
 	}
 }

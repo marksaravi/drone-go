@@ -83,6 +83,7 @@ type flightControl struct {
 type joystick struct {
 	Channel int `yaml:"channel"`
 	Offset  int `yaml:"offset"`
+	Dir     int `yaml:"dir"`
 }
 
 type remoteControl struct {
