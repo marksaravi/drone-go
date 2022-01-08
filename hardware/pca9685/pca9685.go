@@ -88,7 +88,19 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 	return dev, nil
 }
 
+var counter int = 0
+
 func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
+	if counter%1000 == 0 {
+		fmt.Printf("%5.2f, %5.2f, %5.2f, %5.2f, %5.2f\n",
+			throttles.Throttle,
+			throttles.ControlVariables[0],
+			throttles.ControlVariables[1],
+			throttles.ControlVariables[2],
+			throttles.ControlVariables[3],
+		)
+	}
+	counter++
 	for i := 0; i < len(throttles.ControlVariables); i++ {
 		channel := d.channelMappings[i]
 		d.SetThrottle(channel, throttles.Throttle, throttles.ControlVariables[i])
