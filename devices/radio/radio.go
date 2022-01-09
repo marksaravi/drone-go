@@ -89,10 +89,10 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 				if running {
 					payload, available := r.radiolink.ReceivePayload()
-					if payload[0] == COMMAND {
-						r.receiver <- utils.DeserializeFlightCommand(payload)
-					}
 					if available {
+						if payload[0] == COMMAND {
+							r.receiver <- utils.DeserializeFlightCommand(payload)
+						}
 						r.setConnectionState(payload[0])
 					} else {
 						r.setConnectionState(NO_COMMAND)
