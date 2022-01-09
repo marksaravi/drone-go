@@ -132,7 +132,9 @@ func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 	}
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
+	radio.setPower(ON)
 	radio.receiverOn()
+
 	return err
 }
 
@@ -147,7 +149,6 @@ func (radio *nrf204l01) transmitterOn() {
 	radio.setRx(OFF)
 	// radio.flushRx()
 	radio.flushTx()
-	radio.setPower(ON)
 	time.Sleep(time.Millisecond)
 }
 
@@ -157,10 +158,9 @@ func (radio *nrf204l01) receiverOn() {
 	}
 	radio.isReceiver = true
 	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
 	radio.clearStatus()
 	radio.setRx(ON)
-	radio.flushRx()
+	// radio.flushRx()
 	// radio.flushTx()
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
