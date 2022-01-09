@@ -27,44 +27,6 @@ type udpLogger struct {
 	dataChannel      chan models.ImuRotations
 }
 
-func newLogger(
-	ip string,
-	port int,
-	packetsPerSecond int,
-	imuDataPerSecond int,
-) *udpLogger {
-	conn, err := net.ListenUDP("udp", nil)
-	if err != nil {
-		fmt.Println("UDP initialization error: ", err)
-		return &udpLogger{
-			enabled: false,
-		}
-	}
-	address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, port))
-	if err != nil {
-		fmt.Println("UDP initialization error: ", err)
-		return &udpLogger{
-			enabled: false,
-		}
-	}
-
-	dataPerPacket := imuDataPerSecond / packetsPerSecond
-
-	logger := udpLogger{
-		conn:             conn,
-		address:          address,
-		enabled:          true,
-		dataPerPacket:    dataPerPacket,
-		packetsPerSecond: packetsPerSecond,
-		bufferCounter:    0,
-		buffer:           bytes.Buffer{},
-		dataChannel:      make(chan models.ImuRotations),
-	}
-	logger.buffer.WriteByte(byte(packetsPerSecond))
-	logger.buffer.WriteByte(byte(dataPerPacket))
-	return &logger
-}
-
 func (l *udpLogger) sendUDP(imuRotations models.ImuRotations) {
 	data := imuDataToBytes(imuRotations)
 	l.buffer.Write(data)
@@ -107,27 +69,50 @@ func NewUdpLogger() *udpLogger {
 	configs := config.ReadConfigs()
 	flightControl := configs.FlightControl
 	loggerConfigs := configs.UdpLogger
-	if !loggerConfigs.Enabled {
-		return &udpLogger{
-			enabled: false,
+
+	var conn *net.UDPConn = nil
+	var err error = nil
+	var address *net.UDPAddr = nil
+	var enabled bool = false
+
+	if loggerConfigs.Enabled {
+		enabled = loggerConfigs.Enabled
+		conn, err = net.ListenUDP("udp", nil)
+		if err != nil {
+			fmt.Println("UDP initialization error: ", err)
+			enabled = false
+		}
+		address, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", loggerConfigs.IP, loggerConfigs.Port))
+		if err != nil {
+			fmt.Println("UDP initialization error: ", err)
+			enabled = false
 		}
 	}
-	return newLogger(
-		loggerConfigs.IP,
-		loggerConfigs.Port,
-		loggerConfigs.PacketsPerSecond,
-		flightControl.Imu.DataPerSecond,
-	)
+
+	dataPerPacket := flightControl.Imu.DataPerSecond / loggerConfigs.PacketsPerSecond
+
+	logger := udpLogger{
+		enabled:          enabled,
+		conn:             conn,
+		address:          address,
+		dataPerPacket:    dataPerPacket,
+		packetsPerSecond: loggerConfigs.PacketsPerSecond,
+		bufferCounter:    0,
+		buffer:           bytes.Buffer{},
+		dataChannel:      make(chan models.ImuRotations),
+	}
+	logger.buffer.WriteByte(byte(loggerConfigs.PacketsPerSecond))
+	logger.buffer.WriteByte(byte(dataPerPacket))
+	return &logger
+
 }
 
 func (l *udpLogger) Close() {
-	if l.enabled {
-		close(l.dataChannel)
-	}
+	close(l.dataChannel)
 }
 
 func (l *udpLogger) Send(data models.ImuRotations) {
-	if l.enabled && l.dataChannel != nil {
+	if l.enabled {
 		l.dataChannel <- data
 	}
 }

@@ -17,7 +17,6 @@ type imu interface {
 type esc interface {
 	On()
 	Off()
-	Close()
 	SetThrottles(models.Throttles)
 }
 
@@ -71,7 +70,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case <-ctx.Done():
 				if running {
-					fc.esc.Close()
 					fc.radio.Close()
 					fc.logger.Close()
 					running = false
