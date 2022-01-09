@@ -22,9 +22,10 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 	defer wg.Done()
 	wg.Add(1)
 
-	interval := time.Second / 400
+	interval := time.Second / 40
 	start := time.Now()
-	var id byte = 0
+	var received int = 0
+	lastReceived := time.Now()
 
 	var running bool = true
 	for running {
@@ -32,17 +33,20 @@ func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {
 		case <-ctx.Done():
 			running = false
 		default:
-			if time.Since(start) >= interval {
-				start = time.Now()
-				var payload models.Payload
-				payload[0] = id
-				radio.TransmitPayload(payload)
-				radio.ReceivePayload()
-				id++
-				if id > 250 {
-					id = 0
-				}
-			}
+		}
+		if time.Since(start) >= interval {
+			start = time.Now()
+			var payload models.Payload
+			radio.TransmitPayload(payload)
+		}
+		_, ok := radio.ReceivePayload()
+		if ok {
+			received++
+		}
+		if time.Since(lastReceived) >= time.Second {
+			log.Println(received)
+			received = 0
+			lastReceived = time.Now()
 		}
 	}
 }

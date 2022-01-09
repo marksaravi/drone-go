@@ -126,7 +126,7 @@ func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 	if radio.isReceiver {
 		radio.transmitterOn()
 	}
-	radio.ce.Out(gpio.Low)
+	// radio.ce.Out(gpio.Low)
 	_, err := radio.writeRegister(TX_ADDR, radio.address)
 	if err == nil {
 		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
@@ -140,13 +140,13 @@ func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 func (radio *nrf204l01) transmitterOn() {
 	radio.isReceiver = false
 	radio.ce.Out(gpio.Low)
-	radio.setRetries(5, 0)
+	radio.setRetries(1, 0)
 	radio.clearStatus()
 	radio.setRx(OFF)
 	radio.flushRx()
 	radio.flushTx()
 	radio.setPower(ON)
-	radio.ce.Out(gpio.High)
+	// radio.ce.Out(gpio.High)
 }
 
 func (radio *nrf204l01) receiverOn() {
