@@ -126,44 +126,38 @@ func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
 	if radio.isReceiver {
 		radio.transmitterOn()
 	}
+	radio.ce.Out(gpio.Low)
 	_, err := radio.writeRegister(TX_ADDR, radio.address)
 	if err == nil {
 		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
 	}
 	radio.ce.Out(gpio.High)
 	time.Sleep(time.Millisecond)
-	radio.setPower(ON)
 	radio.receiverOn()
-
 	return err
 }
 
 func (radio *nrf204l01) transmitterOn() {
-	if !radio.isReceiver {
-		return
-	}
 	radio.isReceiver = false
 	radio.ce.Out(gpio.Low)
-	radio.setRetries(1, 0)
+	radio.setRetries(5, 0)
 	radio.clearStatus()
 	radio.setRx(OFF)
-	// radio.flushRx()
+	radio.flushRx()
 	radio.flushTx()
-	time.Sleep(time.Millisecond)
+	radio.setPower(ON)
+	radio.ce.Out(gpio.High)
 }
 
 func (radio *nrf204l01) receiverOn() {
-	if radio.isReceiver {
-		return
-	}
 	radio.isReceiver = true
 	radio.ce.Out(gpio.Low)
+	radio.setPower(ON)
 	radio.clearStatus()
 	radio.setRx(ON)
-	// radio.flushRx()
-	// radio.flushTx()
+	radio.flushRx()
+	radio.flushTx()
 	radio.ce.Out(gpio.High)
-	time.Sleep(time.Millisecond)
 }
 
 func dbmStrToDBm(dbm string) byte {
