@@ -27,9 +27,9 @@ flight-control:
       lowpass-filter-config: 3
       averaging: 7
       offsets:
-        X: -65
-        Y: 831
-        Z: -790
+        X: 0
+        Y: 0
+        Z: -787
     gyroscope:
       sensitivity-level: '250dps'
       lowpass-filter-enabled: true
