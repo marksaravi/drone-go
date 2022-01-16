@@ -19,19 +19,18 @@ flight-control:
     calibration-step: 0.1
   imu:
     data-per-second: 1000
-    acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
-      sensitivity-level: '8g'
+      sensitivity-level: '4g'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7
       offsets:
-        X: -65
-        Y: 831
-        Z: -790
+        X: -73
+        Y: 825
+        Z: -787
     gyroscope:
-      sensitivity-level: '250dps'
+      sensitivity-level: '500dps'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7

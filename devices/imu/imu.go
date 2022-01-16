@@ -19,28 +19,24 @@ type imuMems interface {
 }
 
 type imudevice struct {
-	imuMems                     imuMems
-	accRawData                  models.XYZ
-	gyro                        models.Rotations
-	rotations                   models.Rotations
-	lastReading                 time.Time
-	readingInterval             time.Duration
-	accLowPassFilterCoefficient float64
-	lowPassFilterCoefficient    float64
+	imuMems                  imuMems
+	gyro                     models.Rotations
+	rotations                models.Rotations
+	lastReading              time.Time
+	readingInterval          time.Duration
+	lowPassFilterCoefficient float64
 }
 
 func NewImuMems(
 	imuMems imuMems,
 	dataPerSecond int,
-	accLowPassFilterCoefficient float64,
 	lowPassFilterCoefficient float64,
 ) *imudevice {
 	return &imudevice{
-		imuMems:                     imuMems,
-		readingInterval:             time.Second / time.Duration(dataPerSecond),
-		lastReading:                 time.Now(),
-		accLowPassFilterCoefficient: accLowPassFilterCoefficient,
-		lowPassFilterCoefficient:    lowPassFilterCoefficient,
+		imuMems:                  imuMems,
+		readingInterval:          time.Second / time.Duration(dataPerSecond),
+		lastReading:              time.Now(),
+		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 }
 
@@ -55,12 +51,7 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	now := time.Now()
 	acc, gyro := imu.imuMems.Read()
 	diff := now.Sub(imu.lastReading)
-	imu.accRawData = models.XYZ{
-		X: lowPassFilter(imu.accRawData.X, acc.X, imu.accLowPassFilterCoefficient),
-		Y: lowPassFilter(imu.accRawData.Y, acc.Y, imu.accLowPassFilterCoefficient),
-		Z: lowPassFilter(imu.accRawData.Z, acc.Z, imu.accLowPassFilterCoefficient),
-	}
-	accRotations := calcaAcelerometerRotations(imu.accRawData)
+	accRotations := calcaAcelerometerRotations(acc)
 	dg := gyroChanges(gyro, diff.Nanoseconds())
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	nrotations := calcGyroRotations(dg, imu.rotations)
@@ -80,8 +71,8 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 }
 
 func calcaAcelerometerRotations(data models.XYZ) models.Rotations {
-	roll := radToDeg(math.Atan2(data.Y, data.Z))
-	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
+	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
+	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
 	return models.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
@@ -149,7 +140,6 @@ func NewImu() *imudevice {
 	return NewImuMems(
 		imuMems,
 		imuConfig.DataPerSecond,
-		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
 }
