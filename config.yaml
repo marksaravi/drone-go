@@ -28,7 +28,7 @@ flight-control:
       averaging: 7
       offsets:
         X: -75
-        Y: 0
+        Y: 843
         Z: -787
     gyroscope:
       sensitivity-level: '250dps'
