@@ -21,7 +21,7 @@ flight-control:
     data-per-second: 1000
     lowpass-filter-coefficient: 0.01
     accelerometer:
-      sensitivity-level: '2g'
+      sensitivity-level: '4g'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7
@@ -30,7 +30,7 @@ flight-control:
         Y: 825
         Z: -787
     gyroscope:
-      sensitivity-level: '250dps'
+      sensitivity-level: '500dps'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7
