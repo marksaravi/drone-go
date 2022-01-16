@@ -19,28 +19,24 @@ type imuMems interface {
 }
 
 type imudevice struct {
-	imuMems                     imuMems
-	accRawData                  models.XYZ
-	gyro                        models.Rotations
-	rotations                   models.Rotations
-	lastReading                 time.Time
-	readingInterval             time.Duration
-	accLowPassFilterCoefficient float64
-	lowPassFilterCoefficient    float64
+	imuMems                  imuMems
+	gyro                     models.Rotations
+	rotations                models.Rotations
+	lastReading              time.Time
+	readingInterval          time.Duration
+	lowPassFilterCoefficient float64
 }
 
 func NewImuMems(
 	imuMems imuMems,
 	dataPerSecond int,
-	accLowPassFilterCoefficient float64,
 	lowPassFilterCoefficient float64,
 ) *imudevice {
 	return &imudevice{
-		imuMems:                     imuMems,
-		readingInterval:             time.Second / time.Duration(dataPerSecond),
-		lastReading:                 time.Now(),
-		accLowPassFilterCoefficient: accLowPassFilterCoefficient,
-		lowPassFilterCoefficient:    lowPassFilterCoefficient,
+		imuMems:                  imuMems,
+		readingInterval:          time.Second / time.Duration(dataPerSecond),
+		lastReading:              time.Now(),
+		lowPassFilterCoefficient: lowPassFilterCoefficient,
 	}
 }
 
@@ -144,7 +140,6 @@ func NewImu() *imudevice {
 	return NewImuMems(
 		imuMems,
 		imuConfig.DataPerSecond,
-		imuConfig.AccLowPassFilterCoefficient,
 		imuConfig.LowPassFilterCoefficient,
 	)
 }

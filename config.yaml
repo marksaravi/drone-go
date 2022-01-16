@@ -19,10 +19,9 @@ flight-control:
     calibration-step: 0.1
   imu:
     data-per-second: 1000
-    acc-lowpass-filter-coefficient: 0.005
     lowpass-filter-coefficient: 0.01
     accelerometer:
-      sensitivity-level: '8g'
+      sensitivity-level: '2g'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7
