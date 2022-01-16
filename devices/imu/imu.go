@@ -71,8 +71,8 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 }
 
 func calcaAcelerometerRotations(data models.XYZ) models.Rotations {
-	roll := radToDeg(math.Atan2(data.Y, data.Z))
-	pitch := radToDeg(math.Atan2(-data.X, math.Sqrt(data.Z*data.Z+data.Y*data.Y)))
+	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
+	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
 	return models.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
