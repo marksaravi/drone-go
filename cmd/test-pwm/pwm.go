@@ -22,14 +22,12 @@ func main() {
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:           i2cConn,
-		SafeStartThrottle:    configs.SafeStartThrottle,
-		MaxThrottle:          configs.MaxThrottle,
-		ControlVariableRange: configs.ControlVariableRange,
-		ChannelMappings:      configs.ESC.PwmDeviceToESCMappings,
+		Connection:      i2cConn,
+		MaxThrottle:     configs.MaxThrottle,
+		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
 	})
 
-	pwmDev.SetThrottle(*motor, configs.SafeStartThrottle+1, 0)
+	pwmDev.SetThrottle(*motor, 0, true)
 	fmt.Scanln()
 	log.Println("finished")
 }

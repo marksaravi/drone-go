@@ -20,7 +20,7 @@ type radioConfig struct {
 	SPI                spiConfig `yaml:"spi"`
 }
 
-type PIDConfig struct {
+type pidConfig struct {
 	InputLimit float64 `yaml:"input-limit"`
 	PGain      float64 `yaml:"p-gain"`
 	IGain      float64 `yaml:"i-gain"`
@@ -33,9 +33,9 @@ type flightControl struct {
 	MaxThrottle float64 `yaml:"max-throttle"`
 
 	PID struct {
-		Roll        PIDConfig `yaml:"roll"`
-		Pitch       PIDConfig `yaml:"pitch"`
-		Yaw         PIDConfig `yaml:"yaw"`
+		Roll        pidConfig `yaml:"roll"`
+		Pitch       pidConfig `yaml:"pitch"`
+		Yaw         pidConfig `yaml:"yaw"`
 		Calibration struct {
 			Calibrating bool    `yaml:"calibrating"`
 			PStep       float64 `yaml:"p-step"`

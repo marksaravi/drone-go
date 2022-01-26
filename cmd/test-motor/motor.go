@@ -30,11 +30,9 @@ func main() {
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:           i2cConn,
-		SafeStartThrottle:    configs.SafeStartThrottle,
-		MaxThrottle:          configs.MaxThrottle,
-		ControlVariableRange: configs.ControlVariableRange,
-		ChannelMappings:      configs.ESC.PwmDeviceToESCMappings,
+		Connection:      i2cConn,
+		MaxThrottle:     configs.MaxThrottle,
+		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
 	})
 
 	const maxThrottle float64 = 10
@@ -46,14 +44,13 @@ func main() {
 	esc.On()
 	time.Sleep(3 * time.Second)
 	throttles := models.Throttles{
-		Throttle:         0,
-		ControlVariables: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
+		Active:    true,
+		Throttles: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 	}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
 			log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			throttles.Throttle = float64(throttle)
-			throttles.ControlVariables[*motor] = 0
+			throttles.Throttles[*motor] = throttle
 			esc.SetThrottles(throttles)
 			time.Sleep(250 * time.Millisecond)
 			throttle += dThrottle

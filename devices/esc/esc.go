@@ -59,7 +59,7 @@ func (e *escDev) SetThrottles(throttles models.Throttles) {
 
 func (e *escDev) offAll() {
 	e.pwmDev.SetThrottles(models.Throttles{
-		Throttle:         0,
-		ControlVariables: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
+		Active:    false,
+		Throttles: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 	})
 }

@@ -2,10 +2,10 @@ package pca9685
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 )
 
@@ -42,11 +42,10 @@ const (
 )
 
 const (
-	Frequency            float64 = 384
-	MinPW                float64 = 0.000995
-	MaxPW                float64 = 0.00199
-	MaxAllowedThrottle   float64 = 65
-	MinSafeStartThrottle float64 = 5
+	Frequency          float64 = 384
+	MinPW              float64 = 0.000995
+	MaxPW              float64 = 0.00199
+	MaxAllowedThrottle float64 = 65
 )
 
 type pca9685Dev struct {
@@ -63,26 +62,21 @@ type pca9685Dev struct {
 }
 
 type PCA9685Settings struct {
-	Connection           *i2c.Dev
-	ChannelMappings      map[int]int
-	SafeStartThrottle    float64
-	MaxThrottle          float64
-	ControlVariableRange float64
+	Connection      *i2c.Dev
+	ChannelMappings map[int]int
+	MaxThrottle     float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
 func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 	validateSettings(&settings)
 	dev := &pca9685Dev{
-		name:               "pca9685Dev",
-		address:            PCA9685Address,
-		connection:         settings.Connection,
-		safeStartThrottle:  settings.SafeStartThrottle,
-		maxThrottle:        settings.MaxThrottle,
-		channelMappings:    settings.ChannelMappings,
-		controlVariableMin: -settings.ControlVariableRange / 2,
-		controlVariableMax: settings.ControlVariableRange / 2,
-		throttle:           0,
+		name:            "pca9685Dev",
+		address:         PCA9685Address,
+		connection:      settings.Connection,
+		maxThrottle:     settings.MaxThrottle,
+		channelMappings: settings.ChannelMappings,
+		throttle:        0,
 	}
 	dev.init()
 	return dev, nil
@@ -91,41 +85,22 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 // var counter int = 0
 
 func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
-	// if counter%1000 == 0 {
-	// 	fmt.Printf("%5.2f, %5.2f, %5.2f, %5.2f\n",
-	// 		// throttles.Throttle,
-	// 		throttles.ControlVariables[0],
-	// 		throttles.ControlVariables[1],
-	// 		throttles.ControlVariables[2],
-	// 		throttles.ControlVariables[3],
-	// 	)
-	// }
-	// counter++
-	for i := 0; i < len(throttles.ControlVariables); i++ {
-		channel := d.channelMappings[i]
-		d.SetThrottle(channel, throttles.Throttle, throttles.ControlVariables[i])
+	for i := 0; i < len(throttles.Throttles); i++ {
+		d.SetThrottle(d.channelMappings[i], throttles.Throttles[i], throttles.Active)
 	}
 }
 
-func (d *pca9685Dev) SetThrottle(channel int, throttle, controlVariable float64) {
-	t := d.validateThrottle(throttle, controlVariable)
-	pulseWidth := MinPW + t/100*(MaxPW-MinPW)
-	d.setPWM(channel, pulseWidth)
-}
-
-func (d *pca9685Dev) validateThrottle(throttle, controlVariable float64) float64 {
-	t := utils.ApplyLimit(throttle, 0, d.maxThrottle, false)
-	v := utils.ApplyLimit(controlVariable, d.controlVariableMin, d.controlVariableMax, false)
-	if t <= d.safeStartThrottle {
-		v = 0
+func (d *pca9685Dev) SetThrottle(channel int, throttle float64, active bool) {
+	var pulseWidth float64 = MinPW
+	if active && math.Abs(throttle) < d.maxThrottle {
+		pulseWidth = MinPW + throttle*(MaxPW-MinPW)
+		d.setPWM(channel, pulseWidth)
 	}
-
-	return utils.ApplyLimit(v+t, 0, MaxAllowedThrottle, false)
 }
 
 //Calibrate
 func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int) {
-	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, SafeStartThrottle: MinSafeStartThrottle, MaxThrottle: MinSafeStartThrottle + 1, ChannelMappings: mappings})
+	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxThrottle: 0, ChannelMappings: mappings})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -151,14 +126,8 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int
 }
 
 func validateSettings(settings *PCA9685Settings) {
-	if settings.SafeStartThrottle < MinSafeStartThrottle {
-		panic(fmt.Errorf("safe start throttle must be a positive number and more than %6.1f", MinSafeStartThrottle))
-	}
-	if settings.MaxThrottle <= settings.SafeStartThrottle {
-		panic(fmt.Errorf("max throttle must be a more than %6.1f", settings.SafeStartThrottle))
-	}
-	if settings.MaxThrottle+settings.ControlVariableRange/2 > MaxAllowedThrottle {
-		panic(fmt.Errorf("throttle + control variable must be less than %6.1f", MaxAllowedThrottle))
+	if settings.MaxThrottle > MaxAllowedThrottle {
+		panic(fmt.Errorf("max throttle must be less than hardcoded allowd throttle (this value is hardcoded in pca9685 driver) %6.1f", MaxAllowedThrottle))
 	}
 }
 
