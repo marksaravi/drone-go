@@ -23,8 +23,7 @@ type esc interface {
 type pidControls interface {
 	SetFlightCommands(flightCommands models.FlightCommands)
 	SetRotations(rotations models.ImuRotations)
-	Throttles() models.Throttles
-	InitiateEmergencyStop(stop bool)
+	Throttles() map[int]float64
 	PrintGains()
 }
 
@@ -85,7 +84,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case connectionState, ok := <-fc.radio.GetConnection():
 				if ok {
 					showConnectionState(connectionState)
-					fc.pid.InitiateEmergencyStop(connectionState != radio.CONNECTED)
 				}
 				connectionChanOpen = ok
 
@@ -94,7 +92,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						fc.pid.SetRotations(rotations)
-						fc.esc.SetThrottles(fc.pid.Throttles())
+						fc.esc.SetThrottles(models.Throttles{
+							Active:    true,
+							Throttles: fc.pid.Throttles(),
+						})
 						fc.logger.Send(rotations)
 					}
 				}

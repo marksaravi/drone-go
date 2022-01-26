@@ -38,15 +38,13 @@ type PIDControlSettings struct {
 	Calibration CalibrationSettings
 }
 type pidControls struct {
-	settings             PIDControlSettings
-	roll                 *axisControl
-	pitch                *axisControl
-	yaw                  *axisControl
-	targetState          pidState
-	state                pidState
-	throttles            models.Throttles
-	emergencyStopTimeout time.Time
-	emergencyStopStart   float64
+	settings    PIDControlSettings
+	roll        *axisControl
+	pitch       *axisControl
+	yaw         *axisControl
+	targetState pidState
+	state       pidState
+	throttles   map[int]float64
 }
 
 func NewPIDControls(settings PIDControlSettings) *pidControls {
@@ -69,17 +67,12 @@ func NewPIDControls(settings PIDControlSettings) *pidControls {
 			throttle: 0,
 			dt:       0,
 		},
-		throttles: models.Throttles{
-			Active: true,
-			Throttles: map[int]float64{
-				0: 0,
-				1: 0,
-				2: 0,
-				3: 0,
-			},
+		throttles: map[int]float64{
+			0: 0,
+			1: 0,
+			2: 0,
+			3: 0,
 		},
-		emergencyStopTimeout: time.Now().Add(time.Second * 86400),
-		emergencyStopStart:   0,
 	}
 }
 
@@ -127,44 +120,20 @@ func (c *pidControls) calcThrottles() {
 	// motor2pitch := -pitchPID / 2
 	// motor3pitch := -pitchPID / 2
 
-	c.throttles = models.Throttles{
-		Active: true,
-		Throttles: map[int]float64{
-			// 0: motor0roll + motor0pitch + yawPID/2,
-			// 1: motor1roll + motor1pitch - yawPID/2,
-			// 2: motor2roll + motor2pitch + yawPID/2,
-			// 3: motor3roll + motor3pitch - yawPID/2,
-			0: 0,
-			1: 0,
-			2: 0,
-			3: 0,
-		},
+	c.throttles = map[int]float64{
+		// 0: motor0roll + motor0pitch + yawPID/2,
+		// 1: motor1roll + motor1pitch - yawPID/2,
+		// 2: motor2roll + motor2pitch + yawPID/2,
+		// 3: motor3roll + motor3pitch - yawPID/2,
+		0: 0,
+		1: 0,
+		2: 0,
+		3: 0,
 	}
 }
 
-func (c *pidControls) Throttles() models.Throttles {
+func (c *pidControls) Throttles() map[int]float64 {
 	return c.throttles
-}
-
-func (c *pidControls) InitiateEmergencyStop(stop bool) {
-	if stop {
-		c.emergencyStopTimeout = time.Now()
-		c.emergencyStopStart = c.targetState.throttle
-	} else {
-		c.emergencyStopTimeout = time.Now().Add(time.Second * 86400)
-	}
-}
-
-func (c *pidControls) applyEmergencyStop() {
-	dur := time.Since(c.emergencyStopTimeout)
-	if dur > EMERGENCY_STOP_DURATION {
-		dur = EMERGENCY_STOP_DURATION
-	}
-	if dur > 0 {
-		k := float64(EMERGENCY_STOP_DURATION-dur) / float64(EMERGENCY_STOP_DURATION)
-
-		c.targetState.throttle = c.emergencyStopStart * k
-	}
 }
 
 func (c *pidControls) flightControlCommandToPIDCommand(fc models.FlightCommands) pidState {
