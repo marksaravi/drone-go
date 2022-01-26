@@ -21,7 +21,7 @@ type esc interface {
 }
 
 type pidControls interface {
-	SetFlightCommands(flightCommands models.FlightCommands)
+	SetPIDTargetState(state models.PIDState)
 	SetRotations(rotations models.ImuRotations)
 	Throttles() map[int]float64
 	PrintGains()
@@ -76,7 +76,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiver():
 				if ok {
-					fc.pid.SetFlightCommands(flightCommands)
+					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands))
 					// showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok
@@ -123,3 +123,7 @@ func showConnectionState(connectionState radio.ConnectionState) {
 // 		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
 // 	}
 // }
+
+func flightCommandsToPIDState(fc models.FlightCommands) models.PIDState {
+	return models.PIDState{}
+}
