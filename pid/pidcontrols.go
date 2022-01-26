@@ -70,8 +70,8 @@ func NewPIDControls(settings PIDControlSettings) *pidControls {
 			dt:       0,
 		},
 		throttles: models.Throttles{
-			Throttle: 0,
-			ControlVariables: map[int]float64{
+			Active: true,
+			Throttles: map[int]float64{
 				0: 0,
 				1: 0,
 				2: 0,
@@ -128,8 +128,8 @@ func (c *pidControls) calcThrottles() {
 	// motor3pitch := -pitchPID / 2
 
 	c.throttles = models.Throttles{
-		Throttle: c.targetState.throttle,
-		ControlVariables: map[int]float64{
+		Active: true,
+		Throttles: map[int]float64{
 			// 0: motor0roll + motor0pitch + yawPID/2,
 			// 1: motor1roll + motor1pitch - yawPID/2,
 			// 2: motor2roll + motor2pitch + yawPID/2,
