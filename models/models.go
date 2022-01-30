@@ -56,6 +56,6 @@ type Logger interface {
 }
 
 type Throttles struct {
-	Throttle         float64
-	ControlVariables map[int]float64
+	Active    bool
+	Throttles map[int]float64
 }
