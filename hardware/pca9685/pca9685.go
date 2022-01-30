@@ -44,7 +44,7 @@ const (
 	Frequency          float64 = 384
 	MinPW              float64 = 0.000995
 	MaxPW              float64 = 0.00199
-	MaxAllowedThrottle float64 = 65
+	MaxAllowedThrottle float64 = 15
 )
 
 type pca9685Dev struct {
@@ -78,16 +78,22 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 	return dev, nil
 }
 
-// var counter int = 0
+func throttleToPulseWidth(throttle float64) float64 {
+	if throttle <= 0 {
+		return MinPW
+	}
+	if throttle >= MaxAllowedThrottle {
+		throttle = MaxAllowedThrottle
+	}
+	return MinPW + throttle/100*(MaxPW-MinPW)
+}
 
 func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
 	for i := 0; i < len(throttles); i++ {
-		pulseWidth := MinPW
 		throttle := throttles[i]
 		channel := d.channelMappings[i]
 		if throttle >= 0 && throttle < MaxAllowedThrottle && math.Abs(throttle) < d.maxThrottle {
-			pulseWidth = MinPW + throttle*(MaxPW-MinPW)
-			d.setPWM(channel, pulseWidth)
+			d.setPWMByThrottle(channel, throttle)
 		}
 	}
 }
@@ -149,7 +155,11 @@ func getOffTime(frequency float64, pulseWidth float64) (on uint16, off uint16) {
 	return
 }
 
-func (d *pca9685Dev) setPWM(channel int, pulseWidth float64) (err error) {
+func (d *pca9685Dev) setPWMByThrottle(channel int, throttle float64) (err error) {
+	pulseWidth := throttleToPulseWidth(throttle)
+	if pulseWidth > throttleToPulseWidth(MaxAllowedThrottle) {
+		return
+	}
 	on, off := getOffTime(d.frequency, pulseWidth)
 	addresses := []byte{
 		byte(PCA9685LED0OnL + 4*channel),
