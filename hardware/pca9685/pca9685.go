@@ -5,7 +5,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/i2c"
 )
 
@@ -49,16 +48,13 @@ const (
 )
 
 type pca9685Dev struct {
-	name               string
-	address            uint8
-	connection         *i2c.Dev
-	frequency          float64
-	channelMappings    map[int]int
-	maxThrottle        float64
-	controlVariableMin float64
-	controlVariableMax float64
-	safeStartThrottle  float64
-	throttle           float64
+	name            string
+	address         uint8
+	connection      *i2c.Dev
+	frequency       float64
+	channelMappings map[int]int
+	maxThrottle     float64
+	throttle        float64
 }
 
 type PCA9685Settings struct {
@@ -84,18 +80,20 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 
 // var counter int = 0
 
-func (d *pca9685Dev) SetThrottles(throttles models.Throttles) {
-	for i := 0; i < len(throttles.Throttles); i++ {
-		d.SetThrottle(d.channelMappings[i], throttles.Throttles[i], throttles.Active)
+func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
+	for i := 0; i < len(throttles); i++ {
+		pulseWidth := MinPW
+		throttle := throttles[i]
+		channel := d.channelMappings[i]
+		if throttle >= 0 && throttle < MaxAllowedThrottle && math.Abs(throttle) < d.maxThrottle {
+			pulseWidth = MinPW + throttle*(MaxPW-MinPW)
+			d.setPWM(channel, pulseWidth)
+		}
 	}
 }
 
-func (d *pca9685Dev) SetThrottle(channel int, throttle float64, active bool) {
-	var pulseWidth float64 = MinPW
-	if active && math.Abs(throttle) < d.maxThrottle {
-		pulseWidth = MinPW + throttle*(MaxPW-MinPW)
-		d.setPWM(channel, pulseWidth)
-	}
+func (d *pca9685Dev) OffAll() {
+	d.setAllPWM(MinPW)
 }
 
 //Calibrate
