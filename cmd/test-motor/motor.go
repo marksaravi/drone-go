@@ -31,7 +31,7 @@ func main() {
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
 		Connection:      i2cConn,
-		MaxThrottle:     configs.MaxThrottle,
+		MaxThrottle:     15,
 		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
 	})
 
