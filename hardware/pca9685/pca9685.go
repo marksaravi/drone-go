@@ -44,7 +44,7 @@ const (
 	Frequency          float64 = 384
 	MinPW              float64 = 0.000995
 	MaxPW              float64 = 0.00199
-	MaxAllowedThrottle float64 = 15
+	MaxAllowedThrottle float64 = 75
 )
 
 type pca9685Dev struct {
