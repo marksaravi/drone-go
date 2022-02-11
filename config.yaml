@@ -1,7 +1,7 @@
 flight-control:
   debug: false
   min-throttle: 5
-  max-throttle: &MAX_THROTTLE 40
+  max-throttle: &MAX_THROTTLE 20
   pid:
     roll:
       input-limit: 45
