@@ -67,6 +67,12 @@ func main() {
 		esc,
 		radioDev,
 		logger,
+		flightcontrol.Settings{
+			MaxThrottle: configs.MaxThrottle,
+			MaxRoll:     configs.MaxRoll,
+			MaxPitch:    configs.MaxPitch,
+			MaxYaw:      configs.MaxYaw,
+		},
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -2,6 +2,10 @@ flight-control:
   debug: false
   min-throttle: 5
   max-throttle: &MAX_THROTTLE 20
+  max-roll: 5
+  max-pitch: 5
+  max-yaw: 5
+
   pid:
     roll:
       input-limit: 45

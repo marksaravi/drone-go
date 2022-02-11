@@ -31,6 +31,9 @@ type flightControl struct {
 	Debug       bool    `yaml:"debug"`
 	MinThrottle float64 `yaml:"min-throttle"`
 	MaxThrottle float64 `yaml:"max-throttle"`
+	MaxRoll     float64 `yaml:"max-roll"`
+	MaxPitch    float64 `yaml:"max-pitch"`
+	MaxYaw      float64 `yaml:"max-yaw"`
 
 	PID struct {
 		Roll        pidConfig `yaml:"roll"`

@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
 )
@@ -27,12 +28,20 @@ type pidControls interface {
 	PrintGains()
 }
 
+type Settings struct {
+	MaxThrottle float64
+	MaxRoll     float64
+	MaxPitch    float64
+	MaxYaw      float64
+}
+
 type flightControl struct {
-	pid    pidControls
-	imu    imu
-	esc    esc
-	radio  models.Radio
-	logger models.Logger
+	pid      pidControls
+	imu      imu
+	esc      esc
+	radio    models.Radio
+	logger   models.Logger
+	settings Settings
 }
 
 func NewFlightControl(
@@ -41,13 +50,15 @@ func NewFlightControl(
 	esc esc,
 	radio models.Radio,
 	logger models.Logger,
+	settings Settings,
 ) *flightControl {
 	return &flightControl{
-		pid:    pid,
-		imu:    imu,
-		esc:    esc,
-		radio:  radio,
-		logger: logger,
+		pid:      pid,
+		imu:      imu,
+		esc:      esc,
+		radio:    radio,
+		logger:   logger,
+		settings: settings,
 	}
 }
 
@@ -76,7 +87,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiver():
 				if ok {
-					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands))
+					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands, fc.settings))
 					// showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok
@@ -124,6 +135,19 @@ func showConnectionState(connectionState radio.ConnectionState) {
 // 	}
 // }
 
-func flightCommandsToPIDState(fc models.FlightCommands) models.PIDState {
-	return models.PIDState{}
+func joystickToTwoWayCommand(digital uint16, resolution uint16, max float64) float64 {
+	return (float64(digital) - float64(resolution/2)) / float64(resolution) * max
+}
+
+func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) float64 {
+	return float64(digital) / float64(resolution) * max
+}
+
+func flightCommandsToPIDState(command models.FlightCommands, settings Settings) models.PIDState {
+	return models.PIDState{
+		Roll:     joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
+		Pitch:    joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
+		Yaw:      joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
+		Throttle: joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle),
+	}
 }
