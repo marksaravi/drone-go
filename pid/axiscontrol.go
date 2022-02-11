@@ -5,42 +5,40 @@ import (
 )
 
 type axisControl struct {
+	settings      PIDSettings
 	previousInput float64
-	inputLimit    float64
-	iMemoryLimit  float64
 	iMemory       float64
 }
 
-func NewPIDControl(inputLimit, limitI float64) *axisControl {
+func NewPIDControl(settings PIDSettings) *axisControl {
 	return &axisControl{
-		inputLimit:    inputLimit,
-		iMemoryLimit:  limitI,
+		settings:      settings,
 		previousInput: 0,
 		iMemory:       0,
 	}
 }
 
-func (ac *axisControl) getP(input, gain float64) float64 {
-	return input * gain
+func (ac *axisControl) getP(input float64) float64 {
+	return input * ac.settings.PGain
 }
 
-func (ac *axisControl) getI(input float64, gain float64, dt time.Duration) float64 {
-	ac.iMemory = limitToMax(input*gain*float64(dt)/1000000000+ac.iMemory, ac.iMemoryLimit)
+func (ac *axisControl) getI(input float64, dt time.Duration) float64 {
+	ac.iMemory = limitToMax(input*ac.settings.IGain*float64(dt)/1000000000+ac.iMemory, ac.settings.ILimit)
 
 	return ac.iMemory
 }
 
-func (ac *axisControl) getD(input, gain float64, dt time.Duration) float64 {
-	d := (input - ac.previousInput) / float64(dt) * 1000000000 * gain
+func (ac *axisControl) getD(input float64, dt time.Duration) float64 {
+	d := (input - ac.previousInput) / float64(dt) * 1000000000 * ac.settings.DGain
 
 	ac.previousInput = input
 	return d
 }
 
-func (ac *axisControl) calc(input float64, dt time.Duration, gains *gains) float64 {
-	p := ac.getP(input, gains.P)
-	i := ac.getI(input, gains.I, dt)
-	d := ac.getD(input, gains.D, dt)
+func (ac *axisControl) calc(input float64, dt time.Duration) float64 {
+	p := ac.getP(input)
+	i := ac.getI(input, dt)
+	d := ac.getD(input, dt)
 	sum := p + i + d
 	return sum
 }

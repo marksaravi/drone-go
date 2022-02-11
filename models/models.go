@@ -59,3 +59,11 @@ type Throttles struct {
 	Active    bool
 	Throttles map[int]float64
 }
+
+type PIDState struct {
+	Roll     float64
+	Pitch    float64
+	Yaw      float64
+	Throttle float64
+	Dt       time.Duration
+}

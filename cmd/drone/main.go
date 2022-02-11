@@ -14,7 +14,6 @@ import (
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/pid"
@@ -48,32 +47,18 @@ func main() {
 	b, _ := i2creg.Open(configs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:           i2cConn,
-		SafeStartThrottle:    configs.SafeStartThrottle,
-		MaxThrottle:          configs.MaxThrottle,
-		ControlVariableRange: configs.ControlVariableRange,
-		ChannelMappings:      configs.ESC.PwmDeviceToESCMappings,
+		Connection:      i2cConn,
+		MaxThrottle:     configs.MaxThrottle,
+		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
 	})
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
-		pid.PIDSettings{
-			RollPitchPGain:          pidConfigs.RollPitchPGain,
-			RollPitchIGain:          pidConfigs.RollPitchIGain,
-			RollPitchDGain:          pidConfigs.RollPitchDGain,
-			YawPGain:                pidConfigs.YawPGain,
-			YawIGain:                pidConfigs.YawIGain,
-			YawDGain:                pidConfigs.YawDGain,
-			LimitRoll:               pidConfigs.MaxRoll,
-			LimitPitch:              pidConfigs.MaxPitch,
-			LimitYaw:                pidConfigs.MaxYaw,
-			LimitI:                  pidConfigs.MaxI,
-			ThrottleLimit:           float64(configs.MaxThrottle),
-			SafeStartThrottle:       float64(configs.SafeStartThrottle),
-			MaxJoystickDigitalValue: mcp3008.DIGITAL_MAX_VALUE,
-			BeamToAxisRatio:         pidConfigs.BeamToAxisRatio,
-			CalibrationGain:         pidConfigs.CalibrationGain,
-			CalibrationStep:         pidConfigs.CalibrationStep,
+		pid.PIDControlSettings{
+			Roll:        pid.PIDSettings(pidConfigs.Roll),
+			Pitch:       pid.PIDSettings(pidConfigs.Pitch),
+			Yaw:         pid.PIDSettings(pidConfigs.Yaw),
+			Calibration: pid.CalibrationSettings(pidConfigs.Calibration),
 		},
 	)
 	flightControl := flightcontrol.NewFlightControl(
@@ -82,6 +67,12 @@ func main() {
 		esc,
 		radioDev,
 		logger,
+		flightcontrol.Settings{
+			MaxThrottle: configs.MaxThrottle,
+			MaxRoll:     configs.MaxRoll,
+			MaxPitch:    configs.MaxPitch,
+			MaxYaw:      configs.MaxYaw,
+		},
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -20,26 +20,31 @@ type radioConfig struct {
 	SPI                spiConfig `yaml:"spi"`
 }
 
+type pidConfig struct {
+	InputLimit float64 `yaml:"input-limit"`
+	PGain      float64 `yaml:"p-gain"`
+	IGain      float64 `yaml:"i-gain"`
+	DGain      float64 `yaml:"d-gain"`
+	ILimit     float64 `yaml:"i-limit"`
+}
 type flightControl struct {
-	Debug                bool    `yaml:"debug"`
-	MaxThrottle          float64 `yaml:"max-throttle"`
-	SafeStartThrottle    float64 `yaml:"safe-start-throttle"`
-	ControlVariableRange float64 `yaml:"control-variable-range"`
+	Debug       bool    `yaml:"debug"`
+	MinThrottle float64 `yaml:"min-throttle"`
+	MaxThrottle float64 `yaml:"max-throttle"`
+	MaxRoll     float64 `yaml:"max-roll"`
+	MaxPitch    float64 `yaml:"max-pitch"`
+	MaxYaw      float64 `yaml:"max-yaw"`
 
 	PID struct {
-		RollPitchPGain  float64 `yaml:"roll-pitch-p-gain"`
-		RollPitchIGain  float64 `yaml:"roll-pitch-i-gain"`
-		RollPitchDGain  float64 `yaml:"roll-pitch-d-gain"`
-		MaxRoll         float64 `yaml:"max-roll"`
-		MaxPitch        float64 `yaml:"max-pitch"`
-		YawPGain        float64 `yaml:"yaw-p-gain"`
-		YawIGain        float64 `yaml:"yaw-i-gain"`
-		YawDGain        float64 `yaml:"yaw-d-gain"`
-		MaxYaw          float64 `yaml:"max-yaw"`
-		MaxI            float64 `yaml:"max-i"`
-		BeamToAxisRatio float64 `yaml:"beam-to-axis-ratio"`
-		CalibrationGain string  `yaml:"calibration-gain"`
-		CalibrationStep float64 `yaml:"calibration-step"`
+		Roll        pidConfig `yaml:"roll"`
+		Pitch       pidConfig `yaml:"pitch"`
+		Yaw         pidConfig `yaml:"yaw"`
+		Calibration struct {
+			Calibrating bool    `yaml:"calibrating"`
+			PStep       float64 `yaml:"p-step"`
+			IStep       float64 `yaml:"i-step"`
+			DStep       float64 `yaml:"d-step"`
+		} `yaml:"calibration"`
 	} `yaml:"pid"`
 
 	Imu struct {

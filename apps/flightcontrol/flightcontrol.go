@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
 )
@@ -21,19 +22,26 @@ type esc interface {
 }
 
 type pidControls interface {
-	SetFlightCommands(flightCommands models.FlightCommands)
+	SetPIDTargetState(state models.PIDState)
 	SetRotations(rotations models.ImuRotations)
-	Throttles() models.Throttles
-	InitiateEmergencyStop(stop bool)
+	Throttles() map[int]float64
 	PrintGains()
 }
 
+type Settings struct {
+	MaxThrottle float64
+	MaxRoll     float64
+	MaxPitch    float64
+	MaxYaw      float64
+}
+
 type flightControl struct {
-	pid    pidControls
-	imu    imu
-	esc    esc
-	radio  models.Radio
-	logger models.Logger
+	pid      pidControls
+	imu      imu
+	esc      esc
+	radio    models.Radio
+	logger   models.Logger
+	settings Settings
 }
 
 func NewFlightControl(
@@ -42,13 +50,15 @@ func NewFlightControl(
 	esc esc,
 	radio models.Radio,
 	logger models.Logger,
+	settings Settings,
 ) *flightControl {
 	return &flightControl{
-		pid:    pid,
-		imu:    imu,
-		esc:    esc,
-		radio:  radio,
-		logger: logger,
+		pid:      pid,
+		imu:      imu,
+		esc:      esc,
+		radio:    radio,
+		logger:   logger,
+		settings: settings,
 	}
 }
 
@@ -77,7 +87,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiver():
 				if ok {
-					fc.pid.SetFlightCommands(flightCommands)
+					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands, fc.settings))
 					// showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok
@@ -85,7 +95,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case connectionState, ok := <-fc.radio.GetConnection():
 				if ok {
 					showConnectionState(connectionState)
-					fc.pid.InitiateEmergencyStop(connectionState != radio.CONNECTED)
 				}
 				connectionChanOpen = ok
 
@@ -94,7 +103,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						fc.pid.SetRotations(rotations)
-						fc.esc.SetThrottles(fc.pid.Throttles())
+						fc.esc.SetThrottles(models.Throttles{
+							Active:    true,
+							Throttles: fc.pid.Throttles(),
+						})
 						fc.logger.Send(rotations)
 					}
 				}
@@ -122,3 +134,20 @@ func showConnectionState(connectionState radio.ConnectionState) {
 // 		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
 // 	}
 // }
+
+func joystickToTwoWayCommand(digital uint16, resolution uint16, max float64) float64 {
+	return (float64(digital) - float64(resolution/2)) / float64(resolution) * max
+}
+
+func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) float64 {
+	return float64(digital) / float64(resolution) * max
+}
+
+func flightCommandsToPIDState(command models.FlightCommands, settings Settings) models.PIDState {
+	return models.PIDState{
+		Roll:     joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
+		Pitch:    joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
+		Yaw:      joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
+		Throttle: joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle),
+	}
+}
