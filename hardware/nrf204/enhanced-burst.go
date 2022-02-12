@@ -155,12 +155,14 @@ func (tr *nrf204l01) setRxTxAddress() {
 func (tr *nrf204l01) UpdateStatus() {
 	res, _ := writeSPI(0b11111111, []byte{0}, tr.conn)
 	tr.status = res[0]
+	fmt.Println("Status: ", tr.status)
 }
 
 func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
 	if update {
 		tr.UpdateStatus()
 	}
+
 	return tr.status&0b01000000 != 0
 }
 
@@ -168,7 +170,7 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 	if update {
 		tr.UpdateStatus()
 	}
-	return tr.status&0b00100000 != 0
+	return tr.status&0b00010000 != 0
 }
 
 func (tr *nrf204l01) ResetStatus() {
