@@ -20,7 +20,6 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
-		radioConfigs.PowerDBm,
 	)
 	transmitter := radio.NewTransmitter(radioNRF204)
 	go transmitter.StartTransmitter(ctx, wg)

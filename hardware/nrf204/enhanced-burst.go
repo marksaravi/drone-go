@@ -15,7 +15,6 @@ func NewNRF204EnhancedBurst(
 	spiChipSelect int,
 	spiChipEnabledGPIO string,
 	rxTxAddress string,
-	powerDb string,
 ) *nrf204l01 {
 	radioSPIConn := hardware.NewSPIConnection(
 		spiBusNum,
@@ -26,8 +25,18 @@ func NewNRF204EnhancedBurst(
 		address: []byte(rxTxAddress),
 		ce:      initPin(spiChipEnabledGPIO),
 		conn:    radioSPIConn,
-		// powerDBm:   dbmStrToDBm(powerDb),
-		isReceiver: true,
+		registers: map[byte]byte{
+			ADDRESS_CONFIG:     DEFAULT_CONFIG,
+			ADDRESS_EN_AA:      DEFAULT_EN_AA,
+			ADDRESS_EN_RXADDR:  DEFAULT_EN_RXADDR,
+			ADDRESS_SETUP_AW:   DEFAULT_SETUP_AW,
+			ADDRESS_SETUP_RETR: DEFAULT_SETUP_RETR,
+			ADDRESS_RF_CH:      DEFAULT_RF_CH,
+			ADDRESS_RF_SETUP:   DEFAULT_RF_SETUP,
+			ADDRESS_RX_PW_P0:   DEFAULT_RX_PW_P0,
+			ADDRESS_STATUS:     DEFAULT_STATUS,
+		},
+		status: 0,
 	}
 	tr.enhancedBurstInit()
 	tr.enhancedBurstReadConfigRegisters()
@@ -44,7 +53,7 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 
 }
 func (tr *nrf204l01) receiverOn(on bool) {
-	registers[ADDRESS_CONFIG] = bitEnable(registers[ADDRESS_CONFIG], 0, on)
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
 }
 
@@ -66,11 +75,14 @@ func (tr *nrf204l01) PowerOff() {
 }
 
 func (tr *nrf204l01) setPower(on bool) {
-	registers[ADDRESS_CONFIG] = bitEnable(registers[ADDRESS_CONFIG], 1, on)
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
+	if tr.TransmitFailed(false) {
+		writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
+	}
 	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	if err != nil {
 		return err
@@ -124,25 +136,35 @@ func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
 }
 
 func (tr *nrf204l01) ebApplyRegister(address byte) {
-	writeSPI(address, []byte{registers[address]}, tr.conn)
-}
-
-func (tr *nrf204l01) ebWriteRegisterBytes(address byte, values []byte) ([]byte, error) {
-	return writeSPI(address, values, tr.conn)
+	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
 func (tr *nrf204l01) ebSetRegisters() {
-	for address, _ := range registers {
+	for address := range tr.registers {
 		tr.ebApplyRegister(address)
 	}
 }
 
 func (tr *nrf204l01) setRxTxAddress() {
-	tr.ebWriteRegisterBytes(ADDRESS_RX_ADDR_P0, tr.address)
-	tr.ebWriteRegisterBytes(ADDRESS_TX_ADDR, tr.address)
+	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
+	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 }
 
-func (tr *nrf204l01) ebReadStatus() byte {
+func (tr *nrf204l01) UpdateStatus() {
 	res, _ := writeSPI(0b11111111, []byte{0}, tr.conn)
-	return res[0]
+	tr.status = res[0]
+}
+
+func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
+	if update {
+		tr.UpdateStatus()
+	}
+	return tr.status&0b01000000 != 0
+}
+
+func (tr *nrf204l01) TransmitFailed(update bool) bool {
+	if update {
+		tr.UpdateStatus()
+	}
+	return tr.status&0b00100000 != 0
 }

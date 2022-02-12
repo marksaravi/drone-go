@@ -20,7 +20,6 @@ func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
-		radioConfigs.PowerDBm,
 	)
 	receiver := radio.NewReceiver(radioNRF204)
 	go receiver.StartReceiver(ctx, wg)

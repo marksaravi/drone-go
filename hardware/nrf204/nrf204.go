@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/hardware"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -48,7 +47,7 @@ const (
 	DEFAULT_SETUP_RETR byte = 0b00000011
 	DEFAULT_RF_CH      byte = 0b01001100
 	DEFAULT_RF_SETUP   byte = 0b00001111
-	DEFAULT_STATUS     byte = 0b00001110
+	DEFAULT_STATUS     byte = 0b01110000
 	DEFAULT_RX_PW_P0   byte = constants.RADIO_PAYLOAD_SIZE
 	DEFAULT_RX_PW_P1   byte = 0b00000000
 	DEFAULT_RX_PW_P2   byte = 0b00000000
@@ -95,58 +94,34 @@ const (
 // 	DATA_RATE_2MBPS
 // )
 
-const ADDRESS_SIZE int = 5
-
-type radioMode int
-
-const (
-	Receiver radioMode = iota
-	Transmitter
-)
-
 type nrf204l01 struct {
-	ce         gpio.PinOut
-	address    []byte
-	conn       spi.Conn
-	powerDBm   byte
-	isReceiver bool
+	ce        gpio.PinOut
+	address   []byte
+	conn      spi.Conn
+	status    byte
+	registers map[byte]byte
 }
 
-var registers map[byte]byte = map[byte]byte{
-	ADDRESS_CONFIG:     DEFAULT_CONFIG,
-	ADDRESS_EN_AA:      DEFAULT_EN_AA,
-	ADDRESS_EN_RXADDR:  DEFAULT_EN_RXADDR,
-	ADDRESS_SETUP_AW:   DEFAULT_SETUP_AW,
-	ADDRESS_SETUP_RETR: DEFAULT_SETUP_RETR,
-	ADDRESS_RF_CH:      DEFAULT_RF_CH,
-	ADDRESS_RF_SETUP:   DEFAULT_RF_SETUP,
-	ADDRESS_RX_PW_P0:   DEFAULT_RX_PW_P0,
-}
+// func NewNRF204(
+// 	spiBusNum int,
+// 	spiChipSelect int,
+// 	spiChipEnabledGPIO string,
+// 	rxTxAddress string,
+// ) *nrf204l01 {
+// 	radioSPIConn := hardware.NewSPIConnection(
+// 		spiBusNum,
+// 		spiChipSelect,
+// 	)
 
-func NewNRF204(
-	spiBusNum int,
-	spiChipSelect int,
-	spiChipEnabledGPIO string,
-	rxTxAddress string,
-	powerDb string,
-) *nrf204l01 {
-	radioSPIConn := hardware.NewSPIConnection(
-		spiBusNum,
-		spiChipSelect,
-	)
-
-	radio := nrf204l01{
-		address:  []byte(rxTxAddress),
-		ce:       initPin(spiChipEnabledGPIO),
-		conn:     radioSPIConn,
-		powerDBm: 0,
-		// powerDBm:   dbmStrToDBm(powerDb),
-		isReceiver: true,
-	}
-	// radio.init()
-	// radio.receiverOn()
-	return &radio
-}
+// 	radio := nrf204l01{
+// 		address: []byte(rxTxAddress),
+// 		ce:      initPin(spiChipEnabledGPIO),
+// 		conn:    radioSPIConn,
+// 	}
+// 	// radio.init()
+// 	// radio.receiverOn()
+// 	return &radio
+// }
 
 // func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
 // 	// if !radio.isReceiver {
