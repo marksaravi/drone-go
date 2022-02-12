@@ -11,12 +11,6 @@ import (
 )
 
 const (
-	// R_REGISTER      byte = 0x1F
-	// W_REGISTER      byte = 0x20
-	R_REGISTER_MASK byte = 0x0
-	W_REGISTER_MASK byte = 0x20
-)
-const (
 	ADDRESS_CONFIG      byte = 0x0
 	ADDRESS_EN_AA       byte = 0x1
 	ADDRESS_EN_RXADDR   byte = 0x2
@@ -43,6 +37,7 @@ const (
 	ADDRESS_FIFO_STATUS byte = 0x17
 
 	ADDRESS_W_TX_PAYLOAD byte = 0xA0
+	ADDRESS_R_RX_PAYLOAD byte = 0x61
 )
 
 const (
@@ -297,7 +292,7 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
 	w := make([]byte, datalen+1)
 	r := make([]byte, datalen+1)
-	w[0] = address
+	w[0] = address | 0x20 // adding write bit
 
 	for i := 0; i < datalen; i++ {
 		w[i+1] = data[i]

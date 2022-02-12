@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
@@ -53,6 +54,7 @@ func (tr *nrf204l01) TransmitterOn() {
 
 func (tr *nrf204l01) ReceiverOn() {
 	tr.receiverOn(true)
+	tr.ce.Out(gpio.High)
 }
 
 func (tr *nrf204l01) PowerOn() {
@@ -69,7 +71,7 @@ func (tr *nrf204l01) setPower(on bool) {
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
-	_, err := tr.ebWriteRegisterBytes(ADDRESS_W_TX_PAYLOAD, payload[:])
+	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	if err != nil {
 		return err
 	}
@@ -82,6 +84,16 @@ func (tr *nrf204l01) Transmit(payload models.Payload) error {
 	}
 	tr.ce.Out(gpio.Low)
 	return err
+}
+
+func (tr *nrf204l01) Receive() (models.Payload, error) {
+	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
+	data, err := readSPI(ADDRESS_W_TX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
+	if err != nil {
+		return payload, err
+	}
+	copy(payload[:], data)
+	return payload, err
 }
 
 func (tr *nrf204l01) enhancedBurstInit() {
@@ -108,15 +120,15 @@ func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 }
 
 func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
-	return readSPI(address|R_REGISTER_MASK, 1, tr.conn)
+	return readSPI(address, 1, tr.conn)
 }
 
 func (tr *nrf204l01) ebApplyRegister(address byte) {
-	writeSPI(address|W_REGISTER_MASK, []byte{registers[address]}, tr.conn)
+	writeSPI(address, []byte{registers[address]}, tr.conn)
 }
 
 func (tr *nrf204l01) ebWriteRegisterBytes(address byte, values []byte) ([]byte, error) {
-	return writeSPI(address|W_REGISTER_MASK, values, tr.conn)
+	return writeSPI(address, values, tr.conn)
 }
 
 func (tr *nrf204l01) ebSetRegisters() {
@@ -133,24 +145,4 @@ func (tr *nrf204l01) setRxTxAddress() {
 func (tr *nrf204l01) ebReadStatus() byte {
 	res, _ := writeSPI(0b11111111, []byte{0}, tr.conn)
 	return res[0]
-}
-
-func (tr *nrf204l01) ebReadRxPayload() {
-
-}
-
-func (tr *nrf204l01) ebWriteTxPayload() {
-
-}
-
-func (tr *nrf204l01) ebFlushRx() {
-
-}
-
-func (tr *nrf204l01) ebFlushTx() {
-
-}
-
-func (tr *nrf204l01) ebReadStatusRegister() {
-
 }
