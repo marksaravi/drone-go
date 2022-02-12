@@ -22,7 +22,7 @@ const (
 const (
 	ADDRESS_CONFIG      byte = 0x0
 	ADDRESS_EN_AA       byte = 0x1
-	ADDRESS_RXADDR      byte = 0x2
+	ADDRESS_EN_RXADDR   byte = 0x2
 	ADDRESS_SETUP_AW    byte = 0x3
 	ADDRESS_SETUP_RETR  byte = 0x4
 	ADDRESS_RF_CH       byte = 0x5
@@ -123,14 +123,14 @@ type nrf204l01 struct {
 	isReceiver bool
 }
 
-var configRegisters [8]byte = [8]byte{
-	DEFAULT_CONFIG,
-	DEFAULT_EN_AA,
-	DEFAULT_EN_RXADDR,
-	DEFAULT_SETUP_AW,
-	DEFAULT_SETUP_RETR,
-	DEFAULT_RF_CH,
-	DEFAULT_RF_SETUP,
+var configRegisters map[byte]byte = map[byte]byte{
+	ADDRESS_CONFIG:     DEFAULT_CONFIG,
+	ADDRESS_EN_AA:      DEFAULT_EN_AA,
+	ADDRESS_EN_RXADDR:  DEFAULT_EN_RXADDR,
+	ADDRESS_SETUP_AW:   DEFAULT_SETUP_AW,
+	ADDRESS_SETUP_RETR: DEFAULT_SETUP_RETR,
+	ADDRESS_RF_CH:      DEFAULT_RF_CH,
+	ADDRESS_RF_SETUP:   DEFAULT_RF_SETUP,
 }
 
 func NewNRF204(
