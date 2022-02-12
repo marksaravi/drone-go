@@ -15,7 +15,7 @@ import (
 
 type radioLink interface {
 	TransmitPayload(models.Payload) error
-	ReceivePayload() (models.Payload, bool)
+	// ReceivePayload() (models.Payload, bool)
 }
 
 func process(ctx context.Context, wg *sync.WaitGroup, radio radioLink) {

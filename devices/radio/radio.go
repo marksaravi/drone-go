@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type ConnectionState = int
@@ -28,7 +27,7 @@ const (
 
 type radioLink interface {
 	Transmit(models.Payload) error
-	ReceivePayload() (models.Payload, bool)
+	// ReceivePayload() (models.Payload, bool)
 }
 
 type radioDevice struct {
@@ -73,53 +72,53 @@ func NewRadio(radiolink radioLink, heartBeatTimeoutMs int) *radioDevice {
 }
 
 func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
-	log.Println("Starting the Radio...")
+	// wg.Add(1)
+	// log.Println("Starting the Radio...")
 
-	go func() {
-		defer wg.Done()
-		defer log.Println("Radio is stopped.")
+	// go func() {
+	// 	defer wg.Done()
+	// 	defer log.Println("Radio is stopped.")
 
-		var heartbeatInterval = r.heartBeatTimeout / 10
-		r.clearBuffer()
-		var running bool = true
-		var transmitting bool = true
-		for running || transmitting {
-			select {
-			case <-ctx.Done():
-				if running {
-					r.closeRadio()
-					log.Println("Closing Receiver and Connection...")
-					close(r.receiveChannel)
-					close(r.connectionChannel)
-					running = false
-				}
+	// 	var heartbeatInterval = r.heartBeatTimeout / 10
+	// 	r.clearBuffer()
+	// 	var running bool = true
+	// 	var transmitting bool = true
+	// 	for running || transmitting {
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			if running {
+	// 				r.closeRadio()
+	// 				log.Println("Closing Receiver and Connection...")
+	// 				close(r.receiveChannel)
+	// 				close(r.connectionChannel)
+	// 				running = false
+	// 			}
 
-			case flightCommands, ok := <-r.transmitChannel:
-				if ok {
-					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
-				}
-				transmitting = ok
-			default:
-				if running {
-					payload, available := r.radiolink.ReceivePayload()
-					if available {
-						if payload[0] == COMMAND {
-							r.receiveChannel <- utils.DeserializeFlightCommand(payload)
-						}
-						r.setConnectionState(payload[0])
-					} else {
-						r.setConnectionState(NO_COMMAND)
-					}
-					if time.Since(r.lastSentHeartBeat) >= heartbeatInterval {
-						r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
-							Type: HEARTBEAT,
-						}))
-					}
-				}
-			}
-		}
-	}()
+	// 		case flightCommands, ok := <-r.transmitChannel:
+	// 			if ok {
+	// 				r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
+	// 			}
+	// 			transmitting = ok
+	// 		default:
+	// 			if running {
+	// 				payload, available := r.radiolink.ReceivePayload()
+	// 				if available {
+	// 					if payload[0] == COMMAND {
+	// 						r.receiveChannel <- utils.DeserializeFlightCommand(payload)
+	// 					}
+	// 					r.setConnectionState(payload[0])
+	// 				} else {
+	// 					r.setConnectionState(NO_COMMAND)
+	// 				}
+	// 				if time.Since(r.lastSentHeartBeat) >= heartbeatInterval {
+	// 					r.transmitPayload(utils.SerializeFlightCommand(models.FlightCommands{
+	// 						Type: HEARTBEAT,
+	// 					}))
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }()
 }
 
 func (r *radioDevice) Transmit(data models.FlightCommands) {
@@ -191,11 +190,11 @@ func (r *radioDevice) setConnectionState(commandType models.FlightCommandType) {
 }
 
 func (r *radioDevice) clearBuffer() {
-	for {
-		_, available := r.radiolink.ReceivePayload()
-		if !available {
-			break
-		}
-	}
-	log.Println("Radio buffer is cleared.")
+	// for {
+	// 	_, available := r.radiolink.ReceivePayload()
+	// 	if !available {
+	// 		break
+	// 	}
+	// }
+	// log.Println("Radio buffer is cleared.")
 }

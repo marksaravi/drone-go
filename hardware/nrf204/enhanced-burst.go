@@ -4,28 +4,40 @@ import (
 	"log"
 	"time"
 
+	"github.com/marksaravi/drone-go/hardware"
 	"periph.io/x/periph/conn/gpio"
 )
 
+func NewNRF204EnhancedBurst(
+	spiBusNum int,
+	spiChipSelect int,
+	spiChipEnabledGPIO string,
+	rxTxAddress string,
+	powerDb string,
+) *nrf204l01 {
+	radioSPIConn := hardware.NewSPIConnection(
+		spiBusNum,
+		spiChipSelect,
+	)
+
+	radio := nrf204l01{
+		address:    []byte(rxTxAddress),
+		ce:         initPin(spiChipEnabledGPIO),
+		conn:       radioSPIConn,
+		powerDBm:   dbmStrToDBm(powerDb),
+		isReceiver: true,
+	}
+	radio.enhancedBurstInit()
+	radio.enhancedBurstReadConfigRegisters()
+	return &radio
+}
 func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ce.Out(gpio.Low)
 	tr.setPower(OFF)
 	time.Sleep(time.Millisecond)
-	tr.ebCommitConfigRegister(ADDRESS_CONFIG)
-	tr.ebCommitConfigRegister(ADDRESS_EN_AA)
-	tr.ebCommitConfigRegister(ADDRESS_EN_RXADDR)
-	tr.ebCommitConfigRegister(ADDRESS_SETUP_AW)
-	tr.ebCommitConfigRegister(ADDRESS_SETUP_RETR)
-	tr.ebCommitConfigRegister(ADDRESS_RF_CH)
-	tr.ebCommitConfigRegister(ADDRESS_RF_SETUP)
-	tr.setPayloadSize()
-	tr.setAddressWidth()
-	tr.setChannel()
-	tr.setCRCEncodingScheme()
-	tr.enableCRC()
+	tr.ebSetRegisters()
 	tr.setTransmitterAddress()
 	tr.setReceiverAddress()
-	// tr.setPALevel(tr.powerDBm)
 	tr.setPower(ON)
 	time.Sleep(time.Millisecond)
 }
@@ -45,6 +57,21 @@ func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 
 func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
 	return readSPI(address|R_REGISTER_MASK, 1, tr.conn)
+}
+
+func (tr *nrf204l01) ebSetRegisters() {
+
+	for address := ADDRESS_CONFIG; address <= ADDRESS_RF_SETUP; address++ {
+		writeSPI(address|W_REGISTER_MASK, []byte{configRegisters[address]}, tr.conn)
+	}
+}
+
+func (radio *nrf204l01) setTransmitterAddress() {
+	radio.writeRegister(ADDRESS_TX_ADDR, radio.address)
+}
+
+func (radio *nrf204l01) setReceiverAddress() {
+	radio.writeRegister(ADDRESS_RX_ADDR_P0, radio.address)
 }
 
 func (tr *nrf204l01) ebCommitConfigRegister(address byte) {
