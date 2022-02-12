@@ -2,6 +2,7 @@ package radio
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Receiver is stopped.")
 
 		ts := time.Now()
+		// tm := ts
 		for {
 			select {
 			case <-ctx.Done():
@@ -39,7 +41,8 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 				if time.Since(ts) >= time.Second/10 {
 					ts = time.Now()
 					if r.radiolink.ReceiverDataReady(true) {
-
+						payload, _ := r.radiolink.Receive()
+						fmt.Println(payload)
 					}
 				}
 			}
