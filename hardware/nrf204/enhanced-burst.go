@@ -82,9 +82,6 @@ func (tr *nrf204l01) setPower(on bool) {
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
 	fmt.Println(payload)
-	if tr.TransmitFailed(false) {
-		writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
-	}
 	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	if err != nil {
 		return err
@@ -169,4 +166,8 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 		tr.UpdateStatus()
 	}
 	return tr.status&0b00100000 != 0
+}
+
+func (tr *nrf204l01) ResetStatus() {
+	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }

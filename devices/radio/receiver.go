@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/models"
 )
@@ -28,15 +29,19 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		defer log.Println("Receiver is stopped.")
 
-		var running bool = true
-		for running {
+		ts := time.Now()
+		for {
 			select {
 			case <-ctx.Done():
-				if running {
-					running = false
-				}
+				return
 
 			default:
+				if time.Since(ts) >= time.Second/10 {
+					ts = time.Now()
+					if r.radiolink.ReceiverDataReady(true) {
+
+					}
+				}
 			}
 		}
 	}()

@@ -2,6 +2,7 @@ package radio
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -37,6 +38,10 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				}
 
 			case flightCommands := <-r.TransmitChannel:
+				if r.radiolink.TransmitFailed(true) {
+					fmt.Println("Transmit failed")
+					r.radiolink.ResetStatus()
+				}
 				payload := utils.SerializeFlightCommand(flightCommands)
 				r.radiolink.Transmit(payload)
 			default:

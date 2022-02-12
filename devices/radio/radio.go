@@ -27,10 +27,14 @@ const (
 
 type radioLink interface {
 	Transmit(models.Payload) error
+	TransmitFailed(update bool) bool
 	TransmitterOn()
 	ReceiverOn()
 	PowerOn()
 	PowerOff()
+	UpdateStatus()
+	ReceiverDataReady(update bool) bool
+	ResetStatus()
 }
 
 type radioDevice struct {
