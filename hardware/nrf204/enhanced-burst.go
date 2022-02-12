@@ -150,6 +150,9 @@ func (tr *nrf204l01) ebSetRegisters() {
 func (tr *nrf204l01) setRxTxAddress() {
 	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
+	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
+	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
+	fmt.Println("RX: ", rxadd, ", TX: ", txadd)
 }
 
 func (tr *nrf204l01) UpdateStatus() {
@@ -176,3 +179,13 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 func (tr *nrf204l01) ResetStatus() {
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
+
+/*
+const (
+	R_REGISTER byte = 0x1F
+	W_REGISTER byte = 0x20
+)
+func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
+	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
+}
+*/
