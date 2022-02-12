@@ -3,6 +3,7 @@ package nrf204
 import (
 	"log"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
@@ -10,8 +11,8 @@ import (
 )
 
 const (
-	R_REGISTER      byte = 0x1F
-	W_REGISTER      byte = 0x20
+	// R_REGISTER      byte = 0x1F
+	// W_REGISTER      byte = 0x20
 	R_REGISTER_MASK byte = 0x0
 	W_REGISTER_MASK byte = 0x20
 )
@@ -40,18 +41,20 @@ const (
 	ADDRESS_RX_PW_P4    byte = 0x15
 	ADDRESS_RX_PW_P5    byte = 0x16
 	ADDRESS_FIFO_STATUS byte = 0x17
+
+	ADDRESS_W_TX_PAYLOAD byte = 0xA0
 )
 
 const (
 	DEFAULT_CONFIG     byte = 0b00001000
 	DEFAULT_EN_AA      byte = 0b00111111
-	DEFAULT_EN_RXADDR  byte = 0b00000011
+	DEFAULT_EN_RXADDR  byte = 0b00000001
 	DEFAULT_SETUP_AW   byte = 0b00000011
 	DEFAULT_SETUP_RETR byte = 0b00000011
 	DEFAULT_RF_CH      byte = 0b01001100
 	DEFAULT_RF_SETUP   byte = 0b00001111
 	DEFAULT_STATUS     byte = 0b00001110
-	DEFAULT_RX_PW_P0   byte = 0b00000000
+	DEFAULT_RX_PW_P0   byte = constants.RADIO_PAYLOAD_SIZE
 	DEFAULT_RX_PW_P1   byte = 0b00000000
 	DEFAULT_RX_PW_P2   byte = 0b00000000
 	DEFAULT_RX_PW_P3   byte = 0b00000000
@@ -59,43 +62,43 @@ const (
 	DEFAULT_RX_PW_P5   byte = 0b00000000
 )
 
-const (
-	CLEAR_CONFIG      = 0x00
-	EN_CRC       byte = 0b00001000
-	CRCO         byte = 0b00000100
-)
+// const (
+// 	CLEAR_CONFIG      = 0x00
+// 	EN_CRC       byte = 0b00001000
+// 	CRCO         byte = 0b00000100
+// )
 
-const (
-	NRF_CONFIG   byte = 0x00
-	EN_AA        byte = 0x01
-	EN_RXADDR    byte = 0x02
-	SETUP_AW     byte = 0x03
-	SETUP_RETR   byte = 0x04
-	RF_CH        byte = 0x5
-	RF_SETUP     byte = 0x06
-	NRF_STATUS   byte = 0x07
-	RX_PW_P0     byte = 0x11
-	RX_ADDR_P0   byte = 0x0A
-	TX_ADDR      byte = 0x10
-	DYNPD        byte = 0x1C
-	FEATURE      byte = 0x1D
-	R_RX_PAYLOAD byte = 0x61
-	W_TX_PAYLOAD byte = 0xA0
-	FLUSH_TX     byte = 0xE1
-	FLUSH_RX     byte = 0xE2
-)
+// const (
+// 	NRF_CONFIG   byte = 0x00
+// 	EN_AA        byte = 0x01
+// 	EN_RXADDR    byte = 0x02
+// 	SETUP_AW     byte = 0x03
+// 	SETUP_RETR   byte = 0x04
+// 	RF_CH        byte = 0x5
+// 	RF_SETUP     byte = 0x06
+// 	NRF_STATUS   byte = 0x07
+// 	RX_PW_P0     byte = 0x11
+// 	RX_ADDR_P0   byte = 0x0A
+// 	TX_ADDR      byte = 0x10
+// 	DYNPD        byte = 0x1C
+// 	FEATURE      byte = 0x1D
+// 	R_RX_PAYLOAD byte = 0x61
+// 	W_TX_PAYLOAD byte = 0xA0
+// 	FLUSH_TX     byte = 0xE1
+// 	FLUSH_RX     byte = 0xE2
+// )
 
-const (
-	RF_POWER_MINUS_18dBm byte = iota // -18 dBm
-	RF_POWER_MINUS_12dBm             //-12 dBm
-	RF_POWER_MINUS_6dBm              // -6 dBm
-	RF_POWER_0dBm                    // 0 dBm
-)
+// const (
+// 	RF_POWER_MINUS_18dBm byte = iota // -18 dBm
+// 	RF_POWER_MINUS_12dBm             //-12 dBm
+// 	RF_POWER_MINUS_6dBm              // -6 dBm
+// 	RF_POWER_0dBm                    // 0 dBm
+// )
 
-const (
-	DATA_RATE_1MBPS byte = iota
-	DATA_RATE_2MBPS
-)
+// const (
+// 	DATA_RATE_1MBPS byte = iota
+// 	DATA_RATE_2MBPS
+// )
 
 const ADDRESS_SIZE int = 5
 
@@ -122,6 +125,7 @@ var registers map[byte]byte = map[byte]byte{
 	ADDRESS_SETUP_RETR: DEFAULT_SETUP_RETR,
 	ADDRESS_RF_CH:      DEFAULT_RF_CH,
 	ADDRESS_RF_SETUP:   DEFAULT_RF_SETUP,
+	ADDRESS_RX_PW_P0:   DEFAULT_RX_PW_P0,
 }
 
 func NewNRF204(
@@ -137,10 +141,11 @@ func NewNRF204(
 	)
 
 	radio := nrf204l01{
-		address:    []byte(rxTxAddress),
-		ce:         initPin(spiChipEnabledGPIO),
-		conn:       radioSPIConn,
-		powerDBm:   dbmStrToDBm(powerDb),
+		address:  []byte(rxTxAddress),
+		ce:       initPin(spiChipEnabledGPIO),
+		conn:     radioSPIConn,
+		powerDBm: 0,
+		// powerDBm:   dbmStrToDBm(powerDb),
 		isReceiver: true,
 	}
 	// radio.init()
@@ -206,20 +211,20 @@ func NewNRF204(
 // 	// radio.ce.Out(gpio.High)
 // }
 
-func dbmStrToDBm(dbm string) byte {
-	switch dbm {
-	case "-18dbm":
-		return RF_POWER_MINUS_18dBm
-	case "-12dbm":
-		return RF_POWER_MINUS_12dBm
-	case "-6dbm":
-		return RF_POWER_MINUS_6dBm
-	case "0dbm":
-		return RF_POWER_0dBm
-	default:
-		return RF_POWER_MINUS_18dBm
-	}
-}
+// func dbmStrToDBm(dbm string) byte {
+// 	switch dbm {
+// 	case "-18dbm":
+// 		return RF_POWER_MINUS_18dBm
+// 	case "-12dbm":
+// 		return RF_POWER_MINUS_12dBm
+// 	case "-6dbm":
+// 		return RF_POWER_MINUS_6dBm
+// 	case "0dbm":
+// 		return RF_POWER_0dBm
+// 	default:
+// 		return RF_POWER_MINUS_18dBm
+// 	}
+// }
 
 // func (radio *nrf204l01) init() {
 // 	// radio.ce.Out(gpio.Low)

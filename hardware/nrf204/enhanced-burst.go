@@ -22,10 +22,10 @@ func NewNRF204EnhancedBurst(
 	)
 
 	tr := nrf204l01{
-		address:    []byte(rxTxAddress),
-		ce:         initPin(spiChipEnabledGPIO),
-		conn:       radioSPIConn,
-		powerDBm:   dbmStrToDBm(powerDb),
+		address: []byte(rxTxAddress),
+		ce:      initPin(spiChipEnabledGPIO),
+		conn:    radioSPIConn,
+		// powerDBm:   dbmStrToDBm(powerDb),
 		isReceiver: true,
 	}
 	tr.enhancedBurstInit()
@@ -55,11 +55,11 @@ func (tr *nrf204l01) ReceiverOn() {
 	tr.receiverOn(true)
 }
 
-func (tr *nrf204l01) PowerOn(on bool) {
+func (tr *nrf204l01) PowerOn() {
 	tr.setPower(true)
 }
 
-func (tr *nrf204l01) PowerOff(on bool) {
+func (tr *nrf204l01) PowerOff() {
 	tr.setPower(false)
 }
 
@@ -69,7 +69,7 @@ func (tr *nrf204l01) setPower(on bool) {
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
-	_, err := tr.ebWriteRegisterBytes(W_TX_PAYLOAD, payload[:])
+	_, err := tr.ebWriteRegisterBytes(ADDRESS_W_TX_PAYLOAD, payload[:])
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (tr *nrf204l01) ebWriteRegisterBytes(address byte, values []byte) ([]byte, 
 }
 
 func (tr *nrf204l01) ebSetRegisters() {
-	for address := ADDRESS_CONFIG; address <= ADDRESS_RF_SETUP; address++ {
+	for address, _ := range registers {
 		tr.ebApplyRegister(address)
 	}
 }
