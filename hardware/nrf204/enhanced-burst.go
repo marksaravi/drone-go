@@ -2,12 +2,15 @@ package nrf204
 
 import (
 	"log"
+	"time"
 
 	"periph.io/x/periph/conn/gpio"
 )
 
 func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ce.Out(gpio.Low)
+	tr.setPower(OFF)
+	time.Sleep(time.Millisecond)
 	tr.ebCommitConfigRegister(ADDRESS_CONFIG)
 	tr.ebCommitConfigRegister(ADDRESS_EN_AA)
 	tr.ebCommitConfigRegister(ADDRESS_EN_RXADDR)
@@ -16,9 +19,15 @@ func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ebCommitConfigRegister(ADDRESS_RF_CH)
 	tr.ebCommitConfigRegister(ADDRESS_RF_SETUP)
 	tr.setPayloadSize()
+	tr.setAddressWidth()
+	tr.setChannel()
+	tr.setCRCEncodingScheme()
+	tr.enableCRC()
 	tr.setTransmitterAddress()
 	tr.setReceiverAddress()
-	tr.setPALevel(tr.powerDBm)
+	// tr.setPALevel(tr.powerDBm)
+	tr.setPower(ON)
+	time.Sleep(time.Millisecond)
 }
 
 func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
