@@ -31,7 +31,6 @@ type radioLink interface {
 	ReceiverOn()
 	PowerOn()
 	PowerOff()
-	// ReceivePayload() (models.Payload, bool)
 }
 
 type radioDevice struct {
@@ -54,7 +53,7 @@ type radioReceiver struct {
 }
 
 type radioTransmitter struct {
-	transmitChannel   chan models.FlightCommands
+	TransmitChannel   chan models.FlightCommands
 	connectionChannel chan ConnectionState
 	radiolink         radioLink
 	connectionState   ConnectionState

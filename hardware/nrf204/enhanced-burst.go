@@ -1,6 +1,7 @@
 package nrf204
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -80,6 +81,7 @@ func (tr *nrf204l01) setPower(on bool) {
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
+	fmt.Println(payload)
 	if tr.TransmitFailed(false) {
 		writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	}

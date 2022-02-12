@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/models"
 )
 
 func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
@@ -23,4 +25,25 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	)
 	transmitter := radio.NewTransmitter(radioNRF204)
 	go transmitter.StartTransmitter(ctx, wg)
+
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		ts := time.Now()
+		var throttle uint16 = 0
+		for {
+			select {
+			case <-ctx.Done():
+				close(transmitter.TransmitChannel)
+				return
+			default:
+				if time.Since(ts) >= time.Second {
+					ts = time.Now()
+					transmitter.TransmitChannel <- models.FlightCommands{Throttle: throttle}
+					throttle++
+				}
+			}
+		}
+	}(ctx, wg)
 }

@@ -11,7 +11,7 @@ import (
 
 func NewTransmitter(radiolink radioLink) *radioTransmitter {
 	return &radioTransmitter{
-		transmitChannel:   make(chan models.FlightCommands),
+		TransmitChannel:   make(chan models.FlightCommands),
 		connectionChannel: make(chan ConnectionState),
 		radiolink:         radiolink,
 		connectionState:   IDLE,
@@ -36,7 +36,7 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 					running = false
 				}
 
-			case flightCommands := <-r.transmitChannel:
+			case flightCommands := <-r.TransmitChannel:
 				payload := utils.SerializeFlightCommand(flightCommands)
 				r.radiolink.Transmit(payload)
 			default:
