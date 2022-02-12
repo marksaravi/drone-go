@@ -157,6 +157,29 @@ func NewNRF204(
 	return &radio
 }
 
+func NewNRF204EnhancedBurst(
+	spiBusNum int,
+	spiChipSelect int,
+	spiChipEnabledGPIO string,
+	rxTxAddress string,
+	powerDb string,
+) *nrf204l01 {
+	radioSPIConn := hardware.NewSPIConnection(
+		spiBusNum,
+		spiChipSelect,
+	)
+
+	radio := nrf204l01{
+		address:    []byte(rxTxAddress),
+		ce:         initPin(spiChipEnabledGPIO),
+		conn:       radioSPIConn,
+		powerDBm:   dbmStrToDBm(powerDb),
+		isReceiver: true,
+	}
+	radio.enhancedBurstInit()
+	radio.enhancedBurstReadConfigRegisters()
+	return &radio
+}
 func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
 	if !radio.isReceiver {
 		radio.receiverOn()

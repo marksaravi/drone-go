@@ -15,7 +15,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println(configs)
 	radioConfigs := configs.Radio
 
-	radioNRF204 := nrf204.NewNRF204(
+	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,

@@ -2,7 +2,7 @@ package nrf204
 
 import "log"
 
-func (tr *nrf204l01) EnhancedBurstInit() {
+func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ebCommitConfigRegister(ADDRESS_CONFIG)
 	tr.ebCommitConfigRegister(ADDRESS_EN_AA)
 	tr.ebCommitConfigRegister(ADDRESS_EN_RXADDR)
@@ -12,7 +12,7 @@ func (tr *nrf204l01) EnhancedBurstInit() {
 	tr.ebCommitConfigRegister(ADDRESS_RF_SETUP)
 }
 
-func (tr *nrf204l01) EnhancedBurstReadConfigRegisters() {
+func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 	config, _ := tr.ebReadConfigRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.ebReadConfigRegister(ADDRESS_EN_AA)
 	enrxaddr, _ := tr.ebReadConfigRegister(ADDRESS_EN_RXADDR)
