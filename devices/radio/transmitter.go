@@ -41,6 +41,7 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				if r.radiolink.TransmitFailed(true) {
 					fmt.Println("Transmit failed")
 					r.radiolink.ResetStatus()
+					r.radiolink.UpdateStatus()
 				}
 				payload := utils.SerializeFlightCommand(flightCommands)
 				r.radiolink.Transmit(payload)
