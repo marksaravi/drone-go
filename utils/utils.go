@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 )
 
-func WaitToAbortByENTER(cancel context.CancelFunc) {
+func WaitToAbortByENTER(cancel context.CancelFunc, wg *sync.WaitGroup) {
+	wg.Add(1)
 	log.Println("Press ENTER to abort")
 	go func(cancel context.CancelFunc) {
 		defer log.Println("Aborting by user ENTER")
+		defer wg.Done()
 		fmt.Scanln()
 		cancel()
 	}(cancel)

@@ -8,17 +8,16 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
-func NewTransmitter(radiolink radioLink) *radioDevice {
-	return &radioDevice{
+func NewTransmitter(radiolink radioLink) *radioTransmitter {
+	return &radioTransmitter{
 		transmitter:     make(chan models.FlightCommands),
-		receiver:        make(chan models.FlightCommands),
 		connection:      make(chan ConnectionState),
 		radiolink:       radiolink,
 		connectionState: IDLE,
 	}
 }
 
-func (r *radioDevice) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
+func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Transmitter...")
 	r.radiolink.SetTransmitterAddress()

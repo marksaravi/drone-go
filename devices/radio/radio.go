@@ -44,6 +44,13 @@ type radioDevice struct {
 	lock                  sync.Mutex
 }
 
+type radioTransmitter struct {
+	transmitter     chan models.FlightCommands
+	connection      chan ConnectionState
+	radiolink       radioLink
+	connectionState ConnectionState
+}
+
 func NewRadio(radiolink radioLink, heartBeatTimeoutMs int) *radioDevice {
 	heartBeatTimeout := time.Duration(heartBeatTimeoutMs * int(time.Millisecond))
 	hearBeatInit := time.Now().Add(-heartBeatTimeout * 2)

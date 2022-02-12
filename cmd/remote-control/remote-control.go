@@ -103,6 +103,6 @@ func main() {
 
 	radioDev.Start(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
-	utils.WaitToAbortByENTER(cancel)
+	utils.WaitToAbortByENTER(cancel, &waitGroup)
 	waitGroup.Wait()
 }

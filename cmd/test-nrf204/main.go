@@ -65,6 +65,6 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	go process(ctx, &wg, nrf204dev)
-	utils.WaitToAbortByENTER(cancel)
+	utils.WaitToAbortByENTER(cancel, &wg)
 	wg.Wait()
 }
