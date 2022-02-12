@@ -21,6 +21,7 @@ func NewTransmitter(radiolink radioLink) *radioTransmitter {
 func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Transmitter...")
+	r.radiolink.SetTransmitter(true)
 
 	go func() {
 		defer wg.Done()

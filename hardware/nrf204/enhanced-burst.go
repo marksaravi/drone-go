@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
 )
 
@@ -20,25 +21,61 @@ func NewNRF204EnhancedBurst(
 		spiChipSelect,
 	)
 
-	radio := nrf204l01{
+	tr := nrf204l01{
 		address:    []byte(rxTxAddress),
 		ce:         initPin(spiChipEnabledGPIO),
 		conn:       radioSPIConn,
 		powerDBm:   dbmStrToDBm(powerDb),
 		isReceiver: true,
 	}
-	radio.enhancedBurstInit()
-	radio.enhancedBurstReadConfigRegisters()
-	return &radio
+	tr.enhancedBurstInit()
+	tr.enhancedBurstReadConfigRegisters()
+	return &tr
 }
+
+func bitEnable(value byte, bit byte, enable bool) byte {
+	var mask byte = 0b00000001
+	mask = mask << bit
+	if enable {
+		return value | mask
+	}
+	return value & ^mask
+
+}
+
+func (tr *nrf204l01) SetTransmitter(on bool) {
+	registers[ADDRESS_CONFIG] = bitEnable(registers[ADDRESS_CONFIG], 0, on)
+	tr.ebApplyRegister(ADDRESS_CONFIG)
+}
+
+func (tr *nrf204l01) setPower(on bool) {
+	registers[ADDRESS_CONFIG] = bitEnable(registers[ADDRESS_CONFIG], 1, on)
+	tr.ebApplyRegister(ADDRESS_CONFIG)
+}
+
+func (tr *nrf204l01) Transmit(payload models.Payload) error {
+	_, err := tr.ebWriteRegisterBytes(W_TX_PAYLOAD, payload[:])
+	if err != nil {
+		return err
+	}
+	err = tr.ce.Out(gpio.High)
+	if err != nil {
+		return err
+	}
+	ts := time.Now()
+	for time.Since(ts) < 5*time.Microsecond {
+	}
+	tr.ce.Out(gpio.Low)
+	return err
+}
+
 func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ce.Out(gpio.Low)
-	tr.setPower(OFF)
+	tr.setPower(false)
 	time.Sleep(time.Millisecond)
 	tr.ebSetRegisters()
-	tr.setTransmitterAddress()
-	tr.setReceiverAddress()
-	tr.setPower(ON)
+	tr.setRxTxAddress()
+	tr.setPower(true)
 	time.Sleep(time.Millisecond)
 }
 
@@ -59,23 +96,23 @@ func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
 	return readSPI(address|R_REGISTER_MASK, 1, tr.conn)
 }
 
-func (tr *nrf204l01) ebSetRegisters() {
+func (tr *nrf204l01) ebApplyRegister(address byte) {
+	writeSPI(address|W_REGISTER_MASK, []byte{registers[address]}, tr.conn)
+}
 
+func (tr *nrf204l01) ebWriteRegisterBytes(address byte, values []byte) ([]byte, error) {
+	return writeSPI(address|W_REGISTER_MASK, values, tr.conn)
+}
+
+func (tr *nrf204l01) ebSetRegisters() {
 	for address := ADDRESS_CONFIG; address <= ADDRESS_RF_SETUP; address++ {
-		writeSPI(address|W_REGISTER_MASK, []byte{configRegisters[address]}, tr.conn)
+		tr.ebApplyRegister(address)
 	}
 }
 
-func (radio *nrf204l01) setTransmitterAddress() {
-	radio.writeRegister(ADDRESS_TX_ADDR, radio.address)
-}
-
-func (radio *nrf204l01) setReceiverAddress() {
-	radio.writeRegister(ADDRESS_RX_ADDR_P0, radio.address)
-}
-
-func (tr *nrf204l01) ebCommitConfigRegister(address byte) {
-	writeSPI(address|W_REGISTER_MASK, []byte{configRegisters[address]}, tr.conn)
+func (tr *nrf204l01) setRxTxAddress() {
+	tr.ebWriteRegisterBytes(ADDRESS_RX_ADDR_P0, tr.address)
+	tr.ebWriteRegisterBytes(ADDRESS_TX_ADDR, tr.address)
 }
 
 func (tr *nrf204l01) ebReadRxPayload() {

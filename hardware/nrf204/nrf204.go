@@ -2,10 +2,8 @@ package nrf204
 
 import (
 	"log"
-	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/conn/spi"
@@ -59,11 +57,6 @@ const (
 	DEFAULT_RX_PW_P3   byte = 0b00000000
 	DEFAULT_RX_PW_P4   byte = 0b00000000
 	DEFAULT_RX_PW_P5   byte = 0b00000000
-)
-
-const (
-	ON  bool = true
-	OFF bool = false
 )
 
 const (
@@ -121,7 +114,7 @@ type nrf204l01 struct {
 	isReceiver bool
 }
 
-var configRegisters map[byte]byte = map[byte]byte{
+var registers map[byte]byte = map[byte]byte{
 	ADDRESS_CONFIG:     DEFAULT_CONFIG,
 	ADDRESS_EN_AA:      DEFAULT_EN_AA,
 	ADDRESS_EN_RXADDR:  DEFAULT_EN_RXADDR,
@@ -268,22 +261,6 @@ func (radio *nrf204l01) init() {
 // 	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
 // }
 
-func (radio *nrf204l01) Transmit(payload models.Payload) error {
-	_, err := radio.writeRegister(W_TX_PAYLOAD, payload[:])
-	if err != nil {
-		return err
-	}
-	err = radio.ce.Out(gpio.High)
-	if err != nil {
-		return err
-	}
-	ts := time.Now()
-	for time.Since(ts) < 5*time.Microsecond {
-	}
-	radio.ce.Out(gpio.Low)
-	return err
-}
-
 // func (radio *nrf204l01) setAddress() {
 // 	radio.writeRegister(RX_ADDR_P0, []byte{0, 0, 0, 0, 0})
 // 	radio.writeRegister(TX_ADDR, []byte{0, 0, 0, 0, 0})
@@ -297,19 +274,19 @@ func (radio *nrf204l01) Transmit(payload models.Payload) error {
 // 	radio.writeRegisterByte(RF_SETUP, setup)
 // }
 
-func (radio *nrf204l01) isDataAvailable() bool {
-	// get implied RX FIFO empty flag from status byte
-	status := radio.getStatus()
-	// fmt.Println("Status: ", status)
-	pipe := (status >> 1) & 0x07
-	dr := status & 0b01000000
-	return pipe <= 5 && dr == 64
-}
+// func (radio *nrf204l01) isDataAvailable() bool {
+// 	// get implied RX FIFO empty flag from status byte
+// 	status := radio.getStatus()
+// 	// fmt.Println("Status: ", status)
+// 	pipe := (status >> 1) & 0x07
+// 	dr := status & 0b01000000
+// 	return pipe <= 5 && dr == 64
+// }
 
-func (radio *nrf204l01) getStatus() byte {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	return status
-}
+// func (radio *nrf204l01) getStatus() byte {
+// 	status, _ := radio.readRegisterByte(NRF_STATUS)
+// 	return status
+// }
 
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
@@ -325,22 +302,22 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
-	config, _ := radio.readRegisterByte(NRF_CONFIG)
-	if on {
-		radio.writeRegisterByte(NRF_CONFIG, config|bitmask)
-	} else {
-		radio.writeRegisterByte(NRF_CONFIG, config&(^bitmask))
-	}
-}
+// func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
+// 	config, _ := radio.readRegisterByte(NRF_CONFIG)
+// 	if on {
+// 		radio.writeRegisterByte(NRF_CONFIG, config|bitmask)
+// 	} else {
+// 		radio.writeRegisterByte(NRF_CONFIG, config&(^bitmask))
+// 	}
+// }
 
-func (radio *nrf204l01) setPower(isOn bool) {
-	radio.configOnOff(isOn, 0b00000010)
-}
+// func (radio *nrf204l01) setPower(isOn bool) {
+// 	radio.configOnOff(isOn, 0b00000010)
+// }
 
-func (radio *nrf204l01) setRx(isOn bool) {
-	radio.configOnOff(isOn, 0b00000001)
-}
+// func (radio *nrf204l01) setRx(isOn bool) {
+// 	radio.configOnOff(isOn, 0b00000001)
+// }
 
 // func (radio *nrf204l01) setCRCEncodingScheme() {
 // 	radio.configOnOff(ON, 0b00000100)
@@ -350,15 +327,15 @@ func (radio *nrf204l01) setRx(isOn bool) {
 // 	radio.configOnOff(ON, 0b00001000)
 // }
 
-func (radio *nrf204l01) clearStatus() {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	radio.writeRegisterByte(NRF_STATUS, status|0b01110000)
-}
+// func (radio *nrf204l01) clearStatus() {
+// 	status, _ := radio.readRegisterByte(NRF_STATUS)
+// 	radio.writeRegisterByte(NRF_STATUS, status|0b01110000)
+// }
 
-func (radio *nrf204l01) resetDR() {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	radio.writeRegisterByte(NRF_STATUS, status|0b01000000)
-}
+// func (radio *nrf204l01) resetDR() {
+// 	status, _ := radio.readRegisterByte(NRF_STATUS)
+// 	radio.writeRegisterByte(NRF_STATUS, status|0b01000000)
+// }
 
 func readSPI(address byte, datalen int, conn spi.Conn) ([]byte, error) {
 	w := make([]byte, datalen+1)
@@ -368,18 +345,18 @@ func readSPI(address byte, datalen int, conn spi.Conn) ([]byte, error) {
 	return r[1:], err
 }
 
-func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
-	b, err := readSPI(address&R_REGISTER, 1, radio.conn)
-	return b[0], err
-}
+// func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
+// 	b, err := readSPI(address&R_REGISTER, 1, radio.conn)
+// 	return b[0], err
+// }
 
-func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, data[:], radio.conn)
-}
+// func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
+// 	return writeSPI((address&R_REGISTER)|W_REGISTER, data[:], radio.conn)
+// }
 
-func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
-}
+// func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
+// 	return writeSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
+// }
 
 // func (radio *nrf204l01) setPayloadSize() {
 // 	var i byte
@@ -392,13 +369,13 @@ func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, erro
 // 	radio.writeRegisterByte(RF_CH, 76)
 // }
 
-func (radio *nrf204l01) flushRx() {
-	writeSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
-}
+// func (radio *nrf204l01) flushRx() {
+// 	writeSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
+// }
 
-func (radio *nrf204l01) flushTx() {
-	writeSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
-}
+// func (radio *nrf204l01) flushTx() {
+// 	writeSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
+// }
 
 func initPin(pinName string) gpio.PinIO {
 	pin := gpioreg.ByName(pinName)
