@@ -154,16 +154,16 @@ func (r *radioDevice) GetConnection() <-chan ConnectionState {
 	return r.connectionChannel
 }
 
-func (r *radioDevice) closeRadio() {
-	var receiverOffPayload models.Payload
-	receiverOffPayload[0] = RECEIVER_OFF
-	for i := 0; i < 5; i++ {
-		r.transmitPayload(receiverOffPayload)
-	}
-}
+// func (r *radioDevice) closeRadio() {
+// 	var receiverOffPayload models.Payload
+// 	receiverOffPayload[0] = RECEIVER_OFF
+// 	for i := 0; i < 5; i++ {
+// 		r.transmitPayload(receiverOffPayload)
+// 	}
+// }
 
-func (r *radioDevice) transmitPayload(payload models.Payload) {
-}
+// func (r *radioDevice) transmitPayload(payload models.Payload) {
+// }
 
 func (r *radioDevice) setConnectionState(commandType models.FlightCommandType) {
 	defer r.lock.Unlock()
@@ -189,12 +189,12 @@ func (r *radioDevice) setConnectionState(commandType models.FlightCommandType) {
 	}
 }
 
-func (r *radioDevice) clearBuffer() {
-	// for {
-	// 	_, available := r.radiolink.ReceivePayload()
-	// 	if !available {
-	// 		break
-	// 	}
-	// }
-	// log.Println("Radio buffer is cleared.")
-}
+// func (r *radioDevice) clearBuffer() {
+// 	// for {
+// 	// 	_, available := r.radiolink.ReceivePayload()
+// 	// 	if !available {
+// 	// 		break
+// 	// 	}
+// 	// }
+// 	// log.Println("Radio buffer is cleared.")
+// }
