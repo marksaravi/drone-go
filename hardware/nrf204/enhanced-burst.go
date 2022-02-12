@@ -54,7 +54,9 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 
 }
 func (tr *nrf204l01) receiverOn(on bool) {
+	fmt.Println("Receiver: ", on)
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
+	fmt.Println("CONFIG: ", tr.registers[ADDRESS_CONFIG])
 	tr.ebApplyRegister(ADDRESS_CONFIG)
 }
 
@@ -76,6 +78,7 @@ func (tr *nrf204l01) PowerOff() {
 }
 
 func (tr *nrf204l01) setPower(on bool) {
+	fmt.Println("Power: ", on)
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
 }
