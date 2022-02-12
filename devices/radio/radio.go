@@ -27,15 +27,14 @@ const (
 )
 
 type radioLink interface {
-	SetTransmitterAddress()
-	TransmitPayload(models.Payload) error
+	Transmit(models.Payload) error
 	ReceivePayload() (models.Payload, bool)
 }
 
 type radioDevice struct {
-	transmitter           chan models.FlightCommands
-	receiver              chan models.FlightCommands
-	connection            chan ConnectionState
+	transmitChannel       chan models.FlightCommands
+	receiveChannel        chan models.FlightCommands
+	connectionChannel     chan ConnectionState
 	radiolink             radioLink
 	connectionState       ConnectionState
 	lastSentHeartBeat     time.Time
@@ -44,20 +43,27 @@ type radioDevice struct {
 	lock                  sync.Mutex
 }
 
+type radioReceiver struct {
+	receiveChannel    chan models.FlightCommands
+	connectionChannel chan ConnectionState
+	radiolink         radioLink
+	connectionState   ConnectionState
+}
+
 type radioTransmitter struct {
-	transmitter     chan models.FlightCommands
-	connection      chan ConnectionState
-	radiolink       radioLink
-	connectionState ConnectionState
+	transmitChannel   chan models.FlightCommands
+	connectionChannel chan ConnectionState
+	radiolink         radioLink
+	connectionState   ConnectionState
 }
 
 func NewRadio(radiolink radioLink, heartBeatTimeoutMs int) *radioDevice {
 	heartBeatTimeout := time.Duration(heartBeatTimeoutMs * int(time.Millisecond))
 	hearBeatInit := time.Now().Add(-heartBeatTimeout * 2)
 	return &radioDevice{
-		transmitter:           make(chan models.FlightCommands),
-		receiver:              make(chan models.FlightCommands),
-		connection:            make(chan ConnectionState),
+		transmitChannel:       make(chan models.FlightCommands),
+		receiveChannel:        make(chan models.FlightCommands),
+		connectionChannel:     make(chan ConnectionState),
 		radiolink:             radiolink,
 		heartBeatTimeout:      heartBeatTimeout,
 		connectionState:       IDLE,
@@ -84,12 +90,12 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running {
 					r.closeRadio()
 					log.Println("Closing Receiver and Connection...")
-					close(r.receiver)
-					close(r.connection)
+					close(r.receiveChannel)
+					close(r.connectionChannel)
 					running = false
 				}
 
-			case flightCommands, ok := <-r.transmitter:
+			case flightCommands, ok := <-r.transmitChannel:
 				if ok {
 					r.transmitPayload(utils.SerializeFlightCommand(flightCommands))
 				}
@@ -99,7 +105,7 @@ func (r *radioDevice) Start(ctx context.Context, wg *sync.WaitGroup) {
 					payload, available := r.radiolink.ReceivePayload()
 					if available {
 						if payload[0] == COMMAND {
-							r.receiver <- utils.DeserializeFlightCommand(payload)
+							r.receiveChannel <- utils.DeserializeFlightCommand(payload)
 						}
 						r.setConnectionState(payload[0])
 					} else {
@@ -124,14 +130,14 @@ func (r *radioDevice) Transmit(data models.FlightCommands) {
 			}
 		}()
 		data.Type = COMMAND
-		r.transmitter <- data
+		r.transmitChannel <- data
 	}()
 }
 
 func (r *radioDevice) Close() {
 	log.Println("Closing Transmitter...")
 	go func() {
-		close(r.transmitter)
+		close(r.transmitChannel)
 	}()
 }
 
@@ -142,11 +148,11 @@ func (r *radioDevice) SuppressLostConnection() {
 }
 
 func (r *radioDevice) GetReceiver() <-chan models.FlightCommands {
-	return r.receiver
+	return r.receiveChannel
 }
 
 func (r *radioDevice) GetConnection() <-chan ConnectionState {
-	return r.connection
+	return r.connectionChannel
 }
 
 func (r *radioDevice) closeRadio() {
@@ -158,8 +164,6 @@ func (r *radioDevice) closeRadio() {
 }
 
 func (r *radioDevice) transmitPayload(payload models.Payload) {
-	r.lastSentHeartBeat = time.Now()
-	r.radiolink.TransmitPayload(payload)
 }
 
 func (r *radioDevice) setConnectionState(commandType models.FlightCommandType) {
@@ -182,7 +186,7 @@ func (r *radioDevice) setConnectionState(commandType models.FlightCommandType) {
 		r.connectionState = DISCONNECTED
 	}
 	if prevState != r.connectionState {
-		r.connection <- r.connectionState
+		r.connectionChannel <- r.connectionState
 	}
 }
 

@@ -15,6 +15,10 @@ func (tr *nrf204l01) enhancedBurstInit() {
 	tr.ebCommitConfigRegister(ADDRESS_SETUP_RETR)
 	tr.ebCommitConfigRegister(ADDRESS_RF_CH)
 	tr.ebCommitConfigRegister(ADDRESS_RF_SETUP)
+	tr.setPayloadSize()
+	tr.setTransmitterAddress()
+	tr.setReceiverAddress()
+	tr.setPALevel(tr.powerDBm)
 }
 
 func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {

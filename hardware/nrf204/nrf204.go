@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -197,23 +196,23 @@ func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
 	return payload, true
 }
 
-func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
-	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
-		return fmt.Errorf("payload size error %d", len(payload))
-	}
-	if radio.isReceiver {
-		radio.transmitterOn()
-	}
-	radio.ce.Out(gpio.Low)
-	_, err := radio.writeRegister(TX_ADDR, radio.address)
-	if err == nil {
-		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
-	}
-	radio.ce.Out(gpio.High)
-	time.Sleep(time.Millisecond)
-	radio.receiverOn()
-	return err
-}
+// func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
+// 	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
+// 		return fmt.Errorf("payload size error %d", len(payload))
+// 	}
+// 	if radio.isReceiver {
+// 		radio.transmitterOn()
+// 	}
+// 	radio.ce.Out(gpio.Low)
+// 	_, err := radio.writeRegister(TX_ADDR, radio.address)
+// 	if err == nil {
+// 		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
+// 	}
+// 	radio.ce.Out(gpio.High)
+// 	time.Sleep(time.Millisecond)
+// 	radio.receiverOn()
+// 	return err
+// }
 
 func (radio *nrf204l01) transmitterOn() {
 	radio.isReceiver = false
@@ -293,8 +292,28 @@ func (radio *nrf204l01) setDataRate(dataRate byte) {
 	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
 }
 
-func (radio *nrf204l01) SetTransmitterAddress() {
+func (radio *nrf204l01) setTransmitterAddress() {
 	radio.writeRegister(TX_ADDR, radio.address)
+}
+
+func (radio *nrf204l01) setReceiverAddress() {
+	radio.writeRegister(RX_ADDR_P0, radio.address)
+}
+
+func (radio *nrf204l01) Transmit(payload models.Payload) error {
+	_, err := radio.writeRegister(W_TX_PAYLOAD, payload[:])
+	if err != nil {
+		return err
+	}
+	err = radio.ce.Out(gpio.High)
+	if err != nil {
+		return err
+	}
+	ts := time.Now()
+	for time.Since(ts) < 5*time.Microsecond {
+	}
+	radio.ce.Out(gpio.Low)
+	return err
 }
 
 func (radio *nrf204l01) setAddress() {
@@ -387,7 +406,7 @@ func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
 }
 
 func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
+	return writeSPI((address&R_REGISTER)|W_REGISTER, data[:], radio.conn)
 }
 
 func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
