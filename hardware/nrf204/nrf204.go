@@ -221,22 +221,22 @@ func dbmStrToDBm(dbm string) byte {
 	}
 }
 
-func (radio *nrf204l01) init() {
-	// radio.ce.Out(gpio.Low)
-	// radio.setPower(OFF)
-	// radio.setRetries(5, 15)
-	// radio.setPALevel(radio.powerDBm)
-	// radio.setDataRate(DATA_RATE_1MBPS)
-	// // disabling auto acknowlegment
-	// radio.writeRegisterByte(EN_AA, 0)
-	// radio.writeRegisterByte(EN_RXADDR, 3)
-	// radio.setPayloadSize()
-	// radio.setAddressWidth()
-	// radio.setChannel()
-	// radio.setCRCEncodingScheme()
-	// radio.enableCRC()
-	// radio.setAddress()
-}
+// func (radio *nrf204l01) init() {
+// 	// radio.ce.Out(gpio.Low)
+// 	// radio.setPower(OFF)
+// 	// radio.setRetries(5, 15)
+// 	// radio.setPALevel(radio.powerDBm)
+// 	// radio.setDataRate(DATA_RATE_1MBPS)
+// 	// // disabling auto acknowlegment
+// 	// radio.writeRegisterByte(EN_AA, 0)
+// 	// radio.writeRegisterByte(EN_RXADDR, 3)
+// 	// radio.setPayloadSize()
+// 	// radio.setAddressWidth()
+// 	// radio.setChannel()
+// 	// radio.setCRCEncodingScheme()
+// 	// radio.enableCRC()
+// 	// radio.setAddress()
+// }
 
 // func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
 // 	nr := numRetransmit

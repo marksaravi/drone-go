@@ -42,10 +42,25 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 	return value & ^mask
 
 }
-
-func (tr *nrf204l01) SetTransmitter(on bool) {
+func (tr *nrf204l01) receiverOn(on bool) {
 	registers[ADDRESS_CONFIG] = bitEnable(registers[ADDRESS_CONFIG], 0, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
+}
+
+func (tr *nrf204l01) TransmitterOn() {
+	tr.receiverOn(false)
+}
+
+func (tr *nrf204l01) ReceiverOn() {
+	tr.receiverOn(true)
+}
+
+func (tr *nrf204l01) PowerOn(on bool) {
+	tr.setPower(true)
+}
+
+func (tr *nrf204l01) PowerOff(on bool) {
+	tr.setPower(false)
 }
 
 func (tr *nrf204l01) setPower(on bool) {
@@ -113,6 +128,11 @@ func (tr *nrf204l01) ebSetRegisters() {
 func (tr *nrf204l01) setRxTxAddress() {
 	tr.ebWriteRegisterBytes(ADDRESS_RX_ADDR_P0, tr.address)
 	tr.ebWriteRegisterBytes(ADDRESS_TX_ADDR, tr.address)
+}
+
+func (tr *nrf204l01) ebReadStatus() byte {
+	res, _ := writeSPI(0b11111111, []byte{0}, tr.conn)
+	return res[0]
 }
 
 func (tr *nrf204l01) ebReadRxPayload() {

@@ -27,7 +27,10 @@ const (
 
 type radioLink interface {
 	Transmit(models.Payload) error
-	SetTransmitter(on bool)
+	TransmitterOn()
+	ReceiverOn()
+	PowerOn()
+	PowerOff()
 	// ReceivePayload() (models.Payload, bool)
 }
 

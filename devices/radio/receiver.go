@@ -21,7 +21,10 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Receiver...")
 
+	r.radiolink.ReceiverOn()
+
 	go func() {
+		defer r.radiolink.PowerOff()
 		defer wg.Done()
 		defer log.Println("Receiver is stopped.")
 
