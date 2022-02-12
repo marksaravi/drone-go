@@ -1,8 +1,13 @@
 package nrf204
 
-import "log"
+import (
+	"log"
+
+	"periph.io/x/periph/conn/gpio"
+)
 
 func (tr *nrf204l01) enhancedBurstInit() {
+	tr.ce.Out(gpio.Low)
 	tr.ebCommitConfigRegister(ADDRESS_CONFIG)
 	tr.ebCommitConfigRegister(ADDRESS_EN_AA)
 	tr.ebCommitConfigRegister(ADDRESS_EN_RXADDR)

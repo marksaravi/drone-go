@@ -27,6 +27,7 @@ const (
 )
 
 type radioLink interface {
+	SetTransmitterAddress()
 	TransmitPayload(models.Payload) error
 	ReceivePayload() (models.Payload, bool)
 }

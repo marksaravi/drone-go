@@ -12,10 +12,10 @@ import (
 
 func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	configs := config.ReadConfigs().RemoteControl
-	log.Println(configs)
 	radioConfigs := configs.Radio
+	log.Println(radioConfigs)
 
-	radioNRF204 := nrf204.NewNRF204(
+	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,

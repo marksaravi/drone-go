@@ -293,6 +293,10 @@ func (radio *nrf204l01) setDataRate(dataRate byte) {
 	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
 }
 
+func (radio *nrf204l01) SetTransmitterAddress() {
+	radio.writeRegister(TX_ADDR, radio.address)
+}
+
 func (radio *nrf204l01) setAddress() {
 	radio.writeRegister(RX_ADDR_P0, []byte{0, 0, 0, 0, 0})
 	radio.writeRegister(TX_ADDR, []byte{0, 0, 0, 0, 0})
