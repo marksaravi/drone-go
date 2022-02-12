@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"sync"
 
@@ -12,10 +13,17 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.InitHost()
+	rxtxType := flag.String("t", "rx", "t")
+	flag.Parse()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	runTransmitter(ctx, &wg)
+	if *rxtxType == "rx" {
+		runReceiver(ctx, &wg)
+	} else {
+		runTransmitter(ctx, &wg)
+	}
+
 	utils.WaitToAbortByENTER(cancel)
 	wg.Wait()
 }

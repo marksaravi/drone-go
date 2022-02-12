@@ -10,7 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 )
 
-func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
+func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	configs := config.ReadConfigs().RemoteControl
 	log.Println(configs)
 	radioConfigs := configs.Radio
@@ -22,6 +22,6 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.RxTxAddress,
 		radioConfigs.PowerDBm,
 	)
-	transmitter := radio.NewTransmitter(radioNRF204)
-	go transmitter.StartTransmitter(ctx, wg)
+	receiver := radio.NewReceiver(radioNRF204)
+	go receiver.StartReceiver(ctx, wg)
 }

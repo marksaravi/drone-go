@@ -8,7 +8,7 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
-func NewTransmitter(radiolink radioLink) *radioDevice {
+func NewReceiver(radiolink radioLink) *radioDevice {
 	return &radioDevice{
 		transmitter:     make(chan models.FlightCommands),
 		receiver:        make(chan models.FlightCommands),
@@ -18,13 +18,13 @@ func NewTransmitter(radiolink radioLink) *radioDevice {
 	}
 }
 
-func (r *radioDevice) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
+func (r *radioDevice) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
-	log.Println("Starting the Transmitter...")
+	log.Println("Starting the Receiver...")
 
 	go func() {
 		defer wg.Done()
-		defer log.Println("Transmitter is stopped.")
+		defer log.Println("Receiver is stopped.")
 
 		var running bool = true
 		for running {
