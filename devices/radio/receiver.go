@@ -43,6 +43,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 					if r.radiolink.ReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						fmt.Println(payload)
+						r.radiolink.ReceiverOn()
 					}
 				}
 			}
