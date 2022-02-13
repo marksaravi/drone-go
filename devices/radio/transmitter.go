@@ -38,7 +38,7 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				}
 
 			case flightCommands := <-r.TransmitChannel:
-				if r.radiolink.TransmitFailed(true) {
+				if r.radiolink.IsTransmitFailed(true) {
 					fmt.Println("Transmit failed")
 					r.radiolink.ClearStatus()
 					r.radiolink.UpdateStatus()

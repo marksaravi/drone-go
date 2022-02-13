@@ -39,7 +39,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 			default:
 				if time.Since(ts) >= time.Second/40 {
 					ts = time.Now()
-					if r.radiolink.ReceiverDataReady(true) {
+					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						fmt.Println(payload)
 						r.radiolink.ReceiverOn()

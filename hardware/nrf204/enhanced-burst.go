@@ -122,7 +122,7 @@ func (tr *nrf204l01) init() {
 	tr.ceLow()
 	tr.setPower(false)
 	time.Sleep(time.Millisecond)
-	tr.ebSetRegisters()
+	tr.writeConfigRegisters()
 	tr.setRxTxAddress()
 	tr.setPower(true)
 	time.Sleep(time.Millisecond)
@@ -153,7 +153,7 @@ func (tr *nrf204l01) writeRegister(address byte) {
 	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
-func (tr *nrf204l01) ebSetRegisters() {
+func (tr *nrf204l01) writeConfigRegisters() {
 	for address := range tr.registers {
 		tr.writeRegister(address)
 	}
@@ -170,7 +170,7 @@ func (tr *nrf204l01) UpdateStatus() {
 	tr.status = res[0]
 }
 
-func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
+func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
 	if update {
 		tr.UpdateStatus()
 	}
@@ -178,7 +178,7 @@ func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
 	return tr.status&0b01000000 != 0
 }
 
-func (tr *nrf204l01) TransmitFailed(update bool) bool {
+func (tr *nrf204l01) IsTransmitFailed(update bool) bool {
 	if update {
 		tr.UpdateStatus()
 	}

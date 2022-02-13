@@ -28,13 +28,13 @@ const (
 type radioLink interface {
 	TransmitterOn()
 	Transmit(models.Payload) error
-	TransmitFailed(update bool) bool
+	IsTransmitFailed(update bool) bool
 	ReceiverOn()
 	Receive() (models.Payload, error)
 	PowerOn()
 	PowerOff()
 	UpdateStatus()
-	ReceiverDataReady(update bool) bool
+	IsReceiverDataReady(update bool) bool
 	ClearStatus()
 }
 
