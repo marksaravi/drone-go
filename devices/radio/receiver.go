@@ -31,14 +31,13 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		defer log.Println("Receiver is stopped.")
 
 		ts := time.Now()
-		// tm := ts
 		for {
 			select {
 			case <-ctx.Done():
 				return
 
 			default:
-				if time.Since(ts) >= time.Second/10 {
+				if time.Since(ts) >= time.Second/40 {
 					ts = time.Now()
 					if r.radiolink.ReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()

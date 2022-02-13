@@ -45,6 +45,7 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				}
 				payload := utils.SerializeFlightCommand(flightCommands)
 				r.radiolink.Transmit(payload)
+				fmt.Println(payload)
 			default:
 			}
 		}
