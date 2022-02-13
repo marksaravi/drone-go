@@ -69,10 +69,11 @@ flight-control:
     spi:
       bus-number: 1
       chip-select: 2
+  command-per-sec: &COMMAND_PER_SECOND 20
   power-breaker: 'GPIO17'
 
 remote-control:
-  command-per-sec: 40
+  command-per-sec: *COMMAND_PER_SECOND
   joysticks:
     roll:
       channel: 4

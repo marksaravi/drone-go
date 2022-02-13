@@ -78,9 +78,9 @@ type flightControl struct {
 		UpdatePerSecond        int         `yaml:"update-per-second"`
 	} `yaml:"esc"`
 
-	Radio radioConfig `yaml:"radio"`
-
-	PowerBreaker string `yaml:"power-breaker"`
+	Radio            radioConfig `yaml:"radio"`
+	CommandPerSecond int         `yaml:"command-per-sec"`
+	PowerBreaker     string      `yaml:"power-breaker"`
 }
 
 type joystick struct {
