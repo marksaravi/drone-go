@@ -23,7 +23,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	transmitter := radio.NewTransmitter(radioNRF204)
+	transmitter := radio.NewTransmitter(radioNRF204, radioConfigs.ConnectionTimeoutMs)
 	go transmitter.StartTransmitter(ctx, wg)
 
 	wg.Add(1)

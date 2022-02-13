@@ -65,7 +65,7 @@ flight-control:
   radio:
     rx-tx-address: &RX_TX_ADDRESS '03896'
     ce-gpio: 'GPIO26'
-    heart-beat-timeout-ms: 1000
+    connection-timeout-ms: &HEART_BEAT_TIMEOUT 250
     spi:
       bus-number: 1
       chip-select: 2
@@ -103,7 +103,7 @@ remote-control:
   radio:
     rx-tx-address: *RX_TX_ADDRESS
     ce-gpio: 'GPIO26'
-    heart-beat-timeout-ms: 1000
+    connection-timeout-ms: *HEART_BEAT_TIMEOUT
     spi:
       bus-number: 1
       chip-select: 2

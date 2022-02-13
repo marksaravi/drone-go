@@ -13,10 +13,10 @@ type spiConfig struct {
 }
 
 type radioConfig struct {
-	RxTxAddress        string    `yaml:"rx-tx-address"`
-	HeartBeatTimeoutMS int       `yaml:"heart-beat-timeout-ms"`
-	CE                 string    `yaml:"ce-gpio"`
-	SPI                spiConfig `yaml:"spi"`
+	RxTxAddress         string    `yaml:"rx-tx-address"`
+	ConnectionTimeoutMs int       `yaml:"connection-timeout-ms"`
+	CE                  string    `yaml:"ce-gpio"`
+	SPI                 spiConfig `yaml:"spi"`
 }
 
 type pidConfig struct {

@@ -5,28 +5,48 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
 
-func NewTransmitter(radiolink radioTransmitterLink) *radioTransmitter {
+type radioTransmitterLink interface {
+	radioLink
+	TransmitterOn()
+	Transmit(models.Payload) error
+	IsTransmitFailed(update bool) bool
+}
+
+type radioTransmitter struct {
+	radiolink       radioTransmitterLink
+	TransmitChannel chan models.FlightCommands
+
+	connectionChannel  chan ConnectionState
+	connectionState    ConnectionState
+	lastConnectionTime time.Time
+	connectionTimeout  time.Duration
+}
+
+func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *radioTransmitter {
 	return &radioTransmitter{
 		TransmitChannel:   make(chan models.FlightCommands),
 		connectionChannel: make(chan ConnectionState),
 		radiolink:         radiolink,
 		connectionState:   IDLE,
+		connectionTimeout: time.Millisecond * time.Duration(connectionTimeoutMs),
 	}
 }
 
-func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
+func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Transmitter...")
-	r.radiolink.TransmitterOn()
-	r.radiolink.PowerOn()
 
+	t.radiolink.TransmitterOn()
+	t.radiolink.PowerOn()
+	t.lastConnectionTime = time.Now()
 	go func() {
-		defer r.radiolink.PowerOff()
+		defer t.radiolink.PowerOff()
 		defer wg.Done()
 		defer log.Println("Transmitter is stopped.")
 
@@ -38,13 +58,13 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 					running = false
 				}
 
-			case flightCommands := <-r.TransmitChannel:
-				if r.radiolink.IsTransmitFailed(true) {
+			case flightCommands := <-t.TransmitChannel:
+				if t.radiolink.IsTransmitFailed(true) {
 					fmt.Println("Transmit failed")
-					r.radiolink.ClearStatus()
+					t.radiolink.ClearStatus()
 				}
 				payload := utils.SerializeFlightCommand(flightCommands)
-				r.radiolink.Transmit(payload)
+				t.radiolink.Transmit(payload)
 				fmt.Println(payload)
 			default:
 			}
