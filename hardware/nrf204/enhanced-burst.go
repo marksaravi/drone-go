@@ -55,12 +55,12 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 }
 func (tr *nrf204l01) receiverOn(on bool) {
 	tr.ClearStatus()
-	tr.ce.Out(gpio.Low)
-	fmt.Println("Receiver: ", on)
+	tr.ceLow()
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
-	fmt.Println("CONFIG: ", tr.registers[ADDRESS_CONFIG])
 	tr.ebApplyRegister(ADDRESS_CONFIG)
-	tr.ce.Out(gpio.High)
+	tr.PowerOn()
+	tr.ceHigh()
+	fmt.Println("Receiver: ", on)
 }
 
 func (tr *nrf204l01) TransmitterOn() {
@@ -69,6 +69,7 @@ func (tr *nrf204l01) TransmitterOn() {
 
 func (tr *nrf204l01) ReceiverOn() {
 	tr.receiverOn(true)
+	tr.enhancedBurstReadConfigRegisters()
 }
 
 func (tr *nrf204l01) PowerOn() {
@@ -79,10 +80,21 @@ func (tr *nrf204l01) PowerOff() {
 	tr.setPower(false)
 }
 
+func (tr *nrf204l01) ceHigh() {
+	tr.ce.Out(gpio.High)
+	fmt.Println("CE HIGH")
+}
+
+func (tr *nrf204l01) ceLow() {
+	tr.ce.Out(gpio.Low)
+	fmt.Println("CE LOW")
+}
+
 func (tr *nrf204l01) setPower(on bool) {
-	fmt.Println("Power: ", on)
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
+	time.Sleep(time.Millisecond)
+	fmt.Println("Power: ", on)
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
@@ -91,19 +103,16 @@ func (tr *nrf204l01) Transmit(payload models.Payload) error {
 	if err != nil {
 		return err
 	}
-	err = tr.ce.Out(gpio.High)
-	if err != nil {
-		return err
-	}
+	tr.ceHigh()
 	ts := time.Now()
 	for time.Since(ts) < 5*time.Microsecond {
 	}
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	return err
 }
 
 func (tr *nrf204l01) Receive() (models.Payload, error) {
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
 	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
 	if err != nil {
@@ -114,7 +123,7 @@ func (tr *nrf204l01) Receive() (models.Payload, error) {
 }
 
 func (tr *nrf204l01) enhancedBurstInit() {
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	tr.setPower(false)
 	time.Sleep(time.Millisecond)
 	tr.ebSetRegisters()
@@ -132,9 +141,11 @@ func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 	rfch, _ := tr.ebReadConfigRegister(ADDRESS_RF_CH)
 	rfsetup, _ := tr.ebReadConfigRegister(ADDRESS_RF_SETUP)
 	rxpw0, _ := tr.ebReadConfigRegister(ADDRESS_RX_PW_P0)
+	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
+	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
 	log.Printf(
-		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b\n	RX_PW0: %d",
-		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0)
+		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b\n	RX_PW0: %b\n	rx-add: %v\n	tx-add: %v",
+		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0, rxadd, txadd)
 }
 
 func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
@@ -142,7 +153,7 @@ func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
 }
 
 func (tr *nrf204l01) ebApplyRegister(address byte) {
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
@@ -153,7 +164,7 @@ func (tr *nrf204l01) ebSetRegisters() {
 }
 
 func (tr *nrf204l01) setRxTxAddress() {
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
@@ -185,7 +196,7 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 }
 
 func (tr *nrf204l01) ClearStatus() {
-	tr.ce.Out(gpio.Low)
+	tr.ceLow()
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
