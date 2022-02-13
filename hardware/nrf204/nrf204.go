@@ -37,6 +37,9 @@ const (
 
 	ADDRESS_W_TX_PAYLOAD byte = 0xA0
 	ADDRESS_R_RX_PAYLOAD byte = 0x61
+
+	ADDRESS_FLUSH_RX byte = 0xE1
+	ADDRESS_FLUSH_TX byte = 0xE2
 )
 
 const (

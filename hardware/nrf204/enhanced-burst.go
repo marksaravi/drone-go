@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -58,9 +57,10 @@ func (tr *nrf204l01) receiverOn(on bool) {
 	tr.ceLow()
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
+	tr.flushRx()
+	tr.flushTx()
 	tr.PowerOn()
 	tr.ceHigh()
-	fmt.Println("Receiver: ", on)
 }
 
 func (tr *nrf204l01) TransmitterOn() {
@@ -69,7 +69,6 @@ func (tr *nrf204l01) TransmitterOn() {
 
 func (tr *nrf204l01) ReceiverOn() {
 	tr.receiverOn(true)
-	tr.enhancedBurstReadConfigRegisters()
 }
 
 func (tr *nrf204l01) PowerOn() {
@@ -82,23 +81,19 @@ func (tr *nrf204l01) PowerOff() {
 
 func (tr *nrf204l01) ceHigh() {
 	tr.ce.Out(gpio.High)
-	fmt.Println("CE HIGH")
 }
 
 func (tr *nrf204l01) ceLow() {
 	tr.ce.Out(gpio.Low)
-	fmt.Println("CE LOW")
 }
 
 func (tr *nrf204l01) setPower(on bool) {
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
 	tr.ebApplyRegister(ADDRESS_CONFIG)
 	time.Sleep(time.Millisecond)
-	fmt.Println("Power: ", on)
 }
 
 func (tr *nrf204l01) Transmit(payload models.Payload) error {
-	fmt.Println(payload)
 	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	if err != nil {
 		return err
@@ -167,17 +162,11 @@ func (tr *nrf204l01) setRxTxAddress() {
 	tr.ceLow()
 	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
-	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
-	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
-	fmt.Println("RX: ", rxadd, ", TX: ", txadd)
 }
 
 func (tr *nrf204l01) UpdateStatus() {
 	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
 	tr.status = res[0]
-	if tr.status != 0 {
-		log.Println(tr.status)
-	}
 }
 
 func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
@@ -209,3 +198,10 @@ func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error)
 	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
 }
 */
+func (tr *nrf204l01) flushRx() {
+	writeSPI(ADDRESS_FLUSH_RX, []byte{0xFF}, tr.conn)
+}
+
+func (tr *nrf204l01) flushTx() {
+	writeSPI(ADDRESS_FLUSH_TX, []byte{0xFF}, tr.conn)
+}
