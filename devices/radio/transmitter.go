@@ -2,7 +2,6 @@ package radio
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -22,7 +21,7 @@ type radioTransmitter struct {
 	radiolink       radioTransmitterLink
 	TransmitChannel chan models.FlightCommands
 
-	connectionChannel  chan ConnectionState
+	ConnectionChannel  chan ConnectionState
 	connectionState    ConnectionState
 	lastConnectionTime time.Time
 	connectionTimeout  time.Duration
@@ -31,7 +30,7 @@ type radioTransmitter struct {
 func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *radioTransmitter {
 	return &radioTransmitter{
 		TransmitChannel:   make(chan models.FlightCommands),
-		connectionChannel: make(chan ConnectionState),
+		ConnectionChannel: make(chan ConnectionState),
 		radiolink:         radiolink,
 		connectionState:   IDLE,
 		connectionTimeout: time.Millisecond * time.Duration(connectionTimeoutMs),
@@ -50,24 +49,41 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 		defer wg.Done()
 		defer log.Println("Transmitter is stopped.")
 
-		var running bool = true
-		for running {
+		for {
 			select {
 			case <-ctx.Done():
-				if running {
-					running = false
-				}
+				close(t.ConnectionChannel)
+				return
 
 			case flightCommands := <-t.TransmitChannel:
 				if t.radiolink.IsTransmitFailed(true) {
-					fmt.Println("Transmit failed")
+					t.updateConnectionState(false)
 					t.radiolink.ClearStatus()
+				} else {
+					t.updateConnectionState(true)
 				}
 				payload := utils.SerializeFlightCommand(flightCommands)
 				t.radiolink.Transmit(payload)
-				fmt.Println(payload)
-			default:
 			}
 		}
 	}()
+}
+
+func (t *radioTransmitter) updateConnectionState(connected bool) {
+	prevState := t.connectionState
+	if connected {
+		t.connectionState = CONNECTED
+		t.lastConnectionTime = time.Now()
+	} else {
+		if t.connectionState == IDLE {
+			t.lastConnectionTime = time.Now()
+			return
+		}
+		if t.connectionState == CONNECTED && time.Since(t.lastConnectionTime) > t.connectionTimeout {
+			t.connectionState = DISCONNECTED
+		}
+	}
+	if prevState != t.connectionState {
+		t.ConnectionChannel <- t.connectionState
+	}
 }

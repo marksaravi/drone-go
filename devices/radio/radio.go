@@ -6,7 +6,6 @@ const (
 	IDLE ConnectionState = iota
 	DISCONNECTED
 	CONNECTED
-	CONNECTION_LOST
 )
 
 type radioLink interface {

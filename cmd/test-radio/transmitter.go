@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -32,11 +33,28 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 
 		ts := time.Now()
 		var throttle uint16 = 0
-		for {
+		var running bool = true
+		var connectionChannelOpen bool = true
+		for running || connectionChannelOpen {
 			select {
 			case <-ctx.Done():
-				close(transmitter.TransmitChannel)
-				return
+				if running {
+					close(transmitter.TransmitChannel)
+				}
+
+			case connectionState, ok := <-transmitter.ConnectionChannel:
+				connectionChannelOpen = ok
+				if connectionChannelOpen {
+					fmt.Println(connectionState)
+					switch connectionState {
+					case radio.CONNECTED:
+						fmt.Println("CONNECTED")
+					case radio.DISCONNECTED:
+						fmt.Println("DISCONNECTED")
+					case radio.IDLE:
+						fmt.Println("IDLE")
+					}
+				}
 			default:
 				if time.Since(ts) >= time.Second/time.Duration(configs.CommandPerSecond) {
 					ts = time.Now()
