@@ -65,6 +65,7 @@ func (tr *nrf204l01) TransmitterOn() {
 }
 
 func (tr *nrf204l01) ReceiverOn() {
+	tr.ClearStatus()
 	tr.receiverOn(true)
 	tr.ce.Out(gpio.High)
 }
@@ -101,8 +102,9 @@ func (tr *nrf204l01) Transmit(payload models.Payload) error {
 }
 
 func (tr *nrf204l01) Receive() (models.Payload, error) {
+	tr.ce.Out(gpio.Low)
 	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
-	data, err := readSPI(ADDRESS_W_TX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
+	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
 	if err != nil {
 		return payload, err
 	}
@@ -159,7 +161,6 @@ func (tr *nrf204l01) setRxTxAddress() {
 func (tr *nrf204l01) UpdateStatus() {
 	res, _ := writeSPI(0b11111111, []byte{0}, tr.conn)
 	tr.status = res[0]
-	fmt.Println("Status: ", tr.status)
 }
 
 func (tr *nrf204l01) ReceiverDataReady(update bool) bool {
@@ -177,7 +178,7 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 	return tr.status&0b00010000 != 0
 }
 
-func (tr *nrf204l01) ResetStatus() {
+func (tr *nrf204l01) ClearStatus() {
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 

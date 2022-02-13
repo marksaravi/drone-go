@@ -35,7 +35,7 @@ type radioLink interface {
 	PowerOff()
 	UpdateStatus()
 	ReceiverDataReady(update bool) bool
-	ResetStatus()
+	ClearStatus()
 }
 
 type radioDevice struct {
