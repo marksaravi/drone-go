@@ -63,8 +63,7 @@ flight-control:
       2: 8
       3: 12
   radio:
-    rx-tx-address: '03896'
-    power-dbm: '-12dbm'
+    rx-tx-address: &RX_TX_ADDRESS '03896'
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
@@ -101,8 +100,7 @@ remote-control:
     bottom-left: 'GPIO18'
     bottom-right: 'GPIO23'
   radio:
-    rx-tx-address: '03896'
-    power-dbm: '-12dbm'
+    rx-tx-address: *RX_TX_ADDRESS
     ce-gpio: 'GPIO26'
     heart-beat-timeout-ms: 1000
     spi:
