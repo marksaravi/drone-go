@@ -128,9 +128,10 @@ func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 	setupretr, _ := tr.ebReadConfigRegister(ADDRESS_SETUP_RETR)
 	rfch, _ := tr.ebReadConfigRegister(ADDRESS_RF_CH)
 	rfsetup, _ := tr.ebReadConfigRegister(ADDRESS_RF_SETUP)
+	rxpw0, _ := tr.ebReadConfigRegister(ADDRESS_RX_PW_P0)
 	log.Printf(
-		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b",
-		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup)
+		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b\n	RX_PW0: %d",
+		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0)
 }
 
 func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
