@@ -10,7 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
-func NewTransmitter(radiolink radioLink) *radioTransmitter {
+func NewTransmitter(radiolink radioTransmitterLink) *radioTransmitter {
 	return &radioTransmitter{
 		TransmitChannel:   make(chan models.FlightCommands),
 		connectionChannel: make(chan ConnectionState),
