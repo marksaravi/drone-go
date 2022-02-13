@@ -113,23 +113,26 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 
 }
 
-func (tr *nrf204l01) receiverOn(on bool) {
-	tr.ClearStatus()
+func (tr *nrf204l01) selectRadioMode(isRx bool) {
 	tr.ceLow()
-	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
+	tr.ClearStatus()
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
 	tr.writeRegister(ADDRESS_CONFIG)
 	tr.flushRx()
 	tr.flushTx()
 	tr.PowerOn()
+}
+
+func (tr *nrf204l01) Listen() {
 	tr.ceHigh()
 }
 
 func (tr *nrf204l01) TransmitterOn() {
-	tr.receiverOn(false)
+	tr.selectRadioMode(false)
 }
 
 func (tr *nrf204l01) ReceiverOn() {
-	tr.receiverOn(true)
+	tr.selectRadioMode(true)
 }
 
 func (tr *nrf204l01) PowerOn() {
@@ -175,6 +178,7 @@ func (tr *nrf204l01) Receive() (models.Payload, error) {
 		return payload, err
 	}
 	copy(payload[:], data)
+	tr.ClearStatus()
 	return payload, err
 }
 
@@ -225,14 +229,14 @@ func (tr *nrf204l01) setRxTxAddress() {
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 }
 
-func (tr *nrf204l01) UpdateStatus() {
+func (tr *nrf204l01) updateStatus() {
 	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
 	tr.status = res[0]
 }
 
 func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
 	if update {
-		tr.UpdateStatus()
+		tr.updateStatus()
 	}
 
 	return tr.status&0b01000000 != 0
@@ -240,13 +244,12 @@ func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
 
 func (tr *nrf204l01) IsTransmitFailed(update bool) bool {
 	if update {
-		tr.UpdateStatus()
+		tr.updateStatus()
 	}
 	return tr.status&0b00010000 != 0
 }
 
 func (tr *nrf204l01) ClearStatus() {
-	tr.ceLow()
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 

@@ -23,7 +23,6 @@ const (
 type radioLink interface {
 	PowerOn()
 	PowerOff()
-	UpdateStatus()
 	ClearStatus()
 }
 type radioTransmitterLink interface {
@@ -36,6 +35,7 @@ type radioTransmitterLink interface {
 type radioReceiverLink interface {
 	radioLink
 	ReceiverOn()
+	Listen()
 	Receive() (models.Payload, error)
 	IsReceiverDataReady(update bool) bool
 }

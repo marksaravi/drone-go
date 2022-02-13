@@ -24,7 +24,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("Starting the Receiver...")
 
 	r.radiolink.ReceiverOn()
-
+	r.radiolink.Listen()
 	go func() {
 		defer r.radiolink.PowerOff()
 		defer wg.Done()
@@ -42,7 +42,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						fmt.Println(payload)
-						r.radiolink.ReceiverOn()
+						r.radiolink.Listen()
 					}
 				}
 			}
