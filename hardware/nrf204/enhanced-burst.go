@@ -54,10 +54,13 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 
 }
 func (tr *nrf204l01) receiverOn(on bool) {
+	tr.ClearStatus()
+	tr.ce.Out(gpio.Low)
 	fmt.Println("Receiver: ", on)
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
 	fmt.Println("CONFIG: ", tr.registers[ADDRESS_CONFIG])
 	tr.ebApplyRegister(ADDRESS_CONFIG)
+	tr.ce.Out(gpio.High)
 }
 
 func (tr *nrf204l01) TransmitterOn() {
@@ -65,9 +68,7 @@ func (tr *nrf204l01) TransmitterOn() {
 }
 
 func (tr *nrf204l01) ReceiverOn() {
-	tr.ClearStatus()
 	tr.receiverOn(true)
-	tr.ce.Out(gpio.High)
 }
 
 func (tr *nrf204l01) PowerOn() {
@@ -141,6 +142,7 @@ func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
 }
 
 func (tr *nrf204l01) ebApplyRegister(address byte) {
+	tr.ce.Out(gpio.Low)
 	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
@@ -151,6 +153,7 @@ func (tr *nrf204l01) ebSetRegisters() {
 }
 
 func (tr *nrf204l01) setRxTxAddress() {
+	tr.ce.Out(gpio.Low)
 	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
@@ -182,6 +185,7 @@ func (tr *nrf204l01) TransmitFailed(update bool) bool {
 }
 
 func (tr *nrf204l01) ClearStatus() {
+	tr.ce.Out(gpio.Low)
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
