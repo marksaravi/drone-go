@@ -23,6 +23,7 @@ func (r *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 	wg.Add(1)
 	log.Println("Starting the Transmitter...")
 	r.radiolink.TransmitterOn()
+	r.radiolink.PowerOn()
 
 	go func() {
 		defer r.radiolink.PowerOff()

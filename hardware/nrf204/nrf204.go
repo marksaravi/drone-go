@@ -120,7 +120,6 @@ func (tr *nrf204l01) selectRadioMode(isRx bool) {
 	tr.writeRegister(ADDRESS_CONFIG)
 	tr.flushRx()
 	tr.flushTx()
-	tr.PowerOn()
 }
 
 func (tr *nrf204l01) Listen() {
@@ -183,13 +182,11 @@ func (tr *nrf204l01) Receive() (models.Payload, error) {
 }
 
 func (tr *nrf204l01) init() {
+	tr.PowerOff()
 	tr.ceLow()
-	tr.setPower(false)
 	time.Sleep(time.Millisecond)
 	tr.writeConfigRegisters()
 	tr.setRxTxAddress()
-	tr.setPower(true)
-	time.Sleep(time.Millisecond)
 }
 
 func (tr *nrf204l01) readConfigurations() {
