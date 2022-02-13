@@ -11,7 +11,7 @@ import (
 )
 
 func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
-	configs := config.ReadConfigs().RemoteControl
+	configs := config.ReadConfigs().FlightControl
 	radioConfigs := configs.Radio
 	log.Println(radioConfigs)
 
@@ -21,6 +21,6 @@ func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	receiver := radio.NewReceiver(radioNRF204)
+	receiver := radio.NewReceiver(radioNRF204, configs.CommandPerSecond)
 	go receiver.StartReceiver(ctx, wg)
 }

@@ -38,7 +38,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 				close(transmitter.TransmitChannel)
 				return
 			default:
-				if time.Since(ts) >= time.Second {
+				if time.Since(ts) >= time.Second/time.Duration(configs.CommandPerSecond) {
 					ts = time.Now()
 					transmitter.TransmitChannel <- models.FlightCommands{Throttle: throttle}
 					throttle++

@@ -1,6 +1,8 @@
 package radio
 
 import (
+	"time"
+
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -39,11 +41,13 @@ type radioReceiverLink interface {
 	Receive() (models.Payload, error)
 	IsReceiverDataReady(update bool) bool
 }
+
 type radioReceiver struct {
-	receiveChannel    chan models.FlightCommands
-	connectionChannel chan ConnectionState
-	radiolink         radioReceiverLink
-	connectionState   ConnectionState
+	receiveChannel      chan models.FlightCommands
+	connectionChannel   chan ConnectionState
+	radiolink           radioReceiverLink
+	connectionState     ConnectionState
+	statusCheckInterval time.Duration
 }
 
 type radioTransmitter struct {

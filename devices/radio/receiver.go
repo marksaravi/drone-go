@@ -10,12 +10,13 @@ import (
 	"github.com/marksaravi/drone-go/models"
 )
 
-func NewReceiver(radiolink radioReceiverLink) *radioReceiver {
+func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int) *radioReceiver {
 	return &radioReceiver{
-		receiveChannel:    make(chan models.FlightCommands),
-		connectionChannel: make(chan ConnectionState),
-		radiolink:         radiolink,
-		connectionState:   IDLE,
+		receiveChannel:      make(chan models.FlightCommands),
+		connectionChannel:   make(chan ConnectionState),
+		radiolink:           radiolink,
+		connectionState:     IDLE,
+		statusCheckInterval: time.Second / time.Duration(commandsPerSecond*2),
 	}
 }
 
@@ -38,7 +39,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 				return
 
 			default:
-				if time.Since(ts) >= time.Second/40 {
+				if time.Since(ts) >= r.statusCheckInterval {
 					ts = time.Now()
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
