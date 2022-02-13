@@ -38,8 +38,8 @@ func NewNRF204EnhancedBurst(
 		},
 		status: 0,
 	}
-	tr.enhancedBurstInit()
-	tr.enhancedBurstReadConfigRegisters()
+	tr.init()
+	tr.readConfigurations()
 	return &tr
 }
 
@@ -52,11 +52,12 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 	return value & ^mask
 
 }
+
 func (tr *nrf204l01) receiverOn(on bool) {
 	tr.ClearStatus()
 	tr.ceLow()
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, on)
-	tr.ebApplyRegister(ADDRESS_CONFIG)
+	tr.writeRegister(ADDRESS_CONFIG)
 	tr.flushRx()
 	tr.flushTx()
 	tr.PowerOn()
@@ -89,7 +90,7 @@ func (tr *nrf204l01) ceLow() {
 
 func (tr *nrf204l01) setPower(on bool) {
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
-	tr.ebApplyRegister(ADDRESS_CONFIG)
+	tr.writeRegister(ADDRESS_CONFIG)
 	time.Sleep(time.Millisecond)
 }
 
@@ -117,7 +118,7 @@ func (tr *nrf204l01) Receive() (models.Payload, error) {
 	return payload, err
 }
 
-func (tr *nrf204l01) enhancedBurstInit() {
+func (tr *nrf204l01) init() {
 	tr.ceLow()
 	tr.setPower(false)
 	time.Sleep(time.Millisecond)
@@ -127,15 +128,15 @@ func (tr *nrf204l01) enhancedBurstInit() {
 	time.Sleep(time.Millisecond)
 }
 
-func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
-	config, _ := tr.ebReadConfigRegister(ADDRESS_CONFIG)
-	enaa, _ := tr.ebReadConfigRegister(ADDRESS_EN_AA)
-	enrxaddr, _ := tr.ebReadConfigRegister(ADDRESS_EN_RXADDR)
-	setupaw, _ := tr.ebReadConfigRegister(ADDRESS_SETUP_AW)
-	setupretr, _ := tr.ebReadConfigRegister(ADDRESS_SETUP_RETR)
-	rfch, _ := tr.ebReadConfigRegister(ADDRESS_RF_CH)
-	rfsetup, _ := tr.ebReadConfigRegister(ADDRESS_RF_SETUP)
-	rxpw0, _ := tr.ebReadConfigRegister(ADDRESS_RX_PW_P0)
+func (tr *nrf204l01) readConfigurations() {
+	config, _ := tr.readRegister(ADDRESS_CONFIG)
+	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
+	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
+	setupaw, _ := tr.readRegister(ADDRESS_SETUP_AW)
+	setupretr, _ := tr.readRegister(ADDRESS_SETUP_RETR)
+	rfch, _ := tr.readRegister(ADDRESS_RF_CH)
+	rfsetup, _ := tr.readRegister(ADDRESS_RF_SETUP)
+	rxpw0, _ := tr.readRegister(ADDRESS_RX_PW_P0)
 	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
 	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
 	log.Printf(
@@ -143,18 +144,18 @@ func (tr *nrf204l01) enhancedBurstReadConfigRegisters() {
 		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0, rxadd, txadd)
 }
 
-func (tr *nrf204l01) ebReadConfigRegister(address byte) ([]byte, error) {
+func (tr *nrf204l01) readRegister(address byte) ([]byte, error) {
 	return readSPI(address, 1, tr.conn)
 }
 
-func (tr *nrf204l01) ebApplyRegister(address byte) {
+func (tr *nrf204l01) writeRegister(address byte) {
 	tr.ceLow()
 	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
 func (tr *nrf204l01) ebSetRegisters() {
 	for address := range tr.registers {
-		tr.ebApplyRegister(address)
+		tr.writeRegister(address)
 	}
 }
 
@@ -189,15 +190,6 @@ func (tr *nrf204l01) ClearStatus() {
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
-/*
-const (
-	R_REGISTER byte = 0x1F
-	W_REGISTER byte = 0x20
-)
-func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
-}
-*/
 func (tr *nrf204l01) flushRx() {
 	writeSPI(ADDRESS_FLUSH_RX, []byte{0xFF}, tr.conn)
 }
