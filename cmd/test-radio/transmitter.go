@@ -40,6 +40,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 			case <-ctx.Done():
 				if running {
 					transmitter.Close()
+					running = false
 				}
 
 			case connectionState, ok := <-transmitter.GetConnectionStateChannel():
@@ -48,10 +49,12 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 					fmt.Println(radio.StateToString(connectionState))
 				}
 			default:
-				if time.Since(ts) >= time.Second/time.Duration(configs.CommandPerSecond) {
-					ts = time.Now()
-					transmitter.Transmit(models.FlightCommands{Throttle: throttle})
-					throttle++
+				if running {
+					if time.Since(ts) >= time.Second/time.Duration(configs.CommandPerSecond) {
+						ts = time.Now()
+						transmitter.Transmit(models.FlightCommands{Throttle: throttle})
+						throttle++
+					}
 				}
 			}
 		}
