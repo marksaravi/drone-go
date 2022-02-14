@@ -20,7 +20,7 @@ type radioTransmitterLink interface {
 
 type radioTransmitter struct {
 	radiolink       radioTransmitterLink
-	TransmitChannel chan models.FlightCommands
+	transmitChannel chan models.FlightCommands
 
 	connectionChannel  chan models.ConnectionState
 	connectionState    models.ConnectionState
@@ -30,7 +30,7 @@ type radioTransmitter struct {
 
 func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *radioTransmitter {
 	return &radioTransmitter{
-		TransmitChannel:   make(chan models.FlightCommands),
+		transmitChannel:   make(chan models.FlightCommands),
 		connectionChannel: make(chan models.ConnectionState),
 		radiolink:         radiolink,
 		connectionState:   IDLE,
@@ -48,6 +48,7 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 	t.radiolink.Transmit(utils.SerializeFlightCommand(models.FlightCommands{
 		Type: constants.COMMAND_DUMMY,
 	}))
+
 	go func() {
 		defer t.radiolink.PowerOff()
 		defer wg.Done()
@@ -59,7 +60,7 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				close(t.connectionChannel)
 				return
 
-			case flightCommands := <-t.TransmitChannel:
+			case flightCommands := <-t.transmitChannel:
 				if t.radiolink.IsTransmitFailed(true) {
 					t.updateConnectionState(false)
 					t.radiolink.ClearStatus()
@@ -73,7 +74,7 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 }
 
 func (t *radioTransmitter) Close() {
-	close(t.TransmitChannel)
+	close(t.transmitChannel)
 }
 
 func (t *radioTransmitter) GetConnectionStateChannel() <-chan models.ConnectionState {
@@ -85,8 +86,8 @@ func (t *radioTransmitter) SuppressLostConnection() {
 	t.connectionChannel <- t.connectionState
 }
 
-func (t *radioTransmitter) Transmit(fc models.FlightCommands) {
-	t.radiolink.Transmit(utils.SerializeFlightCommand(fc))
+func (t *radioTransmitter) Transmit(flightCommands models.FlightCommands) {
+	t.transmitChannel <- flightCommands
 }
 
 func (t *radioTransmitter) updateConnectionState(connected bool) {
