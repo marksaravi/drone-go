@@ -33,7 +33,7 @@ func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *ra
 		transmitChannel:   make(chan models.FlightCommands),
 		connectionChannel: make(chan models.ConnectionState),
 		radiolink:         radiolink,
-		connectionState:   IDLE,
+		connectionState:   constants.IDLE,
 		connectionTimeout: time.Millisecond * time.Duration(connectionTimeoutMs),
 	}
 }
@@ -82,7 +82,7 @@ func (t *radioTransmitter) GetConnectionStateChannel() <-chan models.ConnectionS
 }
 
 func (t *radioTransmitter) SuppressLostConnection() {
-	t.connectionState = IDLE
+	t.connectionState = constants.IDLE
 }
 
 func (t *radioTransmitter) Transmit(flightCommands models.FlightCommands) {
@@ -106,16 +106,16 @@ func newConnectionState(
 	newState = prevState
 	lastConnection = lastConnected
 	if connected {
-		newState = CONNECTED
+		newState = constants.CONNECTED
 		lastConnection = time.Now()
 	} else {
-		if prevState == IDLE {
-			newState = WAITING_FOR_CONNECTION
-		} else if prevState == CONNECTED {
+		if prevState == constants.IDLE {
+			newState = constants.WAITING_FOR_CONNECTION
+		} else if prevState == constants.CONNECTED {
 			if time.Since(lastConnected) < timeout {
-				newState = CONNECTED
+				newState = constants.CONNECTED
 			} else {
-				newState = DISCONNECTED
+				newState = constants.DISCONNECTED
 			}
 		}
 	}

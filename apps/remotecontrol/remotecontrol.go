@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/devices/radio"
+	"github.com/marksaravi/drone-go/constants"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/models"
 )
@@ -23,9 +23,15 @@ type joystick interface {
 	Read() int
 }
 
+type radioTransmitter interface {
+	Transmit(models.FlightCommands)
+	GetConnectionStateChannel() <-chan models.ConnectionState
+	Close()
+	SuppressLostConnection()
+}
 type remoteControl struct {
 	commandPerSecond                int
-	radio                           models.RadioTransmitter
+	radio                           radioTransmitter
 	roll                            joystick
 	pitch                           joystick
 	yaw                             joystick
@@ -76,7 +82,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 }
 
 func NewRemoteControl(
-	radio models.RadioTransmitter,
+	radio radioTransmitter,
 	roll, pitch, yaw, throttle joystick,
 	btnFrontLeft, btnFrontRight button,
 	btnTopLeft, btnTopRight button,
@@ -144,15 +150,15 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 
 func (rc *remoteControl) setRadioConnectionState(connectionState models.ConnectionState) {
 	switch connectionState {
-	case radio.CONNECTED:
+	case constants.CONNECTED:
 		log.Println("Connected to Drone.")
 		rc.display.Println("Connected!", 3)
 		rc.buzzer.PlaySound(piezobuzzer.ConnectedSound)
-	case radio.WAITING_FOR_CONNECTION:
+	case constants.WAITING_FOR_CONNECTION:
 		log.Println("Waiting for connection.")
 		rc.display.Println("Waiting...", 3)
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
-	case radio.DISCONNECTED:
+	case constants.DISCONNECTED:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
 		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -34,7 +35,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 		receiveChannel:      make(chan models.FlightCommands),
 		connectionChannel:   make(chan models.ConnectionState),
 		radiolink:           radiolink,
-		connectionState:     WAITING_FOR_CONNECTION,
+		connectionState:     constants.WAITING_FOR_CONNECTION,
 		statusCheckInterval: time.Second / time.Duration(commandsPerSecond*2),
 		connectionTimeout:   time.Millisecond * time.Duration(connectionTimeoutMs),
 	}

@@ -44,13 +44,6 @@ type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
 type ConnectionState = int
 
-type RadioTransmitter interface {
-	Transmit(FlightCommands)
-	GetConnectionStateChannel() <-chan ConnectionState
-	Close()
-	SuppressLostConnection()
-}
-
 type Logger interface {
 	Send(ImuRotations)
 	Close()

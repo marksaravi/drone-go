@@ -1,12 +1,8 @@
 package radio
 
-import "github.com/marksaravi/drone-go/models"
-
-const (
-	IDLE models.ConnectionState = iota
-	WAITING_FOR_CONNECTION
-	DISCONNECTED
-	CONNECTED
+import (
+	"github.com/marksaravi/drone-go/constants"
+	"github.com/marksaravi/drone-go/models"
 )
 
 type radioLink interface {
@@ -16,10 +12,10 @@ type radioLink interface {
 }
 
 func StateToString(s models.ConnectionState) string {
-	if s == WAITING_FOR_CONNECTION {
+	if s == constants.WAITING_FOR_CONNECTION {
 		return "WAITING_FOR_CONNECTION"
 	}
-	if s == DISCONNECTED {
+	if s == constants.DISCONNECTED {
 		return "DISCONNECTED"
 	}
 	return "CONNECTED"

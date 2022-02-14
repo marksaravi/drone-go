@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -120,11 +119,11 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 func showConnectionState(connectionState models.ConnectionState) {
 	switch connectionState {
-	case radio.CONNECTED:
+	case constants.CONNECTED:
 		log.Println("Connected")
-	case radio.WAITING_FOR_CONNECTION:
+	case constants.WAITING_FOR_CONNECTION:
 		log.Println("Waiting for Connection")
-	case radio.DISCONNECTED:
+	case constants.DISCONNECTED:
 		log.Println("Disconnected")
 	}
 }
