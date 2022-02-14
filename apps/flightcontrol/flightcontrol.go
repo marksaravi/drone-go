@@ -21,6 +21,10 @@ type esc interface {
 	SetThrottles(models.Throttles)
 }
 
+type radioReceiver interface {
+	GetReceiverChannel() <-chan models.FlightCommands
+	GetConnectionStateChannel() <-chan models.ConnectionState
+}
 type pidControls interface {
 	SetPIDTargetState(state models.PIDState)
 	SetRotations(rotations models.ImuRotations)
@@ -39,7 +43,7 @@ type flightControl struct {
 	pid      pidControls
 	imu      imu
 	esc      esc
-	radio    models.Radio
+	radio    radioReceiver
 	logger   models.Logger
 	settings Settings
 }
@@ -48,7 +52,7 @@ func NewFlightControl(
 	pid pidControls,
 	imu imu,
 	esc esc,
-	radio models.Radio,
+	radio radioReceiver,
 	logger models.Logger,
 	settings Settings,
 ) *flightControl {
@@ -80,19 +84,18 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			select {
 			case <-ctx.Done():
 				if running {
-					fc.radio.Close()
 					fc.logger.Close()
 					running = false
 				}
 
-			case flightCommands, ok := <-fc.radio.GetReceiver():
+			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
 					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands, fc.settings))
 					// showFlightCommands(flightCommands)
 				}
 				commandChanOpen = ok
 
-			case connectionState, ok := <-fc.radio.GetConnection():
+			case connectionState, ok := <-fc.radio.GetConnectionStateChannel():
 				if ok {
 					showConnectionState(connectionState)
 				}
@@ -115,14 +118,14 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func showConnectionState(connectionState radio.ConnectionState) {
+func showConnectionState(connectionState models.ConnectionState) {
 	switch connectionState {
 	case radio.CONNECTED:
 		log.Println("Connected")
+	case radio.WAITING_FOR_CONNECTION:
+		log.Println("Waiting for Connection")
 	case radio.DISCONNECTED:
 		log.Println("Disconnected")
-	case radio.CONNECTION_LOST:
-		log.Println("Lost")
 	}
 }
 

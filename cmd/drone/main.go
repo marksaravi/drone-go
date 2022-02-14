@@ -30,15 +30,14 @@ func main() {
 
 	hardware.InitHost()
 
-	radioNRF204 := nrf204.NewNRF204(
+	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
-		radioConfigs.PowerDBm,
 	)
 
-	radioDev := radio.NewRadio(radioNRF204, radioConfigs.HeartBeatTimeoutMS)
+	radioDev := radio.NewReceiver(radioNRF204, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()
 	powerBreakerPin := configs.PowerBreaker
@@ -78,7 +77,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
-	radioDev.Start(ctx, &wg)
+	radioDev.StartReceiver(ctx, &wg)
 	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
