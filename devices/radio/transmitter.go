@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -44,6 +45,9 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 	t.radiolink.TransmitterOn()
 	t.radiolink.PowerOn()
 	t.lastConnectionTime = time.Now()
+	t.radiolink.Transmit(utils.SerializeFlightCommand(models.FlightCommands{
+		Type: constants.COMMAND_DUMMY,
+	}))
 	go func() {
 		defer t.radiolink.PowerOff()
 		defer wg.Done()
@@ -62,8 +66,7 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 				} else {
 					t.updateConnectionState(true)
 				}
-				payload := utils.SerializeFlightCommand(flightCommands)
-				t.radiolink.Transmit(payload)
+				t.radiolink.Transmit(utils.SerializeFlightCommand(flightCommands))
 			}
 		}
 	}()
@@ -71,19 +74,33 @@ func (t *radioTransmitter) StartTransmitter(ctx context.Context, wg *sync.WaitGr
 
 func (t *radioTransmitter) updateConnectionState(connected bool) {
 	prevState := t.connectionState
-	if connected {
-		t.connectionState = CONNECTED
-		t.lastConnectionTime = time.Now()
-	} else {
-		if t.connectionState == IDLE {
-			t.lastConnectionTime = time.Now()
-			return
-		}
-		if t.connectionState == CONNECTED && time.Since(t.lastConnectionTime) > t.connectionTimeout {
-			t.connectionState = DISCONNECTED
-		}
-	}
+	t.connectionState, t.lastConnectionTime = newConnectionState(connected, t.connectionState, t.lastConnectionTime, t.connectionTimeout)
 	if prevState != t.connectionState {
 		t.ConnectionChannel <- t.connectionState
 	}
+}
+
+func newConnectionState(
+	connected bool,
+	prevState ConnectionState,
+	lastConnected time.Time,
+	timeout time.Duration,
+) (newState ConnectionState, lastConnection time.Time) {
+	newState = prevState
+	lastConnection = lastConnected
+	if connected {
+		newState = CONNECTED
+		lastConnection = time.Now()
+	} else {
+		if prevState == IDLE {
+			newState = WAITING_FOR_CONNECTION
+		} else if prevState == CONNECTED {
+			if time.Since(lastConnected) < timeout {
+				newState = CONNECTED
+			} else {
+				newState = DISCONNECTED
+			}
+		}
+	}
+	return
 }

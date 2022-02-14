@@ -45,15 +45,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 			case connectionState, ok := <-transmitter.ConnectionChannel:
 				connectionChannelOpen = ok
 				if connectionChannelOpen {
-					fmt.Println(connectionState)
-					switch connectionState {
-					case radio.CONNECTED:
-						fmt.Println("CONNECTED")
-					case radio.DISCONNECTED:
-						fmt.Println("DISCONNECTED")
-					case radio.IDLE:
-						fmt.Println("IDLE")
-					}
+					fmt.Println(radio.StateToString(connectionState))
 				}
 			default:
 				if time.Since(ts) >= time.Second/time.Duration(configs.CommandPerSecond) {

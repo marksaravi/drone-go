@@ -34,7 +34,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 		receiveChannel:      make(chan models.FlightCommands),
 		connectionChannel:   make(chan ConnectionState),
 		radiolink:           radiolink,
-		connectionState:     IDLE,
+		connectionState:     WAITING_FOR_CONNECTION,
 		statusCheckInterval: time.Second / time.Duration(commandsPerSecond*2),
 		connectionTimeout:   time.Millisecond * time.Duration(connectionTimeoutMs),
 	}
