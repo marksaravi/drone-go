@@ -99,7 +99,6 @@ func NewNRF204EnhancedBurst(
 		status: 0,
 	}
 	tr.init()
-	tr.readConfigurations()
 	return &tr
 }
 
@@ -189,7 +188,7 @@ func (tr *nrf204l01) init() {
 	tr.setRxTxAddress()
 }
 
-func (tr *nrf204l01) readConfigurations() {
+func (tr *nrf204l01) printConfigurations() {
 	config, _ := tr.readRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
 	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
