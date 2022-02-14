@@ -42,7 +42,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 					close(transmitter.TransmitChannel)
 				}
 
-			case connectionState, ok := <-transmitter.ConnectionChannel:
+			case connectionState, ok := <-transmitter.GetConnectionStateChannel():
 				connectionChannelOpen = ok
 				if connectionChannelOpen {
 					fmt.Println(radio.StateToString(connectionState))

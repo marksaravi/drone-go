@@ -46,7 +46,7 @@ func main() {
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	radioDev := radio.NewTransmitter(radioNRF204)
+	radioDev := radio.NewTransmitter(radioNRF204, radioConfigs.ConnectionTimeoutMs)
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
 		joysticksConfigs.SPI.BusNumber,
 		joysticksConfigs.SPI.ChipSelect,
@@ -100,7 +100,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var waitGroup sync.WaitGroup
 
-	radioDev.Start(ctx, &waitGroup)
+	radioDev.StartTransmitter(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
 	utils.WaitToAbortByENTER(cancel, &waitGroup)
 	waitGroup.Wait()

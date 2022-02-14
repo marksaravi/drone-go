@@ -23,8 +23,8 @@ type radioReceiver struct {
 	receiveChannel      chan models.FlightCommands
 	statusCheckInterval time.Duration
 
-	connectionChannel  chan ConnectionState
-	connectionState    ConnectionState
+	connectionChannel  chan models.ConnectionState
+	connectionState    models.ConnectionState
 	lastConnectionTime time.Time
 	connectionTimeout  time.Duration
 }
@@ -32,7 +32,7 @@ type radioReceiver struct {
 func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionTimeoutMs int) *radioReceiver {
 	return &radioReceiver{
 		receiveChannel:      make(chan models.FlightCommands),
-		connectionChannel:   make(chan ConnectionState),
+		connectionChannel:   make(chan models.ConnectionState),
 		radiolink:           radiolink,
 		connectionState:     WAITING_FOR_CONNECTION,
 		statusCheckInterval: time.Second / time.Duration(commandsPerSecond*2),

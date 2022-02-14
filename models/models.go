@@ -42,10 +42,11 @@ type FlightCommands struct {
 
 type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
-type Radio interface {
+type ConnectionState = int
+
+type RadioTransmitter interface {
 	Transmit(FlightCommands)
-	GetReceiver() <-chan FlightCommands
-	GetConnection() <-chan int
+	GetConnectionStateChannel() <-chan ConnectionState
 	Close()
 	SuppressLostConnection()
 }
