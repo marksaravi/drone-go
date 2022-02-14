@@ -13,11 +13,10 @@ type spiConfig struct {
 }
 
 type radioConfig struct {
-	RxTxAddress        string    `yaml:"rx-tx-address"`
-	PowerDBm           string    `yaml:"power-dbm"`
-	HeartBeatTimeoutMS int       `yaml:"heart-beat-timeout-ms"`
-	CE                 string    `yaml:"ce-gpio"`
-	SPI                spiConfig `yaml:"spi"`
+	RxTxAddress         string    `yaml:"rx-tx-address"`
+	ConnectionTimeoutMs int       `yaml:"connection-timeout-ms"`
+	CE                  string    `yaml:"ce-gpio"`
+	SPI                 spiConfig `yaml:"spi"`
 }
 
 type pidConfig struct {
@@ -79,9 +78,9 @@ type flightControl struct {
 		UpdatePerSecond        int         `yaml:"update-per-second"`
 	} `yaml:"esc"`
 
-	Radio radioConfig `yaml:"radio"`
-
-	PowerBreaker string `yaml:"power-breaker"`
+	Radio            radioConfig `yaml:"radio"`
+	CommandPerSecond int         `yaml:"command-per-sec"`
+	PowerBreaker     string      `yaml:"power-breaker"`
 }
 
 type joystick struct {

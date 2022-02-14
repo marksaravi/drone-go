@@ -3,112 +3,63 @@ package radio
 import (
 	"testing"
 	"time"
+
+	"github.com/marksaravi/drone-go/constants"
 )
 
-func TestIdleToConnectByData(t *testing.T) {
-	r := NewRadio(nil, 500)
-	r.connectionState = DISCONNECTED
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(COMMAND)
-	if r.connectionState != CONNECTED {
-		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
+const testtimeout = time.Second / 2
+
+func TestConnectionStateConnected(t *testing.T) {
+	prevState := constants.DISCONNECTED
+	connected := true
+	lastConected := time.Now().Add(-time.Second)
+
+	state, lastConnection := newConnectionState(connected, prevState, lastConected, testtimeout)
+	if state != constants.CONNECTED || lastConnection == lastConected {
+		t.Fatalf("wanted CONNECTED, have %s\n", StateToString(state))
 	}
 }
 
-func TestDisconneToConnectByData(t *testing.T) {
-	r := NewRadio(nil, 500)
-	r.connectionState = DISCONNECTED
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(COMMAND)
-	if r.connectionState != CONNECTED {
-		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
+func TestConnectionStateIdleAndDisconnected(t *testing.T) {
+	prevState := constants.IDLE
+	connected := false
+	lastConected := time.Now().Add(-time.Second)
+
+	state, _ := newConnectionState(connected, prevState, lastConected, testtimeout)
+	if state != constants.WAITING_FOR_CONNECTION {
+		t.Fatalf("wanted WAITING_FOR_CONNECTION, have %s\n", StateToString(state))
 	}
 }
 
-func TestDisconneToConnectByHeartBeat(t *testing.T) {
-	r := NewRadio(nil, 500)
-	r.connectionState = DISCONNECTED
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(HEARTBEAT)
-	select {
-	case <-r.connection:
-	default:
-	}
-	if r.connectionState != CONNECTED {
-		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
+func TestConnectionStateWaitingAndDisconnected(t *testing.T) {
+	prevState := constants.WAITING_FOR_CONNECTION
+	connected := false
+	lastConected := time.Now().Add(-time.Second)
+
+	state, _ := newConnectionState(connected, prevState, lastConected, testtimeout)
+	if state != constants.WAITING_FOR_CONNECTION {
+		t.Fatalf("wanted WAITING_FOR_CONNECTION, have %s\n", StateToString(state))
 	}
 }
 
-func TestConnectedToDisconnectByReceiverOff(t *testing.T) {
-	r := NewRadio(nil, 500)
-	r.connectionState = CONNECTED
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(RECEIVER_OFF)
-	if r.connectionState != DISCONNECTED {
-		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
+func TestConnectionStateConnectedAndDisconnected(t *testing.T) {
+	prevState := constants.CONNECTED
+	connected := false
+	lastConected := time.Now().Add(-time.Second)
+
+	state, _ := newConnectionState(connected, prevState, lastConected, testtimeout)
+	if state != constants.DISCONNECTED {
+		t.Fatalf("wanted DISCONNECTED, have %s\n", StateToString(state))
 	}
 }
 
-func TestConnectedToLostByTimeout(t *testing.T) {
-	timeoutMS := 500
-	r := NewRadio(nil, timeoutMS)
-	r.connectionState = CONNECTED
-	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(NO_COMMAND)
-	if r.connectionState != CONNECTION_LOST {
-		t.Fatalf("Wanted CONNECTION_LOST, got %v", r.connectionState)
-	}
-}
+func TestConnectionStateDisconnectedAndDisconnected(t *testing.T) {
+	prevState := constants.DISCONNECTED
+	connected := false
+	lastConected := time.Now().Add(-time.Second)
 
-func TestLostToConnectByData(t *testing.T) {
-	timeoutMS := 500
-	r := NewRadio(nil, timeoutMS)
-	r.connectionState = CONNECTION_LOST
-	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(COMMAND)
-	if r.connectionState != CONNECTED {
-		t.Fatalf("Wanted CONNECTED, got %v", r.connectionState)
-	}
-}
-
-func TestLostToDisconnectByData(t *testing.T) {
-	timeoutMS := 500
-	r := NewRadio(nil, timeoutMS)
-	r.connectionState = CONNECTION_LOST
-	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(RECEIVER_OFF)
-	if r.connectionState != DISCONNECTED {
-		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
-	}
-}
-
-func TestDisconnectedToDisconnectedByTimeout(t *testing.T) {
-	timeoutMS := 500
-	r := NewRadio(nil, timeoutMS)
-	r.connectionState = DISCONNECTED
-	r.lastReceivedHeartBeat = time.Now().Add(-time.Duration(timeoutMS * int(time.Millisecond)))
-	go func() {
-		<-r.connection
-	}()
-	r.setConnectionState(NO_COMMAND)
-	if r.connectionState != DISCONNECTED {
-		t.Fatalf("Wanted DISCONNECTED, got %v", r.connectionState)
+	state, _ := newConnectionState(connected, prevState, lastConected, testtimeout)
+	if state != constants.DISCONNECTED {
+		t.Fatalf("wanted DISCONNECTED, have %s\n", StateToString(state))
 	}
 }

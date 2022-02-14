@@ -1,7 +1,6 @@
 package nrf204
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -14,239 +13,255 @@ import (
 )
 
 const (
-	R_REGISTER byte = 0x1F
-	W_REGISTER byte = 0x20
+	ADDRESS_CONFIG      byte = 0x0
+	ADDRESS_EN_AA       byte = 0x1
+	ADDRESS_EN_RXADDR   byte = 0x2
+	ADDRESS_SETUP_AW    byte = 0x3
+	ADDRESS_SETUP_RETR  byte = 0x4
+	ADDRESS_RF_CH       byte = 0x5
+	ADDRESS_RF_SETUP    byte = 0x6
+	ADDRESS_STATUS      byte = 0x7
+	ADDRESS_OBSERVE_TX  byte = 0x8
+	ADDRESS_CD          byte = 0x9
+	ADDRESS_RX_ADDR_P0  byte = 0xA
+	ADDRESS_RX_ADDR_P1  byte = 0xB
+	ADDRESS_RX_ADDR_P2  byte = 0xC
+	ADDRESS_RX_ADDR_P3  byte = 0xD
+	ADDRESS_RX_ADDR_P4  byte = 0xE
+	ADDRESS_RX_ADDR_P5  byte = 0xF
+	ADDRESS_TX_ADDR     byte = 0x10
+	ADDRESS_RX_PW_P0    byte = 0x11
+	ADDRESS_RX_PW_P1    byte = 0x12
+	ADDRESS_RX_PW_P2    byte = 0x13
+	ADDRESS_RX_PW_P3    byte = 0x14
+	ADDRESS_RX_PW_P4    byte = 0x15
+	ADDRESS_RX_PW_P5    byte = 0x16
+	ADDRESS_FIFO_STATUS byte = 0x17
+
+	ADDRESS_W_TX_PAYLOAD byte = 0xA0
+	ADDRESS_R_RX_PAYLOAD byte = 0x61
+
+	ADDRESS_FLUSH_RX byte = 0xE1
+	ADDRESS_FLUSH_TX byte = 0xE2
 )
 
 const (
-	ON  bool = true
-	OFF bool = false
-)
-
-const (
-	CLEAR_CONFIG      = 0x00
-	EN_CRC       byte = 0b00001000
-	CRCO         byte = 0b00000100
-)
-
-const (
-	NRF_CONFIG   byte = 0x00
-	EN_AA        byte = 0x01
-	EN_RXADDR    byte = 0x02
-	SETUP_AW     byte = 0x03
-	SETUP_RETR   byte = 0x04
-	RF_CH        byte = 0x5
-	RF_SETUP     byte = 0x06
-	NRF_STATUS   byte = 0x07
-	RX_PW_P0     byte = 0x11
-	RX_ADDR_P0   byte = 0x0A
-	TX_ADDR      byte = 0x10
-	DYNPD        byte = 0x1C
-	FEATURE      byte = 0x1D
-	R_RX_PAYLOAD byte = 0x61
-	W_TX_PAYLOAD byte = 0xA0
-	FLUSH_TX     byte = 0xE1
-	FLUSH_RX     byte = 0xE2
-)
-
-const (
-	RF_POWER_MINUS_18dBm byte = iota // -18 dBm
-	RF_POWER_MINUS_12dBm             //-12 dBm
-	RF_POWER_MINUS_6dBm              // -6 dBm
-	RF_POWER_0dBm                    // 0 dBm
-)
-
-const (
-	DATA_RATE_1MBPS byte = iota
-	DATA_RATE_2MBPS
-)
-
-const ADDRESS_SIZE int = 5
-
-type radioMode int
-
-const (
-	Receiver radioMode = iota
-	Transmitter
+	DEFAULT_CONFIG     byte = 0b00001000
+	DEFAULT_EN_AA      byte = 0b00111111
+	DEFAULT_EN_RXADDR  byte = 0b00000001
+	DEFAULT_SETUP_AW   byte = 0b00000011
+	DEFAULT_SETUP_RETR byte = 0b00000011
+	DEFAULT_RF_CH      byte = 0b01001100
+	DEFAULT_RF_SETUP   byte = 0b00001111
+	DEFAULT_STATUS     byte = 0b01110000
+	DEFAULT_RX_PW_P0   byte = constants.RADIO_PAYLOAD_SIZE
+	DEFAULT_RX_PW_P1   byte = 0b00000000
+	DEFAULT_RX_PW_P2   byte = 0b00000000
+	DEFAULT_RX_PW_P3   byte = 0b00000000
+	DEFAULT_RX_PW_P4   byte = 0b00000000
+	DEFAULT_RX_PW_P5   byte = 0b00000000
 )
 
 type nrf204l01 struct {
-	ce         gpio.PinOut
-	address    []byte
-	conn       spi.Conn
-	powerDBm   byte
-	isReceiver bool
+	ce        gpio.PinOut
+	address   []byte
+	conn      spi.Conn
+	status    byte
+	registers map[byte]byte
 }
 
-func NewNRF204(
+func NewNRF204EnhancedBurst(
 	spiBusNum int,
 	spiChipSelect int,
 	spiChipEnabledGPIO string,
 	rxTxAddress string,
-	powerDb string,
 ) *nrf204l01 {
 	radioSPIConn := hardware.NewSPIConnection(
 		spiBusNum,
 		spiChipSelect,
 	)
 
-	radio := nrf204l01{
-		address:    []byte(rxTxAddress),
-		ce:         initPin(spiChipEnabledGPIO),
-		conn:       radioSPIConn,
-		powerDBm:   dbmStrToDBm(powerDb),
-		isReceiver: true,
+	tr := nrf204l01{
+		address: []byte(rxTxAddress),
+		ce:      initPin(spiChipEnabledGPIO),
+		conn:    radioSPIConn,
+		registers: map[byte]byte{
+			ADDRESS_CONFIG:     DEFAULT_CONFIG,
+			ADDRESS_EN_AA:      DEFAULT_EN_AA,
+			ADDRESS_EN_RXADDR:  DEFAULT_EN_RXADDR,
+			ADDRESS_SETUP_AW:   DEFAULT_SETUP_AW,
+			ADDRESS_SETUP_RETR: DEFAULT_SETUP_RETR,
+			ADDRESS_RF_CH:      DEFAULT_RF_CH,
+			ADDRESS_RF_SETUP:   DEFAULT_RF_SETUP,
+			ADDRESS_RX_PW_P0:   DEFAULT_RX_PW_P0,
+			ADDRESS_STATUS:     DEFAULT_STATUS,
+		},
+		status: 0,
 	}
-	radio.init()
-	radio.receiverOn()
-	return &radio
+	tr.init()
+	return &tr
 }
 
-func (radio *nrf204l01) ReceivePayload() (models.Payload, bool) {
-	if !radio.isReceiver {
-		radio.receiverOn()
+func bitEnable(value byte, bit byte, enable bool) byte {
+	var mask byte = 0b00000001
+	mask = mask << bit
+	if enable {
+		return value | mask
 	}
-	if !radio.isDataAvailable() {
-		return models.Payload{}, false
-	}
-	payload := models.Payload{}
-	data, err := readSPI(R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), radio.conn)
-	copy(payload[:], data)
-	radio.resetDR()
-	if err != nil {
-		return models.Payload{}, false
-	}
-	return payload, true
+	return value & ^mask
+
 }
 
-func (radio *nrf204l01) TransmitPayload(payload models.Payload) error {
-	if len(payload) < int(constants.RADIO_PAYLOAD_SIZE) {
-		return fmt.Errorf("payload size error %d", len(payload))
-	}
-	if radio.isReceiver {
-		radio.transmitterOn()
-	}
-	radio.ce.Out(gpio.Low)
-	_, err := radio.writeRegister(TX_ADDR, radio.address)
-	if err == nil {
-		_, err = writeSPI(W_TX_PAYLOAD, payload[:], radio.conn)
-	}
-	radio.ce.Out(gpio.High)
+func (tr *nrf204l01) selectRadioMode(isRx bool) {
+	tr.ceLow()
+	tr.ClearStatus()
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
+	tr.writeRegister(ADDRESS_CONFIG)
+	tr.flushRx()
+	tr.flushTx()
+}
+
+func (tr *nrf204l01) Listen() {
+	tr.ceHigh()
+}
+
+func (tr *nrf204l01) TransmitterOn() {
+	tr.selectRadioMode(false)
+}
+
+func (tr *nrf204l01) ReceiverOn() {
+	tr.selectRadioMode(true)
+}
+
+func (tr *nrf204l01) PowerOn() {
+	tr.setPower(true)
+}
+
+func (tr *nrf204l01) PowerOff() {
+	tr.setPower(false)
+}
+
+func (tr *nrf204l01) ceHigh() {
+	tr.ce.Out(gpio.High)
+}
+
+func (tr *nrf204l01) ceLow() {
+	tr.ce.Out(gpio.Low)
+}
+
+func (tr *nrf204l01) setPower(on bool) {
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
+	tr.writeRegister(ADDRESS_CONFIG)
 	time.Sleep(time.Millisecond)
-	radio.receiverOn()
+}
+
+func (tr *nrf204l01) Transmit(payload models.Payload) error {
+	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
+	if err != nil {
+		return err
+	}
+	tr.ceHigh()
+	ts := time.Now()
+	for time.Since(ts) < 5*time.Microsecond {
+	}
+	tr.ceLow()
 	return err
 }
 
-func (radio *nrf204l01) transmitterOn() {
-	radio.isReceiver = false
-	radio.ce.Out(gpio.Low)
-	radio.setRetries(5, 0)
-	radio.clearStatus()
-	radio.setRx(OFF)
-	radio.flushRx()
-	radio.flushTx()
-	radio.setPower(ON)
-	radio.ce.Out(gpio.High)
+func (tr *nrf204l01) Receive() (models.Payload, error) {
+	tr.ceLow()
+	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
+	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
+	if err != nil {
+		return payload, err
+	}
+	copy(payload[:], data)
+	tr.ClearStatus()
+	return payload, err
 }
 
-func (radio *nrf204l01) receiverOn() {
-	radio.isReceiver = true
-	radio.ce.Out(gpio.Low)
-	radio.setPower(ON)
-	radio.clearStatus()
-	radio.setRx(ON)
-	radio.flushRx()
-	radio.flushTx()
-	radio.ce.Out(gpio.High)
+func (tr *nrf204l01) init() {
+	tr.PowerOff()
+	tr.ceLow()
+	time.Sleep(time.Millisecond)
+	tr.writeConfigRegisters()
+	tr.setRxTxAddress()
 }
 
-func dbmStrToDBm(dbm string) byte {
-	switch dbm {
-	case "-18dbm":
-		return RF_POWER_MINUS_18dBm
-	case "-12dbm":
-		return RF_POWER_MINUS_12dBm
-	case "-6dbm":
-		return RF_POWER_MINUS_6dBm
-	case "0dbm":
-		return RF_POWER_0dBm
-	default:
-		return RF_POWER_MINUS_18dBm
+func (tr *nrf204l01) printConfigurations() {
+	config, _ := tr.readRegister(ADDRESS_CONFIG)
+	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
+	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
+	setupaw, _ := tr.readRegister(ADDRESS_SETUP_AW)
+	setupretr, _ := tr.readRegister(ADDRESS_SETUP_RETR)
+	rfch, _ := tr.readRegister(ADDRESS_RF_CH)
+	rfsetup, _ := tr.readRegister(ADDRESS_RF_SETUP)
+	rxpw0, _ := tr.readRegister(ADDRESS_RX_PW_P0)
+	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
+	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
+	log.Printf(
+		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b\n	RX_PW0: %b\n	rx-add: %v\n	tx-add: %v",
+		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0, rxadd, txadd)
+}
+
+func (tr *nrf204l01) readRegister(address byte) ([]byte, error) {
+	return readSPI(address, 1, tr.conn)
+}
+
+func (tr *nrf204l01) writeRegister(address byte) {
+	tr.ceLow()
+	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
+}
+
+func (tr *nrf204l01) writeConfigRegisters() {
+	for address := range tr.registers {
+		tr.writeRegister(address)
 	}
 }
 
-func (radio *nrf204l01) init() {
-	radio.ce.Out(gpio.Low)
-	radio.setPower(OFF)
-	radio.setRetries(5, 15)
-	radio.setPALevel(radio.powerDBm)
-	radio.setDataRate(DATA_RATE_1MBPS)
-	// disabling auto acknowlegment
-	radio.writeRegisterByte(EN_AA, 0)
-	radio.writeRegisterByte(EN_RXADDR, 3)
-	radio.setPayloadSize()
-	radio.setAddressWidth()
-	radio.setChannel()
-	radio.setCRCEncodingScheme()
-	radio.enableCRC()
-	radio.setAddress()
+func (tr *nrf204l01) setRxTxAddress() {
+	tr.ceLow()
+	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
+	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 }
 
-func (radio *nrf204l01) setRetries(delay byte, numRetransmit byte) {
-	nr := numRetransmit
-	if nr > 15 {
-		nr = 15
+func (tr *nrf204l01) updateStatus() {
+	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
+	tr.status = res[0]
+}
+
+func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
+	if update {
+		tr.updateStatus()
 	}
-	d := delay
-	if d > 15 {
-		d = 5
+
+	return tr.status&0b01000000 != 0
+}
+
+func (tr *nrf204l01) IsTransmitFailed(update bool) bool {
+	if update {
+		tr.updateStatus()
 	}
-	setup := nr | (d >> 4)
-	radio.writeRegisterByte(SETUP_RETR, setup)
+	return tr.status&0b00010000 != 0
 }
 
-func (radio *nrf204l01) setDataRate(dataRate byte) {
-	dr := dataRate
-	if dr > DATA_RATE_2MBPS {
-		dr = DATA_RATE_2MBPS
-	}
-	setup, _ := radio.readRegisterByte(RF_SETUP)
-
-	radio.writeRegisterByte(RF_SETUP, (setup&0b11110111)|(dr<<3))
+func (tr *nrf204l01) ClearStatus() {
+	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
-func (radio *nrf204l01) setAddress() {
-	radio.writeRegister(RX_ADDR_P0, []byte{0, 0, 0, 0, 0})
-	radio.writeRegister(TX_ADDR, []byte{0, 0, 0, 0, 0})
-	radio.writeRegister(RX_ADDR_P0, radio.address)
-	radio.writeRegister(TX_ADDR, radio.address)
+func (tr *nrf204l01) flushRx() {
+	writeSPI(ADDRESS_FLUSH_RX, []byte{0xFF}, tr.conn)
 }
 
-func (radio *nrf204l01) setPALevel(rfPower byte) {
-	setup, _ := radio.readRegisterByte(RF_SETUP)
-	setup = (setup & 0b11110001) | (rfPower << 1)
-	radio.writeRegisterByte(RF_SETUP, setup)
-}
-
-func (radio *nrf204l01) isDataAvailable() bool {
-	// get implied RX FIFO empty flag from status byte
-	status := radio.getStatus()
-	// fmt.Println("Status: ", status)
-	pipe := (status >> 1) & 0x07
-	dr := status & 0b01000000
-	return pipe <= 5 && dr == 64
-}
-
-func (radio *nrf204l01) getStatus() byte {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	return status
+func (tr *nrf204l01) flushTx() {
+	writeSPI(ADDRESS_FLUSH_TX, []byte{0xFF}, tr.conn)
 }
 
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)
 	w := make([]byte, datalen+1)
 	r := make([]byte, datalen+1)
-	w[0] = address
+	w[0] = address | 0x20 // adding write bit
 
 	for i := 0; i < datalen; i++ {
 		w[i+1] = data[i]
@@ -256,83 +271,12 @@ func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	return r, err
 }
 
-func (radio *nrf204l01) configOnOff(on bool, bitmask byte) {
-	config, _ := radio.readRegisterByte(NRF_CONFIG)
-	if on {
-		radio.writeRegisterByte(NRF_CONFIG, config|bitmask)
-	} else {
-		radio.writeRegisterByte(NRF_CONFIG, config&(^bitmask))
-	}
-}
-
-func (radio *nrf204l01) setPower(isOn bool) {
-	radio.configOnOff(isOn, 0b00000010)
-}
-
-func (radio *nrf204l01) setRx(isOn bool) {
-	radio.configOnOff(isOn, 0b00000001)
-}
-
-func (radio *nrf204l01) setCRCEncodingScheme() {
-	radio.configOnOff(ON, 0b00000100)
-}
-
-func (radio *nrf204l01) enableCRC() {
-	radio.configOnOff(ON, 0b00001000)
-}
-
-func (radio *nrf204l01) clearStatus() {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	radio.writeRegisterByte(NRF_STATUS, status|0b01110000)
-}
-
-func (radio *nrf204l01) resetDR() {
-	status, _ := radio.readRegisterByte(NRF_STATUS)
-	radio.writeRegisterByte(NRF_STATUS, status|0b01000000)
-}
-
 func readSPI(address byte, datalen int, conn spi.Conn) ([]byte, error) {
 	w := make([]byte, datalen+1)
 	r := make([]byte, datalen+1)
 	w[0] = address
 	err := conn.Tx(w, r)
 	return r[1:], err
-}
-
-func (radio *nrf204l01) readRegisterByte(address byte) (byte, error) {
-	b, err := readSPI(address&R_REGISTER, 1, radio.conn)
-	return b[0], err
-}
-
-func (radio *nrf204l01) writeRegister(address byte, data []byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, data, radio.conn)
-}
-
-func (radio *nrf204l01) writeRegisterByte(address byte, data byte) ([]byte, error) {
-	return writeSPI((address&R_REGISTER)|W_REGISTER, []byte{data}, radio.conn)
-}
-
-func (radio *nrf204l01) setPayloadSize() {
-	var i byte
-	for i = 0; i < 6; i++ {
-		radio.writeRegisterByte(RX_PW_P0+i, constants.RADIO_PAYLOAD_SIZE)
-	}
-}
-
-func (radio *nrf204l01) setAddressWidth() {
-	radio.writeRegisterByte(SETUP_AW, 3)
-}
-
-func (radio *nrf204l01) setChannel() {
-	radio.writeRegisterByte(RF_CH, 76)
-}
-
-func (radio *nrf204l01) flushRx() {
-	writeSPI(FLUSH_RX, []byte{0xFF}, radio.conn)
-}
-
-func (radio *nrf204l01) flushTx() {
-	writeSPI(FLUSH_TX, []byte{0xFF}, radio.conn)
 }
 
 func initPin(pinName string) gpio.PinIO {

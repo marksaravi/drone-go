@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/devices/radio"
+	"github.com/marksaravi/drone-go/constants"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/models"
 )
@@ -23,9 +23,15 @@ type joystick interface {
 	Read() int
 }
 
+type radioTransmitter interface {
+	Transmit(models.FlightCommands)
+	GetConnectionStateChannel() <-chan models.ConnectionState
+	Close()
+	SuppressLostConnection()
+}
 type remoteControl struct {
 	commandPerSecond                int
-	radio                           models.Radio
+	radio                           radioTransmitter
 	roll                            joystick
 	pitch                           joystick
 	yaw                             joystick
@@ -38,7 +44,6 @@ type remoteControl struct {
 	btnBottomRight                  button
 	display                         oledDisplay
 	buzzer                          *piezobuzzer.Buzzer
-	connectionState                 radio.ConnectionState
 	shutdownCountdown               time.Time
 	suppressLostConnectionCountdown time.Time
 }
@@ -77,7 +82,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 }
 
 func NewRemoteControl(
-	radio models.Radio,
+	radio radioTransmitter,
 	roll, pitch, yaw, throttle joystick,
 	btnFrontLeft, btnFrontRight button,
 	btnTopLeft, btnTopRight button,
@@ -112,12 +117,11 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 		defer log.Println("Remote Control is stopped.")
 
 		var readingInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)
-		var receiverChanOpen bool = true
 		var connectionChanOpen bool = true
 		var transmitterOpen bool = true
 		var lastReading time.Time = time.Now()
 
-		for transmitterOpen || connectionChanOpen || receiverChanOpen {
+		for transmitterOpen || connectionChanOpen {
 			select {
 			case <-ctx.Done():
 				if transmitterOpen {
@@ -125,10 +129,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 					rc.radio.Close()
 				}
 
-			case _, ok := <-rc.radio.GetReceiver():
-				receiverChanOpen = ok
-
-			case connectionState, ok := <-rc.radio.GetConnection():
+			case connectionState, ok := <-rc.radio.GetConnectionStateChannel():
 				if ok {
 					rc.setRadioConnectionState(connectionState)
 				}
@@ -147,18 +148,17 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 	}()
 }
 
-func (rc *remoteControl) setRadioConnectionState(connectionState radio.ConnectionState) {
-	rc.connectionState = connectionState
-	switch rc.connectionState {
-	case radio.CONNECTED:
+func (rc *remoteControl) setRadioConnectionState(connectionState models.ConnectionState) {
+	switch connectionState {
+	case constants.CONNECTED:
 		log.Println("Connected to Drone.")
 		rc.display.Println("Connected!", 3)
 		rc.buzzer.PlaySound(piezobuzzer.ConnectedSound)
-	case radio.DISCONNECTED:
+	case constants.WAITING_FOR_CONNECTION:
 		log.Println("Waiting for connection.")
 		rc.display.Println("Waiting...", 3)
 		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
-	case radio.CONNECTION_LOST:
+	case constants.DISCONNECTED:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
 		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)

@@ -42,13 +42,7 @@ type FlightCommands struct {
 
 type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
-type Radio interface {
-	Transmit(FlightCommands)
-	GetReceiver() <-chan FlightCommands
-	GetConnection() <-chan int
-	Close()
-	SuppressLostConnection()
-}
+type ConnectionState = int
 
 type Logger interface {
 	Send(ImuRotations)
