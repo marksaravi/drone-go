@@ -2,12 +2,12 @@ package radio
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type radioReceiverLink interface {
@@ -57,6 +57,8 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-ctx.Done():
+				close(r.connectionChannel)
+				close(r.receiveChannel)
 				return
 
 			default:
@@ -64,11 +66,19 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 					ts = time.Now()
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
-						fmt.Println(payload)
 						r.radiolink.Listen()
+						r.receiveChannel <- utils.DeserializeFlightCommand(payload)
 					}
 				}
 			}
 		}
 	}()
+}
+
+func (r *radioReceiver) GetReceiverChannel() <-chan models.FlightCommands {
+	return r.receiveChannel
+}
+
+func (r *radioReceiver) GetConnectionStateChannel() <-chan models.ConnectionState {
+	return r.connectionChannel
 }
