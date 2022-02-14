@@ -241,6 +241,22 @@ function setAxis(axis) {
 
 function setYRange(yrange) {
     graphSettings.yRange = yrange
+    if (graphSettings.yGrid >= graphSettings.yRange) {
+        switch (graphSettings.yRange) {
+            case 15:
+                graphSettings.yGrid = 5;
+                break;
+            case 10:
+                graphSettings.yGrid = 1;
+                break;
+            case 5:
+                graphSettings.yGrid = 1;
+                break;
+            case 1:
+                graphSettings.yGrid = 0.1;
+                break;
+        }
+    }
     updateGridsSettings()
 }
 
@@ -268,14 +284,14 @@ document.addEventListener("click", e => {
     if (!isDropdownButton && !isDropdownItem && e.target.closest("[data-dropdown]") != null) {
         return
     }
-  
+
     if (isDropdownButton || isDropdownItem) {
-      currentDropdown = e.target.closest("[data-dropdown]")
-      currentDropdown.classList.toggle("active")
+        currentDropdown = e.target.closest("[data-dropdown]")
+        currentDropdown.classList.toggle("active")
     }
-  
+
     document.querySelectorAll("[data-dropdown].active").forEach(dropdown => {
-      if (dropdown === currentDropdown) return
-      dropdown.classList.remove("active")
+        if (dropdown === currentDropdown) return
+        dropdown.classList.remove("active")
     })
-  })
+})
