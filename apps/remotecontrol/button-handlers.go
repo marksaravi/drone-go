@@ -17,8 +17,10 @@ func (rc *remoteControl) actOnShutdownButtonState(pressed bool, cancel context.C
 func (rc *remoteControl) actOnSuppressLostConnectionButtonState(pressed bool) {
 	if !pressed {
 		rc.suppressLostConnectionCountdown = time.Now()
-	}
-	if time.Since(rc.suppressLostConnectionCountdown) > time.Duration(time.Second/2) {
-		rc.radio.SuppressLostConnection()
+	} else {
+		if time.Since(rc.suppressLostConnectionCountdown) > time.Duration(time.Second/2) {
+			rc.radio.SuppressLostConnection()
+			rc.suppressLostConnectionCountdown = time.Now().Add(time.Second * 30)
+		}
 	}
 }

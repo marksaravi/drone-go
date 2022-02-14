@@ -82,8 +82,7 @@ func (t *radioTransmitter) GetConnectionStateChannel() <-chan models.ConnectionS
 }
 
 func (t *radioTransmitter) SuppressLostConnection() {
-	t.connectionState = WAITING_FOR_CONNECTION
-	t.connectionChannel <- t.connectionState
+	t.connectionState = IDLE
 }
 
 func (t *radioTransmitter) Transmit(flightCommands models.FlightCommands) {
