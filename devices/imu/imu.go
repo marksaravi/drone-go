@@ -54,10 +54,10 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	accRotations := calcaAcelerometerRotations(acc)
 	dg := gyroChanges(gyro, diff.Nanoseconds())
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
-	nrotations := calcGyroRotations(dg, imu.rotations)
+	gyroRotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = models.Rotations{
-		Roll:  lowPassFilter(nrotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
-		Pitch: lowPassFilter(nrotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
+		Roll:  lowPassFilter(gyroRotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
+		Pitch: lowPassFilter(gyroRotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.lastReading = now
@@ -101,10 +101,6 @@ func lowPassFilter(prevValue float64, newValue float64, coefficient float64) flo
 	v1 := (1 - coefficient) * prevValue
 	v2 := coefficient * newValue
 	return v1 + v2
-}
-
-func radToDeg(x float64) float64 {
-	return x / math.Pi * 180
 }
 
 func goDurToDt(d int64) float64 {

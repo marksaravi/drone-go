@@ -19,3 +19,13 @@ func TestHighLowBytesToNegativeInt16(t *testing.T) {
 		t.Errorf("got %d, want %d", got, want)
 	}
 }
+
+func TestAccOffsetToLandHBytes(t *testing.T) {
+	var offset uint16 = 31979
+	var wantH uint8 = 249
+	var wantL uint8 = 214
+	gotH, gotL := accOffsetToHighandLowBytes(offset)
+	if wantH != gotH || wantL != gotL {
+		t.Errorf("got %d, %d, want %d, %d", gotH, gotL, wantH, wantL)
+	}
+}

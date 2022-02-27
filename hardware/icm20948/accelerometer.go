@@ -33,6 +33,18 @@ func (dev *memsICM20948) initAccelerometer() error {
 	return err
 }
 
+func accOffsetToHighandLowBytes(offset uint16) (h, l uint8) {
+	shiftedOffset := offset << 1
+	h = uint8((shiftedOffset >> 8) & 0xFF)
+	l = uint8(shiftedOffset & 0xFF)
+	return
+}
+
+func (dev *memsICM20948) setAccOffset(addressH uint16, offset uint16) {
+	h, l := accOffsetToHighandLowBytes(offset)
+	dev.writeRegister(addressH, h, l)
+}
+
 func (dev *memsICM20948) processAccelerometerData(data []byte) (models.XYZ, error) {
 	accSens := accelerometerSensitivity[dev.accConfig.sensitivityLevel]
 	xRaw := towsComplementUint8ToInt16(data[0], data[1])
@@ -47,11 +59,4 @@ func (dev *memsICM20948) processAccelerometerData(data []byte) (models.XYZ, erro
 		Y: y,
 		Z: z,
 	}, nil
-}
-
-func (dev *memsICM20948) setAccOffset(address uint16, offset int16) {
-	offsets, _ := dev.readRegister(address, 2)
-	var h uint8 = uint8((uint16(offset) >> 7) & 0xFF)
-	var l uint8 = uint8((uint16(offset)<<1)&0xFF) | (offsets[1] & 0x01)
-	dev.writeRegister(address, h, l)
 }

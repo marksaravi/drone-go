@@ -39,18 +39,18 @@ flight-control:
       lowpass-filter-config: 3
       averaging: 7
       offsets:
-        X: -73
-        Y: 825
-        Z: -787
+        X: 32696
+        Y: 836
+        Z: 31979
     gyroscope:
       sensitivity-level: '500dps'
       lowpass-filter-enabled: true
       lowpass-filter-config: 3
       averaging: 7
       offsets:
-        X: -12
-        Y: -6
-        Z: -8
+        X: 0
+        Y: 0
+        Z: 4
     spi:
       bus-number: 0
       chip-select: 0
@@ -111,7 +111,7 @@ remote-control:
   buzzer-gpio: 'GPIO5'
 
 logger:
-  enabled: false
-  ip: 192.168.1.101
+  enabled: true
+  ip: 192.168.1.102
   port: 6431
   packets-per-second: 50

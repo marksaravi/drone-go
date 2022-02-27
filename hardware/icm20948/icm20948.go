@@ -18,9 +18,9 @@ type sensorConfig struct {
 	averaging            int
 	lowPassFilterEnabled bool
 	lowPassFilterConfig  int
-	offsetX              int16
-	offsetY              int16
-	offsetZ              int16
+	offsetX              uint16
+	offsetY              uint16
+	offsetZ              uint16
 }
 
 type memsICM20948 struct {
@@ -61,16 +61,16 @@ func NewICM20948Driver(
 	accAveraging int,
 	accLowPassFilterEnabled bool,
 	accLowPassFilterConfig int,
-	accOffsetX int16,
-	accOffsetY int16,
-	accOffsetZ int16,
+	accOffsetX uint16,
+	accOffsetY uint16,
+	accOffsetZ uint16,
 	gyroSensitivityLevel string,
 	gyroAveraging int,
 	gyroLowPassFilterEnabled bool,
 	gyroLowPassFilterConfig int,
-	gyroOffsetX int16,
-	gyroOffsetY int16,
-	gyroOffsetZ int16,
+	gyroOffsetX uint16,
+	gyroOffsetY uint16,
+	gyroOffsetZ uint16,
 ) *memsICM20948 {
 	dev := memsICM20948{
 		spiConn: spiConn,
@@ -148,9 +148,6 @@ func (dev *memsICM20948) initDevice() error {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
-	if err != nil {
-		return err
-	}
 	// No low power mode, enabling everything with 20Mhz clock
 	err = dev.writeRegister(PWR_MGMT_1, 0b00000001, 0b00000000)
 	if err != nil {
