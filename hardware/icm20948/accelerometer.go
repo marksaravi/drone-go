@@ -32,10 +32,16 @@ func (dev *memsICM20948) initAccelerometer() error {
 	time.Sleep(time.Millisecond * 100)
 	return err
 }
-func (dev *memsICM20948) setAccOffset(addressH uint16, offset uint16) {
+
+func accOffsetToHighandLowBytes(offset uint16) (h, l uint8) {
 	shiftedOffset := offset << 1
-	var h uint8 = uint8((shiftedOffset >> 8) & 0xFF)
-	var l uint8 = uint8(shiftedOffset & 0xFF)
+	h = uint8((shiftedOffset >> 8) & 0xFF)
+	l = uint8(shiftedOffset & 0xFF)
+	return
+}
+
+func (dev *memsICM20948) setAccOffset(addressH uint16, offset uint16) {
+	h, l := accOffsetToHighandLowBytes(offset)
 	dev.writeRegister(addressH, h, l)
 }
 
