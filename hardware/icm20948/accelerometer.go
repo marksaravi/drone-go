@@ -32,13 +32,12 @@ func (dev *memsICM20948) initAccelerometer() error {
 	time.Sleep(time.Millisecond * 100)
 	return err
 }
-func (dev *memsICM20948) setAccOffset(addressH uint16, offset int16) {
-	var h uint8 = uint8((uint16(offset) >> 8) & 0xFF)
-	var l uint8 = uint8((uint16(offset) << 1) & 0xFF)
-	fmt.Println("********* ACC OFFSETS: ", h, l)
+func (dev *memsICM20948) setAccOffset(addressH uint16, offset uint16) {
+	shiftedOffset := offset << 1
+	var h uint8 = uint8((shiftedOffset >> 8) & 0xFF)
+	var l uint8 = uint8(shiftedOffset & 0xFF)
 	dev.writeRegister(addressH, h, l)
 }
-
 
 func (dev *memsICM20948) processAccelerometerData(data []byte) (models.XYZ, error) {
 	accSens := accelerometerSensitivity[dev.accConfig.sensitivityLevel]
@@ -54,11 +53,4 @@ func (dev *memsICM20948) processAccelerometerData(data []byte) (models.XYZ, erro
 		Y: y,
 		Z: z,
 	}, nil
-}
-
-func (dev *memsICM20948) setAccOffset(address uint16, offset int16) {
-	offsets, _ := dev.readRegister(address, 2)
-	var h uint8 = uint8((uint16(offset) >> 7) & 0xFF)
-	var l uint8 = uint8((uint16(offset)<<1)&0xFF) | (offsets[1] & 0x01)
-	dev.writeRegister(address, h, l)
 }

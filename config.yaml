@@ -41,7 +41,7 @@ flight-control:
       offsets:
         X: 32696
         Y: 836
-        Z: 32576
+        Z: 31979
     gyroscope:
       sensitivity-level: '500dps'
       lowpass-filter-enabled: true
