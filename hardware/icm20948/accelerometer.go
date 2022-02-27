@@ -32,6 +32,13 @@ func (dev *memsICM20948) initAccelerometer() error {
 	time.Sleep(time.Millisecond * 100)
 	return err
 }
+func (dev *memsICM20948) setAccOffset(addressH uint16, offset int16) {
+	var h uint8 = uint8((uint16(offset) >> 8) & 0xFF)
+	var l uint8 = uint8((uint16(offset) << 1) & 0xFF)
+	fmt.Println("********* ACC OFFSETS: ", h, l)
+	dev.writeRegister(addressH, h, l)
+}
+
 
 func (dev *memsICM20948) processAccelerometerData(data []byte) (models.XYZ, error) {
 	accSens := accelerometerSensitivity[dev.accConfig.sensitivityLevel]

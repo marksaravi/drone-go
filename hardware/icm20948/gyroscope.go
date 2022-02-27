@@ -45,7 +45,7 @@ func (dev *memsICM20948) processGyroscopeData(data []uint8) (models.XYZ, error) 
 	}, nil
 }
 
-func (dev *memsICM20948) setGyroOffset(address uint16, offset int16) {
+func (dev *memsICM20948) setGyroOffset(address uint16, offset uint16) {
 	var h uint8 = uint8(uint16(offset) >> 8)
 	var l uint8 = uint8(uint16(offset) & 0xFF)
 	dev.writeRegister(address, h, l)

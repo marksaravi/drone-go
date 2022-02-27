@@ -115,14 +115,9 @@ type remoteControl struct {
 }
 
 type offsets struct {
-	X int16 `yaml:"X"`
-	Y int16 `yaml:"Y"`
-	Z int16 `yaml:"Z"`
-}
-
-type analogToDigitalConversion struct {
-	Ratio  float64 `yaml:"ratio"`
-	Offset float64 `yaml:"offset"`
+	X uint16 `yaml:"X"`
+	Y uint16 `yaml:"Y"`
+	Z uint16 `yaml:"Z"`
 }
 
 type udpLogger struct {
