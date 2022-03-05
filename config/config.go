@@ -47,9 +47,9 @@ type flightControl struct {
 	} `yaml:"pid"`
 
 	Imu struct {
-		DataPerSecond            int     `yaml:"data-per-second"`
-		LowPassFilterCoefficient float64 `yaml:"lowpass-filter-coefficient"`
-		Accelerometer            struct {
+		DataPerSecond                  int     `yaml:"data-per-second"`
+		ComplimentaryFilterCoefficient float64 `yaml:"complimentary-filter-coefficient"`
+		Accelerometer                  struct {
 			SensitivityLevel     string  `yaml:"sensitivity-level"`
 			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
 			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`

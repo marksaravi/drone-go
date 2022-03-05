@@ -19,24 +19,24 @@ type imuMems interface {
 }
 
 type imudevice struct {
-	imuMems                  imuMems
-	gyro                     models.Rotations
-	rotations                models.Rotations
-	lastReading              time.Time
-	readingInterval          time.Duration
-	lowPassFilterCoefficient float64
+	imuMems                        imuMems
+	gyro                           models.Rotations
+	rotations                      models.Rotations
+	lastReading                    time.Time
+	readingInterval                time.Duration
+	complimentaryFilterCoefficient float64
 }
 
 func NewImuMems(
 	imuMems imuMems,
 	dataPerSecond int,
-	lowPassFilterCoefficient float64,
+	complimentaryFilterCoefficient float64,
 ) *imudevice {
 	return &imudevice{
-		imuMems:                  imuMems,
-		readingInterval:          time.Second / time.Duration(dataPerSecond),
-		lastReading:              time.Now(),
-		lowPassFilterCoefficient: lowPassFilterCoefficient,
+		imuMems:                        imuMems,
+		readingInterval:                time.Second / time.Duration(dataPerSecond),
+		lastReading:                    time.Now(),
+		complimentaryFilterCoefficient: complimentaryFilterCoefficient,
 	}
 }
 
@@ -56,8 +56,8 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	gyroRotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = models.Rotations{
-		Roll:  lowPassFilter(gyroRotations.Roll, accRotations.Roll, imu.lowPassFilterCoefficient),
-		Pitch: lowPassFilter(gyroRotations.Pitch, accRotations.Pitch, imu.lowPassFilterCoefficient),
+		Roll:  complimentaryFilter(gyroRotations.Roll, accRotations.Roll, imu.complimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(gyroRotations.Pitch, accRotations.Pitch, imu.complimentaryFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.lastReading = now
@@ -97,9 +97,9 @@ func gyroChanges(gyro models.XYZ, timeInterval int64) rotationsChanges {
 	}
 }
 
-func lowPassFilter(prevValue float64, newValue float64, coefficient float64) float64 {
-	v1 := (1 - coefficient) * prevValue
-	v2 := coefficient * newValue
+func complimentaryFilter(gyroValue float64, accelerometerValue float64, coefficient float64) float64 {
+	v1 := (1 - coefficient) * gyroValue
+	v2 := coefficient * accelerometerValue
 	return v1 + v2
 }
 
@@ -136,6 +136,6 @@ func NewImu() *imudevice {
 	return NewImuMems(
 		imuMems,
 		imuConfig.DataPerSecond,
-		imuConfig.LowPassFilterCoefficient,
+		imuConfig.ComplimentaryFilterCoefficient,
 	)
 }

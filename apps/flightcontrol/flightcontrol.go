@@ -26,7 +26,7 @@ type radioReceiver interface {
 }
 type pidControls interface {
 	SetTargetStates(state models.PIDState, throttle float64)
-	SetRotations(rotations models.ImuRotations)
+	SetStates(rotations models.ImuRotations)
 	GetThrottles() map[int]float64
 	PrintGains()
 }
@@ -103,7 +103,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running && commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						fc.pid.SetRotations(rotations)
+						fc.pid.SetStates(rotations)
 						fc.esc.SetThrottles(models.Throttles{
 							Active:    true,
 							Throttles: fc.pid.GetThrottles(),
