@@ -110,7 +110,7 @@ func (c *pidControls) calcThrottles() {
 	}
 }
 
-func (c *pidControls) Throttles() map[int]float64 {
+func (c *pidControls) GetThrottles() map[int]float64 {
 	return c.throttles
 }
 
