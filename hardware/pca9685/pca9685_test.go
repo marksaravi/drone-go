@@ -2,37 +2,43 @@ package pca9685
 
 import "testing"
 
-func TestThrottleToPulseWidthPositive(t *testing.T) {
+func TestThrottleInRange(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle - 1
 	want := MinPW + (MaxPW-MinPW)*throttle/100
 	got := throttleToPulseWidth(throttle)
 	if got != want {
 		t.Fatalf("wanted %f, got %f", want, got)
 	}
-	throttle = 10
-	want = MinPW + (MaxPW-MinPW)*0.1
-	got = throttleToPulseWidth(throttle)
-	if got != want {
-		t.Fatalf("wanted %f, got %f", want, got)
-	}
-	throttle = MaxAllowedThrottle + 1
-	want = MinPW + (MaxPW-MinPW)*MaxAllowedThrottle/100
-	got = throttleToPulseWidth(throttle)
-	if got != want {
-		t.Fatalf("wanted %f, got %f", want, got)
+}
+
+func TestThrottleMoreThanMax(t *testing.T) {
+	var throttle float64 = MaxAllowedThrottle + 1
+	got := throttleToPulseWidth(throttle)
+	if got != MaxAllowedPulseWidth {
+		t.Fatalf("wanted %f, got %f", MaxAllowedPulseWidth, got)
 	}
 }
 
-func TestThrottleToPulseWidthNegative(t *testing.T) {
-	var throttle float64 = -50
-	want := MinPW
+func TestThrottleEqualToMax(t *testing.T) {
+	var throttle float64 = MaxAllowedThrottle
 	got := throttleToPulseWidth(throttle)
-	if got != want {
-		t.Fatalf("wanted %f, got %f", want, got)
+	if got != MaxAllowedPulseWidth {
+		t.Fatalf("wanted %f, got %f", MaxAllowedPulseWidth, got)
 	}
-	throttle = -10
-	got = throttleToPulseWidth(throttle)
-	if got != want {
-		t.Fatalf("wanted %f, got %f", want, got)
+}
+
+func TestThrottleEqualToZero(t *testing.T) {
+	var throttle float64 = 0
+	got := throttleToPulseWidth(throttle)
+	if got != MinPW {
+		t.Fatalf("wanted %f, got %f", MinPW, got)
+	}
+}
+
+func TestThrottleLessThanZero(t *testing.T) {
+	var throttle float64 = -1
+	got := throttleToPulseWidth(throttle)
+	if got != MinPW {
+		t.Fatalf("wanted %f, got %f", MinPW, got)
 	}
 }
