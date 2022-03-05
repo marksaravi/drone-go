@@ -30,13 +30,14 @@ type PIDControlSettings struct {
 	Calibration CalibrationSettings
 }
 type pidControls struct {
-	settings    PIDControlSettings
-	roll        *axisControl
-	pitch       *axisControl
-	yaw         *axisControl
-	targetState models.PIDState
-	state       models.PIDState
-	throttles   map[int]float64
+	settings     PIDControlSettings
+	roll         *axisControl
+	pitch        *axisControl
+	yaw          *axisControl
+	targetStates models.PIDState
+	states       models.PIDState
+	throttle     float64
+	throttles    map[int]float64
 }
 
 func NewPIDControls(settings PIDControlSettings) *pidControls {
@@ -46,17 +47,19 @@ func NewPIDControls(settings PIDControlSettings) *pidControls {
 		roll:     NewPIDControl(settings.Roll),
 		pitch:    NewPIDControl(settings.Pitch),
 		yaw:      NewPIDControl(settings.Yaw),
-		targetState: models.PIDState{
-			Roll:     0,
-			Pitch:    0,
-			Yaw:      0,
-			Throttle: 0,
+		targetStates: models.PIDState{
+			Roll:         0,
+			Pitch:        0,
+			Yaw:          0,
+			ReadTime:     time.Now(),
+			ReadInterval: 0,
 		},
-		state: models.PIDState{
-			Roll:     0,
-			Pitch:    0,
-			Yaw:      0,
-			Throttle: 0,
+		states: models.PIDState{
+			Roll:         0,
+			Pitch:        0,
+			Yaw:          0,
+			ReadTime:     time.Now(),
+			ReadInterval: 0,
 		},
 		throttles: map[int]float64{
 			0: 0,
@@ -67,18 +70,19 @@ func NewPIDControls(settings PIDControlSettings) *pidControls {
 	}
 }
 
-func (c *pidControls) SetPIDTargetState(state models.PIDState) {
-	c.targetState = state
-	showStates(c.state, c.targetState)
+func (c *pidControls) SetTargetStates(states models.PIDState, throttle float64) {
+	c.targetStates = states
+	c.throttle = throttle
+	showStates(c.states, c.targetStates, c.throttle)
 }
 
 func (c *pidControls) SetRotations(rotations models.ImuRotations) {
-	c.state = models.PIDState{
-		Roll:     rotations.Rotations.Roll,
-		Pitch:    rotations.Rotations.Pitch,
-		Yaw:      rotations.Rotations.Yaw,
-		Throttle: 0,
-		Dt:       rotations.ReadInterval,
+	c.states = models.PIDState{
+		Roll:         rotations.Rotations.Roll,
+		Pitch:        rotations.Rotations.Pitch,
+		Yaw:          rotations.Rotations.Yaw,
+		ReadTime:     rotations.ReadTime,
+		ReadInterval: rotations.ReadInterval,
 	}
 	c.calcThrottles()
 }
@@ -92,10 +96,10 @@ func (c *pidControls) calcPID(roll, pitch, yaw float64, dt time.Duration) (float
 
 func (c *pidControls) calcThrottles() {
 	c.calcPID(
-		c.state.Roll-c.targetState.Roll,
-		c.state.Pitch-c.targetState.Pitch,
-		c.state.Yaw-c.targetState.Yaw,
-		c.state.Dt,
+		c.states.Roll-c.targetStates.Roll,
+		c.states.Pitch-c.targetStates.Pitch,
+		c.states.Yaw-c.targetStates.Yaw,
+		c.states.ReadInterval,
 	)
 
 	c.throttles = map[int]float64{
@@ -154,10 +158,10 @@ func (c *pidControls) PrintGains() {
 
 var lastPrint time.Time = time.Now()
 
-func showStates(a, t models.PIDState) {
+func showStates(a, t models.PIDState, throttle float64) {
 	if time.Since(lastPrint) > time.Second*2 {
 		lastPrint = time.Now()
 		// log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n    ", a.Roll, a.Pitch, a.Yaw, a.Throttle, t.Roll, t.Pitch, t.Yaw, t.Throttle)
-		log.Printf("throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f\n    ", t.Throttle, t.Roll, t.Pitch, t.Yaw)
+		log.Printf("throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f\n    ", throttle, t.Roll, t.Pitch, t.Yaw)
 	}
 }

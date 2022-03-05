@@ -55,9 +55,9 @@ type Throttles struct {
 }
 
 type PIDState struct {
-	Roll     float64
-	Pitch    float64
-	Yaw      float64
-	Throttle float64
-	Dt       time.Duration
+	Roll         float64
+	Pitch        float64
+	Yaw          float64
+	ReadTime     time.Time
+	ReadInterval time.Duration
 }

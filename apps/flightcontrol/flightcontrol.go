@@ -25,7 +25,7 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan models.ConnectionState
 }
 type pidControls interface {
-	SetPIDTargetState(state models.PIDState)
+	SetTargetStates(state models.PIDState, throttle float64)
 	SetRotations(rotations models.ImuRotations)
 	Throttles() map[int]float64
 	PrintGains()
@@ -89,8 +89,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
-					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands, fc.settings))
-					// showFlightCommands(flightCommands)
+					fc.pid.SetTargetStates(flightCommandsToPIDState(flightCommands, fc.settings), flightCommandsToThrottle(flightCommands, fc.settings))
 				}
 				commandChanOpen = ok
 
@@ -147,9 +146,12 @@ func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) flo
 
 func flightCommandsToPIDState(command models.FlightCommands, settings Settings) models.PIDState {
 	return models.PIDState{
-		Roll:     joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
-		Pitch:    joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
-		Yaw:      joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
-		Throttle: joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle),
+		Roll:  joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
+		Pitch: joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
+		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
+}
+
+func flightCommandsToThrottle(command models.FlightCommands, settings Settings) float64 {
+	return joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle)
 }
