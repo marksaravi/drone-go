@@ -19,16 +19,16 @@ flight-control:
       i-gain: 0
       d-gain: 0
     yaw:
-      max-output-to-max-throttle-ratio: 0.2
+      max-output-to-max-throttle-ratio: 0.1
       p-gain: 0
       i-gain: 0
       d-gain: 0
     calibration:
       calibrating: 'none'
       gain: 'p'
-      p-step: 0.1
-      i-step: 0.1
-      d-step: 0.1
+      p-step: 0
+      i-step: 0
+      d-step: 0
   imu:
     data-per-second: 1000
     complimentary-filter-coefficient: 0.001

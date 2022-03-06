@@ -88,15 +88,15 @@ func (c *pidControls) SetStates(rotations models.ImuRotations) {
 
 }
 
-func (c *pidControls) calcPIDs(errRoll, errPitch, errYaw float64, dt time.Duration) (float64, float64, float64) {
-	rollFeedback := c.rollPIDControl.calcPIDFeedback(errRoll, dt)
-	pitchFeedback := c.pitchPIDControl.calcPIDFeedback(errPitch, dt)
-	yawFeedback := c.yawPIDControl.calcPIDFeedback(errYaw, dt)
-	return rollFeedback, pitchFeedback, yawFeedback
+func (c *pidControls) calcPIDs(errRoll, errPitch, errYaw float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
+	rollFeedback = c.rollPIDControl.calcPIDFeedback(errRoll, dt)
+	pitchFeedback = c.pitchPIDControl.calcPIDFeedback(errPitch, dt)
+	yawFeedback = c.yawPIDControl.calcPIDFeedback(errYaw, dt)
+	return
 }
 
 func (c *pidControls) calcThrottles() {
-	c.calcPIDs(
+	rollFeedback, pitchFeedback, yawFeedback := c.calcPIDs(
 		c.states.Roll-c.targetStates.Roll,
 		c.states.Pitch-c.targetStates.Pitch,
 		c.states.Yaw-c.targetStates.Yaw,
@@ -104,10 +104,10 @@ func (c *pidControls) calcThrottles() {
 	)
 
 	c.throttles = map[int]float64{
-		0: 0,
-		1: 0,
-		2: 0,
-		3: 0,
+		0: c.throttle - pitchFeedback - yawFeedback,
+		1: c.throttle - rollFeedback + yawFeedback,
+		2: c.throttle + pitchFeedback - yawFeedback,
+		3: c.throttle + rollFeedback + yawFeedback,
 	}
 }
 
