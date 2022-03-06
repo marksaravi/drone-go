@@ -32,7 +32,7 @@ flight-control:
       d-step: 0.1
   imu:
     data-per-second: 1000
-    complimentary-filter-coefficient: 0.01
+    complimentary-filter-coefficient: 0.001
     accelerometer:
       sensitivity-level: '4g'
       lowpass-filter-enabled: true
@@ -51,6 +51,10 @@ flight-control:
         X: 0
         Y: 0
         Z: 4
+      directions:
+        X: 1
+        Y: -1
+        Z: 1
     spi:
       bus-number: 0
       chip-select: 0

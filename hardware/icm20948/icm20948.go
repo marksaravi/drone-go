@@ -21,6 +21,9 @@ type sensorConfig struct {
 	offsetX              uint16
 	offsetY              uint16
 	offsetZ              uint16
+	directionX           float64
+	directionY           float64
+	directionZ           float64
 }
 
 type memsICM20948 struct {
@@ -71,7 +74,11 @@ func NewICM20948Driver(
 	gyroOffsetX uint16,
 	gyroOffsetY uint16,
 	gyroOffsetZ uint16,
+	gyroDirectionX float64,
+	gyroDirectionY float64,
+	gyroDirectionZ float64,
 ) *memsICM20948 {
+	log.Println(gyroDirectionX, gyroDirectionY, gyroDirectionZ)
 	dev := memsICM20948{
 		spiConn: spiConn,
 		regbank: 0xFF,
@@ -83,6 +90,9 @@ func NewICM20948Driver(
 			offsetX:              accOffsetX,
 			offsetY:              accOffsetY,
 			offsetZ:              accOffsetZ,
+			directionX:           1,
+			directionY:           1,
+			directionZ:           1,
 		},
 		gyroConfig: sensorConfig{
 			sensitivityLevel:     gyroSensitivityLevel,
@@ -92,6 +102,9 @@ func NewICM20948Driver(
 			offsetX:              gyroOffsetX,
 			offsetY:              gyroOffsetY,
 			offsetZ:              gyroOffsetZ,
+			directionX:           gyroDirectionX,
+			directionY:           gyroDirectionY,
+			directionZ:           gyroDirectionZ,
 		},
 	}
 	err := dev.initDevice()

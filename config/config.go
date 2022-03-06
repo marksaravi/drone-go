@@ -58,11 +58,12 @@ type flightControl struct {
 		} `yaml:"accelerometer"`
 
 		Gyroscope struct {
-			SensitivityLevel     string  `yaml:"sensitivity-level"`
-			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
-			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`
-			Averaging            int     `yaml:"averaging"`
-			Offsets              offsets `yaml:"offsets"`
+			SensitivityLevel     string     `yaml:"sensitivity-level"`
+			LowPassFilterEnabled bool       `yaml:"lowpass-filter-enabled"`
+			LowPassFilterConfig  int        `yaml:"lowpass-filter-config"`
+			Averaging            int        `yaml:"averaging"`
+			Offsets              offsets    `yaml:"offsets"`
+			Directions           directions `yaml:"directions"`
 		} `yaml:"gyroscope"`
 
 		Magnetometer struct {
@@ -118,6 +119,12 @@ type offsets struct {
 	X uint16 `yaml:"X"`
 	Y uint16 `yaml:"Y"`
 	Z uint16 `yaml:"Z"`
+}
+
+type directions struct {
+	X float64 `yaml:"X"`
+	Y float64 `yaml:"Y"`
+	Z float64 `yaml:"Z"`
 }
 
 type udpLogger struct {

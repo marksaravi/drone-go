@@ -132,6 +132,9 @@ func NewImu() *imudevice {
 		gyroConfig.Offsets.X,
 		gyroConfig.Offsets.Y,
 		gyroConfig.Offsets.Z,
+		gyroConfig.Directions.X,
+		gyroConfig.Directions.Y,
+		gyroConfig.Directions.Z,
 	)
 	return NewImuMems(
 		imuMems,
