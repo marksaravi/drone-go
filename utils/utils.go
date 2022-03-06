@@ -31,17 +31,11 @@ func limitWarning(less bool, limit float64) {
 		}
 	}
 }
-func ApplyLimit(x, min, max float64, genwarning bool) float64 {
+func ApplyLimits(x, min, max float64) float64 {
 	if x < min {
-		if genwarning {
-			limitWarning(true, min)
-		}
 		return min
 	}
 	if x > max {
-		if genwarning {
-			limitWarning(false, max)
-		}
 		return max
 	}
 	return x

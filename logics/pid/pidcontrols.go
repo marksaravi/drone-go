@@ -40,14 +40,15 @@ func NewPIDControls(
 	pitchPIDSettings PIDSettings,
 	yawPIDSettings PIDSettings,
 	maxThrottle float64,
+	minThrottle float64,
 	maxItoMaxOutputRatio float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
 		calibration:     calibration,
-		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings, maxThrottle, maxItoMaxOutputRatio),
-		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings, maxThrottle, maxItoMaxOutputRatio),
-		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
+		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
+		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
 		targetStates: models.PIDState{
 			Roll:         0,
 			Pitch:        0,
@@ -87,11 +88,11 @@ func (c *pidControls) SetStates(rotations models.ImuRotations) {
 
 }
 
-func (c *pidControls) calcPIDs(roll, pitch, yaw float64, dt time.Duration) (float64, float64, float64) {
-	rollPID := c.rollPIDControl.calc(roll, dt)
-	pitchPID := c.pitchPIDControl.calc(pitch, dt)
-	yawPID := c.yawPIDControl.calc(yaw, dt)
-	return rollPID, pitchPID, yawPID
+func (c *pidControls) calcPIDs(errRoll, errPitch, errYaw float64, dt time.Duration) (float64, float64, float64) {
+	rollFeedback := c.rollPIDControl.calcPIDFeedback(errRoll, dt)
+	pitchFeedback := c.pitchPIDControl.calcPIDFeedback(errPitch, dt)
+	yawFeedback := c.yawPIDControl.calcPIDFeedback(errYaw, dt)
+	return rollFeedback, pitchFeedback, yawFeedback
 }
 
 func (c *pidControls) calcThrottles() {

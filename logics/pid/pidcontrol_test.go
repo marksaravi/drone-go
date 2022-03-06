@@ -11,6 +11,7 @@ func createPidControls() *pidControls {
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
 		100,
+		10,
 		1,
 		CalibrationSettings{
 			Calibrating: "none",
@@ -28,6 +29,7 @@ func TestCreate(t *testing.T) {
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 3, DGain: 3.5},
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.2, PGain: 3.5, IGain: 4, DGain: 4.5},
 		80,
+		10,
 		0.5,
 		CalibrationSettings{
 			Calibrating: "roll",

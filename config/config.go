@@ -29,7 +29,7 @@ type flightControl struct {
 	Debug                   bool    `yaml:"debug"`
 	MinThrottle             float64 `yaml:"min-throttle"`
 	MaxThrottle             float64 `yaml:"max-throttle"`
-	PIDMaxItoMaxOutputRatio float64 `yaml:"pid-max-i-to-max-output-ratio"`
+	PIDMaxIToMaxOutputRatio float64 `yaml:"pid-max-i-to-max-output-ratio"`
 	MaxRoll                 float64 `yaml:"max-roll"`
 	MaxPitch                float64 `yaml:"max-pitch"`
 	MaxYaw                  float64 `yaml:"max-yaw"`

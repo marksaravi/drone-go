@@ -57,7 +57,8 @@ func main() {
 		pid.PIDSettings(pidConfigs.Pitch),
 		pid.PIDSettings(pidConfigs.Yaw),
 		configs.MaxThrottle,
-		configs.PIDMaxItoMaxOutputRatio,
+		configs.MinThrottle,
+		configs.PIDMaxIToMaxOutputRatio,
 		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
 	flightControl := flightcontrol.NewFlightControl(
