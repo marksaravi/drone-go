@@ -1,6 +1,7 @@
 package pid
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -18,6 +19,7 @@ type PIDSettings struct {
 
 type CalibrationSettings struct {
 	Calibrating string
+	Gain        string
 	PStep       float64
 	IStep       float64
 	DStep       float64
@@ -43,9 +45,9 @@ func NewPIDControls(
 ) *pidControls {
 	return &pidControls{
 		calibration:     calibration,
-		rollPIDControl:  NewPIDControl(rollPIDSettings, maxThrottle, maxItoMaxOutputRatio),
-		pitchPIDControl: NewPIDControl(pitchPIDSettings, maxThrottle, maxItoMaxOutputRatio),
-		yawPIDControl:   NewPIDControl(yawPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings, maxThrottle, maxItoMaxOutputRatio),
 		targetStates: models.PIDState{
 			Roll:         0,
 			Pitch:        0,
@@ -113,54 +115,48 @@ func (c *pidControls) GetThrottles() map[int]float64 {
 	return c.throttles
 }
 
-func (c *pidControls) calibrateGain(gain string, down, up bool) {
-	// addStep := func(x, step float64) float64 {
-	// 	nvalue := x + step
-	// 	if nvalue < 0 {
-	// 		nvalue = x
-	// 	}
-	// 	log.Printf("%s Gain is changed to %8.6f\n", gain, nvalue)
-	// 	return nvalue
-	// }
-	// if !down && !up {
-	// 	c.calibrationStepApplied = false
-	// 	return
-	// }
-	// if c.calibrationStepApplied {
-	// 	return
-	// }
-	// var step float64 = c.calibrationStep
-	// if down {
-	// 	step = -step
-	// }
-
-	// switch strings.ToLower(gain) {
-	// case "roll-p":
-	// 	c.gains.P = addStep(c.gains.P, step)
-	// case "roll-i":
-	// 	c.gains.I = addStep(c.gains.I, step)
-	// case "roll-d":
-	// 	c.gains.D = addStep(c.gains.D, step)
-	// case "yaw-p":
-	// 	c.yawGains.P = addStep(c.yawGains.P, step)
-	// case "yaw-i":
-	// 	c.yawGains.I = addStep(c.yawGains.I, step)
-	// case "yaw-d":
-	// 	c.yawGains.D = addStep(c.yawGains.D, step)
-	// }
-	// c.calibrationStepApplied = true
-}
-
-func (c *pidControls) PrintGains() {
-	// log.Printf("P: %8.6f, I: %8.6f, D: %8.6f, yP: %8.6f, yI: %8.6f, yD: %8.6f\n", c.gains.P, c.gains.I, c.gains.D, c.yawGains.P, c.yawGains.I, c.yawGains.D)
-}
-
-var lastPrint time.Time = time.Now()
-
-func showStates(a, t models.PIDState, throttle float64) {
-	if time.Since(lastPrint) > time.Second*2 {
-		lastPrint = time.Now()
-		// log.Printf("actual roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f, throttle: %6.2f\n    ", a.Roll, a.Pitch, a.Yaw, a.Throttle, t.Roll, t.Pitch, t.Yaw, t.Throttle)
-		log.Printf("throttle: %6.2f,  target roll: %6.2f, pitch: %6.2f, yaw: %6.2f\n    ", throttle, t.Roll, t.Pitch, t.Yaw)
+func (c *pidControls) Calibrate(down, up bool) {
+	if c.calibration.Calibrating == "none" {
+		return
 	}
+	var pidcontrol *pidControl
+	switch c.calibration.Calibrating {
+	case "roll":
+		pidcontrol = c.rollPIDControl
+	case "pitch":
+		pidcontrol = c.pitchPIDControl
+	case "yaw":
+		pidcontrol = c.yawPIDControl
+	}
+	var sign float64 = 1
+	if down {
+		sign = -1
+	}
+	switch c.calibration.Gain {
+	case "p":
+		pidcontrol.pGain += c.calibration.PStep * sign
+	case "i":
+		pidcontrol.iGain += c.calibration.IStep * sign
+	case "d":
+		pidcontrol.dGain += c.calibration.DStep * sign
+	}
+	if up || down {
+		printGains(pidcontrol)
+	}
+
+}
+
+func printGains(p *pidControl) {
+	log.Printf("%8s P: %8.6f, I: %8.6f, D: %8.6f\n", p.name, p.pGain, p.iGain, p.dGain)
+}
+
+func (p *pidControls) PrintGains() {
+	if p.calibration.Calibrating == "none" {
+		return
+	}
+	fmt.Println()
+	printGains(p.rollPIDControl)
+	printGains(p.pitchPIDControl)
+	printGains(p.yawPIDControl)
+	fmt.Println()
 }

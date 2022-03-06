@@ -29,6 +29,7 @@ type pidControls interface {
 	SetStates(rotations models.ImuRotations)
 	GetThrottles() map[int]float64
 	PrintGains()
+	Calibrate(up, down bool)
 }
 
 type Settings struct {
@@ -90,6 +91,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
 					fc.pid.SetTargetStates(flightCommandsToPIDState(flightCommands, fc.settings), flightCommandsToThrottle(flightCommands, fc.settings))
+					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
 				commandChanOpen = ok
 

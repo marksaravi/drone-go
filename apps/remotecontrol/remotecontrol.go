@@ -74,10 +74,10 @@ func (rc *remoteControl) read() models.FlightCommands {
 		Throttle:          uint16(throttle),
 		ButtonFrontLeft:   buttonFrontLeft,
 		ButtonFrontRight:  buttonFrontRight,
-		ButtonTopLeft:     buttonTopLeft,
-		ButtonTopRight:    buttonTopRight,
-		ButtonBottomLeft:  buttonBottomLeft,
-		ButtonBottomRight: buttonBottomRight,
+		ButtonTopLeft:     buttonTopLeft,     // used for calibration -
+		ButtonTopRight:    buttonTopRight,    // used for calibration +
+		ButtonBottomLeft:  buttonBottomLeft,  // used for stopping disconnect alarm
+		ButtonBottomRight: buttonBottomRight, // used for shutting down the remote control
 	}
 }
 

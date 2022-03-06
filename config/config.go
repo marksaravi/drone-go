@@ -40,6 +40,7 @@ type flightControl struct {
 		Yaw         pidConfig `yaml:"yaw"`
 		Calibration struct {
 			Calibrating string  `yaml:"calibrating"`
+			Gain        string  `yaml:"gain"`
 			PStep       float64 `yaml:"p-step"`
 			IStep       float64 `yaml:"i-step"`
 			DStep       float64 `yaml:"d-step"`

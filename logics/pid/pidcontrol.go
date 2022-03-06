@@ -5,6 +5,7 @@ import (
 )
 
 type pidControl struct {
+	name          string
 	pGain         float64
 	iGain         float64
 	dGain         float64
@@ -14,9 +15,10 @@ type pidControl struct {
 	iMemory       float64
 }
 
-func NewPIDControl(settings PIDSettings, maxThrottle float64, maxItoMaxOutputRatio float64) *pidControl {
+func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, maxItoMaxOutputRatio float64) *pidControl {
 	maxOutput := settings.MaxOutputToMaxThrottleRatio * maxThrottle
 	return &pidControl{
+		name:          name,
 		pGain:         settings.PGain,
 		iGain:         settings.IGain,
 		dGain:         settings.DGain,
