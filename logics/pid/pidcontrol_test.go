@@ -53,15 +53,24 @@ func TestCreate(t *testing.T) {
 
 func TestPIDGains(t *testing.T) {
 	pidcontrols := createPidControls()
+
 	pValue := pidcontrols.rollPIDControl.getP(1.5)
 	var wantP float64 = 3.75
 	if pValue != wantP {
 		t.Errorf("want roll P %f, got %f", wantP, pValue)
 	}
+
 	pidcontrols.rollPIDControl.iMemory = 5
 	wantI := 5.00075
 	iValue := pidcontrols.rollPIDControl.getI(1.5, time.Second/1000)
 	if iValue != wantI {
 		t.Errorf("want roll I %f, got %f", wantI, iValue)
+	}
+
+	wantD := float64(750)
+	pidcontrols.rollPIDControl.previousInput = 1
+	dValue := pidcontrols.rollPIDControl.getD(2, time.Second/1000)
+	if dValue != wantD {
+		t.Errorf("want roll D %f, got %f", wantD, dValue)
 	}
 }
