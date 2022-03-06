@@ -17,7 +17,7 @@ type PIDSettings struct {
 }
 
 type CalibrationSettings struct {
-	Calibrating bool
+	Calibrating string
 	PStep       float64
 	IStep       float64
 	DStep       float64

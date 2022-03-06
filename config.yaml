@@ -24,7 +24,7 @@ flight-control:
       i-gain: 0
       d-gain: 0
     calibration:
-      calibrating: false
+      calibrating: 'none'
       p-step: 0.1
       i-step: 0.1
       d-step: 0.1
