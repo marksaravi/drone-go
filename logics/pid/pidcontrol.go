@@ -19,15 +19,15 @@ type pidControl struct {
 }
 
 func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, minThrottle float64, maxIToMaxOutputRatio float64) *pidControl {
-	maxOutput := settings.MaxOutputToMaxThrottleRatio * maxThrottle
+	maxPIDOutput := settings.MaxOutputToMaxThrottleRatio * maxThrottle
 	return &pidControl{
 		name:          name,
 		pGain:         settings.PGain,
 		iGain:         settings.IGain,
 		dGain:         settings.DGain,
-		maxOutput:     maxOutput,
+		maxOutput:     maxPIDOutput,
 		minOutput:     minThrottle,
-		maxI:          maxOutput * maxIToMaxOutputRatio,
+		maxI:          maxPIDOutput * maxIToMaxOutputRatio,
 		previousInput: 0,
 		iMemory:       0,
 	}
