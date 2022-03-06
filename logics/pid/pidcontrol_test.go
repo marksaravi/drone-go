@@ -3,11 +3,7 @@ package pid
 import (
 	"testing"
 	"time"
-
-	"github.com/marksaravi/drone-go/models"
 )
-
-const readInterval = time.Second / 1000
 
 func createPidControls() *pidControls {
 	return NewPIDControls(
@@ -55,25 +51,17 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestPGain(t *testing.T) {
+func TestPIDGains(t *testing.T) {
 	pidcontrols := createPidControls()
-	pidcontrols.SetStates(models.ImuRotations{
-		Rotations: models.Rotations{
-			Roll:  4,
-			Pitch: 3,
-			Yaw:   2,
-		},
-		ReadInterval: readInterval,
-	})
-	pidcontrols.SetTargetStates(models.PIDState{
-		Roll:  0,
-		Pitch: 0,
-		Yaw:   0,
-	}, 50)
-	// p, i, d := pidcontrols.calcPIDs(pidcontrols.states.Roll-pidcontrols.targetStates.Roll, 0, 0, readInterval)
-	pValue := pidcontrols.rollPIDControl.getP(pidcontrols.states.Roll - pidcontrols.targetStates.Roll)
-	var want float64 = 6
-	if pValue != want {
-		t.Errorf("got roll p %f, want %f", pValue, want)
+	pValue := pidcontrols.rollPIDControl.getP(1.5)
+	var wantP float64 = 3.75
+	if pValue != wantP {
+		t.Errorf("want roll P %f, got %f", wantP, pValue)
+	}
+	pidcontrols.rollPIDControl.iMemory = 5
+	wantI := 5.00075
+	iValue := pidcontrols.rollPIDControl.getI(1.5, time.Second/1000)
+	if iValue != wantI {
+		t.Errorf("want roll I %f, got %f", wantI, iValue)
 	}
 }
