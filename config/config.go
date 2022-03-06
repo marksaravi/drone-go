@@ -20,19 +20,19 @@ type radioConfig struct {
 }
 
 type pidConfig struct {
-	InputLimit float64 `yaml:"input-limit"`
-	PGain      float64 `yaml:"p-gain"`
-	IGain      float64 `yaml:"i-gain"`
-	DGain      float64 `yaml:"d-gain"`
-	ILimit     float64 `yaml:"i-limit"`
+	MaxOutputToMaxThrottleRatio float64 `yaml:"max-output-to-max-throttle-ratio"`
+	PGain                       float64 `yaml:"p-gain"`
+	IGain                       float64 `yaml:"i-gain"`
+	DGain                       float64 `yaml:"d-gain"`
 }
 type flightControl struct {
-	Debug       bool    `yaml:"debug"`
-	MinThrottle float64 `yaml:"min-throttle"`
-	MaxThrottle float64 `yaml:"max-throttle"`
-	MaxRoll     float64 `yaml:"max-roll"`
-	MaxPitch    float64 `yaml:"max-pitch"`
-	MaxYaw      float64 `yaml:"max-yaw"`
+	Debug                   bool    `yaml:"debug"`
+	MinThrottle             float64 `yaml:"min-throttle"`
+	MaxThrottle             float64 `yaml:"max-throttle"`
+	PIDMaxItoMaxOutputRatio float64 `yaml:"pid-max-i-to-max-output-ratio"`
+	MaxRoll                 float64 `yaml:"max-roll"`
+	MaxPitch                float64 `yaml:"max-pitch"`
+	MaxYaw                  float64 `yaml:"max-yaw"`
 
 	PID struct {
 		Roll        pidConfig `yaml:"roll"`

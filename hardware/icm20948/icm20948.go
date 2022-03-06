@@ -78,7 +78,6 @@ func NewICM20948Driver(
 	gyroDirectionY float64,
 	gyroDirectionZ float64,
 ) *memsICM20948 {
-	log.Println(gyroDirectionX, gyroDirectionY, gyroDirectionZ)
 	dev := memsICM20948{
 		spiConn: spiConn,
 		regbank: 0xFF,

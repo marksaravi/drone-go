@@ -9,20 +9,20 @@ import (
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
 
+type PIDSettings struct {
+	MaxOutputToMaxThrottleRatio float64
+	PGain                       float64
+	IGain                       float64
+	DGain                       float64
+}
+
 type CalibrationSettings struct {
 	Calibrating bool
 	PStep       float64
 	IStep       float64
 	DStep       float64
 }
-type PIDControlSettings struct {
-	Roll        models.PIDSettings
-	Pitch       models.PIDSettings
-	Yaw         models.PIDSettings
-	Calibration CalibrationSettings
-}
 type pidControls struct {
-	settings        PIDControlSettings
 	rollPIDControl  *pidControl
 	pitchPIDControl *pidControl
 	yawPIDControl   *pidControl
@@ -30,15 +30,22 @@ type pidControls struct {
 	states          models.PIDState
 	throttle        float64
 	throttles       map[int]float64
+	calibration     CalibrationSettings
 }
 
-func NewPIDControls(settings PIDControlSettings) *pidControls {
-
+func NewPIDControls(
+	rollPIDSettings PIDSettings,
+	pitchPIDSettings PIDSettings,
+	yawPIDSettings PIDSettings,
+	maxThrottle float64,
+	maxItoMaxOutputRatio float64,
+	calibration CalibrationSettings,
+) *pidControls {
 	return &pidControls{
-		settings:        settings,
-		rollPIDControl:  NewPIDControl(settings.Roll),
-		pitchPIDControl: NewPIDControl(settings.Pitch),
-		yawPIDControl:   NewPIDControl(settings.Yaw),
+		calibration:     calibration,
+		rollPIDControl:  NewPIDControl(rollPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		pitchPIDControl: NewPIDControl(pitchPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		yawPIDControl:   NewPIDControl(yawPIDSettings, maxThrottle, maxItoMaxOutputRatio),
 		targetStates: models.PIDState{
 			Roll:         0,
 			Pitch:        0,

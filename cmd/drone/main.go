@@ -17,7 +17,6 @@ import (
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
-	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -54,12 +53,12 @@ func main() {
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
 	pidcontrols := pid.NewPIDControls(
-		pid.PIDControlSettings{
-			Roll:        models.PIDSettings(pidConfigs.Roll),
-			Pitch:       models.PIDSettings(pidConfigs.Pitch),
-			Yaw:         models.PIDSettings(pidConfigs.Yaw),
-			Calibration: pid.CalibrationSettings(pidConfigs.Calibration),
-		},
+		pid.PIDSettings(pidConfigs.Roll),
+		pid.PIDSettings(pidConfigs.Pitch),
+		pid.PIDSettings(pidConfigs.Yaw),
+		configs.MaxThrottle,
+		configs.PIDMaxItoMaxOutputRatio,
+		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
 	flightControl := flightcontrol.NewFlightControl(
 		pidcontrols,
