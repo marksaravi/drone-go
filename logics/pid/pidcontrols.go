@@ -9,14 +9,6 @@ import (
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
 
-type PIDSettings struct {
-	InputLimit float64
-	PGain      float64
-	IGain      float64
-	DGain      float64
-	ILimit     float64
-}
-
 type CalibrationSettings struct {
 	Calibrating bool
 	PStep       float64
@@ -24,9 +16,9 @@ type CalibrationSettings struct {
 	DStep       float64
 }
 type PIDControlSettings struct {
-	Roll        PIDSettings
-	Pitch       PIDSettings
-	Yaw         PIDSettings
+	Roll        models.PIDSettings
+	Pitch       models.PIDSettings
+	Yaw         models.PIDSettings
 	Calibration CalibrationSettings
 }
 type pidControls struct {

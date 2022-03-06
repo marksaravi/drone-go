@@ -54,6 +54,14 @@ type Throttles struct {
 	Throttles map[int]float64
 }
 
+type PIDSettings struct {
+	InputLimit float64
+	PGain      float64
+	IGain      float64
+	DGain      float64
+	ILimit     float64
+}
+
 type PIDState struct {
 	Roll         float64
 	Pitch        float64

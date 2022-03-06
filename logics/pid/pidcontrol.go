@@ -2,15 +2,17 @@ package pid
 
 import (
 	"time"
+
+	"github.com/marksaravi/drone-go/models"
 )
 
 type pidControl struct {
-	settings      PIDSettings
+	settings      models.PIDSettings
 	previousInput float64
 	iMemory       float64
 }
 
-func NewPIDControl(settings PIDSettings) *pidControl {
+func NewPIDControl(settings models.PIDSettings) *pidControl {
 	return &pidControl{
 		settings:      settings,
 		previousInput: 0,
@@ -18,27 +20,27 @@ func NewPIDControl(settings PIDSettings) *pidControl {
 	}
 }
 
-func (ac *pidControl) getP(input float64) float64 {
-	return input * ac.settings.PGain
+func (pidcontrol *pidControl) getP(input float64) float64 {
+	return input * pidcontrol.settings.PGain
 }
 
-func (ac *pidControl) getI(input float64, dt time.Duration) float64 {
-	ac.iMemory = limitToMax(input*ac.settings.IGain*float64(dt)/1000000000+ac.iMemory, ac.settings.ILimit)
+func (pidcontrol *pidControl) getI(input float64, dt time.Duration) float64 {
+	pidcontrol.iMemory = limitToMax(input*pidcontrol.settings.IGain*float64(dt)/1000000000+pidcontrol.iMemory, pidcontrol.settings.ILimit)
 
-	return ac.iMemory
+	return pidcontrol.iMemory
 }
 
-func (ac *pidControl) getD(input float64, dt time.Duration) float64 {
-	d := (input - ac.previousInput) / float64(dt) * 1000000000 * ac.settings.DGain
+func (pidcontrol *pidControl) getD(input float64, dt time.Duration) float64 {
+	d := (input - pidcontrol.previousInput) / float64(dt) * 1000000000 * pidcontrol.settings.DGain
 
-	ac.previousInput = input
+	pidcontrol.previousInput = input
 	return d
 }
 
-func (ac *pidControl) calc(input float64, dt time.Duration) float64 {
-	p := ac.getP(input)
-	i := ac.getI(input, dt)
-	d := ac.getD(input, dt)
+func (pidcontrol *pidControl) calc(input float64, dt time.Duration) float64 {
+	p := pidcontrol.getP(input)
+	i := pidcontrol.getI(input, dt)
+	d := pidcontrol.getD(input, dt)
 	sum := p + i + d
 	return sum
 }
