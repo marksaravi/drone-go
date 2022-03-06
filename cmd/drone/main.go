@@ -16,7 +16,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	"github.com/marksaravi/drone-go/pid"
+	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
