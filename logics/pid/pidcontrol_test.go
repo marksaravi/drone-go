@@ -5,24 +5,6 @@ import (
 	"time"
 )
 
-func createPidControls() *pidControls {
-	return NewPIDControls(
-		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
-		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
-		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
-		100,
-		10,
-		1,
-		CalibrationSettings{
-			Calibrating: "none",
-			Gain:        "",
-			PStep:       0.1,
-			IStep:       0.2,
-			DStep:       0.3,
-		},
-	)
-}
-
 func TestCreate(t *testing.T) {
 	got := NewPIDControls(
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.5, PGain: 1.5, IGain: 2, DGain: 2.5},
@@ -54,7 +36,21 @@ func TestCreate(t *testing.T) {
 }
 
 func TestPIDGains(t *testing.T) {
-	pidcontrols := createPidControls()
+	pidcontrols := NewPIDControls(
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
+		100,
+		10,
+		1,
+		CalibrationSettings{
+			Calibrating: "none",
+			Gain:        "",
+			PStep:       0.1,
+			IStep:       0.2,
+			DStep:       0.3,
+		},
+	)
 
 	pValue := pidcontrols.rollPIDControl.getP(1.5)
 	var wantP float64 = 3.75
@@ -74,5 +70,49 @@ func TestPIDGains(t *testing.T) {
 	dValue := pidcontrols.rollPIDControl.getD(2, time.Second/1000)
 	if dValue != wantD {
 		t.Errorf("want roll D %f, got %f", wantD, dValue)
+	}
+}
+
+func TestPIDLimits(t *testing.T) {
+	pidcontrols := NewPIDControls(
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 10, IGain: 2, DGain: 3},
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 10, IGain: 2, DGain: 3},
+		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 10, IGain: 2, DGain: 3},
+		100,
+		10,
+		1,
+		CalibrationSettings{
+			Calibrating: "none",
+			Gain:        "",
+			PStep:       0.1,
+			IStep:       0.2,
+			DStep:       0.3,
+		},
+	)
+
+	pidcontrols.rollPIDControl.iMemory = pidcontrols.rollPIDControl.maxI
+	wantI := pidcontrols.rollPIDControl.maxI
+	iValue := pidcontrols.rollPIDControl.getI(1, time.Second/1000)
+	if iValue != wantI {
+		t.Errorf("want roll positive I %f, got %f", wantI, iValue)
+	}
+
+	pidcontrols.rollPIDControl.iMemory = -pidcontrols.rollPIDControl.maxI
+	wantI = -pidcontrols.rollPIDControl.maxI
+	iValue = pidcontrols.rollPIDControl.getI(-1, time.Second/1000)
+	if iValue != wantI {
+		t.Errorf("want roll negative I %f, got %f", wantI, iValue)
+	}
+
+	rollFeedback := pidcontrols.rollPIDControl.calcPIDFeedback(30, time.Second)
+	var wantFeedback float64 = 75
+	if rollFeedback != wantFeedback {
+		t.Errorf("want roll feedback %f, got %f", wantFeedback, rollFeedback)
+	}
+
+	rollFeedback = pidcontrols.rollPIDControl.calcPIDFeedback(-30, time.Second)
+	wantFeedback = 10
+	if rollFeedback != wantFeedback {
+		t.Errorf("want roll feedback %f, got %f", wantFeedback, rollFeedback)
 	}
 }
