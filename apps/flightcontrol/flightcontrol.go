@@ -2,6 +2,7 @@ package flightcontrol
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 )
+
+const SAFE_START_DURATION = time.Second
 
 type imu interface {
 	ResetTime()
@@ -18,7 +21,7 @@ type imu interface {
 type esc interface {
 	On()
 	Off()
-	SetThrottles(models.Throttles)
+	SetThrottles(throttles models.Throttles, isSafeStarted bool)
 }
 
 type radioReceiver interface {
@@ -42,12 +45,13 @@ type Settings struct {
 }
 
 type flightControl struct {
-	pid      pidControls
-	imu      imu
-	esc      esc
-	radio    radioReceiver
-	logger   models.Logger
-	settings Settings
+	pid           pidControls
+	imu           imu
+	esc           esc
+	radio         radioReceiver
+	logger        models.Logger
+	settings      Settings
+	isSafeStarted bool
 }
 
 func NewFlightControl(
@@ -80,7 +84,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
 		var running bool = true
-
+		var flightControlStartTime time.Time = time.Now()
 		fc.imu.ResetTime()
 		for running || connectionChanOpen || commandChanOpen {
 			select {
@@ -94,6 +98,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if ok {
 					rotations := flightCommandsToRotations(flightCommands, fc.settings)
 					throttle := flightCommandsToThrottle(flightCommands, fc.settings)
+					fmt.Print(throttle)
+					fc.checkForSafeStart(throttle, flightControlStartTime)
 					fc.pid.SetTargetStates(rotations, throttle)
 					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
@@ -110,7 +116,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						fc.pid.SetStates(rotations.Rotations, rotations.ReadInterval)
-						fc.esc.SetThrottles(fc.pid.GetThrottles())
+
+						fc.esc.SetThrottles(fc.pid.GetThrottles(), fc.isSafeStarted)
 						fc.logger.Send(rotations)
 					}
 				}
@@ -127,6 +134,15 @@ func showConnectionState(connectionState models.ConnectionState) {
 		log.Println("Waiting for Connection")
 	case constants.DISCONNECTED:
 		log.Println("Disconnected")
+	}
+}
+
+func (fc *flightControl) checkForSafeStart(throttle float64, startTime time.Time) {
+	if time.Since(startTime) > SAFE_START_DURATION && throttle == 0 {
+		if !fc.isSafeStarted {
+			log.Println("Safe Start Detected")
+		}
+		fc.isSafeStarted = true
 	}
 }
 
