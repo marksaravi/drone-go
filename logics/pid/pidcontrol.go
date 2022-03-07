@@ -33,6 +33,10 @@ func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, minTh
 	}
 }
 
+func (pidcontrol *pidControl) reset() {
+	pidcontrol.iMemory = 0
+}
+
 func (pidcontrol *pidControl) getP(input float64) float64 {
 	return input * pidcontrol.pGain
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
@@ -75,27 +76,25 @@ func (c *pidControls) SetTargetStates(states models.Rotations, throttle float64)
 	c.throttle = throttle
 }
 
-func (c *pidControls) SetStates(rotations models.Rotations, dt time.Duration) {
-	c.states = rotations
-	c.dt = dt
-
-}
-
-func (c *pidControls) calcPIDs(errRoll, errPitch, errYaw float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
-	rollFeedback = c.rollPIDControl.calcPIDFeedback(errRoll, dt)
-	pitchFeedback = c.pitchPIDControl.calcPIDFeedback(errPitch, dt)
-	yawFeedback = c.yawPIDControl.calcPIDFeedback(errYaw, dt)
+func (c *pidControls) calcFeedbacks(rollError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
+	rollFeedback = c.rollPIDControl.calcPIDFeedback(rollError, dt)
+	pitchFeedback = c.rollPIDControl.calcPIDFeedback(pitchError, dt)
+	yawFeedback = c.rollPIDControl.calcPIDFeedback(yawError, dt)
 	return
 }
 
-func (c *pidControls) calcThrottles() {
-	// rollFeedback, pitchFeedback, yawFeedback := c.calcPIDs(
-	// 	c.states.Roll-c.targetStates.Roll,
-	// 	c.states.Pitch-c.targetStates.Pitch,
-	// 	c.states.Yaw-c.targetStates.Yaw,
-	// 	c.states.ReadInterval,
-	// )
+func (c *pidControls) SetStates(rotations models.Rotations, dt time.Duration) {
+	rollError := c.targetStates.Roll - rotations.Roll
+	pitchError := c.targetStates.Pitch - rotations.Pitch
+	yawError := c.targetStates.Yaw - rotations.Yaw
+	rollFeedback, pitchFeedback, yawFeedback := c.calcFeedbacks(rollError, pitchError, yawError, dt)
+	c.calcThrottles(rollFeedback, pitchFeedback, yawFeedback)
+	utils.PrintByInterval("pidfeedbacks", time.Second/10, func() {
+		printFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
+	})
+}
 
+func (c *pidControls) calcThrottles(rollFeedback, pitchFeedback, yawFeedback float64) {
 	c.throttles = map[int]float64{
 		0: c.throttle, //- pitchFeedback - yawFeedback,
 		1: c.throttle, //- rollFeedback + yawFeedback,
@@ -104,14 +103,20 @@ func (c *pidControls) calcThrottles() {
 	}
 }
 
+func (c *pidControls) reset() {
+	c.rollPIDControl.reset()
+	c.pitchPIDControl.reset()
+	c.yawPIDControl.reset()
+}
+
 func (c *pidControls) GetThrottles(isSafeStarted bool) models.Throttles {
 	if !isSafeStarted {
+		c.reset()
 		return models.Throttles{
 			BaseThrottle: 0,
 			Throttles:    map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 		}
 	}
-	c.calcThrottles()
 	return models.Throttles{
 		BaseThrottle: c.throttle,
 		Throttles:    c.throttles,
@@ -162,4 +167,8 @@ func (p *pidControls) PrintGains() {
 	printGains(p.pitchPIDControl)
 	printGains(p.yawPIDControl)
 	fmt.Println()
+}
+
+func printFeedbacks(rollFeedback, pitchFeedback, yawFeedback float64) {
+	log.Printf("feedbacks { roll: %8.4f, pitch: %8.4f, yaw: %8.4f\n", rollFeedback, pitchFeedback, yawFeedback)
 }
