@@ -2,7 +2,6 @@ package flightcontrol
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -98,7 +97,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if ok {
 					rotations := flightCommandsToRotations(flightCommands, fc.settings)
 					throttle := flightCommandsToThrottle(flightCommands, fc.settings)
-					fmt.Print(throttle)
 					fc.checkForSafeStart(throttle, flightControlStartTime)
 					fc.pid.SetTargetStates(rotations, throttle)
 					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
@@ -116,7 +114,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						fc.pid.SetStates(rotations.Rotations, rotations.ReadInterval)
-
 						fc.esc.SetThrottles(fc.pid.GetThrottles(), fc.isSafeStarted)
 						fc.logger.Send(rotations)
 					}
