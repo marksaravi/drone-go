@@ -59,7 +59,6 @@ type PCA9685Settings struct {
 	Connection      *i2c.Dev
 	ChannelMappings map[int]int
 	MaxThrottle     float64
-	MinThrottle     float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
@@ -99,10 +98,6 @@ func (d *pca9685Dev) SetThrottles(throttles map[int]float64, on bool) {
 		pulseWidth := throttleToPulseWidth(throttle)
 		d.setPWMByThrottle(channel, pulseWidth)
 	}
-}
-
-func (d *pca9685Dev) OffAll() {
-	d.setAllPWM(MinPW)
 }
 
 //Calibrate

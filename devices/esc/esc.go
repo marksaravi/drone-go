@@ -16,49 +16,57 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottles(map[int]float64)
-	OffAll()
+	SetThrottles(map[int]float64, bool)
 }
 
 type escDev struct {
-	pwmDev         pwmDevice
-	powerbreaker   powerbreaker
-	lastUpdate     time.Time
-	updateInterval time.Duration
-	debug          bool
+	pwmDev            pwmDevice
+	powerbreaker      powerbreaker
+	lastUpdate        time.Time
+	updateInterval    time.Duration
+	debug             bool
+	isStartedFromZero bool
 }
 
 func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, debug bool) *escDev {
 	powerbreaker.Disconnect()
 	return &escDev{
-		pwmDev:         pwmDev,
-		powerbreaker:   powerbreaker,
-		lastUpdate:     time.Now().Add(-time.Second),
-		updateInterval: time.Second / time.Duration(updatesPerSecond),
-		debug:          debug,
+		pwmDev:            pwmDev,
+		powerbreaker:      powerbreaker,
+		lastUpdate:        time.Now().Add(-time.Second),
+		updateInterval:    time.Second / time.Duration(updatesPerSecond),
+		debug:             debug,
+		isStartedFromZero: false,
 	}
 }
 
+func (e *escDev) zeroThrottle() {
+	e.pwmDev.SetThrottles(map[int]float64{0: 0, 1: 0, 2: 0, 3: 0}, false)
+}
+
 func (e *escDev) On() {
-	e.pwmDev.OffAll()
+	e.zeroThrottle()
 	if !e.debug {
 		e.powerbreaker.Connect()
 	}
 }
 
 func (e *escDev) Off() {
-	e.pwmDev.OffAll()
+	e.zeroThrottle()
 	e.powerbreaker.Disconnect()
 }
 
 func (e *escDev) SetThrottles(throttles models.Throttles) {
-	if throttles.Active {
+	if throttles.BaseThrottle == 0 {
+		e.isStartedFromZero = true
+	}
+	if e.isStartedFromZero {
 		if time.Since(e.lastUpdate) >= e.updateInterval {
 			e.lastUpdate = time.Now()
-			e.pwmDev.SetThrottles(throttles.Throttles)
+			e.pwmDev.SetThrottles(throttles.Throttles, true)
 		}
 
 	} else {
-		e.pwmDev.OffAll()
+		e.zeroThrottle()
 	}
 }

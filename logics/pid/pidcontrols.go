@@ -96,24 +96,27 @@ func (c *pidControls) calcPIDs(errRoll, errPitch, errYaw float64, dt time.Durati
 }
 
 func (c *pidControls) calcThrottles() {
-	rollFeedback, pitchFeedback, yawFeedback := c.calcPIDs(
-		c.states.Roll-c.targetStates.Roll,
-		c.states.Pitch-c.targetStates.Pitch,
-		c.states.Yaw-c.targetStates.Yaw,
-		c.states.ReadInterval,
-	)
+	// rollFeedback, pitchFeedback, yawFeedback := c.calcPIDs(
+	// 	c.states.Roll-c.targetStates.Roll,
+	// 	c.states.Pitch-c.targetStates.Pitch,
+	// 	c.states.Yaw-c.targetStates.Yaw,
+	// 	c.states.ReadInterval,
+	// )
 
 	c.throttles = map[int]float64{
-		0: c.throttle - pitchFeedback - yawFeedback,
-		1: c.throttle - rollFeedback + yawFeedback,
-		2: c.throttle + pitchFeedback - yawFeedback,
-		3: c.throttle + rollFeedback + yawFeedback,
+		0: c.throttle, //- pitchFeedback - yawFeedback,
+		1: c.throttle, //- rollFeedback + yawFeedback,
+		2: c.throttle, //+ pitchFeedback - yawFeedback,
+		3: c.throttle, //+ rollFeedback + yawFeedback,
 	}
 }
 
-func (c *pidControls) GetThrottles() map[int]float64 {
+func (c *pidControls) GetThrottles() models.Throttles {
 	c.calcThrottles()
-	return c.throttles
+	return models.Throttles{
+		BaseThrottle: c.throttle,
+		Throttles:    c.throttles,
+	}
 }
 
 func (c *pidControls) Calibrate(down, up bool) {

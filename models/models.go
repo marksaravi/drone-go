@@ -50,8 +50,8 @@ type Logger interface {
 }
 
 type Throttles struct {
-	Active    bool
-	Throttles map[int]float64
+	BaseThrottle float64
+	Throttles    map[int]float64
 }
 
 type PIDState struct {

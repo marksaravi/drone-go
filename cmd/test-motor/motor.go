@@ -38,22 +38,21 @@ func main() {
 	const maxThrottle float64 = 10
 	const steps int = 10
 	var dThrottle float64 = maxThrottle / float64(steps)
-	var throttle float64 = 0
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.UpdatePerSecond, false)
 	var wg sync.WaitGroup
 	esc.On()
 	time.Sleep(3 * time.Second)
 	throttles := models.Throttles{
-		Active:    true,
-		Throttles: map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
+		BaseThrottle: 0,
+		Throttles:    map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 	}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
-			log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			throttles.Throttles[*motor] = throttle
+			log.Println("motor: ", *motor, ", throttle:  ", throttles.BaseThrottle, "%")
+			throttles.Throttles[*motor] = throttles.BaseThrottle
 			esc.SetThrottles(throttles)
 			time.Sleep(250 * time.Millisecond)
-			throttle += dThrottle
+			throttles.BaseThrottle += dThrottle
 		}
 		dThrottle = -dThrottle
 	}
