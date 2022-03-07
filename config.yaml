@@ -92,7 +92,7 @@ remote-control:
       dir: 1
     throttle:
       channel: 5
-      offset: -1
+      offset: 5
     spi:
       bus-number: 0
       chip-select: 0
