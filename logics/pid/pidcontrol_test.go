@@ -11,7 +11,6 @@ func TestCreate(t *testing.T) {
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 3, DGain: 3.5},
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.2, PGain: 3.5, IGain: 4, DGain: 4.5},
 		80,
-		10,
 		0.5,
 		CalibrationSettings{
 			Calibrating: "roll",
@@ -23,9 +22,6 @@ func TestCreate(t *testing.T) {
 	)
 	if got.rollPIDControl.pGain != 1.5 {
 		t.Errorf("got pgain %f, want pgain %f", got.rollPIDControl.pGain, float64(1.5))
-	}
-	if got.rollPIDControl.maxOutput != 40 {
-		t.Errorf("got max output %f, want max output %f", got.rollPIDControl.pGain, float64(40))
 	}
 	if got.rollPIDControl.maxI != 20 {
 		t.Errorf("got pgain %f, want pgain %f", got.rollPIDControl.pGain, float64(1.5))
@@ -41,7 +37,6 @@ func TestPIDGains(t *testing.T) {
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 2.5, IGain: 0.5, DGain: 0.75},
 		100,
-		10,
 		1,
 		CalibrationSettings{
 			Calibrating: "none",
@@ -79,7 +74,6 @@ func TestPIDLimits(t *testing.T) {
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 10, IGain: 2, DGain: 3},
 		PIDSettings{MaxOutputToMaxThrottleRatio: 0.75, PGain: 10, IGain: 2, DGain: 3},
 		100,
-		10,
 		1,
 		CalibrationSettings{
 			Calibrating: "none",
@@ -105,13 +99,13 @@ func TestPIDLimits(t *testing.T) {
 	}
 
 	rollFeedback := pidcontrols.rollPIDControl.calcPIDFeedback(30, time.Second)
-	var wantFeedback float64 = 75
+	var wantFeedback float64 = 375
 	if rollFeedback != wantFeedback {
 		t.Errorf("want roll feedback %f, got %f", wantFeedback, rollFeedback)
 	}
 
 	rollFeedback = pidcontrols.rollPIDControl.calcPIDFeedback(-30, time.Second)
-	wantFeedback = 10
+	wantFeedback = -555
 	if rollFeedback != wantFeedback {
 		t.Errorf("want roll feedback %f, got %f", wantFeedback, rollFeedback)
 	}

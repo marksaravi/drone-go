@@ -1,6 +1,7 @@
 package pid
 
 import (
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/utils"
@@ -12,13 +13,12 @@ type pidControl struct {
 	iGain         float64
 	dGain         float64
 	maxOutput     float64
-	minOutput     float64
 	maxI          float64
 	previousInput float64
 	iMemory       float64
 }
 
-func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, minThrottle float64, maxIToMaxOutputRatio float64) *pidControl {
+func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, maxIToMaxOutputRatio float64) *pidControl {
 	maxPIDOutput := settings.MaxOutputToMaxThrottleRatio * maxThrottle
 	return &pidControl{
 		name:          name,
@@ -26,7 +26,6 @@ func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, minTh
 		iGain:         settings.IGain,
 		dGain:         settings.DGain,
 		maxOutput:     maxPIDOutput,
-		minOutput:     minThrottle,
 		maxI:          maxPIDOutput * maxIToMaxOutputRatio,
 		previousInput: 0,
 		iMemory:       0,
@@ -37,26 +36,29 @@ func (pidcontrol *pidControl) reset() {
 	pidcontrol.iMemory = 0
 }
 
-func (pidcontrol *pidControl) getP(input float64) float64 {
-	return input * pidcontrol.pGain
+func (pidcontrol *pidControl) getP(inputError float64) float64 {
+	return inputError * pidcontrol.pGain
 }
 
-func (pidcontrol *pidControl) getI(input float64, dt time.Duration) float64 {
-	pidcontrol.iMemory = utils.ApplyLimits(input*pidcontrol.iGain*float64(dt)/1000000000+pidcontrol.iMemory, -pidcontrol.maxI, pidcontrol.maxI)
+func (pidcontrol *pidControl) getI(inputError float64, dt time.Duration) float64 {
+	pidcontrol.iMemory = utils.ApplyLimits(inputError*pidcontrol.iGain*float64(dt)/1000000000+pidcontrol.iMemory, -pidcontrol.maxI, pidcontrol.maxI)
 	return pidcontrol.iMemory
 }
 
-func (pidcontrol *pidControl) getD(input float64, dt time.Duration) float64 {
-	d := (input - pidcontrol.previousInput) / float64(dt) * 1000000000 * pidcontrol.dGain
+func (pidcontrol *pidControl) getD(inputError float64, dt time.Duration) float64 {
+	d := (inputError - pidcontrol.previousInput) / float64(dt) * 1000000000 * pidcontrol.dGain
 
-	pidcontrol.previousInput = input
+	pidcontrol.previousInput = inputError
 	return d
 }
 
-func (pidcontrol *pidControl) calcPIDFeedback(input float64, dt time.Duration) float64 {
-	p := pidcontrol.getP(input)
-	i := pidcontrol.getI(input, dt)
-	d := pidcontrol.getD(input, dt)
-	sum := utils.ApplyLimits(p+i+d, pidcontrol.minOutput, pidcontrol.maxOutput)
-	return sum
+func (pidcontrol *pidControl) calcPIDFeedback(inputError float64, dt time.Duration) float64 {
+	p := pidcontrol.getP(inputError)
+	i := pidcontrol.getI(inputError, dt)
+	d := pidcontrol.getD(inputError, dt)
+	utils.PrintByInterval("pidfeedbacks", time.Second/10, func() {
+		log.Printf("feedbacks { roll: %8.4f, pitch: %8.4f, yaw: %8.4f\n", p, i, d)
+	})
+
+	return p + i + d
 }

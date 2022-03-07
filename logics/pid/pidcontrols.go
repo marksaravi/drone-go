@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
@@ -42,15 +41,14 @@ func NewPIDControls(
 	pitchPIDSettings PIDSettings,
 	yawPIDSettings PIDSettings,
 	maxThrottle float64,
-	minThrottle float64,
 	maxItoMaxOutputRatio float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
 		calibration:     calibration,
-		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
-		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
-		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings, maxThrottle, minThrottle, maxItoMaxOutputRatio),
+		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings, maxThrottle, maxItoMaxOutputRatio),
+		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings, maxThrottle, maxItoMaxOutputRatio),
 		targetStates: models.Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -89,17 +87,17 @@ func (c *pidControls) SetStates(rotations models.Rotations, dt time.Duration) {
 	yawError := c.targetStates.Yaw - rotations.Yaw
 	rollFeedback, pitchFeedback, yawFeedback := c.calcFeedbacks(rollError, pitchError, yawError, dt)
 	c.calcThrottles(rollFeedback, pitchFeedback, yawFeedback)
-	utils.PrintByInterval("pidfeedbacks", time.Second/10, func() {
-		printFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
-	})
+	// utils.PrintByInterval("pidfeedbacks", time.Second/10, func() {
+	// 	printFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
+	// })
 }
 
 func (c *pidControls) calcThrottles(rollFeedback, pitchFeedback, yawFeedback float64) {
 	c.throttles = map[int]float64{
-		0: c.throttle, //- pitchFeedback - yawFeedback,
-		1: c.throttle, //- rollFeedback + yawFeedback,
-		2: c.throttle, //+ pitchFeedback - yawFeedback,
-		3: c.throttle, //+ rollFeedback + yawFeedback,
+		0: c.throttle - pitchFeedback - yawFeedback,
+		1: c.throttle - rollFeedback + yawFeedback,
+		2: c.throttle + pitchFeedback - yawFeedback,
+		3: c.throttle + rollFeedback + yawFeedback,
 	}
 }
 
