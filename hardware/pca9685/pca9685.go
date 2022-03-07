@@ -43,7 +43,7 @@ const (
 	Frequency          float64 = 384
 	MinPW              float64 = 0.000995
 	MaxPW              float64 = 0.00199
-	MaxAllowedThrottle float64 = 50
+	MaxAllowedThrottle float64 = 35
 	MinOnThrottle      float64 = 5
 )
 
