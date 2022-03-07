@@ -53,11 +53,3 @@ type Throttles struct {
 	BaseThrottle float64
 	Throttles    map[int]float64
 }
-
-type PIDState struct {
-	Roll         float64
-	Pitch        float64
-	Yaw          float64
-	ReadTime     time.Time
-	ReadInterval time.Duration
-}

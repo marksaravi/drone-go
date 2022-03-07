@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
@@ -25,8 +26,8 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan models.ConnectionState
 }
 type pidControls interface {
-	SetTargetStates(state models.PIDState, throttle float64)
-	SetStates(rotations models.ImuRotations)
+	SetTargetStates(rotations models.Rotations, throttle float64)
+	SetStates(rotations models.Rotations, dt time.Duration)
 	GetThrottles() models.Throttles
 
 	PrintGains()
@@ -91,7 +92,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
-					fc.pid.SetTargetStates(flightCommandsToPIDState(flightCommands, fc.settings), flightCommandsToThrottle(flightCommands, fc.settings))
+					rotations := flightCommandsToRotations(flightCommands, fc.settings)
+					throttle := flightCommandsToThrottle(flightCommands, fc.settings)
+					fc.pid.SetTargetStates(rotations, throttle)
 					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
 				commandChanOpen = ok
@@ -106,7 +109,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running && commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						fc.pid.SetStates(rotations)
+						fc.pid.SetStates(rotations.Rotations, rotations.ReadInterval)
 						fc.esc.SetThrottles(fc.pid.GetThrottles())
 						fc.logger.Send(rotations)
 					}
@@ -144,8 +147,8 @@ func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) flo
 	return float64(digital) / float64(resolution) * max
 }
 
-func flightCommandsToPIDState(command models.FlightCommands, settings Settings) models.PIDState {
-	return models.PIDState{
+func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.Rotations {
+	return models.Rotations{
 		Roll:  joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
 		Pitch: joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
 		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
