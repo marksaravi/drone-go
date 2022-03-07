@@ -40,11 +40,11 @@ const (
 )
 
 const (
-	Frequency            float64 = 384
-	MinPW                float64 = 0.000995
-	MaxPW                float64 = 0.00199
-	MaxAllowedThrottle   float64 = 50
-	MaxAllowedPulseWidth float64 = MinPW + MaxAllowedThrottle/100*(MaxPW-MinPW)
+	Frequency          float64 = 384
+	MinPW              float64 = 0.000995
+	MaxPW              float64 = 0.00199
+	MaxAllowedThrottle float64 = 50
+	MinOnThrottle      float64 = 5
 )
 
 type pca9685Dev struct {
@@ -53,14 +53,13 @@ type pca9685Dev struct {
 	connection      *i2c.Dev
 	frequency       float64
 	channelMappings map[int]int
-	maxThrottle     float64
-	throttle        float64
 }
 
 type PCA9685Settings struct {
 	Connection      *i2c.Dev
 	ChannelMappings map[int]int
 	MaxThrottle     float64
+	MinThrottle     float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
@@ -70,28 +69,32 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 		name:            "pca9685Dev",
 		address:         PCA9685Address,
 		connection:      settings.Connection,
-		maxThrottle:     settings.MaxThrottle,
 		channelMappings: settings.ChannelMappings,
-		throttle:        0,
 	}
 	dev.init()
 	return dev, nil
 }
 
 func throttleToPulseWidth(throttle float64) float64 {
-	pulseWidth := MinPW + throttle/100*(MaxPW-MinPW)
-	if pulseWidth < MinPW {
-		return MinPW
-	}
-	if pulseWidth > MaxAllowedPulseWidth {
-		return MaxAllowedPulseWidth
-	}
-	return pulseWidth
+	return MinPW + throttle/100*(MaxPW-MinPW)
 }
 
-func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
+func limitThrottle(throttle float64, on bool) float64 {
+	if !on {
+		return 0
+	}
+	if throttle < MinOnThrottle {
+		return MinOnThrottle
+	}
+	if throttle > MaxAllowedThrottle {
+		return MaxAllowedThrottle
+	}
+	return throttle
+}
+
+func (d *pca9685Dev) SetThrottles(throttles map[int]float64, on bool) {
 	for i := 0; i < len(throttles); i++ {
-		throttle := throttles[i]
+		throttle := limitThrottle(throttles[i], on)
 		channel := d.channelMappings[i]
 		pulseWidth := throttleToPulseWidth(throttle)
 		d.setPWMByThrottle(channel, pulseWidth)

@@ -4,41 +4,32 @@ import "testing"
 
 func TestThrottleInRange(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle - 1
-	want := MinPW + (MaxPW-MinPW)*throttle/100
-	got := throttleToPulseWidth(throttle)
-	if got != want {
-		t.Fatalf("wanted %f, got %f", want, got)
+	got := limitThrottle(throttle, true)
+	if got != throttle {
+		t.Fatalf("wanted %f, got %f", throttle, got)
 	}
 }
 
 func TestThrottleMoreThanMax(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle + 1
-	got := throttleToPulseWidth(throttle)
-	if got != MaxAllowedPulseWidth {
-		t.Fatalf("wanted %f, got %f", MaxAllowedPulseWidth, got)
+	got := limitThrottle(throttle, true)
+	if got != MaxAllowedThrottle {
+		t.Fatalf("wanted %f, got %f", MaxAllowedThrottle, got)
 	}
 }
 
-func TestThrottleEqualToMax(t *testing.T) {
-	var throttle float64 = MaxAllowedThrottle
-	got := throttleToPulseWidth(throttle)
-	if got != MaxAllowedPulseWidth {
-		t.Fatalf("wanted %f, got %f", MaxAllowedPulseWidth, got)
+func TestThrottlessThanMin(t *testing.T) {
+	var throttle float64 = MinOnThrottle - 1
+	got := limitThrottle(throttle, true)
+	if got != MinOnThrottle {
+		t.Fatalf("wanted %f, got %f", MinOnThrottle, got)
 	}
 }
 
-func TestThrottleEqualToZero(t *testing.T) {
-	var throttle float64 = 0
-	got := throttleToPulseWidth(throttle)
-	if got != MinPW {
-		t.Fatalf("wanted %f, got %f", MinPW, got)
-	}
-}
-
-func TestThrottleLessThanZero(t *testing.T) {
-	var throttle float64 = -1
-	got := throttleToPulseWidth(throttle)
-	if got != MinPW {
-		t.Fatalf("wanted %f, got %f", MinPW, got)
+func TestThrottleWhenOff(t *testing.T) {
+	var throttle float64 = MaxAllowedThrottle - 1
+	got := limitThrottle(throttle, false)
+	if got != 0 {
+		t.Fatalf("wanted %f, got %f", 0.0, got)
 	}
 }
