@@ -30,7 +30,7 @@ type radioReceiver interface {
 type pidControls interface {
 	SetTargetStates(rotations models.Rotations, throttle float64)
 	SetStates(rotations models.Rotations, dt time.Duration)
-	GetThrottles() models.Throttles
+	GetThrottles(isSafeStarted bool) models.Throttles
 
 	PrintGains()
 	Calibrate(up, down bool)
@@ -114,7 +114,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						fc.pid.SetStates(rotations.Rotations, rotations.ReadInterval)
-						fc.esc.SetThrottles(fc.pid.GetThrottles(), fc.isSafeStarted)
+						throttles := fc.pid.GetThrottles(fc.isSafeStarted)
+						fc.esc.SetThrottles(throttles, fc.isSafeStarted)
 						fc.logger.Send(rotations)
 					}
 				}

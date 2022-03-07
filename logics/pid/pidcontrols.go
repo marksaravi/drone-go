@@ -104,7 +104,13 @@ func (c *pidControls) calcThrottles() {
 	}
 }
 
-func (c *pidControls) GetThrottles() models.Throttles {
+func (c *pidControls) GetThrottles(isSafeStarted bool) models.Throttles {
+	if !isSafeStarted {
+		return models.Throttles{
+			BaseThrottle: 0,
+			Throttles:    map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
+		}
+	}
 	c.calcThrottles()
 	return models.Throttles{
 		BaseThrottle: c.throttle,
