@@ -8,27 +8,24 @@ import (
 )
 
 type pidControl struct {
-	name          string
-	pGain         float64
-	iGain         float64
-	dGain         float64
-	maxOutput     float64
-	maxI          float64
-	previousInput float64
-	iMemory       float64
+	name       string
+	pGain      float64
+	iGain      float64
+	dGain      float64
+	maxI       float64
+	dPrevError float64
+	iMemory    float64
 }
 
-func NewPIDControl(name string, settings PIDSettings, maxThrottle float64, maxIToMaxOutputRatio float64) *pidControl {
-	maxPIDOutput := settings.MaxOutputToMaxThrottleRatio * maxThrottle
+func NewPIDControl(name string, settings PIDSettings) *pidControl {
 	return &pidControl{
-		name:          name,
-		pGain:         settings.PGain,
-		iGain:         settings.IGain,
-		dGain:         settings.DGain,
-		maxOutput:     maxPIDOutput,
-		maxI:          maxPIDOutput * maxIToMaxOutputRatio,
-		previousInput: 0,
-		iMemory:       0,
+		name:       name,
+		pGain:      settings.PGain,
+		iGain:      settings.IGain,
+		dGain:      settings.DGain,
+		maxI:       settings.MaxI,
+		dPrevError: 0,
+		iMemory:    0,
 	}
 }
 
@@ -46,9 +43,9 @@ func (pidcontrol *pidControl) getI(inputError float64, dt time.Duration) float64
 }
 
 func (pidcontrol *pidControl) getD(inputError float64, dt time.Duration) float64 {
-	d := (inputError - pidcontrol.previousInput) / float64(dt) * 1000000000 * pidcontrol.dGain
+	d := (inputError - pidcontrol.dPrevError) / float64(dt) * 1000000000 * pidcontrol.dGain
 
-	pidcontrol.previousInput = inputError
+	pidcontrol.dPrevError = inputError
 	return d
 }
 
