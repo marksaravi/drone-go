@@ -25,7 +25,7 @@ type esc interface {
 
 type radioReceiver interface {
 	GetReceiverChannel() <-chan models.FlightCommands
-	GetConnectionStateChannel() <-chan models.ConnectionState
+	GetConnectionStateChannel() <-chan int
 }
 type pidControls interface {
 	SetTargetStates(rotations models.Rotations)
@@ -42,13 +42,16 @@ type Settings struct {
 }
 
 type flightControl struct {
-	pid           pidControls
-	imu           imu
-	esc           esc
-	radio         radioReceiver
-	logger        models.Logger
-	settings      Settings
-	isSafeStarted bool
+	pid                pidControls
+	imu                imu
+	esc                esc
+	radio              radioReceiver
+	logger             models.Logger
+	settings           Settings
+	isSafeStarted      bool
+	connectionState    int
+	connectionChanOpen bool
+	timeout            time.Time
 }
 
 func NewFlightControl(
@@ -60,12 +63,15 @@ func NewFlightControl(
 	settings Settings,
 ) *flightControl {
 	return &flightControl{
-		pid:      pid,
-		imu:      imu,
-		esc:      esc,
-		radio:    radio,
-		logger:   logger,
-		settings: settings,
+		pid:                pid,
+		imu:                imu,
+		esc:                esc,
+		radio:              radio,
+		logger:             logger,
+		settings:           settings,
+		timeout:            time.Now().Add(time.Second * 1000000),
+		connectionState:    constants.CONNECTED,
+		connectionChanOpen: true,
 	}
 }
 
@@ -79,12 +85,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		fc.esc.On()
 		var commandChanOpen bool = true
-		var connectionChanOpen bool = true
 		var running bool = true
 		var throttle float64 = 0
-		var flightControlStartTime time.Time = time.Now()
 		fc.imu.ResetTime()
-		for running || connectionChanOpen || commandChanOpen {
+		for running || fc.connectionChanOpen || commandChanOpen {
 			select {
 			case <-ctx.Done():
 				if running {
@@ -96,17 +100,16 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if ok {
 					rotations := flightCommandsToRotations(flightCommands, fc.settings)
 					throttle = flightCommandsToThrottle(flightCommands, fc.settings)
-					fc.checkForSafeStart(throttle, flightControlStartTime)
+					fc.checkForSafeStart(throttle)
 					fc.pid.SetTargetStates(rotations)
 					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
 				commandChanOpen = ok
 
-			case connectionState, ok := <-fc.radio.GetConnectionStateChannel():
-				if ok {
-					showConnectionState(connectionState)
+			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
+				if fc.connectionChanOpen {
+					fc.showConnectionState()
 				}
-				connectionChanOpen = ok
 
 			default:
 				if running && commandChanOpen {
@@ -122,19 +125,21 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func showConnectionState(connectionState models.ConnectionState) {
-	switch connectionState {
+func (fc *flightControl) showConnectionState() {
+	switch fc.connectionState {
 	case constants.CONNECTED:
 		log.Println("Connected")
+		fc.timeout = time.Now()
 	case constants.WAITING_FOR_CONNECTION:
 		log.Println("Waiting for Connection")
 	case constants.DISCONNECTED:
 		log.Println("Disconnected")
+		fc.timeout = time.Now()
 	}
 }
 
-func (fc *flightControl) checkForSafeStart(throttle float64, startTime time.Time) {
-	if time.Since(startTime) > SAFE_START_DURATION && throttle == 0 {
+func (fc *flightControl) checkForSafeStart(throttle float64) {
+	if time.Since(fc.timeout) > SAFE_START_DURATION && throttle == 0 {
 		if !fc.isSafeStarted {
 			log.Println("Safe Start Detected")
 		}

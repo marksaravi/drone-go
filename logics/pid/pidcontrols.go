@@ -119,7 +119,7 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations,
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
-	// utils.PrintByInterval("pidcontrols", time.Second/5, func() {
+	// utils.Schedule("pidcontrols", time.Second/5, func() {
 	// 	log.Printf(" pid: { roll: %8.4f, pitch: %8.4f, yaw: %8.4f } throttles: {0: %8.4f, 1: %8.4f, 2: %8.4f, 3: %8.4f}\n", rollFeedback, pitchFeedback, yawFeedback, throttles.Throttles[0], throttles.Throttles[1], throttles.Throttles[2], throttles.Throttles[3])
 	// })
 	return throttles
