@@ -4,7 +4,7 @@ import "testing"
 
 func TestThrottleInRange(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle - 1
-	got := limitThrottle(throttle, true)
+	got := limitThrottle(throttle)
 	if got != throttle {
 		t.Fatalf("wanted %f, got %f", throttle, got)
 	}
