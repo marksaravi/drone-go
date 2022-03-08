@@ -27,27 +27,30 @@ type CalibrationSettings struct {
 }
 
 type pidControls struct {
-	rollPIDControl     *pidControl
-	pitchPIDControl    *pidControl
-	yawPIDControl      *pidControl
-	targetStates       models.Rotations
-	armsThrottleRatios [4]float64
-	calibration        CalibrationSettings
+	rollPIDControl        *pidControl
+	pitchPIDControl       *pidControl
+	yawPIDControl         *pidControl
+	targetStates          models.Rotations
+	arm_0_2_ThrottleRatio float64
+	arm_1_3_ThrottleRatio float64
+	calibration           CalibrationSettings
 }
 
 func NewPIDControls(
 	rollPIDSettings PIDSettings,
 	pitchPIDSettings PIDSettings,
 	yawPIDSettings PIDSettings,
-	armsThrottleRatios [4]float64,
+	arm_0_2_ThrottleRatio float64,
+	arm_1_3_ThrottleRatio float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
-		calibration:        calibration,
-		rollPIDControl:     NewPIDControl("Roll", rollPIDSettings),
-		pitchPIDControl:    NewPIDControl("Pitch", pitchPIDSettings),
-		yawPIDControl:      NewPIDControl("Yaw", yawPIDSettings),
-		armsThrottleRatios: armsThrottleRatios,
+		calibration:           calibration,
+		rollPIDControl:        NewPIDControl("Roll", rollPIDSettings),
+		pitchPIDControl:       NewPIDControl("Pitch", pitchPIDSettings),
+		yawPIDControl:         NewPIDControl("Yaw", yawPIDSettings),
+		arm_0_2_ThrottleRatio: arm_0_2_ThrottleRatio,
+		arm_1_3_ThrottleRatio: arm_1_3_ThrottleRatio,
 		targetStates: models.Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -76,6 +79,19 @@ func (c *pidControls) calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback
 	return
 }
 
+func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float64) models.Throttles {
+	return models.Throttles{
+		BaseThrottle: throttle,
+		Throttles: map[int]float64{
+			0: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[0],
+			1: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[1],
+			2: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[2],
+			3: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[3],
+		},
+	}
+
+}
+
 func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles {
 	if !isSafeStarted {
 		c.reset()
@@ -94,17 +110,9 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations,
 	pitchError := c.targetStates.Pitch - rotations.Pitch
 	yawError := c.targetStates.Yaw - rotations.Yaw
 	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
-	arms := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
+	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
-	return models.Throttles{
-		BaseThrottle: throttle,
-		Throttles: map[int]float64{
-			0: throttle + arms[0],
-			1: throttle + arms[1],
-			2: throttle + arms[2],
-			3: throttle + arms[3],
-		},
-	}
+	return c.calculateThrottles(throttle, armsFeedback)
 }
 
 func (c *pidControls) reset() {
