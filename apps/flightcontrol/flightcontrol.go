@@ -2,6 +2,7 @@ package flightcontrol
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -53,8 +54,8 @@ type flightControl struct {
 	commandChanOpen    bool
 	connectionChanOpen bool
 	running            bool
-	timeout            time.Time
 	flightCommands     models.FlightCommands
+	throttle           float64
 }
 
 func NewFlightControl(
@@ -72,11 +73,11 @@ func NewFlightControl(
 		radio:              radio,
 		logger:             logger,
 		settings:           settings,
-		timeout:            time.Now().Add(time.Second * 1000000),
 		connectionState:    constants.CONNECTED,
 		connectionChanOpen: true,
 		commandChanOpen:    true,
 		running:            true,
+		throttle:           0,
 	}
 }
 
@@ -89,7 +90,6 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer fc.esc.Off()
 
 		fc.esc.On()
-		var throttle float64 = 0
 		fc.imu.ResetTime()
 		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
@@ -102,23 +102,25 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case fc.flightCommands, fc.commandChanOpen = <-fc.radio.GetReceiverChannel():
 				if fc.commandChanOpen {
 					rotations := flightCommandsToRotations(fc.flightCommands, fc.settings)
-					throttle = flightCommandsToThrottle(fc.flightCommands, fc.settings)
-					fc.checkForSafeStart(throttle)
+					throttle := flightCommandsToThrottle(fc.flightCommands, fc.settings)
+					fc.checkForEnablingSafeStart(throttle)
 					fc.pid.SetTargetStates(rotations)
 					fc.pid.Calibrate(fc.flightCommands.ButtonTopRight, fc.flightCommands.ButtonTopLeft)
 				}
 
 			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
 				if fc.connectionChanOpen {
+					fc.isSafeStarted = false
 					fc.showConnectionState()
 				}
 
 			default:
+				fc.safeReduceThrottle()
 				if fc.running && fc.commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						throttles := fc.pid.GetThrottles(throttle, rotations.Rotations, rotations.ReadInterval, fc.isSafeStarted)
-						fc.esc.SetThrottles(throttles, fc.isSafeStarted)
+						throttles := fc.pid.GetThrottles(fc.throttle, rotations.Rotations, rotations.ReadInterval, true)
+						fc.esc.SetThrottles(throttles, true)
 						fc.logger.Send(rotations)
 					}
 				}
@@ -131,32 +133,32 @@ func (fc *flightControl) showConnectionState() {
 	switch fc.connectionState {
 	case constants.CONNECTED:
 		log.Println("Connected")
-		fc.timeout = time.Now()
-	case constants.WAITING_FOR_CONNECTION:
-		log.Println("Waiting for Connection")
 	case constants.DISCONNECTED:
 		log.Println("Disconnected")
-		fc.timeout = time.Now()
 	}
 }
 
-func (fc *flightControl) checkForSafeStart(throttle float64) {
-	if time.Since(fc.timeout) > SAFE_START_DURATION && throttle == 0 {
-		if !fc.isSafeStarted {
-			log.Println("Safe Start Detected")
-		}
+func (fc *flightControl) safeReduceThrottle() {
+	if fc.isSafeStarted || fc.throttle == 0 {
+		return
+	}
+
+	fc.throttle -= fc.throttle / 100
+	time.Sleep(time.Millisecond)
+	if fc.throttle < 5 {
+		fc.throttle = 0
+	}
+}
+
+func (fc *flightControl) checkForEnablingSafeStart(throttle float64) {
+	if !fc.isSafeStarted && throttle == 0 {
 		fc.isSafeStarted = true
+		fmt.Println("Safe Start Enabled")
+	}
+	if fc.isSafeStarted {
+		fc.throttle = throttle
 	}
 }
-
-// var lastShowFlightCommands time.Time
-
-// func showFlightCommands(fc models.FlightCommands) {
-// 	if time.Since(lastShowFlightCommands) >= time.Second/2 {
-// 		lastShowFlightCommands = time.Now()
-// 		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
-// 	}
-// }
 
 func joystickToTwoWayCommand(digital uint16, resolution uint16, max float64) float64 {
 	return (float64(digital) - float64(resolution/2)) / float64(resolution) * max
