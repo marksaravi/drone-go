@@ -50,8 +50,11 @@ type flightControl struct {
 	settings           Settings
 	isSafeStarted      bool
 	connectionState    int
+	commandChanOpen    bool
 	connectionChanOpen bool
+	running            bool
 	timeout            time.Time
+	flightCommands     models.FlightCommands
 }
 
 func NewFlightControl(
@@ -72,6 +75,8 @@ func NewFlightControl(
 		timeout:            time.Now().Add(time.Second * 1000000),
 		connectionState:    constants.CONNECTED,
 		connectionChanOpen: true,
+		commandChanOpen:    true,
+		running:            true,
 	}
 }
 
@@ -84,27 +89,24 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer fc.esc.Off()
 
 		fc.esc.On()
-		var commandChanOpen bool = true
-		var running bool = true
 		var throttle float64 = 0
 		fc.imu.ResetTime()
-		for running || fc.connectionChanOpen || commandChanOpen {
+		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
 			case <-ctx.Done():
-				if running {
+				if fc.running {
 					fc.logger.Close()
-					running = false
+					fc.running = false
 				}
 
-			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
-				if ok {
-					rotations := flightCommandsToRotations(flightCommands, fc.settings)
-					throttle = flightCommandsToThrottle(flightCommands, fc.settings)
+			case fc.flightCommands, fc.commandChanOpen = <-fc.radio.GetReceiverChannel():
+				if fc.commandChanOpen {
+					rotations := flightCommandsToRotations(fc.flightCommands, fc.settings)
+					throttle = flightCommandsToThrottle(fc.flightCommands, fc.settings)
 					fc.checkForSafeStart(throttle)
 					fc.pid.SetTargetStates(rotations)
-					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
+					fc.pid.Calibrate(fc.flightCommands.ButtonTopRight, fc.flightCommands.ButtonTopLeft)
 				}
-				commandChanOpen = ok
 
 			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
 				if fc.connectionChanOpen {
@@ -112,7 +114,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 
 			default:
-				if running && commandChanOpen {
+				if fc.running && fc.commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						throttles := fc.pid.GetThrottles(throttle, rotations.Rotations, rotations.ReadInterval, fc.isSafeStarted)

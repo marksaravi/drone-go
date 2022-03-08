@@ -2,7 +2,6 @@ package radio
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -45,7 +44,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 
 func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
-	log.Println("Starting the Receiver...", r.connectionTimeout, r.commandReadInterval)
+	log.Println("Starting the Receiver...")
 
 	r.radiolink.ReceiverOn()
 	r.radiolink.PowerOn()
@@ -80,14 +79,15 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (r *radioReceiver) updateConnectionState(connected bool) {
-	if connected && r.connectionState != constants.CONNECTED {
-		r.connectionState = constants.CONNECTED
-		r.connectionChannel <- r.connectionState
+	if connected {
 		r.lastConnectionTime = time.Now()
+		if r.connectionState != constants.CONNECTED {
+			r.connectionState = constants.CONNECTED
+			r.connectionChannel <- r.connectionState
+		}
 	}
 	if !connected && r.connectionState != constants.DISCONNECTED && time.Since(r.lastConnectionTime) > r.connectionTimeout {
 		r.connectionState = constants.DISCONNECTED
-		fmt.Println(time.Since(r.lastConnectionTime))
 		r.connectionChannel <- r.connectionState
 	}
 }
