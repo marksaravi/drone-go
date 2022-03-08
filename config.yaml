@@ -1,6 +1,6 @@
 flight-control:
   debug: false
-  min-throttle: 5
+  min-throttle: 10
   max-throttle: 25
   max-roll: 5
   max-pitch: 5

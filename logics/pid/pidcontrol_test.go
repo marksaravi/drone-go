@@ -12,6 +12,7 @@ func TestPIDGains(t *testing.T) {
 		PIDSettings{},
 		1,
 		1,
+		10,
 		CalibrationSettings{},
 	)
 
@@ -43,6 +44,7 @@ func TestPIDLimits(t *testing.T) {
 		PIDSettings{},
 		1,
 		1,
+		10,
 		CalibrationSettings{},
 	)
 

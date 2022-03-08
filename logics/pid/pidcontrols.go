@@ -32,6 +32,7 @@ type pidControls struct {
 	targetStates          models.Rotations
 	arm_0_2_ThrottleRatio float64
 	arm_1_3_ThrottleRatio float64
+	minThrottle           float64
 	calibration           CalibrationSettings
 }
 
@@ -41,6 +42,7 @@ func NewPIDControls(
 	yawPIDSettings PIDSettings,
 	arm_0_2_ThrottleRatio float64,
 	arm_1_3_ThrottleRatio float64,
+	minThrottle float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
@@ -55,6 +57,7 @@ func NewPIDControls(
 			Pitch: 0,
 			Yaw:   0,
 		},
+		minThrottle: minThrottle,
 	}
 }
 
@@ -79,13 +82,17 @@ func (c *pidControls) calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback
 }
 
 func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float64) models.Throttles {
+	apply := float64(1)
+	if throttle < c.minThrottle {
+		apply = 0
+	}
 	return models.Throttles{
 		BaseThrottle: throttle,
 		Throttles: map[int]float64{
-			0: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[0],
-			1: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[1],
-			2: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[2],
-			3: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[3],
+			0: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[0]*apply,
+			1: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[1]*apply,
+			2: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[2]*apply,
+			3: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[3]*apply,
 		},
 	}
 

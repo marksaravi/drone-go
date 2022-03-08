@@ -63,6 +63,7 @@ func main() {
 		pidYawSettings,
 		configs.Arm_0_2_ThrottleRatio,
 		configs.Arm_1_3_ThrottleRatio,
+		configs.MinThrottle,
 		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
 	fmt.Println(pidcontrols)

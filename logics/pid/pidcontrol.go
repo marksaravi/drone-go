@@ -7,14 +7,13 @@ import (
 )
 
 type pidControl struct {
-	name          string
-	pGain         float64
-	iGain         float64
-	dGain         float64
-	maxI          float64
-	throttleRatio float64
-	dPrevError    float64
-	iMemory       float64
+	name       string
+	pGain      float64
+	iGain      float64
+	dGain      float64
+	maxI       float64
+	dPrevError float64
+	iMemory    float64
 }
 
 func NewPIDControl(name string, settings PIDSettings) *pidControl {

@@ -18,14 +18,6 @@ func TestThrottleMoreThanMax(t *testing.T) {
 	}
 }
 
-func TestThrottlessThanMin(t *testing.T) {
-	var throttle float64 = MinOnThrottle - 1
-	got := limitThrottle(throttle, true)
-	if got != MinOnThrottle {
-		t.Fatalf("wanted %f, got %f", MinOnThrottle, got)
-	}
-}
-
 func TestThrottleWhenOff(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle - 1
 	got := limitThrottle(throttle, false)
