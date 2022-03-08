@@ -20,14 +20,13 @@ type pidControl struct {
 
 func NewPIDControl(name string, settings PIDSettings) *pidControl {
 	return &pidControl{
-		name:          name,
-		pGain:         settings.PGain,
-		iGain:         settings.IGain,
-		dGain:         settings.DGain,
-		maxI:          settings.MaxI,
-		throttleRatio: settings.ThrottleRatio,
-		dPrevError:    0,
-		iMemory:       0,
+		name:       name,
+		pGain:      settings.PGain,
+		iGain:      settings.IGain,
+		dGain:      settings.DGain,
+		maxI:       settings.MaxI,
+		dPrevError: 0,
+		iMemory:    0,
 	}
 }
 

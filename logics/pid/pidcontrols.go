@@ -11,11 +11,10 @@ import (
 const EMERGENCY_STOP_DURATION = time.Second * 2
 
 type PIDSettings struct {
-	PGain         float64
-	IGain         float64
-	DGain         float64
-	MaxI          float64
-	ThrottleRatio float64
+	PGain float64
+	IGain float64
+	DGain float64
+	MaxI  float64
 }
 
 type CalibrationSettings struct {
