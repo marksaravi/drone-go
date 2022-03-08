@@ -28,10 +28,8 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan models.ConnectionState
 }
 type pidControls interface {
-	SetTargetStates(rotations models.Rotations, throttle float64)
-	SetStates(rotations models.Rotations, dt time.Duration)
-	GetThrottles(isSafeStarted bool) models.Throttles
-
+	SetTargetStates(rotations models.Rotations)
+	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles
 	PrintGains()
 	Calibrate(up, down bool)
 }
@@ -83,6 +81,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
 		var running bool = true
+		var throttle float64 = 0
 		var flightControlStartTime time.Time = time.Now()
 		fc.imu.ResetTime()
 		for running || connectionChanOpen || commandChanOpen {
@@ -96,9 +95,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
 					rotations := flightCommandsToRotations(flightCommands, fc.settings)
-					throttle := flightCommandsToThrottle(flightCommands, fc.settings)
+					throttle = flightCommandsToThrottle(flightCommands, fc.settings)
 					fc.checkForSafeStart(throttle, flightControlStartTime)
-					fc.pid.SetTargetStates(rotations, throttle)
+					fc.pid.SetTargetStates(rotations)
 					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
 				commandChanOpen = ok
@@ -113,8 +112,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running && commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						fc.pid.SetStates(rotations.Rotations, rotations.ReadInterval)
-						throttles := fc.pid.GetThrottles(fc.isSafeStarted)
+						throttles := fc.pid.GetThrottles(throttle, rotations.Rotations, rotations.ReadInterval, fc.isSafeStarted)
 						fc.esc.SetThrottles(throttles, fc.isSafeStarted)
 						fc.logger.Send(rotations)
 					}

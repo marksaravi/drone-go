@@ -2,27 +2,29 @@ flight-control:
   debug: false
   min-throttle: 5
   max-throttle: 25
-  pid-max-i-to-max-output-ratio: 0.75
   max-roll: 5
   max-pitch: 5
   max-yaw: 5
 
   pid:
     roll:
-      max-output-to-max-throttle-ratio: 1
       p-gain: 0
       i-gain: 0
       d-gain: 0
+      max-i-to-max-throttle-ratio: 0.5
+      throttle-to-max-throttle-ratio: 1
     pitch:
-      max-output-to-max-throttle-ratio: 1
       p-gain: 0
       i-gain: 0
       d-gain: 0
+      max-i-to-max-throttle-ratio: 0.5
+      throttle-to-max-throttle-ratio: 1
     yaw:
-      max-output-to-max-throttle-ratio: 0.1
       p-gain: 0
       i-gain: 0
       d-gain: 0
+      max-i-to-max-throttle-ratio: 0.1
+      throttle-to-max-throttle-ratio: 0.1
     calibration:
       calibrating: 'none'
       gain: 'p'

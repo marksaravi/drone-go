@@ -52,13 +52,14 @@ func main() {
 	})
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
+	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), configs.MaxThrottle)
+	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), configs.MaxThrottle)
+	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), configs.MaxThrottle)
+
 	pidcontrols := pid.NewPIDControls(
-		pid.PIDSettings(pidConfigs.Roll),
-		pid.PIDSettings(pidConfigs.Pitch),
-		pid.PIDSettings(pidConfigs.Yaw),
-		configs.MaxThrottle,
-		configs.MinThrottle,
-		configs.PIDMaxIToMaxOutputRatio,
+		pidRollSettings,
+		pidPitchSettings,
+		pidYawSettings,
 		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
 	flightControl := flightcontrol.NewFlightControl(
@@ -82,4 +83,25 @@ func main() {
 	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
+}
+
+type pidsettings struct {
+	PGain         float64
+	IGain         float64
+	DGain         float64
+	MaxIRatio     float64
+	ThrottleRatio float64
+}
+
+func createPIDSettings(
+	configs pidsettings,
+	maxThrottle float64,
+) pid.PIDSettings {
+	return pid.PIDSettings{
+		PGain:         configs.PGain,
+		IGain:         configs.IGain,
+		DGain:         configs.DGain,
+		MaxI:          configs.MaxIRatio * maxThrottle,
+		ThrottleRatio: configs.ThrottleRatio * maxThrottle,
+	}
 }

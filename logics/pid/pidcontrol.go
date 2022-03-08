@@ -8,24 +8,26 @@ import (
 )
 
 type pidControl struct {
-	name       string
-	pGain      float64
-	iGain      float64
-	dGain      float64
-	maxI       float64
-	dPrevError float64
-	iMemory    float64
+	name          string
+	pGain         float64
+	iGain         float64
+	dGain         float64
+	maxI          float64
+	throttleRatio float64
+	dPrevError    float64
+	iMemory       float64
 }
 
 func NewPIDControl(name string, settings PIDSettings) *pidControl {
 	return &pidControl{
-		name:       name,
-		pGain:      settings.PGain,
-		iGain:      settings.IGain,
-		dGain:      settings.DGain,
-		maxI:       settings.MaxI,
-		dPrevError: 0,
-		iMemory:    0,
+		name:          name,
+		pGain:         settings.PGain,
+		iGain:         settings.IGain,
+		dGain:         settings.DGain,
+		maxI:          settings.MaxI,
+		throttleRatio: settings.ThrottleRatio,
+		dPrevError:    0,
+		iMemory:       0,
 	}
 }
 
