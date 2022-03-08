@@ -50,6 +50,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	r.radiolink.PowerOn()
 	r.radiolink.Listen()
 
+	flushTimeout := time.Now()
 	go func() {
 		defer r.radiolink.PowerOff()
 		defer wg.Done()
@@ -67,8 +68,10 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						r.radiolink.Listen()
-						r.receiveChannel <- utils.DeserializeFlightCommand(payload)
-						r.updateConnectionState(true)
+						if time.Since(flushTimeout) > time.Second {
+							r.receiveChannel <- utils.DeserializeFlightCommand(payload)
+							r.updateConnectionState(true)
+						}
 					} else {
 						r.updateConnectionState(false)
 					}
