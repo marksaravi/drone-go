@@ -22,8 +22,8 @@ type radioTransmitter struct {
 	radiolink       radioTransmitterLink
 	transmitChannel chan models.FlightCommands
 
-	connectionChannel  chan models.ConnectionState
-	connectionState    models.ConnectionState
+	connectionChannel  chan int
+	connectionState    int
 	lastConnectionTime time.Time
 	connectionTimeout  time.Duration
 }
@@ -31,7 +31,7 @@ type radioTransmitter struct {
 func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *radioTransmitter {
 	return &radioTransmitter{
 		transmitChannel:   make(chan models.FlightCommands),
-		connectionChannel: make(chan models.ConnectionState),
+		connectionChannel: make(chan int),
 		radiolink:         radiolink,
 		connectionState:   constants.IDLE,
 		connectionTimeout: time.Millisecond * time.Duration(connectionTimeoutMs),
@@ -77,7 +77,7 @@ func (t *radioTransmitter) Close() {
 	close(t.transmitChannel)
 }
 
-func (t *radioTransmitter) GetConnectionStateChannel() <-chan models.ConnectionState {
+func (t *radioTransmitter) GetConnectionStateChannel() <-chan int {
 	return t.connectionChannel
 }
 
@@ -99,10 +99,10 @@ func (t *radioTransmitter) updateConnectionState(connected bool) {
 
 func newConnectionState(
 	connected bool,
-	prevState models.ConnectionState,
+	prevState int,
 	lastConnected time.Time,
 	timeout time.Duration,
-) (newState models.ConnectionState, lastConnection time.Time) {
+) (newState int, lastConnection time.Time) {
 	newState = prevState
 	lastConnection = lastConnected
 	if connected {

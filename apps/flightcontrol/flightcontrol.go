@@ -2,6 +2,7 @@ package flightcontrol
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -20,16 +21,16 @@ type imu interface {
 type esc interface {
 	On()
 	Off()
-	SetThrottles(throttles models.Throttles, isSafeStarted bool)
+	SetThrottles(throttles models.Throttles)
 }
 
 type radioReceiver interface {
 	GetReceiverChannel() <-chan models.FlightCommands
-	GetConnectionStateChannel() <-chan models.ConnectionState
+	GetConnectionStateChannel() <-chan int
 }
 type pidControls interface {
 	SetTargetStates(rotations models.Rotations)
-	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles
+	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles
 	PrintGains()
 	Calibrate(up, down bool)
 }
@@ -42,13 +43,19 @@ type Settings struct {
 }
 
 type flightControl struct {
-	pid           pidControls
-	imu           imu
-	esc           esc
-	radio         radioReceiver
-	logger        models.Logger
-	settings      Settings
-	isSafeStarted bool
+	pid                pidControls
+	imu                imu
+	esc                esc
+	radio              radioReceiver
+	logger             models.Logger
+	settings           Settings
+	isSafeStarted      bool
+	connectionState    int
+	commandChanOpen    bool
+	connectionChanOpen bool
+	running            bool
+	flightCommands     models.FlightCommands
+	throttle           float64
 }
 
 func NewFlightControl(
@@ -60,12 +67,17 @@ func NewFlightControl(
 	settings Settings,
 ) *flightControl {
 	return &flightControl{
-		pid:      pid,
-		imu:      imu,
-		esc:      esc,
-		radio:    radio,
-		logger:   logger,
-		settings: settings,
+		pid:                pid,
+		imu:                imu,
+		esc:                esc,
+		radio:              radio,
+		logger:             logger,
+		settings:           settings,
+		connectionState:    constants.CONNECTED,
+		connectionChanOpen: true,
+		commandChanOpen:    true,
+		running:            true,
+		throttle:           0,
 	}
 }
 
@@ -78,42 +90,37 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		defer fc.esc.Off()
 
 		fc.esc.On()
-		var commandChanOpen bool = true
-		var connectionChanOpen bool = true
-		var running bool = true
-		var throttle float64 = 0
-		var flightControlStartTime time.Time = time.Now()
 		fc.imu.ResetTime()
-		for running || connectionChanOpen || commandChanOpen {
+		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
 			case <-ctx.Done():
-				if running {
+				if fc.running {
 					fc.logger.Close()
-					running = false
+					fc.running = false
 				}
 
-			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
-				if ok {
-					rotations := flightCommandsToRotations(flightCommands, fc.settings)
-					throttle = flightCommandsToThrottle(flightCommands, fc.settings)
-					fc.checkForSafeStart(throttle, flightControlStartTime)
+			case fc.flightCommands, fc.commandChanOpen = <-fc.radio.GetReceiverChannel():
+				if fc.commandChanOpen {
+					rotations := flightCommandsToRotations(fc.flightCommands, fc.settings)
+					throttle := flightCommandsToThrottle(fc.flightCommands, fc.settings)
+					fc.checkForEnablingSafeStart(throttle)
 					fc.pid.SetTargetStates(rotations)
-					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
+					fc.pid.Calibrate(fc.flightCommands.ButtonTopRight, fc.flightCommands.ButtonTopLeft)
 				}
-				commandChanOpen = ok
 
-			case connectionState, ok := <-fc.radio.GetConnectionStateChannel():
-				if ok {
-					showConnectionState(connectionState)
+			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
+				if fc.connectionChanOpen {
+					fc.isSafeStarted = false
+					fc.showConnectionState()
 				}
-				connectionChanOpen = ok
 
 			default:
-				if running && commandChanOpen {
+				fc.safeReduceThrottle()
+				if fc.running && fc.commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						throttles := fc.pid.GetThrottles(throttle, rotations.Rotations, rotations.ReadInterval, fc.isSafeStarted)
-						fc.esc.SetThrottles(throttles, fc.isSafeStarted)
+						throttles := fc.pid.GetThrottles(fc.throttle, rotations.Rotations, rotations.ReadInterval)
+						fc.esc.SetThrottles(throttles)
 						fc.logger.Send(rotations)
 					}
 				}
@@ -122,34 +129,36 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func showConnectionState(connectionState models.ConnectionState) {
-	switch connectionState {
+func (fc *flightControl) showConnectionState() {
+	switch fc.connectionState {
 	case constants.CONNECTED:
 		log.Println("Connected")
-	case constants.WAITING_FOR_CONNECTION:
-		log.Println("Waiting for Connection")
 	case constants.DISCONNECTED:
 		log.Println("Disconnected")
 	}
 }
 
-func (fc *flightControl) checkForSafeStart(throttle float64, startTime time.Time) {
-	if time.Since(startTime) > SAFE_START_DURATION && throttle == 0 {
-		if !fc.isSafeStarted {
-			log.Println("Safe Start Detected")
-		}
-		fc.isSafeStarted = true
+func (fc *flightControl) safeReduceThrottle() {
+	if fc.isSafeStarted || fc.throttle == 0 {
+		return
+	}
+
+	fc.throttle -= fc.throttle / 100
+	time.Sleep(time.Millisecond)
+	if fc.throttle < 5 {
+		fc.throttle = 0
 	}
 }
 
-// var lastShowFlightCommands time.Time
-
-// func showFlightCommands(fc models.FlightCommands) {
-// 	if time.Since(lastShowFlightCommands) >= time.Second/2 {
-// 		lastShowFlightCommands = time.Now()
-// 		log.Printf("%4d, %4d, %4d, %4d, %t, %t, %t, %t, %t, %t", fc.Roll, fc.Pitch, fc.Yaw, fc.Throttle, fc.ButtonFrontLeft, fc.ButtonFrontRight, fc.ButtonTopLeft, fc.ButtonTopRight, fc.ButtonBottomLeft, fc.ButtonBottomRight)
-// 	}
-// }
+func (fc *flightControl) checkForEnablingSafeStart(throttle float64) {
+	if !fc.isSafeStarted && throttle == 0 {
+		fc.isSafeStarted = true
+		fmt.Println("Safe Start Enabled")
+	}
+	if fc.isSafeStarted {
+		fc.throttle = throttle
+	}
+}
 
 func joystickToTwoWayCommand(digital uint16, resolution uint16, max float64) float64 {
 	return (float64(digital) - float64(resolution/2)) / float64(resolution) * max

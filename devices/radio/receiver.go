@@ -22,10 +22,10 @@ type radioReceiverLink interface {
 type radioReceiver struct {
 	radiolink           radioReceiverLink
 	receiveChannel      chan models.FlightCommands
-	statusCheckInterval time.Duration
+	commandReadInterval time.Duration
 
-	connectionChannel  chan models.ConnectionState
-	connectionState    models.ConnectionState
+	connectionChannel  chan int
+	connectionState    int
 	lastConnectionTime time.Time
 	connectionTimeout  time.Duration
 }
@@ -33,11 +33,12 @@ type radioReceiver struct {
 func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionTimeoutMs int) *radioReceiver {
 	return &radioReceiver{
 		receiveChannel:      make(chan models.FlightCommands),
-		connectionChannel:   make(chan models.ConnectionState),
+		connectionChannel:   make(chan int),
 		radiolink:           radiolink,
-		connectionState:     constants.WAITING_FOR_CONNECTION,
-		statusCheckInterval: time.Second / time.Duration(commandsPerSecond*2),
+		connectionState:     constants.IDLE,
+		commandReadInterval: time.Second / time.Duration(commandsPerSecond*2),
 		connectionTimeout:   time.Millisecond * time.Duration(connectionTimeoutMs),
+		lastConnectionTime:  time.Now(),
 	}
 }
 
@@ -48,13 +49,13 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	r.radiolink.ReceiverOn()
 	r.radiolink.PowerOn()
 	r.radiolink.Listen()
-	r.lastConnectionTime = time.Now()
+
+	flushTimeout := time.Now()
 	go func() {
 		defer r.radiolink.PowerOff()
 		defer wg.Done()
 		defer log.Println("Receiver is stopped.")
 
-		ts := time.Now()
 		for {
 			select {
 			case <-ctx.Done():
@@ -63,23 +64,41 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 				return
 
 			default:
-				if time.Since(ts) >= r.statusCheckInterval {
-					ts = time.Now()
+				utils.Schedule("commandReadInterval", r.commandReadInterval, func() {
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						r.radiolink.Listen()
-						r.receiveChannel <- utils.DeserializeFlightCommand(payload)
+						if time.Since(flushTimeout) > time.Second {
+							r.receiveChannel <- utils.DeserializeFlightCommand(payload)
+							r.updateConnectionState(true)
+						}
+					} else {
+						r.updateConnectionState(false)
 					}
-				}
+				})
 			}
 		}
 	}()
+}
+
+func (r *radioReceiver) updateConnectionState(connected bool) {
+	if connected {
+		r.lastConnectionTime = time.Now()
+		if r.connectionState != constants.CONNECTED {
+			r.connectionState = constants.CONNECTED
+			r.connectionChannel <- r.connectionState
+		}
+	}
+	if !connected && r.connectionState != constants.DISCONNECTED && time.Since(r.lastConnectionTime) > r.connectionTimeout {
+		r.connectionState = constants.DISCONNECTED
+		r.connectionChannel <- r.connectionState
+	}
 }
 
 func (r *radioReceiver) GetReceiverChannel() <-chan models.FlightCommands {
 	return r.receiveChannel
 }
 
-func (r *radioReceiver) GetConnectionStateChannel() <-chan models.ConnectionState {
+func (r *radioReceiver) GetConnectionStateChannel() <-chan int {
 	return r.connectionChannel
 }

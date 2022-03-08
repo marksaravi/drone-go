@@ -2,7 +2,6 @@ package radio
 
 import (
 	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/models"
 )
 
 type radioLink interface {
@@ -11,12 +10,15 @@ type radioLink interface {
 	ClearStatus()
 }
 
-func StateToString(s models.ConnectionState) string {
+func StateToString(s int) string {
 	if s == constants.WAITING_FOR_CONNECTION {
 		return "WAITING_FOR_CONNECTION"
 	}
 	if s == constants.DISCONNECTED {
 		return "DISCONNECTED"
+	}
+	if s == constants.IDLE {
+		return "IDLE"
 	}
 	return "CONNECTED"
 }

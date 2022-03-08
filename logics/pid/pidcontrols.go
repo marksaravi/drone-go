@@ -85,6 +85,8 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 	apply := float64(1)
 	if throttle < c.minThrottle {
 		apply = 0
+	} else {
+		c.reset()
 	}
 	return models.Throttles{
 		BaseThrottle: throttle,
@@ -98,20 +100,7 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 
 }
 
-func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles {
-	if !isSafeStarted {
-		c.reset()
-		return models.Throttles{
-			BaseThrottle: 0,
-			Throttles: map[int]float64{
-				0: 0,
-				1: 0,
-				2: 0,
-				3: 0,
-			},
-		}
-	}
-
+func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles {
 	rollError := c.targetStates.Roll - rotations.Roll
 	pitchError := c.targetStates.Pitch - rotations.Pitch
 	yawError := c.targetStates.Yaw - rotations.Yaw
@@ -119,7 +108,7 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations,
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
-	// utils.PrintByInterval("pidcontrols", time.Second/5, func() {
+	// utils.Schedule("pidcontrols", time.Second/5, func() {
 	// 	log.Printf(" pid: { roll: %8.4f, pitch: %8.4f, yaw: %8.4f } throttles: {0: %8.4f, 1: %8.4f, 2: %8.4f, 3: %8.4f}\n", rollFeedback, pitchFeedback, yawFeedback, throttles.Throttles[0], throttles.Throttles[1], throttles.Throttles[2], throttles.Throttles[3])
 	// })
 	return throttles

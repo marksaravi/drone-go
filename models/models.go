@@ -42,8 +42,6 @@ type FlightCommands struct {
 
 type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
 
-type ConnectionState = int
-
 type Logger interface {
 	Send(ImuRotations)
 	Close()

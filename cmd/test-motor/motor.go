@@ -50,7 +50,7 @@ func main() {
 		for step := 0; step < steps; step++ {
 			log.Println("motor: ", *motor, ", throttle:  ", throttles.BaseThrottle, "%")
 			throttles.Throttles[*motor] = throttles.BaseThrottle
-			esc.SetThrottles(throttles, true)
+			esc.SetThrottles(throttles)
 			time.Sleep(250 * time.Millisecond)
 			throttles.BaseThrottle += dThrottle
 		}

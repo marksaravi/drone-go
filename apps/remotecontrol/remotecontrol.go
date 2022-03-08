@@ -25,7 +25,7 @@ type joystick interface {
 
 type radioTransmitter interface {
 	Transmit(models.FlightCommands)
-	GetConnectionStateChannel() <-chan models.ConnectionState
+	GetConnectionStateChannel() <-chan int
 	Close()
 	SuppressLostConnection()
 }
@@ -148,7 +148,7 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 	}()
 }
 
-func (rc *remoteControl) setRadioConnectionState(connectionState models.ConnectionState) {
+func (rc *remoteControl) setRadioConnectionState(connectionState int) {
 	switch connectionState {
 	case constants.CONNECTED:
 		log.Println("Connected to Drone.")
