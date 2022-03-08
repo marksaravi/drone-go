@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
@@ -71,10 +72,10 @@ func (c *pidControls) calcAxisFeedbacks(rollError, pitchError, yawError float64,
 
 func (c *pidControls) calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback float64) (arms [4]float64) {
 	arms = [4]float64{0, 0, 0, 0}
-	arms[0] = -pitchFeedback - yawFeedback
-	arms[1] = -rollFeedback + yawFeedback
-	arms[2] = pitchFeedback - yawFeedback
-	arms[3] = rollFeedback + yawFeedback
+	arms[0] = +pitchFeedback - yawFeedback
+	arms[1] = +rollFeedback + yawFeedback
+	arms[2] = -pitchFeedback - yawFeedback
+	arms[3] = -rollFeedback + yawFeedback
 	return
 }
 
@@ -111,7 +112,11 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations,
 	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
-	return c.calculateThrottles(throttle, armsFeedback)
+	throttles := c.calculateThrottles(throttle, armsFeedback)
+	utils.PrintByInterval("pidcontrols", time.Second/5, func() {
+		log.Printf(" pid: { roll: %8.4f, pitch: %8.4f, yaw: %8.4f } throttles: {0: %8.4f, 1: %8.4f, 2: %8.4f, 3: %8.4f}\n", rollFeedback, pitchFeedback, yawFeedback, throttles.Throttles[0], throttles.Throttles[1], throttles.Throttles[2], throttles.Throttles[3])
+	})
+	return throttles
 }
 
 func (c *pidControls) reset() {
@@ -164,8 +169,4 @@ func (p *pidControls) PrintGains() {
 	printGains(p.pitchPIDControl)
 	printGains(p.yawPIDControl)
 	fmt.Println()
-}
-
-func printFeedbacks(rollFeedback, pitchFeedback, yawFeedback float64) {
-	log.Printf("feedbacks { roll: %8.4f, pitch: %8.4f, yaw: %8.4f\n", rollFeedback, pitchFeedback, yawFeedback)
 }
