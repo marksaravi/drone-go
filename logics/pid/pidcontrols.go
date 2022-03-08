@@ -64,8 +64,8 @@ func (c *pidControls) SetTargetStates(states models.Rotations) {
 
 func (c *pidControls) calcAxisFeedbacks(rollError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
 	rollFeedback = c.rollPIDControl.calcPIDFeedback(rollError, dt)
-	pitchFeedback = c.rollPIDControl.calcPIDFeedback(pitchError, dt)
-	yawFeedback = c.rollPIDControl.calcPIDFeedback(yawError, dt)
+	pitchFeedback = c.pitchPIDControl.calcPIDFeedback(pitchError, dt)
+	yawFeedback = c.yawPIDControl.calcPIDFeedback(yawError, dt)
 	return
 }
 

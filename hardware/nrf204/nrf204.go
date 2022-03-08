@@ -41,8 +41,8 @@ const (
 	ADDRESS_W_TX_PAYLOAD byte = 0xA0
 	ADDRESS_R_RX_PAYLOAD byte = 0x61
 
-	// ADDRESS_FLUSH_TX byte = 0xE1
-	// ADDRESS_FLUSH_RX byte = 0xE2
+	ADDRESS_FLUSH_TX byte = 0xE1
+	ADDRESS_FLUSH_RX byte = 0xE2
 )
 
 const (
@@ -117,8 +117,8 @@ func (tr *nrf204l01) selectRadioMode(isRx bool) {
 	tr.ClearStatus()
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
 	tr.writeRegister(ADDRESS_CONFIG)
-	// tr.flushRx()
-	// tr.flushTx()
+	tr.flushRx()
+	tr.flushTx()
 }
 
 func (tr *nrf204l01) Listen() {
@@ -249,13 +249,13 @@ func (tr *nrf204l01) ClearStatus() {
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
-// func (tr *nrf204l01) flushRx() {
-// 	writeSPI(ADDRESS_FLUSH_RX, []byte{0x0}, tr.conn)
-// }
+func (tr *nrf204l01) flushRx() {
+	writeSPI(ADDRESS_FLUSH_RX, []byte{0x0}, tr.conn)
+}
 
-// func (tr *nrf204l01) flushTx() {
-// 	writeSPI(ADDRESS_FLUSH_TX, []byte{0x0}, tr.conn)
-// }
+func (tr *nrf204l01) flushTx() {
+	writeSPI(ADDRESS_FLUSH_TX, []byte{0x0}, tr.conn)
+}
 
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {
 	datalen := len(data)

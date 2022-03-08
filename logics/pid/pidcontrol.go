@@ -1,7 +1,6 @@
 package pid
 
 import (
-	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/utils"
@@ -54,9 +53,6 @@ func (pidcontrol *pidControl) calcPIDFeedback(inputError float64, dt time.Durati
 	p := pidcontrol.getP(inputError)
 	i := pidcontrol.getI(inputError, dt)
 	d := pidcontrol.getD(inputError, dt)
-	utils.PrintByInterval("pidfeedbacks", time.Second/10, func() {
-		log.Printf("feedbacks { roll: %8.4f, pitch: %8.4f, yaw: %8.4f\n", p, i, d)
-	})
 
 	return p + i + d
 }
