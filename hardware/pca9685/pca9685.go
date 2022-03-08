@@ -77,8 +77,8 @@ func throttleToPulseWidth(throttle float64) float64 {
 	return MinPW + throttle/100*(MaxPW-MinPW)
 }
 
-func limitThrottle(throttle float64, on bool) float64 {
-	if !on || throttle < 0 {
+func limitThrottle(throttle float64) float64 {
+	if throttle < 0 {
 		return 0
 	}
 	if throttle > MaxAllowedThrottle {
@@ -87,9 +87,9 @@ func limitThrottle(throttle float64, on bool) float64 {
 	return throttle
 }
 
-func (d *pca9685Dev) SetThrottles(throttles map[int]float64, on bool) {
+func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
 	for i := 0; i < len(throttles); i++ {
-		throttle := limitThrottle(throttles[i], on)
+		throttle := limitThrottle(throttles[i])
 		channel := d.channelMappings[i]
 		pulseWidth := throttleToPulseWidth(throttle)
 		d.setPWMByThrottle(channel, pulseWidth)

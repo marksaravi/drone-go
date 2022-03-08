@@ -11,7 +11,7 @@ flight-control:
   pid:
     roll:
       p-gain: 0
-      i-gain: 0
+      i-gain: 1
       d-gain: 0
       max-i-to-max-throttle-ratio: 0.5
     pitch:

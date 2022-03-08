@@ -12,7 +12,7 @@ func TestThrottleInRange(t *testing.T) {
 
 func TestThrottleMoreThanMax(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle + 1
-	got := limitThrottle(throttle, true)
+	got := limitThrottle(throttle)
 	if got != MaxAllowedThrottle {
 		t.Fatalf("wanted %f, got %f", MaxAllowedThrottle, got)
 	}
@@ -20,7 +20,7 @@ func TestThrottleMoreThanMax(t *testing.T) {
 
 func TestThrottleWhenOff(t *testing.T) {
 	var throttle float64 = MaxAllowedThrottle - 1
-	got := limitThrottle(throttle, false)
+	got := limitThrottle(throttle)
 	if got != 0 {
 		t.Fatalf("wanted %f, got %f", 0.0, got)
 	}

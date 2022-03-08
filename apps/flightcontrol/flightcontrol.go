@@ -21,7 +21,7 @@ type imu interface {
 type esc interface {
 	On()
 	Off()
-	SetThrottles(throttles models.Throttles, isSafeStarted bool)
+	SetThrottles(throttles models.Throttles)
 }
 
 type radioReceiver interface {
@@ -30,7 +30,7 @@ type radioReceiver interface {
 }
 type pidControls interface {
 	SetTargetStates(rotations models.Rotations)
-	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles
+	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles
 	PrintGains()
 	Calibrate(up, down bool)
 }
@@ -119,8 +119,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if fc.running && fc.commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						throttles := fc.pid.GetThrottles(fc.throttle, rotations.Rotations, rotations.ReadInterval, true)
-						fc.esc.SetThrottles(throttles, true)
+						throttles := fc.pid.GetThrottles(fc.throttle, rotations.Rotations, rotations.ReadInterval)
+						fc.esc.SetThrottles(throttles)
 						fc.logger.Send(rotations)
 					}
 				}
