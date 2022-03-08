@@ -44,7 +44,7 @@ const (
 	MinPW              float64 = 0.000995
 	MaxPW              float64 = 0.00199
 	MaxAllowedThrottle float64 = 35
-	MinOnThrottle      float64 = 5
+	MinOnThrottle      float64 = 0
 )
 
 type pca9685Dev struct {
@@ -79,11 +79,8 @@ func throttleToPulseWidth(throttle float64) float64 {
 }
 
 func limitThrottle(throttle float64, on bool) float64 {
-	if !on {
+	if !on || throttle < 0 {
 		return 0
-	}
-	if throttle < MinOnThrottle {
-		return MinOnThrottle
 	}
 	if throttle > MaxAllowedThrottle {
 		return MaxAllowedThrottle
