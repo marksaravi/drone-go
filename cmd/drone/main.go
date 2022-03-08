@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -60,8 +61,15 @@ func main() {
 		pidRollSettings,
 		pidPitchSettings,
 		pidYawSettings,
+		[4]float64{
+			configs.Arm_0_2_ThrottleRatio,
+			configs.Arm_1_3_ThrottleRatio,
+			configs.Arm_0_2_ThrottleRatio,
+			configs.Arm_1_3_ThrottleRatio,
+		},
 		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
+	fmt.Println(pidcontrols)
 	flightControl := flightcontrol.NewFlightControl(
 		pidcontrols,
 		imudev,
@@ -86,11 +94,10 @@ func main() {
 }
 
 type pidsettings struct {
-	PGain         float64
-	IGain         float64
-	DGain         float64
-	MaxIRatio     float64
-	ThrottleRatio float64
+	PGain     float64
+	IGain     float64
+	DGain     float64
+	MaxIRatio float64
 }
 
 func createPIDSettings(
@@ -98,10 +105,9 @@ func createPIDSettings(
 	maxThrottle float64,
 ) pid.PIDSettings {
 	return pid.PIDSettings{
-		PGain:         configs.PGain,
-		IGain:         configs.IGain,
-		DGain:         configs.DGain,
-		MaxI:          configs.MaxIRatio * maxThrottle,
-		ThrottleRatio: configs.ThrottleRatio * maxThrottle,
+		PGain: configs.PGain,
+		IGain: configs.IGain,
+		DGain: configs.DGain,
+		MaxI:  configs.MaxIRatio * maxThrottle,
 	}
 }

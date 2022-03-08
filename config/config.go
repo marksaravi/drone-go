@@ -20,22 +20,20 @@ type radioConfig struct {
 }
 
 type pidConfig struct {
-	PGain         float64 `yaml:"p-gain"`
-	IGain         float64 `yaml:"i-gain"`
-	DGain         float64 `yaml:"d-gain"`
-	MaxIRatio     float64 `yaml:"max-i-to-max-throttle-ratio"`
-	ThrottleRatio float64 `yaml:"throttle-to-max-throttle-ratio"`
+	PGain     float64 `yaml:"p-gain"`
+	IGain     float64 `yaml:"i-gain"`
+	DGain     float64 `yaml:"d-gain"`
+	MaxIRatio float64 `yaml:"max-i-to-max-throttle-ratio"`
 }
 type flightControl struct {
-	Debug                              bool    `yaml:"debug"`
-	MinThrottle                        float64 `yaml:"min-throttle"`
-	MaxThrottle                        float64 `yaml:"max-throttle"`
-	MaxRollThrottleToMaxThrottleRatio  float64 `yaml:"max-roll-throttleto-maxthrottle-ratio"`
-	MaxPitchThrottleToMaxThrottleRatio float64 `yaml:"max-pitch-throttleto-maxthrottle-ratio"`
-	MaxYawThrottleToMaxThrottleRatio   float64 `yaml:"max-yaw-throttleto-maxthrottle-ratio"`
-	MaxRoll                            float64 `yaml:"max-roll"`
-	MaxPitch                           float64 `yaml:"max-pitch"`
-	MaxYaw                             float64 `yaml:"max-yaw"`
+	Debug                 bool    `yaml:"debug"`
+	MinThrottle           float64 `yaml:"min-throttle"`
+	MaxThrottle           float64 `yaml:"max-throttle"`
+	Arm_0_2_ThrottleRatio float64 `yaml:"arm-0-2-throttle-ratio"`
+	Arm_1_3_ThrottleRatio float64 `yaml:"arm-1-3-throttle-ratio"`
+	MaxRoll               float64 `yaml:"max-roll"`
+	MaxPitch              float64 `yaml:"max-pitch"`
+	MaxYaw                float64 `yaml:"max-yaw"`
 
 	PID struct {
 		Roll        pidConfig `yaml:"roll"`

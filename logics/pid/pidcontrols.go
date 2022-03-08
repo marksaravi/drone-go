@@ -25,25 +25,29 @@ type CalibrationSettings struct {
 	IStep       float64
 	DStep       float64
 }
+
 type pidControls struct {
-	rollPIDControl  *pidControl
-	pitchPIDControl *pidControl
-	yawPIDControl   *pidControl
-	targetStates    models.Rotations
-	calibration     CalibrationSettings
+	rollPIDControl     *pidControl
+	pitchPIDControl    *pidControl
+	yawPIDControl      *pidControl
+	targetStates       models.Rotations
+	armsThrottleRatios [4]float64
+	calibration        CalibrationSettings
 }
 
 func NewPIDControls(
 	rollPIDSettings PIDSettings,
 	pitchPIDSettings PIDSettings,
 	yawPIDSettings PIDSettings,
+	armsThrottleRatios [4]float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
-		calibration:     calibration,
-		rollPIDControl:  NewPIDControl("Roll", rollPIDSettings),
-		pitchPIDControl: NewPIDControl("Pitch", pitchPIDSettings),
-		yawPIDControl:   NewPIDControl("Yaw", yawPIDSettings),
+		calibration:        calibration,
+		rollPIDControl:     NewPIDControl("Roll", rollPIDSettings),
+		pitchPIDControl:    NewPIDControl("Pitch", pitchPIDSettings),
+		yawPIDControl:      NewPIDControl("Yaw", yawPIDSettings),
+		armsThrottleRatios: armsThrottleRatios,
 		targetStates: models.Rotations{
 			Roll:  0,
 			Pitch: 0,
