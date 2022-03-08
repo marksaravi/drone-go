@@ -39,9 +39,9 @@ func (dev *memsICM20948) processGyroscopeData(data []uint8) (models.XYZ, error) 
 	y := float64(towsComplementUint8ToInt16(data[2], data[3])) / scale
 	z := float64(towsComplementUint8ToInt16(data[4], data[5])) / scale
 	return models.XYZ{
-		X: x,
-		Y: y,
-		Z: z,
+		X: x * dev.gyroConfig.directionX,
+		Y: y * dev.gyroConfig.directionY,
+		Z: z * dev.gyroConfig.directionZ,
 	}, nil
 }
 

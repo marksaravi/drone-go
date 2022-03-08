@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	"github.com/marksaravi/drone-go/pid"
+	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/periph/conn/i2c"
 	"periph.io/x/periph/conn/i2c/i2creg"
@@ -52,14 +53,19 @@ func main() {
 	})
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
 
+	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), configs.MaxThrottle)
+	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), configs.MaxThrottle)
+	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), configs.MaxThrottle)
+
 	pidcontrols := pid.NewPIDControls(
-		pid.PIDControlSettings{
-			Roll:        pid.PIDSettings(pidConfigs.Roll),
-			Pitch:       pid.PIDSettings(pidConfigs.Pitch),
-			Yaw:         pid.PIDSettings(pidConfigs.Yaw),
-			Calibration: pid.CalibrationSettings(pidConfigs.Calibration),
-		},
+		pidRollSettings,
+		pidPitchSettings,
+		pidYawSettings,
+		configs.Arm_0_2_ThrottleRatio,
+		configs.Arm_1_3_ThrottleRatio,
+		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
+	fmt.Println(pidcontrols)
 	flightControl := flightcontrol.NewFlightControl(
 		pidcontrols,
 		imudev,
@@ -81,4 +87,23 @@ func main() {
 	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
+}
+
+type pidsettings struct {
+	PGain     float64
+	IGain     float64
+	DGain     float64
+	MaxIRatio float64
+}
+
+func createPIDSettings(
+	configs pidsettings,
+	maxThrottle float64,
+) pid.PIDSettings {
+	return pid.PIDSettings{
+		PGain: configs.PGain,
+		IGain: configs.IGain,
+		DGain: configs.DGain,
+		MaxI:  configs.MaxIRatio * maxThrottle,
+	}
 }

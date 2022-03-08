@@ -20,26 +20,28 @@ type radioConfig struct {
 }
 
 type pidConfig struct {
-	InputLimit float64 `yaml:"input-limit"`
-	PGain      float64 `yaml:"p-gain"`
-	IGain      float64 `yaml:"i-gain"`
-	DGain      float64 `yaml:"d-gain"`
-	ILimit     float64 `yaml:"i-limit"`
+	PGain     float64 `yaml:"p-gain"`
+	IGain     float64 `yaml:"i-gain"`
+	DGain     float64 `yaml:"d-gain"`
+	MaxIRatio float64 `yaml:"max-i-to-max-throttle-ratio"`
 }
 type flightControl struct {
-	Debug       bool    `yaml:"debug"`
-	MinThrottle float64 `yaml:"min-throttle"`
-	MaxThrottle float64 `yaml:"max-throttle"`
-	MaxRoll     float64 `yaml:"max-roll"`
-	MaxPitch    float64 `yaml:"max-pitch"`
-	MaxYaw      float64 `yaml:"max-yaw"`
+	Debug                 bool    `yaml:"debug"`
+	MinThrottle           float64 `yaml:"min-throttle"`
+	MaxThrottle           float64 `yaml:"max-throttle"`
+	Arm_0_2_ThrottleRatio float64 `yaml:"arm-0-2-throttle-ratio"`
+	Arm_1_3_ThrottleRatio float64 `yaml:"arm-1-3-throttle-ratio"`
+	MaxRoll               float64 `yaml:"max-roll"`
+	MaxPitch              float64 `yaml:"max-pitch"`
+	MaxYaw                float64 `yaml:"max-yaw"`
 
 	PID struct {
 		Roll        pidConfig `yaml:"roll"`
 		Pitch       pidConfig `yaml:"pitch"`
 		Yaw         pidConfig `yaml:"yaw"`
 		Calibration struct {
-			Calibrating bool    `yaml:"calibrating"`
+			Calibrating string  `yaml:"calibrating"`
+			Gain        string  `yaml:"gain"`
 			PStep       float64 `yaml:"p-step"`
 			IStep       float64 `yaml:"i-step"`
 			DStep       float64 `yaml:"d-step"`
@@ -47,9 +49,9 @@ type flightControl struct {
 	} `yaml:"pid"`
 
 	Imu struct {
-		DataPerSecond            int     `yaml:"data-per-second"`
-		LowPassFilterCoefficient float64 `yaml:"lowpass-filter-coefficient"`
-		Accelerometer            struct {
+		DataPerSecond                  int     `yaml:"data-per-second"`
+		ComplimentaryFilterCoefficient float64 `yaml:"complimentary-filter-coefficient"`
+		Accelerometer                  struct {
 			SensitivityLevel     string  `yaml:"sensitivity-level"`
 			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
 			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`
@@ -58,11 +60,12 @@ type flightControl struct {
 		} `yaml:"accelerometer"`
 
 		Gyroscope struct {
-			SensitivityLevel     string  `yaml:"sensitivity-level"`
-			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
-			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`
-			Averaging            int     `yaml:"averaging"`
-			Offsets              offsets `yaml:"offsets"`
+			SensitivityLevel     string     `yaml:"sensitivity-level"`
+			LowPassFilterEnabled bool       `yaml:"lowpass-filter-enabled"`
+			LowPassFilterConfig  int        `yaml:"lowpass-filter-config"`
+			Averaging            int        `yaml:"averaging"`
+			Offsets              offsets    `yaml:"offsets"`
+			Directions           directions `yaml:"directions"`
 		} `yaml:"gyroscope"`
 
 		Magnetometer struct {
@@ -118,6 +121,12 @@ type offsets struct {
 	X uint16 `yaml:"X"`
 	Y uint16 `yaml:"Y"`
 	Z uint16 `yaml:"Z"`
+}
+
+type directions struct {
+	X float64 `yaml:"X"`
+	Y float64 `yaml:"Y"`
+	Z float64 `yaml:"Z"`
 }
 
 type udpLogger struct {

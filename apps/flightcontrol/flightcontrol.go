@@ -4,10 +4,13 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 )
+
+const SAFE_START_DURATION = time.Second
 
 type imu interface {
 	ResetTime()
@@ -17,7 +20,7 @@ type imu interface {
 type esc interface {
 	On()
 	Off()
-	SetThrottles(models.Throttles)
+	SetThrottles(throttles models.Throttles, isSafeStarted bool)
 }
 
 type radioReceiver interface {
@@ -25,10 +28,10 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan models.ConnectionState
 }
 type pidControls interface {
-	SetPIDTargetState(state models.PIDState)
-	SetRotations(rotations models.ImuRotations)
-	Throttles() map[int]float64
+	SetTargetStates(rotations models.Rotations)
+	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration, isSafeStarted bool) models.Throttles
 	PrintGains()
+	Calibrate(up, down bool)
 }
 
 type Settings struct {
@@ -39,12 +42,13 @@ type Settings struct {
 }
 
 type flightControl struct {
-	pid      pidControls
-	imu      imu
-	esc      esc
-	radio    radioReceiver
-	logger   models.Logger
-	settings Settings
+	pid           pidControls
+	imu           imu
+	esc           esc
+	radio         radioReceiver
+	logger        models.Logger
+	settings      Settings
+	isSafeStarted bool
 }
 
 func NewFlightControl(
@@ -77,7 +81,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 		var commandChanOpen bool = true
 		var connectionChanOpen bool = true
 		var running bool = true
-
+		var throttle float64 = 0
+		var flightControlStartTime time.Time = time.Now()
 		fc.imu.ResetTime()
 		for running || connectionChanOpen || commandChanOpen {
 			select {
@@ -89,8 +94,11 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case flightCommands, ok := <-fc.radio.GetReceiverChannel():
 				if ok {
-					fc.pid.SetPIDTargetState(flightCommandsToPIDState(flightCommands, fc.settings))
-					// showFlightCommands(flightCommands)
+					rotations := flightCommandsToRotations(flightCommands, fc.settings)
+					throttle = flightCommandsToThrottle(flightCommands, fc.settings)
+					fc.checkForSafeStart(throttle, flightControlStartTime)
+					fc.pid.SetTargetStates(rotations)
+					fc.pid.Calibrate(flightCommands.ButtonTopRight, flightCommands.ButtonTopLeft)
 				}
 				commandChanOpen = ok
 
@@ -104,11 +112,8 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if running && commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
-						fc.pid.SetRotations(rotations)
-						fc.esc.SetThrottles(models.Throttles{
-							Active:    true,
-							Throttles: fc.pid.Throttles(),
-						})
+						throttles := fc.pid.GetThrottles(throttle, rotations.Rotations, rotations.ReadInterval, fc.isSafeStarted)
+						fc.esc.SetThrottles(throttles, fc.isSafeStarted)
 						fc.logger.Send(rotations)
 					}
 				}
@@ -125,6 +130,15 @@ func showConnectionState(connectionState models.ConnectionState) {
 		log.Println("Waiting for Connection")
 	case constants.DISCONNECTED:
 		log.Println("Disconnected")
+	}
+}
+
+func (fc *flightControl) checkForSafeStart(throttle float64, startTime time.Time) {
+	if time.Since(startTime) > SAFE_START_DURATION && throttle == 0 {
+		if !fc.isSafeStarted {
+			log.Println("Safe Start Detected")
+		}
+		fc.isSafeStarted = true
 	}
 }
 
@@ -145,11 +159,14 @@ func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) flo
 	return float64(digital) / float64(resolution) * max
 }
 
-func flightCommandsToPIDState(command models.FlightCommands, settings Settings) models.PIDState {
-	return models.PIDState{
-		Roll:     joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
-		Pitch:    joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
-		Yaw:      joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
-		Throttle: joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle),
+func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.Rotations {
+	return models.Rotations{
+		Roll:  joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
+		Pitch: joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
+		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
+}
+
+func flightCommandsToThrottle(command models.FlightCommands, settings Settings) float64 {
+	return joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle)
 }

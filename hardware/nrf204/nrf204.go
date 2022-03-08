@@ -41,8 +41,8 @@ const (
 	ADDRESS_W_TX_PAYLOAD byte = 0xA0
 	ADDRESS_R_RX_PAYLOAD byte = 0x61
 
-	ADDRESS_FLUSH_RX byte = 0xE1
-	ADDRESS_FLUSH_TX byte = 0xE2
+	ADDRESS_FLUSH_TX byte = 0xE1
+	ADDRESS_FLUSH_RX byte = 0xE2
 )
 
 const (
@@ -188,7 +188,7 @@ func (tr *nrf204l01) init() {
 	tr.setRxTxAddress()
 }
 
-func (tr *nrf204l01) printConfigurations() {
+func (tr *nrf204l01) PrintConfigurations() {
 	config, _ := tr.readRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
 	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
@@ -250,11 +250,11 @@ func (tr *nrf204l01) ClearStatus() {
 }
 
 func (tr *nrf204l01) flushRx() {
-	writeSPI(ADDRESS_FLUSH_RX, []byte{0xFF}, tr.conn)
+	writeSPI(ADDRESS_FLUSH_RX, []byte{0x0}, tr.conn)
 }
 
 func (tr *nrf204l01) flushTx() {
-	writeSPI(ADDRESS_FLUSH_TX, []byte{0xFF}, tr.conn)
+	writeSPI(ADDRESS_FLUSH_TX, []byte{0x0}, tr.conn)
 }
 
 func writeSPI(address byte, data []byte, conn spi.Conn) ([]byte, error) {

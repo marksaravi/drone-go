@@ -16,8 +16,7 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottles(map[int]float64)
-	OffAll()
+	SetThrottles(map[int]float64, bool)
 }
 
 type escDev struct {
@@ -39,26 +38,29 @@ func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, d
 	}
 }
 
+func (e *escDev) zeroThrottle() {
+	e.pwmDev.SetThrottles(map[int]float64{0: 0, 1: 0, 2: 0, 3: 0}, false)
+}
+
 func (e *escDev) On() {
-	e.pwmDev.OffAll()
+	e.zeroThrottle()
 	if !e.debug {
 		e.powerbreaker.Connect()
 	}
 }
 
 func (e *escDev) Off() {
-	e.pwmDev.OffAll()
+	e.zeroThrottle()
 	e.powerbreaker.Disconnect()
 }
 
-func (e *escDev) SetThrottles(throttles models.Throttles) {
-	if throttles.Active {
-		if time.Since(e.lastUpdate) >= e.updateInterval {
-			e.lastUpdate = time.Now()
-			e.pwmDev.SetThrottles(throttles.Throttles)
+func (e *escDev) SetThrottles(throttles models.Throttles, isSafeStarted bool) {
+	if time.Since(e.lastUpdate) >= e.updateInterval {
+		e.lastUpdate = time.Now()
+		if isSafeStarted {
+			e.pwmDev.SetThrottles(throttles.Throttles, true)
+		} else {
+			e.zeroThrottle()
 		}
-
-	} else {
-		e.pwmDev.OffAll()
 	}
 }
