@@ -87,7 +87,6 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 	apply := float64(1)
 	if throttle < c.minThrottle {
 		apply = 0
-	} else {
 		c.reset()
 	}
 	return models.Throttles{
