@@ -30,22 +30,21 @@ type radioTransmitter interface {
 	SuppressLostConnection()
 }
 type remoteControl struct {
-	commandPerSecond                int
-	radio                           radioTransmitter
-	roll                            joystick
-	pitch                           joystick
-	yaw                             joystick
-	throttle                        joystick
-	btnFrontLeft                    button
-	btnFrontRight                   button
-	btnTopLeft                      button
-	btnTopRight                     button
-	btnBottomLeft                   button
-	btnBottomRight                  button
-	display                         oledDisplay
-	buzzer                          *piezobuzzer.Buzzer
-	shutdownCountdown               time.Time
-	suppressLostConnectionCountdown time.Time
+	commandPerSecond  int
+	radio             radioTransmitter
+	roll              joystick
+	pitch             joystick
+	yaw               joystick
+	throttle          joystick
+	btnFrontLeft      button
+	btnFrontRight     button
+	btnTopLeft        button
+	btnTopRight       button
+	btnBottomLeft     button
+	btnBottomRight    button
+	display           oledDisplay
+	buzzer            *piezobuzzer.Buzzer
+	shutdownCountdown time.Time
 }
 
 var lastPrinted time.Time = time.Now()
