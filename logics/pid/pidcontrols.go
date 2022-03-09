@@ -101,8 +101,6 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 
 }
 
-var ts time.Time = time.Now()
-
 func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles {
 	rollError := c.targetStates.Roll - rotations.Roll
 	pitchError := c.targetStates.Pitch - rotations.Pitch
@@ -111,10 +109,6 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations,
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
-	if time.Since(ts) >= time.Second/2 {
-		ts = time.Now()
-		log.Printf(" pid: { roll: %8.4f, pitch: %8.4f, yaw: %8.4f } throttles: {0: %8.4f, 1: %8.4f, 2: %8.4f, 3: %8.4f}\n", rollFeedback, pitchFeedback, yawFeedback, throttles.Throttles[0], throttles.Throttles[1], throttles.Throttles[2], throttles.Throttles[3])
-	}
 	return throttles
 }
 
