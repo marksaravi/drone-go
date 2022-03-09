@@ -34,6 +34,7 @@ type pidControls struct {
 	arm_1_3_ThrottleRatio float64
 	minThrottle           float64
 	calibration           CalibrationSettings
+	calibrationApplied    bool
 }
 
 func NewPIDControls(
@@ -57,7 +58,8 @@ func NewPIDControls(
 			Pitch: 0,
 			Yaw:   0,
 		},
-		minThrottle: minThrottle,
+		minThrottle:        minThrottle,
+		calibrationApplied: false,
 	}
 }
 
@@ -121,6 +123,13 @@ func (c *pidControls) reset() {
 }
 
 func (c *pidControls) Calibrate(down, up bool) {
+	if !down && !up {
+		c.calibrationApplied = false
+		return
+	}
+	if c.calibrationApplied {
+		return
+	}
 	if c.calibration.Calibrating == "none" {
 		return
 	}
@@ -145,10 +154,11 @@ func (c *pidControls) Calibrate(down, up bool) {
 	case "d":
 		pidcontrol.dGain += c.calibration.DStep * sign
 	}
+	c.calibrationApplied = true
 	if up || down {
+		fmt.Println(c.calibration)
 		printGains(pidcontrol)
 	}
-
 }
 
 func printGains(p *pidControl) {
