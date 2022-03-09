@@ -23,6 +23,7 @@ type radioReceiver struct {
 	radiolink           radioReceiverLink
 	receiveChannel      chan models.FlightCommands
 	commandReadInterval time.Duration
+	commandReadTimeout  time.Time
 
 	connectionChannel  chan int
 	connectionState    int
@@ -37,6 +38,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 		radiolink:           radiolink,
 		connectionState:     constants.IDLE,
 		commandReadInterval: time.Second / time.Duration(commandsPerSecond*2),
+		commandReadTimeout:  time.Now(),
 		connectionTimeout:   time.Millisecond * time.Duration(connectionTimeoutMs),
 		lastConnectionTime:  time.Now(),
 	}
@@ -64,7 +66,8 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 				return
 
 			default:
-				utils.Schedule("commandReadInterval", r.commandReadInterval, func() {
+				if time.Since(r.commandReadTimeout) >= r.commandReadInterval {
+					r.commandReadTimeout = time.Now()
 					if r.radiolink.IsReceiverDataReady(true) {
 						payload, _ := r.radiolink.Receive()
 						r.radiolink.Listen()
@@ -75,7 +78,7 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 					} else {
 						r.updateConnectionState(false)
 					}
-				})
+				}
 			}
 		}
 	}()
