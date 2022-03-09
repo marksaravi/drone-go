@@ -124,7 +124,7 @@ func (c *pidControls) reset() {
 	c.yawPIDControl.reset()
 }
 
-func (c *pidControls) Calibrate(down, up bool) {
+func (c *pidControls) Calibrate(up, down bool) {
 	if !down && !up {
 		c.calibrationApplied = false
 		return
