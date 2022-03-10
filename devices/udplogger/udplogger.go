@@ -6,6 +6,7 @@ package udplogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -113,7 +114,7 @@ func (l *udpLogger) Send(data models.ImuRotations) {
 	}
 }
 
-func (l *udpLogger) Start(wg *sync.WaitGroup) {
+func (l *udpLogger) Start(ctx context.Context, wg *sync.WaitGroup) {
 	if !l.enabled {
 		log.Println("Logger is not enabled.")
 		return

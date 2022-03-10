@@ -22,5 +22,5 @@ func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		radioConfigs.RxTxAddress,
 	)
 	receiver := radio.NewReceiver(radioNRF204, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
-	go receiver.StartReceiver(ctx, wg)
+	go receiver.Start(ctx, wg)
 }

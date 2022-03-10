@@ -44,7 +44,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 	}
 }
 
-func (r *RadioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
+func (r *RadioReceiver) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Receiver...")
 
