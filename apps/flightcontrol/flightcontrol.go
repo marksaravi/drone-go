@@ -56,6 +56,7 @@ type flightControl struct {
 	running            bool
 	flightCommands     models.FlightCommands
 	throttle           float64
+	stopTimeout        time.Time
 }
 
 func NewFlightControl(
@@ -78,6 +79,8 @@ func NewFlightControl(
 		commandChanOpen:    true,
 		running:            true,
 		throttle:           0,
+		isSafeStarted:      false,
+		stopTimeout:        time.Now(),
 	}
 }
 
@@ -139,12 +142,11 @@ func (fc *flightControl) showConnectionState() {
 }
 
 func (fc *flightControl) safeReduceThrottle() {
-	if fc.isSafeStarted || fc.throttle == 0 {
+	if fc.isSafeStarted || fc.throttle == 0 || time.Since(fc.stopTimeout) < time.Millisecond*10 {
 		return
 	}
-
+	fc.stopTimeout = time.Now()
 	fc.throttle -= fc.throttle / 100
-	time.Sleep(time.Millisecond)
 	if fc.throttle < 5 {
 		fc.throttle = 0
 	}

@@ -54,10 +54,10 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	accRotations := calcaAcelerometerRotations(acc)
 	dg := gyroChanges(gyro, diff.Nanoseconds())
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
-	gyroRotations := calcGyroRotations(dg, imu.rotations)
+	newRotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = models.Rotations{
-		Roll:  complimentaryFilter(gyroRotations.Roll, accRotations.Roll, imu.complimentaryFilterCoefficient),
-		Pitch: complimentaryFilter(gyroRotations.Pitch, accRotations.Pitch, imu.complimentaryFilterCoefficient),
+		Roll:  complimentaryFilter(newRotations.Roll, accRotations.Roll, imu.complimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(newRotations.Pitch, accRotations.Pitch, imu.complimentaryFilterCoefficient),
 		Yaw:   imu.gyro.Yaw,
 	}
 	imu.lastReading = now
@@ -80,11 +80,11 @@ func calcaAcelerometerRotations(data models.XYZ) models.Rotations {
 	}
 }
 
-func calcGyroRotations(dGyro rotationsChanges, gyro models.Rotations) models.Rotations {
+func calcGyroRotations(dGyro rotationsChanges, prevRotations models.Rotations) models.Rotations {
 	return models.Rotations{
-		Roll:  math.Mod(gyro.Roll+dGyro.dRoll, 360),
-		Pitch: math.Mod(gyro.Pitch+dGyro.dPitch, 360),
-		Yaw:   math.Mod(gyro.Yaw+dGyro.dYaw, 360),
+		Roll:  math.Mod(prevRotations.Roll+dGyro.dRoll, 360),
+		Pitch: math.Mod(prevRotations.Pitch+dGyro.dPitch, 360),
+		Yaw:   math.Mod(prevRotations.Yaw+dGyro.dYaw, 360),
 	}
 }
 
