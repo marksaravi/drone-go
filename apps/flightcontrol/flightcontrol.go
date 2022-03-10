@@ -113,7 +113,9 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
 				if fc.connectionChanOpen {
-					fc.isSafeStarted = false
+					if fc.connectionState == constants.DISCONNECTED {
+						fc.isSafeStarted = false
+					}
 					fc.showConnectionState()
 				}
 
