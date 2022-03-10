@@ -5,8 +5,8 @@ flight-control:
   max-roll: 5
   max-pitch: 5
   max-yaw: 5
-  arm-0-2-throttle-ratio: 1
-  arm-1-3-throttle-ratio: 1
+  arm-0-2-throttle-enabled: false
+  arm-1-3-throttle-enabled: true
 
   pid:
     roll:
@@ -15,9 +15,9 @@ flight-control:
       d-gain: 0.25
       max-i-to-max-throttle-ratio: 0.5
     pitch:
-      p-gain: 0
-      i-gain: 0
-      d-gain: 0
+      p-gain: 2
+      i-gain: 5
+      d-gain: 0.25
       max-i-to-max-throttle-ratio: 0.5
     yaw:
       p-gain: 0

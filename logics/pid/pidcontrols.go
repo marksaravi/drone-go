@@ -26,33 +26,33 @@ type CalibrationSettings struct {
 }
 
 type pidControls struct {
-	rollPIDControl        *pidControl
-	pitchPIDControl       *pidControl
-	yawPIDControl         *pidControl
-	targetStates          models.Rotations
-	arm_0_2_ThrottleRatio float64
-	arm_1_3_ThrottleRatio float64
-	minThrottle           float64
-	calibration           CalibrationSettings
-	calibrationApplied    bool
+	rollPIDControl          *pidControl
+	pitchPIDControl         *pidControl
+	yawPIDControl           *pidControl
+	targetStates            models.Rotations
+	arm_0_2_ThrottleEnabled bool
+	arm_1_3_ThrottleEnabled bool
+	minThrottle             float64
+	calibration             CalibrationSettings
+	calibrationApplied      bool
 }
 
 func NewPIDControls(
 	rollPIDSettings PIDSettings,
 	pitchPIDSettings PIDSettings,
 	yawPIDSettings PIDSettings,
-	arm_0_2_ThrottleRatio float64,
-	arm_1_3_ThrottleRatio float64,
+	arm_0_2_ThrottleEnabled bool,
+	arm_1_3_ThrottleEnabled bool,
 	minThrottle float64,
 	calibration CalibrationSettings,
 ) *pidControls {
 	return &pidControls{
-		calibration:           calibration,
-		rollPIDControl:        NewPIDControl("Roll", rollPIDSettings),
-		pitchPIDControl:       NewPIDControl("Pitch", pitchPIDSettings),
-		yawPIDControl:         NewPIDControl("Yaw", yawPIDSettings),
-		arm_0_2_ThrottleRatio: arm_0_2_ThrottleRatio,
-		arm_1_3_ThrottleRatio: arm_1_3_ThrottleRatio,
+		calibration:             calibration,
+		rollPIDControl:          NewPIDControl("Roll", rollPIDSettings),
+		pitchPIDControl:         NewPIDControl("Pitch", pitchPIDSettings),
+		yawPIDControl:           NewPIDControl("Yaw", yawPIDSettings),
+		arm_0_2_ThrottleEnabled: arm_0_2_ThrottleEnabled,
+		arm_1_3_ThrottleEnabled: arm_1_3_ThrottleEnabled,
 		targetStates: models.Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -84,18 +84,26 @@ func (c *pidControls) calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback
 }
 
 func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float64) models.Throttles {
-	apply := float64(1)
+	applyFeedbacks := float64(1)
 	if throttle < c.minThrottle {
-		apply = 0
+		applyFeedbacks = 0
 		c.reset()
+	}
+	arm_0_2_enabled := float64(0)
+	if c.arm_0_2_ThrottleEnabled {
+		arm_0_2_enabled = 1.0
+	}
+	arm_1_3_enabled := float64(0)
+	if c.arm_1_3_ThrottleEnabled {
+		arm_1_3_enabled = 1.0
 	}
 	return models.Throttles{
 		BaseThrottle: throttle,
 		Throttles: map[int]float64{
-			0: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[0]*apply,
-			1: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[1]*apply,
-			2: throttle*c.arm_0_2_ThrottleRatio + armsFeedback[2]*apply,
-			3: throttle*c.arm_1_3_ThrottleRatio + armsFeedback[3]*apply,
+			0: (throttle + armsFeedback[0]*applyFeedbacks) * arm_0_2_enabled,
+			1: (throttle + armsFeedback[1]*applyFeedbacks) * arm_1_3_enabled,
+			2: (throttle + armsFeedback[2]*applyFeedbacks) * arm_0_2_enabled,
+			3: (throttle + armsFeedback[3]*applyFeedbacks) * arm_1_3_enabled,
 		},
 	}
 
