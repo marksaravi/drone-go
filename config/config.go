@@ -27,7 +27,7 @@ type pidConfig struct {
 }
 type flightControl struct {
 	Debug                   bool    `yaml:"debug"`
-	MinThrottle             float64 `yaml:"min-throttle"`
+	MinPIDThrottle          float64 `yaml:"min-pid-throttle"`
 	MaxThrottle             float64 `yaml:"max-throttle"`
 	Arm_0_2_ThrottleEnabled bool    `yaml:"arm-0-2-throttle-enabled"`
 	Arm_1_3_ThrottleEnabled bool    `yaml:"arm-1-3-throttle-enabled"`
