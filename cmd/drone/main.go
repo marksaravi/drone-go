@@ -24,12 +24,13 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	configs := config.ReadConfigs()
+	flightcontrolConfigs := configs.FlightControl
 	fcConfigs := configs.FlightControl
 	pidConfigs := fcConfigs.PID
 
 	hardware.InitHost()
 
-	radioReceiver := createRadioReceiver(configs)
+	radioReceiver := createRadioReceiver(flightcontrolConfigs)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()
 	powerBreakerPin := fcConfigs.PowerBreaker
