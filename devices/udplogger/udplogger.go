@@ -65,11 +65,7 @@ func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	return buffer.Bytes()
 }
 
-func NewUdpLogger() *udpLogger {
-	configs := config.ReadConfigs()
-	flightControl := configs.FlightControl
-	loggerConfigs := configs.UdpLogger
-
+func NewUdpLogger(loggerConfigs config.UdpLoggerConfigs, dataPerSecond int) *udpLogger {
 	var conn *net.UDPConn = nil
 	var err error = nil
 	var address *net.UDPAddr = nil
@@ -89,7 +85,7 @@ func NewUdpLogger() *udpLogger {
 		}
 	}
 
-	dataPerPacket := flightControl.Imu.DataPerSecond / loggerConfigs.PacketsPerSecond
+	dataPerPacket := dataPerSecond / loggerConfigs.PacketsPerSecond
 
 	logger := udpLogger{
 		enabled:          enabled,
