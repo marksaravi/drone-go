@@ -93,7 +93,9 @@ func (t *radioTransmitter) updateConnectionState(connected bool) {
 	prevState := t.connectionState
 	t.connectionState, t.lastConnectionTime = newConnectionState(connected, t.connectionState, t.lastConnectionTime, t.connectionTimeout)
 	if prevState != t.connectionState {
-		t.connectionChannel <- t.connectionState
+		go func(connectionState int) {
+			t.connectionChannel <- t.connectionState
+		}(t.connectionState)
 	}
 }
 
