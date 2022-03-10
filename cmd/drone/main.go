@@ -12,10 +12,8 @@ import (
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/esc"
 	"github.com/marksaravi/drone-go/devices/imu"
-	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/nrf204"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
@@ -25,45 +23,38 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	configs := config.ReadConfigs().FlightControl
-	radioConfigs := configs.Radio
-	pidConfigs := configs.PID
+	configs := config.ReadConfigs()
+	fcConfigs := configs.FlightControl
+	pidConfigs := fcConfigs.PID
 
 	hardware.InitHost()
 
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
-		radioConfigs.SPI.BusNumber,
-		radioConfigs.SPI.ChipSelect,
-		radioConfigs.CE,
-		radioConfigs.RxTxAddress,
-	)
-
-	radioDev := radio.NewReceiver(radioNRF204, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
+	radioReceiver := createRadioReceiver(configs)
 	logger := udplogger.NewUdpLogger()
 	imudev := imu.NewImu()
-	powerBreakerPin := configs.PowerBreaker
+	powerBreakerPin := fcConfigs.PowerBreaker
 	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open(configs.ESC.I2CDev)
+	b, _ := i2creg.Open(fcConfigs.ESC.I2CDev)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
 		Connection:      i2cConn,
-		MaxThrottle:     configs.MaxThrottle,
-		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
+		MaxThrottle:     fcConfigs.MaxThrottle,
+		ChannelMappings: fcConfigs.ESC.PwmDeviceToESCMappings,
 	})
-	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
+	esc := esc.NewESC(pwmDev, powerBreaker, fcConfigs.Imu.DataPerSecond, fcConfigs.Debug)
 
-	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), configs.MaxThrottle)
-	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), configs.MaxThrottle)
-	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), configs.MaxThrottle)
+	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), fcConfigs.MaxThrottle)
+	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), fcConfigs.MaxThrottle)
+	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), fcConfigs.MaxThrottle)
 
 	pidcontrols := pid.NewPIDControls(
 		pidRollSettings,
 		pidPitchSettings,
 		pidYawSettings,
-		configs.Arm_0_2_ThrottleEnabled,
-		configs.Arm_1_3_ThrottleEnabled,
-		configs.MinPIDThrottle,
+		fcConfigs.Arm_0_2_ThrottleEnabled,
+		fcConfigs.Arm_1_3_ThrottleEnabled,
+		fcConfigs.MinPIDThrottle,
 		pid.CalibrationSettings(pidConfigs.Calibration),
 	)
 	fmt.Println(pidcontrols)
@@ -71,20 +62,20 @@ func main() {
 		pidcontrols,
 		imudev,
 		esc,
-		radioDev,
+		radioReceiver,
 		logger,
 		flightcontrol.Settings{
-			MaxThrottle: configs.MaxThrottle,
-			MaxRoll:     configs.MaxRoll,
-			MaxPitch:    configs.MaxPitch,
-			MaxYaw:      configs.MaxYaw,
+			MaxThrottle: fcConfigs.MaxThrottle,
+			MaxRoll:     fcConfigs.MaxRoll,
+			MaxPitch:    fcConfigs.MaxPitch,
+			MaxYaw:      fcConfigs.MaxYaw,
 		},
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
-	radioDev.StartReceiver(ctx, &wg)
+	radioReceiver.StartReceiver(ctx, &wg)
 	logger.Start(&wg)
 	flightControl.Start(ctx, &wg)
 	wg.Wait()
@@ -98,13 +89,13 @@ type pidsettings struct {
 }
 
 func createPIDSettings(
-	configs pidsettings,
+	fcConfigs pidsettings,
 	maxThrottle float64,
 ) pid.PIDSettings {
 	return pid.PIDSettings{
-		PGain: configs.PGain,
-		IGain: configs.IGain,
-		DGain: configs.DGain,
-		MaxI:  configs.MaxIRatio * maxThrottle,
+		PGain: fcConfigs.PGain,
+		IGain: fcConfigs.IGain,
+		DGain: fcConfigs.DGain,
+		MaxI:  fcConfigs.MaxIRatio * maxThrottle,
 	}
 }

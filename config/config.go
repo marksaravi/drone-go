@@ -136,18 +136,18 @@ type udpLogger struct {
 	PacketsPerSecond int    `yaml:"packets-per-second"`
 }
 
-type configs struct {
+type Configs struct {
 	RemoteControl remoteControl `yaml:"remote-control"`
 	FlightControl flightControl `yaml:"flight-control"`
 	UdpLogger     udpLogger     `yaml:"logger"`
 }
 
-func ReadConfigs() configs {
+func ReadConfigs() Configs {
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
-	var configs configs
+	var configs Configs
 	yaml.Unmarshal([]byte(content), &configs)
 	return configs
 }
