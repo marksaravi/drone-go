@@ -32,7 +32,7 @@ func main() {
 
 	radioReceiver := createRadioReceiver(flightcontrolConfigs)
 	logger := udplogger.NewUdpLogger(configs.UdpLogger, flightcontrolConfigs.Imu.DataPerSecond)
-	imudev := imu.NewImu()
+	imudev := imu.NewImu(flightcontrolConfigs)
 	powerBreakerPin := fcConfigs.PowerBreaker
 	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)

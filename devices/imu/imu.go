@@ -107,8 +107,7 @@ func goDurToDt(d int64) float64 {
 	return float64(d) / 1e9
 }
 
-func NewImu() *imudevice {
-	configs := config.ReadConfigs().FlightControl
+func NewImu(configs config.FlightControlConfigs) *imudevice {
 	imuConfig := configs.Imu
 	imuSPIConn := hardware.NewSPIConnection(
 		imuConfig.SPI.BusNumber,
