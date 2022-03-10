@@ -83,18 +83,21 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}()
 }
-
+func (r *radioReceiver) updateConnectionStateAsync(connectionState int) {
+	r.connectionState = connectionState
+	func() {
+		r.connectionChannel <- connectionState
+	}()
+}
 func (r *radioReceiver) updateConnectionState(connected bool) {
 	if connected {
 		r.lastConnectionTime = time.Now()
 		if r.connectionState != constants.CONNECTED {
-			r.connectionState = constants.CONNECTED
-			r.connectionChannel <- r.connectionState
+			r.updateConnectionStateAsync(constants.CONNECTED)
 		}
 	}
 	if !connected && r.connectionState != constants.DISCONNECTED && time.Since(r.lastConnectionTime) > r.connectionTimeout {
-		r.connectionState = constants.DISCONNECTED
-		r.connectionChannel <- r.connectionState
+		r.updateConnectionStateAsync(constants.DISCONNECTED)
 	}
 }
 
