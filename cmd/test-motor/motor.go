@@ -36,14 +36,15 @@ func main() {
 	})
 
 	const maxThrottle float64 = 10
+	const minThrottle float64 = 5
 	const steps int = 10
-	var dThrottle float64 = maxThrottle / float64(steps)
+	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
 	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.UpdatePerSecond, false)
 	var wg sync.WaitGroup
 	esc.On()
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 	throttles := models.Throttles{
-		BaseThrottle: 0,
+		BaseThrottle: minThrottle,
 		Throttles:    map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
 	}
 	for repeat := 0; repeat < 2; repeat++ {

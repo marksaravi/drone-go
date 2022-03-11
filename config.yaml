@@ -23,12 +23,12 @@ flight-control:
       p-gain: 0
       i-gain: 0
       d-gain: 0
-      max-i-to-max-throttle-ratio: 0.1
+      max-i-to-max-throttle-ratio: 0.5
     calibration:
-      calibrating: 'pitch'
-      gain: 'i'
-      p-step: 0.001
-      i-step: 0.25
+      calibrating: 'yaw'
+      gain: 'p'
+      p-step: 0.01
+      i-step: 0.1
       d-step: 0.01
   imu:
     data-per-second: 1000
@@ -50,7 +50,7 @@ flight-control:
       offsets:
         X: 0
         Y: 0
-        Z: 4
+        Z: 0
       directions:
         X: 1
         Y: -1
