@@ -1,6 +1,7 @@
 package esc
 
 import (
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
@@ -25,6 +26,7 @@ type escDev struct {
 	lastUpdate     time.Time
 	updateInterval time.Duration
 	debug          bool
+	mu             sync.Mutex
 }
 
 func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, debug bool) *escDev {
@@ -57,6 +59,8 @@ func (e *escDev) Off() {
 func (e *escDev) SetThrottles(throttles models.Throttles) {
 	if time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
-		e.pwmDev.SetThrottles(throttles.Throttles)
+		func(throttles map[int]float64) {
+			e.pwmDev.SetThrottles(throttles)
+		}(throttles.Throttles)
 	}
 }
