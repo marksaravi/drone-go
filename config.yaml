@@ -17,7 +17,7 @@ flight-control:
     pitch:
       p-gain: 0.3
       i-gain: 0.03
-      d-gain: 0.02
+      d-gain: 0.025
       max-i-to-max-throttle-ratio: 0.5
     yaw:
       p-gain: 0
@@ -26,7 +26,7 @@ flight-control:
       max-i-to-max-throttle-ratio: 0.1
     calibration:
       calibrating: 'pitch'
-      gain: 'i'
+      gain: 'd'
       p-step: 0.025
       i-step: 0.01
       d-step: 0.01
