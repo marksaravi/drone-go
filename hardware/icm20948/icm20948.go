@@ -31,8 +31,6 @@ type memsICM20948 struct {
 	regbank    uint8
 	accConfig  sensorConfig
 	gyroConfig sensorConfig
-	accData    models.XYZ
-	gyroData   models.XYZ
 }
 
 func reg(reg uint16) *register {
@@ -183,23 +181,24 @@ func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 
 // ReadSensors reads Accelerometer and Gyro data
 func (dev *memsICM20948) Read() (
-	acc models.XYZ,
-	gyro models.XYZ,
+	models.XYZ,
+	models.XYZ,
+	error,
 ) {
 	data, err := dev.readSensorsRawData()
 
 	if err != nil {
-		return
+		return models.XYZ{}, models.XYZ{}, err
 	}
-	nacc, accErr := dev.processAccelerometerData(data)
-	ngyro, gyroErr := dev.processGyroscopeData(data[6:])
-	if accErr == nil {
-		dev.accData = nacc
+	acc, accErr := dev.processAccelerometerData(data)
+	gyro, gyroErr := dev.processGyroscopeData(data[6:])
+	if accErr != nil {
+		return models.XYZ{}, models.XYZ{}, accErr
 	}
-	if gyroErr == nil {
-		dev.gyroData = ngyro
+	if gyroErr != nil {
+		return models.XYZ{}, models.XYZ{}, gyroErr
 	}
-	return dev.accData, dev.gyroData
+	return acc, gyro, nil
 }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16

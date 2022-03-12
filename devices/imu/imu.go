@@ -15,7 +15,7 @@ type rotationsChanges struct {
 }
 
 type imuMems interface {
-	Read() (acc models.XYZ, gyro models.XYZ)
+	Read() (models.XYZ, models.XYZ, error)
 }
 
 type imudevice struct {
@@ -51,7 +51,10 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 		return models.ImuRotations{}, false
 	}
 	now := time.Now()
-	acc, gyro := imu.imuMems.Read()
+	acc, gyro, err := imu.imuMems.Read()
+	if err != nil {
+		return models.ImuRotations{}, false
+	}
 	diff := now.Sub(imu.lastReading)
 	accRotations := calcaAcelerometerRotations(acc)
 	dg := gyroChanges(gyro, diff.Nanoseconds())
