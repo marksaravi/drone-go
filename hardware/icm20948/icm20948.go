@@ -159,7 +159,15 @@ func (dev *memsICM20948) initDevice() error {
 	}
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
 	// No low power mode, enabling everything with 20Mhz clock
-	err = dev.writeRegister(PWR_MGMT_1, 0b00000001, 0b00000000)
+	err = dev.writeRegister(INT_ENABLE, 0b00000100)
+	if err != nil {
+		return err
+	}
+	err = dev.writeRegister(PWR_MGMT_1, 0b00000001)
+	if err != nil {
+		return err
+	}
+	err = dev.writeRegister(PWR_MGMT_2, 0b00000000)
 	if err != nil {
 		return err
 	}
