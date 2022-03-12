@@ -37,6 +37,8 @@ func NewImuMems(
 		readingInterval:                time.Second / time.Duration(dataPerSecond),
 		lastReading:                    time.Now(),
 		complimentaryFilterCoefficient: complimentaryFilterCoefficient,
+		gyro:                           models.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		rotations:                      models.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
 }
 
@@ -89,7 +91,7 @@ func calcGyroRotations(dGyro rotationsChanges, prevRotations models.Rotations) m
 }
 
 func gyroChanges(gyro models.XYZ, timeInterval int64) rotationsChanges {
-	dt := goDurToDt(timeInterval)
+	dt := float64(timeInterval) / 1e9
 	return rotationsChanges{
 		dRoll:  gyro.X * dt,
 		dPitch: gyro.Y * dt,
@@ -101,10 +103,6 @@ func complimentaryFilter(gyroValue float64, accelerometerValue float64, coeffici
 	v1 := (1 - coefficient) * gyroValue
 	v2 := coefficient * accelerometerValue
 	return v1 + v2
-}
-
-func goDurToDt(d int64) float64 {
-	return float64(d) / 1e9
 }
 
 func NewImu(configs config.FlightControlConfigs) *imudevice {
