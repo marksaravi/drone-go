@@ -9,6 +9,7 @@ import (
 
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const SAFE_START_DURATION = time.Second
@@ -124,6 +125,11 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 				if fc.running && fc.commandChanOpen {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
+						utils.PrintIntervally(
+							fmt.Sprintf("%6.3f   %6.3f    %6.3f    %6.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle),
+							"imudata",
+							time.Second/2,
+							true)
 						throttles := fc.pid.GetThrottles(fc.throttle, rotations.Rotations, rotations.ReadInterval)
 						fc.esc.SetThrottles(throttles)
 						fc.logger.Send(rotations)

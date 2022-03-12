@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var intervals map[string]time.Time = make(map[string]time.Time)
+
 func WaitToAbortByENTER(cancel context.CancelFunc, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Press ENTER to abort")
@@ -19,18 +21,6 @@ func WaitToAbortByENTER(cancel context.CancelFunc, wg *sync.WaitGroup) {
 	}(cancel)
 }
 
-var lastWarning time.Time = time.Now()
-
-func limitWarning(less bool, limit float64) {
-	if time.Since(lastWarning) > time.Second/2 {
-		lastWarning = time.Now()
-		if less {
-			log.Println("value is less than ", limit)
-		} else {
-			log.Println("value is more than ", limit)
-		}
-	}
-}
 func ApplyLimits(x, min, max float64) float64 {
 	if x < min {
 		return min
@@ -39,4 +29,22 @@ func ApplyLimits(x, min, max float64) float64 {
 		return max
 	}
 	return x
+}
+
+func PrintIntervally(msg string, id string, interval time.Duration, useLog bool) {
+	log.SetFlags(log.Lmicroseconds)
+	now := time.Now()
+	last, ok := intervals[id]
+	if !ok {
+		last = now
+		intervals[id] = now
+	}
+	if time.Since(last) >= interval {
+		intervals[id] = now
+		if useLog {
+			log.Print(msg)
+		} else {
+			fmt.Print(msg)
+		}
+	}
 }
