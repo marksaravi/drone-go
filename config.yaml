@@ -11,13 +11,13 @@ flight-control:
   pid:
     roll:
       p-gain: 0.3
-      i-gain: 3
-      d-gain: 0.33
+      i-gain: 1.8
+      d-gain: 0.27
       max-i-to-max-throttle-ratio: 0.5
     pitch:
       p-gain: 0.3
-      i-gain: 3
-      d-gain: 0.33
+      i-gain: 1.8
+      d-gain: 0.27
       max-i-to-max-throttle-ratio: 0.5
     yaw:
       p-gain: 0
@@ -25,8 +25,8 @@ flight-control:
       d-gain: 0
       max-i-to-max-throttle-ratio: 0.5
     calibration:
-      calibrating: 'yaw'
-      gain: 'p'
+      calibrating: 'pitch'
+      gain: 'i'
       p-step: 0.01
       i-step: 0.1
       d-step: 0.01
