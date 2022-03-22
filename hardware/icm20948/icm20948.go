@@ -31,8 +31,6 @@ type memsICM20948 struct {
 	regbank    uint8
 	accConfig  sensorConfig
 	gyroConfig sensorConfig
-	accData    models.XYZ
-	gyroData   models.XYZ
 }
 
 func reg(reg uint16) *register {
@@ -161,7 +159,15 @@ func (dev *memsICM20948) initDevice() error {
 	}
 	time.Sleep(50 * time.Millisecond) // wait for taking effect
 	// No low power mode, enabling everything with 20Mhz clock
-	err = dev.writeRegister(PWR_MGMT_1, 0b00000001, 0b00000000)
+	err = dev.writeRegister(INT_ENABLE, 0b00000100)
+	if err != nil {
+		return err
+	}
+	err = dev.writeRegister(PWR_MGMT_1, 0b00000001)
+	if err != nil {
+		return err
+	}
+	err = dev.writeRegister(PWR_MGMT_2, 0b00000000)
 	if err != nil {
 		return err
 	}
@@ -183,23 +189,24 @@ func (dev *memsICM20948) readSensorsRawData() ([]uint8, error) {
 
 // ReadSensors reads Accelerometer and Gyro data
 func (dev *memsICM20948) Read() (
-	acc models.XYZ,
-	gyro models.XYZ,
+	models.XYZ,
+	models.XYZ,
+	error,
 ) {
 	data, err := dev.readSensorsRawData()
 
 	if err != nil {
-		return
+		return models.XYZ{}, models.XYZ{}, err
 	}
-	nacc, accErr := dev.processAccelerometerData(data)
-	ngyro, gyroErr := dev.processGyroscopeData(data[6:])
-	if accErr == nil {
-		dev.accData = nacc
+	acc, accErr := dev.processAccelerometerData(data)
+	gyro, gyroErr := dev.processGyroscopeData(data[6:])
+	if accErr != nil {
+		return models.XYZ{}, models.XYZ{}, accErr
 	}
-	if gyroErr == nil {
-		dev.gyroData = ngyro
+	if gyroErr != nil {
+		return models.XYZ{}, models.XYZ{}, gyroErr
 	}
-	return dev.accData, dev.gyroData
+	return acc, gyro, nil
 }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16

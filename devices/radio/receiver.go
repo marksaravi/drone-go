@@ -19,7 +19,7 @@ type radioReceiverLink interface {
 	IsReceiverDataReady(update bool) bool
 }
 
-type radioReceiver struct {
+type RadioReceiver struct {
 	radiolink           radioReceiverLink
 	receiveChannel      chan models.FlightCommands
 	commandReadInterval time.Duration
@@ -31,8 +31,8 @@ type radioReceiver struct {
 	connectionTimeout  time.Duration
 }
 
-func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionTimeoutMs int) *radioReceiver {
-	return &radioReceiver{
+func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionTimeoutMs int) *RadioReceiver {
+	return &RadioReceiver{
 		receiveChannel:      make(chan models.FlightCommands),
 		connectionChannel:   make(chan int),
 		radiolink:           radiolink,
@@ -44,7 +44,7 @@ func NewReceiver(radiolink radioReceiverLink, commandsPerSecond int, connectionT
 	}
 }
 
-func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
+func (r *RadioReceiver) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Starting the Receiver...")
 
@@ -83,13 +83,13 @@ func (r *radioReceiver) StartReceiver(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}()
 }
-func (r *radioReceiver) updateConnectionStateAsync(connectionState int) {
+func (r *RadioReceiver) updateConnectionStateAsync(connectionState int) {
 	r.connectionState = connectionState
 	func() {
 		r.connectionChannel <- connectionState
 	}()
 }
-func (r *radioReceiver) updateConnectionState(connected bool) {
+func (r *RadioReceiver) updateConnectionState(connected bool) {
 	if connected {
 		r.lastConnectionTime = time.Now()
 		if r.connectionState != constants.CONNECTED {
@@ -101,10 +101,10 @@ func (r *radioReceiver) updateConnectionState(connected bool) {
 	}
 }
 
-func (r *radioReceiver) GetReceiverChannel() <-chan models.FlightCommands {
+func (r *RadioReceiver) GetReceiverChannel() <-chan models.FlightCommands {
 	return r.receiveChannel
 }
 
-func (r *radioReceiver) GetConnectionStateChannel() <-chan int {
+func (r *RadioReceiver) GetConnectionStateChannel() <-chan int {
 	return r.connectionChannel
 }

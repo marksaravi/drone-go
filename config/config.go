@@ -25,7 +25,7 @@ type pidConfig struct {
 	DGain     float64 `yaml:"d-gain"`
 	MaxIRatio float64 `yaml:"max-i-to-max-throttle-ratio"`
 }
-type flightControl struct {
+type FlightControlConfigs struct {
 	Debug                   bool    `yaml:"debug"`
 	MinPIDThrottle          float64 `yaml:"min-pid-throttle"`
 	MaxThrottle             float64 `yaml:"max-throttle"`
@@ -92,7 +92,7 @@ type joystick struct {
 	Dir     int `yaml:"dir"`
 }
 
-type remoteControl struct {
+type RemoteControlConfigs struct {
 	CommandPerSecond int `yaml:"command-per-sec"`
 
 	Joysticks struct {
@@ -129,25 +129,25 @@ type directions struct {
 	Z float64 `yaml:"Z"`
 }
 
-type udpLogger struct {
+type UdpLoggerConfigs struct {
 	Enabled          bool   `yaml:"enabled"`
 	IP               string `yaml:"ip"`
 	Port             int    `yaml:"port"`
 	PacketsPerSecond int    `yaml:"packets-per-second"`
 }
 
-type configs struct {
-	RemoteControl remoteControl `yaml:"remote-control"`
-	FlightControl flightControl `yaml:"flight-control"`
-	UdpLogger     udpLogger     `yaml:"logger"`
+type Configs struct {
+	RemoteControl RemoteControlConfigs `yaml:"remote-control"`
+	FlightControl FlightControlConfigs `yaml:"flight-control"`
+	UdpLogger     UdpLoggerConfigs     `yaml:"logger"`
 }
 
-func ReadConfigs() configs {
+func ReadConfigs() Configs {
 	content, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
-	var configs configs
+	var configs Configs
 	yaml.Unmarshal([]byte(content), &configs)
 	return configs
 }

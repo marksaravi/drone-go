@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
@@ -23,70 +22,20 @@ import (
 	"periph.io/x/periph/conn/i2c/i2creg"
 )
 
+type routine interface {
+	Start(context.Context, *sync.WaitGroup)
+}
+
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	configs := config.ReadConfigs().FlightControl
-	radioConfigs := configs.Radio
-	pidConfigs := configs.PID
-
 	hardware.InitHost()
-
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
-		radioConfigs.SPI.BusNumber,
-		radioConfigs.SPI.ChipSelect,
-		radioConfigs.CE,
-		radioConfigs.RxTxAddress,
-	)
-
-	radioDev := radio.NewReceiver(radioNRF204, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
-	logger := udplogger.NewUdpLogger()
-	imudev := imu.NewImu()
-	powerBreakerPin := configs.PowerBreaker
-	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
-	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open(configs.ESC.I2CDev)
-	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:      i2cConn,
-		MaxThrottle:     configs.MaxThrottle,
-		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
-	})
-	esc := esc.NewESC(pwmDev, powerBreaker, configs.Imu.DataPerSecond, configs.Debug)
-
-	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), configs.MaxThrottle)
-	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), configs.MaxThrottle)
-	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), configs.MaxThrottle)
-
-	pidcontrols := pid.NewPIDControls(
-		pidRollSettings,
-		pidPitchSettings,
-		pidYawSettings,
-		configs.Arm_0_2_ThrottleEnabled,
-		configs.Arm_1_3_ThrottleEnabled,
-		configs.MinPIDThrottle,
-		pid.CalibrationSettings(pidConfigs.Calibration),
-	)
-	fmt.Println(pidcontrols)
-	flightControl := flightcontrol.NewFlightControl(
-		pidcontrols,
-		imudev,
-		esc,
-		radioDev,
-		logger,
-		flightcontrol.Settings{
-			MaxThrottle: configs.MaxThrottle,
-			MaxRoll:     configs.MaxRoll,
-			MaxPitch:    configs.MaxPitch,
-			MaxYaw:      configs.MaxYaw,
-		},
-	)
-
+	flightcontrol, radioReceiver, logger := initDevices()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	utils.WaitToAbortByENTER(cancel, &wg)
-	radioDev.StartReceiver(ctx, &wg)
-	logger.Start(&wg)
-	flightControl.Start(ctx, &wg)
+	radioReceiver.Start(ctx, &wg)
+	logger.Start(ctx, &wg)
+	flightcontrol.Start(ctx, &wg)
 	wg.Wait()
 }
 
@@ -98,13 +47,73 @@ type pidsettings struct {
 }
 
 func createPIDSettings(
-	configs pidsettings,
+	fcConfigs pidsettings,
 	maxThrottle float64,
 ) pid.PIDSettings {
 	return pid.PIDSettings{
-		PGain: configs.PGain,
-		IGain: configs.IGain,
-		DGain: configs.DGain,
-		MaxI:  configs.MaxIRatio * maxThrottle,
+		PGain: fcConfigs.PGain,
+		IGain: fcConfigs.IGain,
+		DGain: fcConfigs.DGain,
+		MaxI:  fcConfigs.MaxIRatio * maxThrottle,
 	}
+}
+
+func initDevices() (flightControlRoutine, radioReceiverRoutine, udpLoggerRoutine routine) {
+	configs := config.ReadConfigs()
+	flightcontrolConfigs := configs.FlightControl
+	fcConfigs := configs.FlightControl
+	pidConfigs := fcConfigs.PID
+	radioConfigs := flightcontrolConfigs.Radio
+	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
+		radioConfigs.SPI.BusNumber,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.CE,
+		radioConfigs.RxTxAddress,
+	)
+	radioReceiver := radio.NewReceiver(radioNRF204, flightcontrolConfigs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
+	udpLogger := udplogger.NewUdpLogger(configs.UdpLogger, flightcontrolConfigs.Imu.DataPerSecond)
+	imudev := imu.NewImu(flightcontrolConfigs)
+	powerBreakerPin := fcConfigs.PowerBreaker
+	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
+	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
+	b, _ := i2creg.Open(fcConfigs.ESC.I2CDev)
+	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
+		Connection:      i2cConn,
+		MaxThrottle:     fcConfigs.MaxThrottle,
+		ChannelMappings: fcConfigs.ESC.PwmDeviceToESCMappings,
+	})
+	esc := esc.NewESC(pwmDev, powerBreaker, fcConfigs.Imu.DataPerSecond, fcConfigs.Debug)
+
+	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), fcConfigs.MaxThrottle)
+	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), fcConfigs.MaxThrottle)
+	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), fcConfigs.MaxThrottle)
+
+	pidcontrols := pid.NewPIDControls(
+		pidRollSettings,
+		pidPitchSettings,
+		pidYawSettings,
+		fcConfigs.Arm_0_2_ThrottleEnabled,
+		fcConfigs.Arm_1_3_ThrottleEnabled,
+		fcConfigs.MinPIDThrottle,
+		pid.CalibrationSettings(pidConfigs.Calibration),
+	)
+
+	flightControl := flightcontrol.NewFlightControl(
+		pidcontrols,
+		imudev,
+		esc,
+		radioReceiver,
+		udpLogger,
+		flightcontrol.Settings{
+			MaxThrottle: fcConfigs.MaxThrottle,
+			MaxRoll:     fcConfigs.MaxRoll,
+			MaxPitch:    fcConfigs.MaxPitch,
+			MaxYaw:      fcConfigs.MaxYaw,
+		},
+	)
+	flightControlRoutine = flightControl
+	radioReceiverRoutine = radioReceiver
+	udpLoggerRoutine = udpLogger
+	return
 }

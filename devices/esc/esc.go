@@ -57,6 +57,8 @@ func (e *escDev) Off() {
 func (e *escDev) SetThrottles(throttles models.Throttles) {
 	if time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
-		e.pwmDev.SetThrottles(throttles.Throttles)
+		func(throttles map[int]float64) {
+			e.pwmDev.SetThrottles(throttles)
+		}(throttles.Throttles)
 	}
 }

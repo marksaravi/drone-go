@@ -15,7 +15,7 @@ const (
 	LP_CONFIG    uint16 = BANK0 | 0x5
 	PWR_MGMT_1   uint16 = BANK0 | 0x6
 	PWR_MGMT_2   uint16 = BANK0 | 0x7
-	INT_ENABLE_3 uint16 = BANK0 | 0x13
+	INT_ENABLE   uint16 = BANK0 | 0x10
 	ACCEL_XOUT_H uint16 = BANK0 | 0x2D
 	ACCEL_XOUT_L uint16 = BANK0 | 0x2E
 	ACCEL_YOUT_H uint16 = BANK0 | 0x2F
