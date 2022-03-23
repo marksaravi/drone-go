@@ -3,12 +3,14 @@ package pid
 import (
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
+const HEADING_NOT_SET float64 = 1000000
 
 type PIDSettings struct {
 	PGain float64
@@ -30,6 +32,7 @@ type pidControls struct {
 	pitchPIDControl         *pidControl
 	yawPIDControl           *pidControl
 	targetStates            models.Rotations
+	heading                 float64
 	arm_0_2_ThrottleEnabled bool
 	arm_1_3_ThrottleEnabled bool
 	minThrottle             float64
@@ -58,6 +61,7 @@ func NewPIDControls(
 			Pitch: 0,
 			Yaw:   0,
 		},
+		heading:            HEADING_NOT_SET,
 		minThrottle:        minThrottle,
 		calibrationApplied: false,
 	}
@@ -110,9 +114,16 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 }
 
 func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles {
+	if c.heading == HEADING_NOT_SET {
+		c.heading = rotations.Yaw
+	}
 	rollError := c.targetStates.Roll - rotations.Roll
 	pitchError := c.targetStates.Pitch - rotations.Pitch
-	yawError := c.targetStates.Yaw - rotations.Yaw
+	yawError := c.heading - rotations.Yaw
+	if math.Abs(c.targetStates.Yaw) > 1 {
+		yawError = c.targetStates.Yaw
+		c.heading = rotations.Yaw
+	}
 	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
 	// utils.PrintIntervally(fmt.Sprintf("errors roll: %7.3f pitch: %7.3f yaw: %7.3f\n", rollError, pitchError, yawError), "yawfeedback", time.Second/2, false)
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
