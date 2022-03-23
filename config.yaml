@@ -21,13 +21,13 @@ flight-control:
       max-i-to-max-throttle-ratio: 0.1
     yaw:
       p-gain: 0
-      i-gain: 0
-      d-gain: 0
+      i-gain: 1.5
+      d-gain: 0.1
       max-i-to-max-throttle-ratio: 0.1
     calibration:
-      calibrating: 'roll'
+      calibrating: 'yaw'
       gain: 'p'
-      p-step: 0.01
+      p-step: 0.1
       i-step: 0.1
       d-step: 0.01
   imu:
