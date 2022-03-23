@@ -86,7 +86,7 @@ remote-control:
     pitch:
       channel: 2
       offset: -28
-      dir: -1
+      dir: 1
     yaw:
       channel: 3
       offset: -38
