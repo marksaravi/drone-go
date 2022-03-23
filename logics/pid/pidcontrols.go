@@ -126,6 +126,34 @@ func (c *pidControls) reset() {
 	c.pitchPIDControl.reset()
 	c.yawPIDControl.reset()
 }
+func (c *pidControls) setCalibrationGain(axis, gain string, up, down bool) {
+	var pidcontrol *pidControl
+	switch axis {
+	case "roll":
+		pidcontrol = c.rollPIDControl
+	case "pitch":
+		pidcontrol = c.pitchPIDControl
+	case "yaw":
+		pidcontrol = c.yawPIDControl
+	}
+	var sign float64 = 1
+	if down {
+		sign = -1
+	}
+	switch gain {
+	case "p":
+		pidcontrol.pGain += c.calibration.PStep * sign
+	case "i":
+		pidcontrol.iGain += c.calibration.IStep * sign
+	case "d":
+		pidcontrol.dGain += c.calibration.DStep * sign
+	}
+	c.calibrationApplied = true
+	if up || down {
+		fmt.Println(c.calibration)
+		printGains(pidcontrol)
+	}
+}
 
 func (c *pidControls) Calibrate(up, down bool) {
 	if !down && !up {
@@ -138,31 +166,17 @@ func (c *pidControls) Calibrate(up, down bool) {
 	if c.calibration.Calibrating == "none" {
 		return
 	}
-	var pidcontrol *pidControl
+
 	switch c.calibration.Calibrating {
+	case "roll-pitch":
+		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
+		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
 	case "roll":
-		pidcontrol = c.rollPIDControl
+		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
 	case "pitch":
-		pidcontrol = c.pitchPIDControl
+		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
 	case "yaw":
-		pidcontrol = c.yawPIDControl
-	}
-	var sign float64 = 1
-	if down {
-		sign = -1
-	}
-	switch c.calibration.Gain {
-	case "p":
-		pidcontrol.pGain += c.calibration.PStep * sign
-	case "i":
-		pidcontrol.iGain += c.calibration.IStep * sign
-	case "d":
-		pidcontrol.dGain += c.calibration.DStep * sign
-	}
-	c.calibrationApplied = true
-	if up || down {
-		fmt.Println(c.calibration)
-		printGains(pidcontrol)
+		c.setCalibrationGain("yaw", c.calibration.Gain, up, down)
 	}
 }
 
