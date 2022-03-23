@@ -2,6 +2,7 @@ package remotecontrol
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/constants"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/models"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type button interface {
@@ -61,10 +63,7 @@ func (rc *remoteControl) read() models.FlightCommands {
 	buttonBottomLeft := rc.btnBottomLeft.Read()
 	buttonBottomRight := rc.btnBottomRight.Read()
 
-	if time.Since(lastPrinted) >= time.Second {
-		lastPrinted = time.Now()
-		log.Printf("%6d, %6d, %6d, %6d\n", roll, pitch, yaw, throttle)
-	}
+	utils.PrintIntervally(fmt.Sprintf("%6d, %6d, %6d, %6d, %v, %v\n", roll, pitch, yaw, throttle, buttonTopLeft, buttonTopRight), "remotedata", time.Second, false)
 
 	return models.FlightCommands{
 		Roll:              uint16(roll),
@@ -160,6 +159,7 @@ func (rc *remoteControl) setRadioConnectionState(connectionState int) {
 	case constants.DISCONNECTED:
 		log.Println("Connection is lost.")
 		rc.display.Println("Drone is Lost", 3)
-		rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
+		// rc.buzzer.WaveGenerator(piezobuzzer.WarningSound)
+		rc.buzzer.PlaySound(piezobuzzer.DisconnectedSound)
 	}
 }
