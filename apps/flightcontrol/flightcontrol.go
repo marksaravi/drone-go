@@ -127,7 +127,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						utils.PrintIntervally(
-							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f    ,targets yaw: %7.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle, targetStates.Yaw),
+							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f ,targets roll:%6.3f, pitch:%6.3f, yaw:%6.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle, targetStates.Roll, targetStates.Pitch, targetStates.Yaw),
 							"imudata",
 							time.Second/2,
 							true)
