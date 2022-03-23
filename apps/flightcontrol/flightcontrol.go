@@ -95,6 +95,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		fc.esc.On()
 		fc.imu.ResetTime()
+		var targetStates models.Rotations
 		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
 			case <-ctx.Done():
@@ -105,10 +106,10 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case fc.flightCommands, fc.commandChanOpen = <-fc.radio.GetReceiverChannel():
 				if fc.commandChanOpen {
-					rotations := flightCommandsToRotations(fc.flightCommands, fc.settings)
+					targetStates = flightCommandsToRotations(fc.flightCommands, fc.settings)
 					throttle := flightCommandsToThrottle(fc.flightCommands, fc.settings)
 					fc.checkForEnablingSafeStart(throttle)
-					fc.pid.SetTargetStates(rotations)
+					fc.pid.SetTargetStates(targetStates)
 					fc.pid.Calibrate(fc.flightCommands.ButtonTopRight, fc.flightCommands.ButtonTopLeft)
 				}
 
@@ -126,7 +127,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						utils.PrintIntervally(
-							fmt.Sprintf("%6.3f   %6.3f    %6.3f    %6.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle),
+							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f    ,targets yaw: %7.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle, targetStates.Yaw),
 							"imudata",
 							time.Second/2,
 							true)

@@ -1,10 +1,10 @@
 flight-control:
   debug: false
-  min-pid-throttle: 30
+  min-pid-throttle: 20
   max-throttle: 47
   max-roll: 5
   max-pitch: 5
-  max-yaw: 5
+  max-yaw: 15
   arm-0-2-throttle-enabled: true
   arm-1-3-throttle-enabled: true
 
@@ -20,13 +20,13 @@ flight-control:
       d-gain: 0.27
       max-i-to-max-throttle-ratio: 0.5
     yaw:
-      p-gain: 0
+      p-gain: 0.1
       i-gain: 0
-      d-gain: 0
+      d-gain: 0.02
       max-i-to-max-throttle-ratio: 0.5
     calibration:
-      calibrating: 'pitch'
-      gain: 'i'
+      calibrating: 'yaw'
+      gain: 'd'
       p-step: 0.01
       i-step: 0.1
       d-step: 0.01
@@ -89,7 +89,7 @@ remote-control:
       dir: -1
     yaw:
       channel: 3
-      offset: -43
+      offset: -38
       dir: 1
     throttle:
       channel: 5
