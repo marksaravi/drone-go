@@ -13,13 +13,16 @@ type joystickInput struct {
 
 func (js *joystickInput) Read() int {
 	digitalValue := int(js.input.Read()) - js.offset
-	if digitalValue > (js.maxValue - 1) {
-		return js.maxValue - 1
+	if js.dir == -1 {
+		digitalValue = js.maxValue - digitalValue
+	}
+	if digitalValue >= js.maxValue {
+		digitalValue = js.maxValue - 1
 	}
 	if digitalValue < 0 {
-		return 0
+		digitalValue = 0
 	}
-	return digitalValue * js.dir
+	return digitalValue
 }
 
 func NewJoystick(input analogtodigital, maxValue int, offset int, dir int) *joystickInput {
