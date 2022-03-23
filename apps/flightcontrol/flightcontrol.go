@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"sync"
 	"time"
 
@@ -179,10 +180,20 @@ func joystickToOneWayCommand(digital uint16, resolution uint16, max float64) flo
 	return float64(digital) / float64(resolution) * max
 }
 
+func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
+	rad := angle / 180.0 * math.Pi
+	xR = x*math.Cos(rad) + y*math.Sin(rad)
+	yR = -x*math.Sin(rad) + y*math.Cos(rad)
+	return
+}
+
 func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.Rotations {
+	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
+	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
+	rRoll, rPitch := rotationsAroundZ(roll, pitch, -45)
 	return models.Rotations{
-		Roll:  joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll),
-		Pitch: joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch),
+		Roll:  rRoll,
+		Pitch: rPitch,
 		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
 }
