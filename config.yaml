@@ -1,7 +1,7 @@
 flight-control:
   debug: false
   min-pid-throttle: 20
-  max-throttle: 47
+  max-throttle: 45
   max-roll: 5
   max-pitch: 5
   max-yaw: 15
