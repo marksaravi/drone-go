@@ -1,35 +1,35 @@
 flight-control:
   debug: false
   min-pid-throttle: 20
-  max-throttle: 45
-  max-roll: 5
-  max-pitch: 5
-  max-yaw: 15
+  max-throttle: 42
+  max-roll: 10
+  max-pitch: 10
+  max-yaw: 25
   arm-0-2-throttle-enabled: true
   arm-1-3-throttle-enabled: true
 
   pid:
     roll:
-      p-gain: 0.3
+      p-gain: 0.35
       i-gain: 1.8
-      d-gain: 0.27
-      max-i-to-max-throttle-ratio: 0.5
+      d-gain: 0.22
+      max-i-to-max-throttle-ratio: 0.25
     pitch:
-      p-gain: 0.3
+      p-gain: 0.35
       i-gain: 1.8
-      d-gain: 0.27
-      max-i-to-max-throttle-ratio: 0.5
+      d-gain: 0.22
+      max-i-to-max-throttle-ratio: 0.25
     yaw:
-      p-gain: 0.1
+      p-gain: 0.25
       i-gain: 0
-      d-gain: 0.02
-      max-i-to-max-throttle-ratio: 0.5
+      d-gain: 0.05
+      max-i-to-max-throttle-ratio: 0.1
     calibration:
-      calibrating: 'yaw'
-      gain: 'd'
+      calibrating: 'roll-pitch'
+      gain: 'p'
       p-step: 0.01
-      i-step: 0.1
-      d-step: 0.01
+      i-step: 0.01
+      d-step: 0.0025
   imu:
     data-per-second: 1000
     complimentary-filter-coefficient: 0.001

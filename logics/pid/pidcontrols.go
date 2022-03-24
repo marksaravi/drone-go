@@ -3,12 +3,14 @@ package pid
 import (
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
 )
 
 const EMERGENCY_STOP_DURATION = time.Second * 2
+const HEADING_NOT_SET float64 = 1000000
 
 type PIDSettings struct {
 	PGain float64
@@ -30,6 +32,7 @@ type pidControls struct {
 	pitchPIDControl         *pidControl
 	yawPIDControl           *pidControl
 	targetStates            models.Rotations
+	heading                 float64
 	arm_0_2_ThrottleEnabled bool
 	arm_1_3_ThrottleEnabled bool
 	minThrottle             float64
@@ -58,6 +61,7 @@ func NewPIDControls(
 			Pitch: 0,
 			Yaw:   0,
 		},
+		heading:            HEADING_NOT_SET,
 		minThrottle:        minThrottle,
 		calibrationApplied: false,
 	}
@@ -110,11 +114,18 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 }
 
 func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles {
-	rollError := c.targetStates.Roll + c.targetStates.Pitch - rotations.Roll
-	pitchError := c.targetStates.Roll - c.targetStates.Pitch - rotations.Pitch
-	yawError := c.targetStates.Yaw - rotations.Yaw
+	if c.heading == HEADING_NOT_SET {
+		c.heading = rotations.Yaw
+	}
+	rollError := c.targetStates.Roll - rotations.Roll
+	pitchError := c.targetStates.Pitch - rotations.Pitch
+	yawError := c.heading - rotations.Yaw
+	if math.Abs(c.targetStates.Yaw) > 1 {
+		yawError = c.targetStates.Yaw
+		c.heading = rotations.Yaw
+	}
 	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
-	// utils.PrintIntervally(fmt.Sprintf("yaw error: %7.3f  feedback:%7.3f\n", yawError, yawFeedback), "yawfeedback", time.Second/2, false)
+	// utils.PrintIntervally(fmt.Sprintf("errors roll: %7.3f pitch: %7.3f yaw: %7.3f\n", rollError, pitchError, yawError), "yawfeedback", time.Second/2, false)
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
@@ -125,6 +136,34 @@ func (c *pidControls) reset() {
 	c.rollPIDControl.reset()
 	c.pitchPIDControl.reset()
 	c.yawPIDControl.reset()
+}
+func (c *pidControls) setCalibrationGain(axis, gain string, up, down bool) {
+	var pidcontrol *pidControl
+	switch axis {
+	case "roll":
+		pidcontrol = c.rollPIDControl
+	case "pitch":
+		pidcontrol = c.pitchPIDControl
+	case "yaw":
+		pidcontrol = c.yawPIDControl
+	}
+	var sign float64 = 1
+	if down {
+		sign = -1
+	}
+	switch gain {
+	case "p":
+		pidcontrol.pGain += c.calibration.PStep * sign
+	case "i":
+		pidcontrol.iGain += c.calibration.IStep * sign
+	case "d":
+		pidcontrol.dGain += c.calibration.DStep * sign
+	}
+	c.calibrationApplied = true
+	if up || down {
+		fmt.Println(c.calibration)
+		printGains(pidcontrol)
+	}
 }
 
 func (c *pidControls) Calibrate(up, down bool) {
@@ -138,31 +177,17 @@ func (c *pidControls) Calibrate(up, down bool) {
 	if c.calibration.Calibrating == "none" {
 		return
 	}
-	var pidcontrol *pidControl
+
 	switch c.calibration.Calibrating {
+	case "roll-pitch":
+		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
+		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
 	case "roll":
-		pidcontrol = c.rollPIDControl
+		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
 	case "pitch":
-		pidcontrol = c.pitchPIDControl
+		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
 	case "yaw":
-		pidcontrol = c.yawPIDControl
-	}
-	var sign float64 = 1
-	if down {
-		sign = -1
-	}
-	switch c.calibration.Gain {
-	case "p":
-		pidcontrol.pGain += c.calibration.PStep * sign
-	case "i":
-		pidcontrol.iGain += c.calibration.IStep * sign
-	case "d":
-		pidcontrol.dGain += c.calibration.DStep * sign
-	}
-	c.calibrationApplied = true
-	if up || down {
-		fmt.Println(c.calibration)
-		printGains(pidcontrol)
+		c.setCalibrationGain("yaw", c.calibration.Gain, up, down)
 	}
 }
 
