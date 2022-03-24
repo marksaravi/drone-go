@@ -2,6 +2,8 @@ Author: Mark Saravi
 Description: Building a drone from scratch with golang  
 **This project is still under development and informations in this repo is not enough for a complete drone yet**
 
+**Video** [First Successful flight 2022-03-24](https://youtu.be/BWwzsjJLGSs)
+
 # Building your own drone from scratch
 
 ## Safety First
