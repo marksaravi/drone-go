@@ -33,6 +33,9 @@ flight-control:
   imu:
     data-per-second: 1000
     complimentary-filter-coefficient: 0.001
+    rotation-around-axis-offsets:
+      x: -0.25
+      y: 0.09
     accelerometer:
       sensitivity-level: '4g'
       lowpass-filter-enabled: true

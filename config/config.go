@@ -51,7 +51,11 @@ type FlightControlConfigs struct {
 	Imu struct {
 		DataPerSecond                  int     `yaml:"data-per-second"`
 		ComplimentaryFilterCoefficient float64 `yaml:"complimentary-filter-coefficient"`
-		Accelerometer                  struct {
+		RotationAroundAxisOffsets      struct {
+			X float64 `yaml:"x"`
+			Y float64 `yaml:"y"`
+		} `yaml:"rotation-around-axis-offsets"`
+		Accelerometer struct {
 			SensitivityLevel     string  `yaml:"sensitivity-level"`
 			LowPassFilterEnabled bool    `yaml:"lowpass-filter-enabled"`
 			LowPassFilterConfig  int     `yaml:"lowpass-filter-config"`
