@@ -53,15 +53,15 @@ func append8Bytes(buffer *bytes.Buffer, d [8]byte) {
 
 func imuDataToBytes(imuRot models.ImuRotations) []byte {
 	buffer := bytes.Buffer{}
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Roll))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Pitch))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Yaw))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Roll))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Pitch))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Yaw))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Roll))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Pitch))
-	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Yaw))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.X))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Y))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Accelerometer.Z))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.X))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Y))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Gyroscope.Z))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.X))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Y))
+	append4Bytes(&buffer, utils.Float64ToRoundedFloat32Bytes(imuRot.Rotations.Z))
 	append8Bytes(&buffer, utils.UInt64ToBytes(uint64(imuRot.ReadTime.UnixNano())))
 	return buffer.Bytes()
 }

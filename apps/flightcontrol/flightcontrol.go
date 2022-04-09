@@ -31,8 +31,8 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan int
 }
 type pidControls interface {
-	SetTargetStates(rotations models.Rotations)
-	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles
+	SetTargetStates(rotations models.RotationsAroundImuAxis)
+	GetThrottles(throttle float64, rotations models.RotationsAroundImuAxis, dt time.Duration) models.Throttles
 	PrintGains()
 	Calibrate(up, down bool)
 }
@@ -96,7 +96,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		fc.esc.On()
 		fc.imu.ResetTime()
-		var targetStates models.Rotations
+		var targetStates models.RotationsAroundImuAxis
 		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
 			case <-ctx.Done():
@@ -128,7 +128,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						utils.PrintIntervally(
-							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f ,targets roll:%6.3f, pitch:%6.3f, yaw:%6.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle, targetStates.Roll, targetStates.Pitch, targetStates.Yaw),
+							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f ,targets roll:%6.3f, pitch:%6.3f, yaw:%6.3f\n", rotations.Rotations.X, rotations.Rotations.Y, rotations.Rotations.Z, fc.throttle, targetStates.X, targetStates.Y, targetStates.Z),
 							"imudata",
 							time.Second/2,
 							true)
@@ -187,14 +187,14 @@ func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
 	return
 }
 
-func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.Rotations {
+func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundImuAxis {
 	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
 	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
-	rRoll, rPitch := rotationsAroundZ(roll, pitch, -45)
-	return models.Rotations{
-		Roll:  rRoll,
-		Pitch: rPitch,
-		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
+	xrot, yrot := rotationsAroundZ(roll, pitch, -45)
+	return models.RotationsAroundImuAxis{
+		X: xrot,
+		Y: yrot,
+		Z: joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
 }
 

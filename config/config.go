@@ -36,9 +36,9 @@ type FlightControlConfigs struct {
 	MaxYaw                  float64 `yaml:"max-yaw"`
 
 	PID struct {
-		Roll        pidConfig `yaml:"roll"`
-		Pitch       pidConfig `yaml:"pitch"`
-		Yaw         pidConfig `yaml:"yaw"`
+		X           pidConfig `yaml:"rotation-around-imu-axis-x"`
+		Y           pidConfig `yaml:"rotation-around-imu-axis-y"`
+		Z           pidConfig `yaml:"rotation-around-imu-axis-z"`
 		Calibration struct {
 			Calibrating string  `yaml:"calibrating"`
 			Gain        string  `yaml:"gain"`
