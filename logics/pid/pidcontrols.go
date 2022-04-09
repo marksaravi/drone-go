@@ -41,9 +41,9 @@ type pidControls struct {
 }
 
 func NewPIDControls(
-	rollPIDSettings PIDSettings,
-	pitchPIDSettings PIDSettings,
-	yawPIDSettings PIDSettings,
+	xPIDSettings PIDSettings,
+	yPIDSettings PIDSettings,
+	zPIDSettings PIDSettings,
 	arm_0_2_ThrottleEnabled bool,
 	arm_1_3_ThrottleEnabled bool,
 	minThrottle float64,
@@ -51,9 +51,9 @@ func NewPIDControls(
 ) *pidControls {
 	return &pidControls{
 		calibration:             calibration,
-		xPIDControl:             NewPIDControl("IMU-X-Axis", rollPIDSettings),
-		yPIDControl:             NewPIDControl("IMU-Y-Axis", pitchPIDSettings),
-		zPIDControl:             NewPIDControl("IMU-Z-Axis", yawPIDSettings),
+		xPIDControl:             NewPIDControl("IMU-X-Axis", xPIDSettings),
+		yPIDControl:             NewPIDControl("IMU-Y-Axis", yPIDSettings),
+		zPIDControl:             NewPIDControl("IMU-Z-Axis", zPIDSettings),
 		arm_0_2_ThrottleEnabled: arm_0_2_ThrottleEnabled,
 		arm_1_3_ThrottleEnabled: arm_1_3_ThrottleEnabled,
 		targetStates: models.RotationsAroundImuAxis{
