@@ -71,19 +71,19 @@ func (c *pidControls) SetTargetStates(states models.RotationsAroundImuAxis) {
 	c.targetStates = states
 }
 
-func (c *pidControls) calcAxisFeedbacks(xError, pitchError, yawError float64, dt time.Duration) (xFeedback, pitchFeedback, yawFeedback float64) {
+func (c *pidControls) calcAxisFeedbacks(xError, yError, zError float64, dt time.Duration) (xFeedback, yFeedback, zFeedback float64) {
 	xFeedback = c.xPIDControl.calcPIDFeedback(xError, dt)
-	pitchFeedback = c.yPIDControl.calcPIDFeedback(pitchError, dt)
-	yawFeedback = c.zPIDControl.calcPIDFeedback(yawError, dt)
+	yFeedback = c.yPIDControl.calcPIDFeedback(yError, dt)
+	zFeedback = c.zPIDControl.calcPIDFeedback(zError, dt)
 	return
 }
 
-func (c *pidControls) calcArmsFeedbacks(xFeedback, pitchFeedback, yawFeedback float64) (arms [4]float64) {
+func (c *pidControls) calcArmsFeedbacks(xFeedback, yFeedback, zFeedback float64) (arms [4]float64) {
 	arms = [4]float64{0, 0, 0, 0}
-	arms[0] = +pitchFeedback - yawFeedback
-	arms[1] = +xFeedback + yawFeedback
-	arms[2] = -pitchFeedback - yawFeedback
-	arms[3] = -xFeedback + yawFeedback
+	arms[0] = +yFeedback - zFeedback
+	arms[1] = +xFeedback + zFeedback
+	arms[2] = -yFeedback - zFeedback
+	arms[3] = -xFeedback + zFeedback
 	return
 }
 
@@ -118,15 +118,15 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsA
 		c.heading = rotations.Z
 	}
 	xError := c.targetStates.X - rotations.X
-	pitchError := c.targetStates.Y - rotations.Y
-	yawError := c.heading - rotations.Z
+	yError := c.targetStates.Y - rotations.Y
+	zError := c.heading - rotations.Z
 	if math.Abs(c.targetStates.Z) > 1 {
-		yawError = c.targetStates.Z
+		zError = c.targetStates.Z
 		c.heading = rotations.Z
 	}
-	xFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(xError, pitchError, yawError, dt)
-	// utils.PrintIntervally(fmt.Sprintf("errors x: %7.3f pitch: %7.3f yaw: %7.3f\n", xError, pitchError, yawError), "yawfeedback", time.Second/2, false)
-	armsFeedback := c.calcArmsFeedbacks(xFeedback, pitchFeedback, yawFeedback)
+	xFeedback, yFeedback, zFeedback := c.calcAxisFeedbacks(xError, yError, zError, dt)
+	// utils.PrintIntervally(fmt.Sprintf("errors x: %7.3f y: %7.3f z: %7.3f\n", xError, yError, zError), "zfeedback", time.Second/2, false)
+	armsFeedback := c.calcArmsFeedbacks(xFeedback, yFeedback, zFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
 	return throttles
@@ -142,9 +142,9 @@ func (c *pidControls) setCalibrationGain(axis, gain string, up, down bool) {
 	switch axis {
 	case "x":
 		pidcontrol = c.xPIDControl
-	case "pitch":
+	case "y":
 		pidcontrol = c.yPIDControl
-	case "yaw":
+	case "z":
 		pidcontrol = c.zPIDControl
 	}
 	var sign float64 = 1
@@ -179,15 +179,15 @@ func (c *pidControls) Calibrate(up, down bool) {
 	}
 
 	switch c.calibration.Calibrating {
-	case "x-pitch":
+	case "x-y":
 		c.setCalibrationGain("x", c.calibration.Gain, up, down)
-		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
+		c.setCalibrationGain("y", c.calibration.Gain, up, down)
 	case "x":
 		c.setCalibrationGain("x", c.calibration.Gain, up, down)
-	case "pitch":
-		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
-	case "yaw":
-		c.setCalibrationGain("yaw", c.calibration.Gain, up, down)
+	case "y":
+		c.setCalibrationGain("y", c.calibration.Gain, up, down)
+	case "z":
+		c.setCalibrationGain("z", c.calibration.Gain, up, down)
 	}
 }
 
