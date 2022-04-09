@@ -28,9 +28,9 @@ type CalibrationSettings struct {
 }
 
 type pidControls struct {
-	rollPIDControl          *pidControl
-	pitchPIDControl         *pidControl
-	yawPIDControl           *pidControl
+	xPIDControl             *pidControl
+	yPIDControl             *pidControl
+	zPIDControl             *pidControl
 	targetStates            models.RotationsAroundImuAxis
 	heading                 float64
 	arm_0_2_ThrottleEnabled bool
@@ -51,9 +51,9 @@ func NewPIDControls(
 ) *pidControls {
 	return &pidControls{
 		calibration:             calibration,
-		rollPIDControl:          NewPIDControl("Roll", rollPIDSettings),
-		pitchPIDControl:         NewPIDControl("Pitch", pitchPIDSettings),
-		yawPIDControl:           NewPIDControl("Yaw", yawPIDSettings),
+		xPIDControl:             NewPIDControl("IMU-X-Axis", rollPIDSettings),
+		yPIDControl:             NewPIDControl("IMU-Y-Axis", pitchPIDSettings),
+		zPIDControl:             NewPIDControl("IMU-Z-Axis", yawPIDSettings),
 		arm_0_2_ThrottleEnabled: arm_0_2_ThrottleEnabled,
 		arm_1_3_ThrottleEnabled: arm_1_3_ThrottleEnabled,
 		targetStates: models.RotationsAroundImuAxis{
@@ -72,9 +72,9 @@ func (c *pidControls) SetTargetStates(states models.RotationsAroundImuAxis) {
 }
 
 func (c *pidControls) calcAxisFeedbacks(rollError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
-	rollFeedback = c.rollPIDControl.calcPIDFeedback(rollError, dt)
-	pitchFeedback = c.pitchPIDControl.calcPIDFeedback(pitchError, dt)
-	yawFeedback = c.yawPIDControl.calcPIDFeedback(yawError, dt)
+	rollFeedback = c.xPIDControl.calcPIDFeedback(rollError, dt)
+	pitchFeedback = c.yPIDControl.calcPIDFeedback(pitchError, dt)
+	yawFeedback = c.zPIDControl.calcPIDFeedback(yawError, dt)
 	return
 }
 
@@ -133,19 +133,19 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsA
 }
 
 func (c *pidControls) reset() {
-	c.rollPIDControl.reset()
-	c.pitchPIDControl.reset()
-	c.yawPIDControl.reset()
+	c.xPIDControl.reset()
+	c.yPIDControl.reset()
+	c.zPIDControl.reset()
 }
 func (c *pidControls) setCalibrationGain(axis, gain string, up, down bool) {
 	var pidcontrol *pidControl
 	switch axis {
 	case "roll":
-		pidcontrol = c.rollPIDControl
+		pidcontrol = c.xPIDControl
 	case "pitch":
-		pidcontrol = c.pitchPIDControl
+		pidcontrol = c.yPIDControl
 	case "yaw":
-		pidcontrol = c.yawPIDControl
+		pidcontrol = c.zPIDControl
 	}
 	var sign float64 = 1
 	if down {
@@ -200,8 +200,8 @@ func (p *pidControls) PrintGains() {
 		return
 	}
 	fmt.Println()
-	printGains(p.rollPIDControl)
-	printGains(p.pitchPIDControl)
-	printGains(p.yawPIDControl)
+	printGains(p.xPIDControl)
+	printGains(p.yPIDControl)
+	printGains(p.zPIDControl)
 	fmt.Println()
 }
