@@ -71,8 +71,8 @@ func (c *pidControls) SetTargetStates(states models.RotationsAroundImuAxis) {
 	c.targetStates = states
 }
 
-func (c *pidControls) calcAxisFeedbacks(rollError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
-	rollFeedback = c.xPIDControl.calcPIDFeedback(rollError, dt)
+func (c *pidControls) calcAxisFeedbacks(xError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
+	rollFeedback = c.xPIDControl.calcPIDFeedback(xError, dt)
 	pitchFeedback = c.yPIDControl.calcPIDFeedback(pitchError, dt)
 	yawFeedback = c.zPIDControl.calcPIDFeedback(yawError, dt)
 	return
@@ -117,14 +117,14 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsA
 	if c.heading == HEADING_NOT_SET {
 		c.heading = rotations.Z
 	}
-	rollError := c.targetStates.X - rotations.X
+	xError := c.targetStates.X - rotations.X
 	pitchError := c.targetStates.Y - rotations.Y
 	yawError := c.heading - rotations.Z
 	if math.Abs(c.targetStates.Z) > 1 {
 		yawError = c.targetStates.Z
 		c.heading = rotations.Z
 	}
-	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
+	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(xError, pitchError, yawError, dt)
 	// utils.PrintIntervally(fmt.Sprintf("errors roll: %7.3f pitch: %7.3f yaw: %7.3f\n", rollError, pitchError, yawError), "yawfeedback", time.Second/2, false)
 	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
 
