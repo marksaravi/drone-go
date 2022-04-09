@@ -188,12 +188,12 @@ func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
 }
 
 func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundImuAxis {
-	xrot := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
-	yrot := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
-	rxrot, ryrot := rotationsAroundZ(xrot, yrot, -45)
+	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
+	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
+	xrot, yrot := rotationsAroundZ(roll, pitch, -45)
 	return models.RotationsAroundImuAxis{
-		X: rxrot,
-		Y: ryrot,
+		X: xrot,
+		Y: yrot,
 		Z: joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
 }
