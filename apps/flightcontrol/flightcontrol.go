@@ -128,7 +128,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 					rotations, imuDataAvailable := fc.imu.ReadRotations()
 					if imuDataAvailable {
 						utils.PrintIntervally(
-							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f ,targets roll:%6.3f, pitch:%6.3f, yaw:%6.3f\n", rotations.Rotations.Pitch, rotations.Rotations.Pitch, rotations.Rotations.Yaw, fc.throttle, targetStates.Roll, targetStates.Pitch, targetStates.Yaw),
+							fmt.Sprintf("roll:%7.3f   pitch: %7.3f    yaw:%7.3f    throttle:%4.1f ,targets roll:%6.3f, pitch:%6.3f, yaw:%6.3f\n", rotations.Rotations.X, rotations.Rotations.Y, rotations.Rotations.Z, fc.throttle, targetStates.X, targetStates.Y, targetStates.Z),
 							"imudata",
 							time.Second/2,
 							true)
@@ -188,13 +188,13 @@ func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
 }
 
 func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundAxis {
-	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
-	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
-	rRoll, rPitch := rotationsAroundZ(roll, pitch, -45)
+	xrot := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
+	yrot := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
+	rxrot, ryrot := rotationsAroundZ(xrot, yrot, -45)
 	return models.RotationsAroundAxis{
-		Roll:  rRoll,
-		Pitch: rPitch,
-		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
+		X: rxrot,
+		Y: ryrot,
+		Z: joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
 	}
 }
 

@@ -57,9 +57,9 @@ func NewPIDControls(
 		arm_0_2_ThrottleEnabled: arm_0_2_ThrottleEnabled,
 		arm_1_3_ThrottleEnabled: arm_1_3_ThrottleEnabled,
 		targetStates: models.RotationsAroundAxis{
-			Roll:  0,
-			Pitch: 0,
-			Yaw:   0,
+			X: 0,
+			Y: 0,
+			Z: 0,
 		},
 		heading:            HEADING_NOT_SET,
 		minThrottle:        minThrottle,
@@ -115,14 +115,14 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 
 func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsAroundAxis, dt time.Duration) models.Throttles {
 	if c.heading == HEADING_NOT_SET {
-		c.heading = rotations.Yaw
+		c.heading = rotations.Z
 	}
-	rollError := c.targetStates.Roll - rotations.Roll
-	pitchError := c.targetStates.Pitch - rotations.Pitch
-	yawError := c.heading - rotations.Yaw
-	if math.Abs(c.targetStates.Yaw) > 1 {
-		yawError = c.targetStates.Yaw
-		c.heading = rotations.Yaw
+	rollError := c.targetStates.X - rotations.X
+	pitchError := c.targetStates.Y - rotations.Y
+	yawError := c.heading - rotations.Z
+	if math.Abs(c.targetStates.Z) > 1 {
+		yawError = c.targetStates.Z
+		c.heading = rotations.Z
 	}
 	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(rollError, pitchError, yawError, dt)
 	// utils.PrintIntervally(fmt.Sprintf("errors roll: %7.3f pitch: %7.3f yaw: %7.3f\n", rollError, pitchError, yawError), "yawfeedback", time.Second/2, false)

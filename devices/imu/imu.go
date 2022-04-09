@@ -37,8 +37,8 @@ func NewImuMems(
 		readingInterval:                time.Second / time.Duration(dataPerSecond),
 		lastReading:                    time.Now(),
 		complimentaryFilterCoefficient: complimentaryFilterCoefficient,
-		gyro:                           models.RotationsAroundAxis{Roll: 0, Pitch: 0, Yaw: 0},
-		rotations:                      models.RotationsAroundAxis{Roll: 0, Pitch: 0, Yaw: 0},
+		gyro:                           models.RotationsAroundAxis{X: 0, Y: 0, Z: 0},
+		rotations:                      models.RotationsAroundAxis{X: 0, Y: 0, Z: 0},
 	}
 }
 
@@ -61,9 +61,9 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	newRotations := calcGyroRotations(dg, imu.rotations)
 	imu.rotations = models.RotationsAroundAxis{
-		Roll:  complimentaryFilter(newRotations.Roll, accRotations.Roll, imu.complimentaryFilterCoefficient),
-		Pitch: complimentaryFilter(newRotations.Pitch, accRotations.Pitch, imu.complimentaryFilterCoefficient),
-		Yaw:   imu.gyro.Yaw,
+		X: complimentaryFilter(newRotations.X, accRotations.X, imu.complimentaryFilterCoefficient),
+		Y: complimentaryFilter(newRotations.Y, accRotations.Y, imu.complimentaryFilterCoefficient),
+		Z: imu.gyro.Z,
 	}
 	imu.lastReading = now
 	return models.ImuRotations{
@@ -76,20 +76,20 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 }
 
 func calcaAcelerometerRotations(data models.XYZ) models.RotationsAroundAxis {
-	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
-	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
+	yrot := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
+	xrot := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
 	return models.RotationsAroundAxis{
-		Roll:  roll,
-		Pitch: pitch,
-		Yaw:   0,
+		X: xrot,
+		Y: yrot,
+		Z: 0,
 	}
 }
 
 func calcGyroRotations(dGyro rotationsChanges, prevRotations models.RotationsAroundAxis) models.RotationsAroundAxis {
 	return models.RotationsAroundAxis{
-		Roll:  math.Mod(prevRotations.Roll+dGyro.dRoll, 360),
-		Pitch: math.Mod(prevRotations.Pitch+dGyro.dPitch, 360),
-		Yaw:   math.Mod(prevRotations.Yaw+dGyro.dYaw, 360),
+		X: math.Mod(prevRotations.X+dGyro.dRoll, 360),
+		Y: math.Mod(prevRotations.Y+dGyro.dPitch, 360),
+		Z: math.Mod(prevRotations.Z+dGyro.dYaw, 360),
 	}
 }
 

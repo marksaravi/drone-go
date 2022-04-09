@@ -13,7 +13,7 @@ type XYZ struct {
 }
 
 type RotationsAroundAxis struct {
-	Roll, Pitch, Yaw float64
+	X, Y, Z float64
 }
 
 type ImuRotations struct {
