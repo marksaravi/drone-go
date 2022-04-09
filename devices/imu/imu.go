@@ -20,8 +20,8 @@ type imuMems interface {
 
 type imudevice struct {
 	imuMems                        imuMems
-	gyro                           models.RotationsAroundAxis
-	rotations                      models.RotationsAroundAxis
+	gyro                           models.RotationsAroundImuAxis
+	rotations                      models.RotationsAroundImuAxis
 	lastReading                    time.Time
 	readingInterval                time.Duration
 	complimentaryFilterCoefficient float64
@@ -37,8 +37,8 @@ func NewImuMems(
 		readingInterval:                time.Second / time.Duration(dataPerSecond),
 		lastReading:                    time.Now(),
 		complimentaryFilterCoefficient: complimentaryFilterCoefficient,
-		gyro:                           models.RotationsAroundAxis{X: 0, Y: 0, Z: 0},
-		rotations:                      models.RotationsAroundAxis{X: 0, Y: 0, Z: 0},
+		gyro:                           models.RotationsAroundImuAxis{X: 0, Y: 0, Z: 0},
+		rotations:                      models.RotationsAroundImuAxis{X: 0, Y: 0, Z: 0},
 	}
 }
 
@@ -60,7 +60,7 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	dg := gyroChanges(gyro, diff.Nanoseconds())
 	imu.gyro = calcGyroRotations(dg, imu.gyro)
 	newRotations := calcGyroRotations(dg, imu.rotations)
-	imu.rotations = models.RotationsAroundAxis{
+	imu.rotations = models.RotationsAroundImuAxis{
 		X: complimentaryFilter(newRotations.X, accRotations.X, imu.complimentaryFilterCoefficient),
 		Y: complimentaryFilter(newRotations.Y, accRotations.Y, imu.complimentaryFilterCoefficient),
 		Z: imu.gyro.Z,
@@ -75,18 +75,18 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	}, true
 }
 
-func calcaAcelerometerRotations(data models.XYZ) models.RotationsAroundAxis {
+func calcaAcelerometerRotations(data models.XYZ) models.RotationsAroundImuAxis {
 	yrot := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
 	xrot := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
-	return models.RotationsAroundAxis{
+	return models.RotationsAroundImuAxis{
 		X: xrot,
 		Y: yrot,
 		Z: 0,
 	}
 }
 
-func calcGyroRotations(dGyro rotationsChanges, prevRotations models.RotationsAroundAxis) models.RotationsAroundAxis {
-	return models.RotationsAroundAxis{
+func calcGyroRotations(dGyro rotationsChanges, prevRotations models.RotationsAroundImuAxis) models.RotationsAroundImuAxis {
+	return models.RotationsAroundImuAxis{
 		X: math.Mod(prevRotations.X+dGyro.dRoll, 360),
 		Y: math.Mod(prevRotations.Y+dGyro.dPitch, 360),
 		Z: math.Mod(prevRotations.Z+dGyro.dYaw, 360),
