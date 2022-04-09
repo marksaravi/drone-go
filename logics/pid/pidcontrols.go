@@ -31,7 +31,7 @@ type pidControls struct {
 	rollPIDControl          *pidControl
 	pitchPIDControl         *pidControl
 	yawPIDControl           *pidControl
-	targetStates            models.Rotations
+	targetStates            models.RotationsAroundAxis
 	heading                 float64
 	arm_0_2_ThrottleEnabled bool
 	arm_1_3_ThrottleEnabled bool
@@ -56,7 +56,7 @@ func NewPIDControls(
 		yawPIDControl:           NewPIDControl("Yaw", yawPIDSettings),
 		arm_0_2_ThrottleEnabled: arm_0_2_ThrottleEnabled,
 		arm_1_3_ThrottleEnabled: arm_1_3_ThrottleEnabled,
-		targetStates: models.Rotations{
+		targetStates: models.RotationsAroundAxis{
 			Roll:  0,
 			Pitch: 0,
 			Yaw:   0,
@@ -67,7 +67,7 @@ func NewPIDControls(
 	}
 }
 
-func (c *pidControls) SetTargetStates(states models.Rotations) {
+func (c *pidControls) SetTargetStates(states models.RotationsAroundAxis) {
 	c.targetStates = states
 }
 
@@ -113,7 +113,7 @@ func (c *pidControls) calculateThrottles(throttle float64, armsFeedback [4]float
 
 }
 
-func (c *pidControls) GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles {
+func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsAroundAxis, dt time.Duration) models.Throttles {
 	if c.heading == HEADING_NOT_SET {
 		c.heading = rotations.Yaw
 	}

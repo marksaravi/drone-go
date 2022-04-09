@@ -31,8 +31,8 @@ type radioReceiver interface {
 	GetConnectionStateChannel() <-chan int
 }
 type pidControls interface {
-	SetTargetStates(rotations models.Rotations)
-	GetThrottles(throttle float64, rotations models.Rotations, dt time.Duration) models.Throttles
+	SetTargetStates(rotations models.RotationsAroundAxis)
+	GetThrottles(throttle float64, rotations models.RotationsAroundAxis, dt time.Duration) models.Throttles
 	PrintGains()
 	Calibrate(up, down bool)
 }
@@ -96,7 +96,7 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 		fc.esc.On()
 		fc.imu.ResetTime()
-		var targetStates models.Rotations
+		var targetStates models.RotationsAroundAxis
 		for fc.running || fc.connectionChanOpen || fc.commandChanOpen {
 			select {
 			case <-ctx.Done():
@@ -187,11 +187,11 @@ func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
 	return
 }
 
-func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.Rotations {
+func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundAxis {
 	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
 	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
 	rRoll, rPitch := rotationsAroundZ(roll, pitch, -45)
-	return models.Rotations{
+	return models.RotationsAroundAxis{
 		Roll:  rRoll,
 		Pitch: rPitch,
 		Yaw:   joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),

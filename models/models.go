@@ -12,14 +12,14 @@ type XYZ struct {
 	Z float64
 }
 
-type Rotations struct {
+type RotationsAroundAxis struct {
 	Roll, Pitch, Yaw float64
 }
 
 type ImuRotations struct {
-	Accelerometer Rotations
-	Gyroscope     Rotations
-	Rotations     Rotations
+	Accelerometer RotationsAroundAxis
+	Gyroscope     RotationsAroundAxis
+	Rotations     RotationsAroundAxis
 	ReadTime      time.Time
 	ReadInterval  time.Duration
 }
