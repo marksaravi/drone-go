@@ -85,9 +85,9 @@ func initDevices() (flightControlRoutine, radioReceiverRoutine, udpLoggerRoutine
 	})
 	esc := esc.NewESC(pwmDev, powerBreaker, fcConfigs.Imu.DataPerSecond, fcConfigs.Debug)
 
-	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.Roll), fcConfigs.MaxThrottle)
-	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Pitch), fcConfigs.MaxThrottle)
-	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Yaw), fcConfigs.MaxThrottle)
+	pidRollSettings := createPIDSettings(pidsettings(pidConfigs.X), fcConfigs.MaxThrottle)
+	pidPitchSettings := createPIDSettings(pidsettings(pidConfigs.Y), fcConfigs.MaxThrottle)
+	pidYawSettings := createPIDSettings(pidsettings(pidConfigs.Z), fcConfigs.MaxThrottle)
 
 	pidcontrols := pid.NewPIDControls(
 		pidRollSettings,
