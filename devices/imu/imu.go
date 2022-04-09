@@ -25,18 +25,21 @@ type imudevice struct {
 	lastReading                    time.Time
 	readingInterval                time.Duration
 	complimentaryFilterCoefficient float64
+	xOffset, yOffset               float64
 }
 
 func NewImuMems(
 	imuMems imuMems,
 	dataPerSecond int,
-	complimentaryFilterCoefficient float64,
+	complimentaryFilterCoefficient, xOffset, yOffset float64,
 ) *imudevice {
 	return &imudevice{
 		imuMems:                        imuMems,
 		readingInterval:                time.Second / time.Duration(dataPerSecond),
 		lastReading:                    time.Now(),
 		complimentaryFilterCoefficient: complimentaryFilterCoefficient,
+		xOffset:                        xOffset,
+		yOffset:                        yOffset,
 		gyro:                           models.RotationsAroundImuAxis{X: 0, Y: 0, Z: 0},
 		rotations:                      models.RotationsAroundImuAxis{X: 0, Y: 0, Z: 0},
 	}
@@ -69,9 +72,13 @@ func (imu *imudevice) ReadRotations() (models.ImuRotations, bool) {
 	return models.ImuRotations{
 		Accelerometer: accRotations,
 		Gyroscope:     imu.gyro,
-		Rotations:     imu.rotations,
-		ReadTime:      now,
-		ReadInterval:  diff,
+		Rotations: models.RotationsAroundImuAxis{
+			X: imu.rotations.X - imu.xOffset,
+			Y: imu.rotations.Y - imu.yOffset,
+			Z: imu.rotations.Z,
+		},
+		ReadTime:     now,
+		ReadInterval: diff,
 	}, true
 }
 
@@ -140,5 +147,7 @@ func NewImu(configs config.FlightControlConfigs) *imudevice {
 		imuMems,
 		imuConfig.DataPerSecond,
 		imuConfig.ComplimentaryFilterCoefficient,
+		imuConfig.RotationAroundAxisOffsets.X,
+		imuConfig.RotationAroundAxisOffsets.Y,
 	)
 }
