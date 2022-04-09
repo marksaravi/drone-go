@@ -71,19 +71,19 @@ func (c *pidControls) SetTargetStates(states models.RotationsAroundImuAxis) {
 	c.targetStates = states
 }
 
-func (c *pidControls) calcAxisFeedbacks(xError, pitchError, yawError float64, dt time.Duration) (rollFeedback, pitchFeedback, yawFeedback float64) {
-	rollFeedback = c.xPIDControl.calcPIDFeedback(xError, dt)
+func (c *pidControls) calcAxisFeedbacks(xError, pitchError, yawError float64, dt time.Duration) (xFeedback, pitchFeedback, yawFeedback float64) {
+	xFeedback = c.xPIDControl.calcPIDFeedback(xError, dt)
 	pitchFeedback = c.yPIDControl.calcPIDFeedback(pitchError, dt)
 	yawFeedback = c.zPIDControl.calcPIDFeedback(yawError, dt)
 	return
 }
 
-func (c *pidControls) calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback float64) (arms [4]float64) {
+func (c *pidControls) calcArmsFeedbacks(xFeedback, pitchFeedback, yawFeedback float64) (arms [4]float64) {
 	arms = [4]float64{0, 0, 0, 0}
 	arms[0] = +pitchFeedback - yawFeedback
-	arms[1] = +rollFeedback + yawFeedback
+	arms[1] = +xFeedback + yawFeedback
 	arms[2] = -pitchFeedback - yawFeedback
-	arms[3] = -rollFeedback + yawFeedback
+	arms[3] = -xFeedback + yawFeedback
 	return
 }
 
@@ -124,9 +124,9 @@ func (c *pidControls) GetThrottles(throttle float64, rotations models.RotationsA
 		yawError = c.targetStates.Z
 		c.heading = rotations.Z
 	}
-	rollFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(xError, pitchError, yawError, dt)
-	// utils.PrintIntervally(fmt.Sprintf("errors roll: %7.3f pitch: %7.3f yaw: %7.3f\n", rollError, pitchError, yawError), "yawfeedback", time.Second/2, false)
-	armsFeedback := c.calcArmsFeedbacks(rollFeedback, pitchFeedback, yawFeedback)
+	xFeedback, pitchFeedback, yawFeedback := c.calcAxisFeedbacks(xError, pitchError, yawError, dt)
+	// utils.PrintIntervally(fmt.Sprintf("errors x: %7.3f pitch: %7.3f yaw: %7.3f\n", xError, pitchError, yawError), "yawfeedback", time.Second/2, false)
+	armsFeedback := c.calcArmsFeedbacks(xFeedback, pitchFeedback, yawFeedback)
 
 	throttles := c.calculateThrottles(throttle, armsFeedback)
 	return throttles
@@ -140,7 +140,7 @@ func (c *pidControls) reset() {
 func (c *pidControls) setCalibrationGain(axis, gain string, up, down bool) {
 	var pidcontrol *pidControl
 	switch axis {
-	case "roll":
+	case "x":
 		pidcontrol = c.xPIDControl
 	case "pitch":
 		pidcontrol = c.yPIDControl
@@ -179,11 +179,11 @@ func (c *pidControls) Calibrate(up, down bool) {
 	}
 
 	switch c.calibration.Calibrating {
-	case "roll-pitch":
-		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
+	case "x-pitch":
+		c.setCalibrationGain("x", c.calibration.Gain, up, down)
 		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
-	case "roll":
-		c.setCalibrationGain("roll", c.calibration.Gain, up, down)
+	case "x":
+		c.setCalibrationGain("x", c.calibration.Gain, up, down)
 	case "pitch":
 		c.setCalibrationGain("pitch", c.calibration.Gain, up, down)
 	case "yaw":

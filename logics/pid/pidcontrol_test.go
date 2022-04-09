@@ -19,21 +19,21 @@ func TestPIDGains(t *testing.T) {
 	pValue := pidcontrols.xPIDControl.getP(1.5)
 	var wantP float64 = 3.75
 	if pValue != wantP {
-		t.Errorf("want roll P %f, got %f", wantP, pValue)
+		t.Errorf("want x P %f, got %f", wantP, pValue)
 	}
 
 	pidcontrols.xPIDControl.iMemory = 5
 	wantI := 5.00075
 	iValue := pidcontrols.xPIDControl.getI(1.5, time.Second/1000)
 	if iValue != wantI {
-		t.Errorf("want roll I %f, got %f", wantI, iValue)
+		t.Errorf("want x I %f, got %f", wantI, iValue)
 	}
 
 	wantD := float64(750)
 	pidcontrols.xPIDControl.dPrevError = 1
 	dValue := pidcontrols.xPIDControl.getD(2, time.Second/1000)
 	if dValue != wantD {
-		t.Errorf("want roll D %f, got %f", wantD, dValue)
+		t.Errorf("want x D %f, got %f", wantD, dValue)
 	}
 }
 
@@ -52,13 +52,13 @@ func TestPIDLimits(t *testing.T) {
 	wantI := pidcontrols.xPIDControl.maxI
 	iValue := pidcontrols.xPIDControl.getI(1, time.Second/1000)
 	if iValue != wantI {
-		t.Errorf("want roll positive I %f, got %f", wantI, iValue)
+		t.Errorf("want x positive I %f, got %f", wantI, iValue)
 	}
 
 	pidcontrols.xPIDControl.iMemory = -pidcontrols.xPIDControl.maxI
 	wantI = -pidcontrols.xPIDControl.maxI
 	iValue = pidcontrols.xPIDControl.getI(-1, time.Second/1000)
 	if iValue != wantI {
-		t.Errorf("want roll negative I %f, got %f", wantI, iValue)
+		t.Errorf("want x negative I %f, got %f", wantI, iValue)
 	}
 }
