@@ -25,7 +25,7 @@ flight-control:
       d-gain: 0.05
       max-i-to-max-throttle-ratio: 0.025
     calibration:
-      calibrating: 'y'
+      calibrating: 'none'
       gain: 'p'
       p-step: 0.01
       i-step: 0.025
