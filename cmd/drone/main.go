@@ -14,7 +14,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
@@ -64,7 +64,7 @@ func initDevices() (flightControlRoutine, radioReceiverRoutine, udpLoggerRoutine
 	fcConfigs := configs.FlightControl
 	pidConfigs := fcConfigs.PID
 	radioConfigs := flightcontrolConfigs.Radio
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
+	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,

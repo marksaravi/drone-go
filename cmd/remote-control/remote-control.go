@@ -11,7 +11,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
-	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"github.com/marksaravi/drone-go/utils"
@@ -40,7 +40,7 @@ func main() {
 	oled := ssd1306.NewSSD1306(oledDev, ssd1306.DefaultOptions)
 	oled.Init()
 
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
+	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,

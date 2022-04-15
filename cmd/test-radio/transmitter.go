@@ -9,7 +9,7 @@ import (
 
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices/radio"
-	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/models"
 )
 
@@ -18,7 +18,7 @@ func runTransmitter(ctx context.Context, wg *sync.WaitGroup) {
 	radioConfigs := configs.Radio
 	log.Println(radioConfigs)
 
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
+	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
