@@ -70,7 +70,7 @@ type nrf24l01dev struct {
 	registers map[byte]byte
 }
 
-func NewNRF204EnhancedBurst(
+func NewNRF24L01EnhancedBurst(
 	spiBusNum int,
 	spiChipSelect int,
 	spiChipEnabledGPIO string,

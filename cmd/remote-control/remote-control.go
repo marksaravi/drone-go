@@ -40,13 +40,13 @@ func main() {
 	oled := ssd1306.NewSSD1306(oledDev, ssd1306.DefaultOptions)
 	oled.Init()
 
-	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
+	radioNRF24L01 := nrf24l01.NewNRF24L01EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	radioDev := radio.NewTransmitter(radioNRF204, radioConfigs.ConnectionTimeoutMs)
+	radioDev := radio.NewTransmitter(radioNRF24L01, radioConfigs.ConnectionTimeoutMs)
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
 		joysticksConfigs.SPI.BusNumber,
 		joysticksConfigs.SPI.ChipSelect,

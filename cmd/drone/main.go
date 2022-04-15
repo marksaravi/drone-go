@@ -64,13 +64,13 @@ func initDevices() (flightControlRoutine, radioReceiverRoutine, udpLoggerRoutine
 	fcConfigs := configs.FlightControl
 	pidConfigs := fcConfigs.PID
 	radioConfigs := flightcontrolConfigs.Radio
-	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
+	radioNRF24L01 := nrf24l01.NewNRF24L01EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	radioReceiver := radio.NewReceiver(radioNRF204, flightcontrolConfigs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
+	radioReceiver := radio.NewReceiver(radioNRF24L01, flightcontrolConfigs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
 	udpLogger := udplogger.NewUdpLogger(configs.UdpLogger, flightcontrolConfigs.Imu.DataPerSecond)
 	imudev := imu.NewImu(flightcontrolConfigs)
 	powerBreakerPin := fcConfigs.PowerBreaker

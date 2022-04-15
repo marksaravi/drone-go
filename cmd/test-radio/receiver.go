@@ -15,12 +15,12 @@ func runReceiver(ctx context.Context, wg *sync.WaitGroup) {
 	radioConfigs := configs.Radio
 	log.Println(radioConfigs)
 
-	radioNRF204 := nrf24l01.NewNRF204EnhancedBurst(
+	radioNRF24L01 := nrf24l01.NewNRF24L01EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	receiver := radio.NewReceiver(radioNRF204, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
+	receiver := radio.NewReceiver(radioNRF24L01, configs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
 	go receiver.Start(ctx, wg)
 }
