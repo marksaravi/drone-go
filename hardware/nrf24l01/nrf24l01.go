@@ -1,4 +1,4 @@
-package nrf204
+package nrf24l01
 
 import (
 	"log"
@@ -62,7 +62,7 @@ const (
 	DEFAULT_RX_PW_P5   byte = 0b00000000
 )
 
-type nrf204l01 struct {
+type nrf24l01dev struct {
 	ce        gpio.PinOut
 	address   []byte
 	conn      spi.Conn
@@ -70,18 +70,18 @@ type nrf204l01 struct {
 	registers map[byte]byte
 }
 
-func NewNRF204EnhancedBurst(
+func NewNRF24L01EnhancedBurst(
 	spiBusNum int,
 	spiChipSelect int,
 	spiChipEnabledGPIO string,
 	rxTxAddress string,
-) *nrf204l01 {
+) *nrf24l01dev {
 	radioSPIConn := hardware.NewSPIConnection(
 		spiBusNum,
 		spiChipSelect,
 	)
 
-	tr := nrf204l01{
+	tr := nrf24l01dev{
 		address: []byte(rxTxAddress),
 		ce:      initPin(spiChipEnabledGPIO),
 		conn:    radioSPIConn,
@@ -112,7 +112,7 @@ func bitEnable(value byte, bit byte, enable bool) byte {
 
 }
 
-func (tr *nrf204l01) selectRadioMode(isRx bool) {
+func (tr *nrf24l01dev) selectRadioMode(isRx bool) {
 	tr.ceLow()
 	tr.ClearStatus()
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
@@ -121,41 +121,41 @@ func (tr *nrf204l01) selectRadioMode(isRx bool) {
 	tr.flushTx()
 }
 
-func (tr *nrf204l01) Listen() {
+func (tr *nrf24l01dev) Listen() {
 	tr.ceHigh()
 }
 
-func (tr *nrf204l01) TransmitterOn() {
+func (tr *nrf24l01dev) TransmitterOn() {
 	tr.selectRadioMode(false)
 }
 
-func (tr *nrf204l01) ReceiverOn() {
+func (tr *nrf24l01dev) ReceiverOn() {
 	tr.selectRadioMode(true)
 }
 
-func (tr *nrf204l01) PowerOn() {
+func (tr *nrf24l01dev) PowerOn() {
 	tr.setPower(true)
 }
 
-func (tr *nrf204l01) PowerOff() {
+func (tr *nrf24l01dev) PowerOff() {
 	tr.setPower(false)
 }
 
-func (tr *nrf204l01) ceHigh() {
+func (tr *nrf24l01dev) ceHigh() {
 	tr.ce.Out(gpio.High)
 }
 
-func (tr *nrf204l01) ceLow() {
+func (tr *nrf24l01dev) ceLow() {
 	tr.ce.Out(gpio.Low)
 }
 
-func (tr *nrf204l01) setPower(on bool) {
+func (tr *nrf24l01dev) setPower(on bool) {
 	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
 	tr.writeRegister(ADDRESS_CONFIG)
 	time.Sleep(time.Millisecond)
 }
 
-func (tr *nrf204l01) Transmit(payload models.Payload) error {
+func (tr *nrf24l01dev) Transmit(payload models.Payload) error {
 	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func (tr *nrf204l01) Transmit(payload models.Payload) error {
 	return err
 }
 
-func (tr *nrf204l01) Receive() (models.Payload, error) {
+func (tr *nrf24l01dev) Receive() (models.Payload, error) {
 	tr.ceLow()
 	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
 	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
@@ -180,7 +180,7 @@ func (tr *nrf204l01) Receive() (models.Payload, error) {
 	return payload, err
 }
 
-func (tr *nrf204l01) init() {
+func (tr *nrf24l01dev) init() {
 	tr.PowerOff()
 	tr.ceLow()
 	time.Sleep(time.Millisecond)
@@ -188,7 +188,7 @@ func (tr *nrf204l01) init() {
 	tr.setRxTxAddress()
 }
 
-func (tr *nrf204l01) PrintConfigurations() {
+func (tr *nrf24l01dev) PrintConfigurations() {
 	config, _ := tr.readRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
 	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
@@ -204,33 +204,33 @@ func (tr *nrf204l01) PrintConfigurations() {
 		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0, rxadd, txadd)
 }
 
-func (tr *nrf204l01) readRegister(address byte) ([]byte, error) {
+func (tr *nrf24l01dev) readRegister(address byte) ([]byte, error) {
 	return readSPI(address, 1, tr.conn)
 }
 
-func (tr *nrf204l01) writeRegister(address byte) {
+func (tr *nrf24l01dev) writeRegister(address byte) {
 	tr.ceLow()
 	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
 }
 
-func (tr *nrf204l01) writeConfigRegisters() {
+func (tr *nrf24l01dev) writeConfigRegisters() {
 	for address := range tr.registers {
 		tr.writeRegister(address)
 	}
 }
 
-func (tr *nrf204l01) setRxTxAddress() {
+func (tr *nrf24l01dev) setRxTxAddress() {
 	tr.ceLow()
 	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
 	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
 }
 
-func (tr *nrf204l01) updateStatus() {
+func (tr *nrf24l01dev) updateStatus() {
 	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
 	tr.status = res[0]
 }
 
-func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
+func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
 	if update {
 		tr.updateStatus()
 	}
@@ -238,22 +238,22 @@ func (tr *nrf204l01) IsReceiverDataReady(update bool) bool {
 	return tr.status&0b01000000 != 0
 }
 
-func (tr *nrf204l01) IsTransmitFailed(update bool) bool {
+func (tr *nrf24l01dev) IsTransmitFailed(update bool) bool {
 	if update {
 		tr.updateStatus()
 	}
 	return tr.status&0b00010000 != 0
 }
 
-func (tr *nrf204l01) ClearStatus() {
+func (tr *nrf24l01dev) ClearStatus() {
 	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
-func (tr *nrf204l01) flushRx() {
+func (tr *nrf24l01dev) flushRx() {
 	writeSPI(ADDRESS_FLUSH_RX, []byte{0x0}, tr.conn)
 }
 
-func (tr *nrf204l01) flushTx() {
+func (tr *nrf24l01dev) flushTx() {
 	writeSPI(ADDRESS_FLUSH_TX, []byte{0x0}, tr.conn)
 }
 

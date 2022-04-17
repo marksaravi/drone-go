@@ -14,7 +14,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/nrf204"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
@@ -64,13 +64,13 @@ func initDevices() (flightControlRoutine, radioReceiverRoutine, udpLoggerRoutine
 	fcConfigs := configs.FlightControl
 	pidConfigs := fcConfigs.PID
 	radioConfigs := flightcontrolConfigs.Radio
-	radioNRF204 := nrf204.NewNRF204EnhancedBurst(
+	radioNRF24L01 := nrf24l01.NewNRF24L01EnhancedBurst(
 		radioConfigs.SPI.BusNumber,
 		radioConfigs.SPI.ChipSelect,
 		radioConfigs.CE,
 		radioConfigs.RxTxAddress,
 	)
-	radioReceiver := radio.NewReceiver(radioNRF204, flightcontrolConfigs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
+	radioReceiver := radio.NewReceiver(radioNRF24L01, flightcontrolConfigs.CommandPerSecond, radioConfigs.ConnectionTimeoutMs)
 	udpLogger := udplogger.NewUdpLogger(configs.UdpLogger, flightcontrolConfigs.Imu.DataPerSecond)
 	imudev := imu.NewImu(flightcontrolConfigs)
 	powerBreakerPin := fcConfigs.PowerBreaker
