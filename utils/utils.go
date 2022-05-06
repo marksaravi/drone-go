@@ -4,20 +4,46 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 	"sync"
 	"time"
 )
 
 var intervals map[string]time.Time = make(map[string]time.Time)
 
-func WaitToAbortByENTER(cancel context.CancelFunc, wg *sync.WaitGroup) {
+func unixDisableInputBuffering() {
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+}
+
+func unixDisplayCharacterOnScreen(enable bool) {
+	if enable {
+		exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+	} else {
+		exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	}
+}
+
+func WaitToAbortByESC(cancel context.CancelFunc, wg *sync.WaitGroup) {
 	wg.Add(1)
 	log.Println("Press ENTER to abort")
 	go func(cancel context.CancelFunc) {
 		defer log.Println("Aborting by user ENTER")
 		defer wg.Done()
-		fmt.Scanln()
-		cancel()
+		// disable input buffering
+		unixDisableInputBuffering()
+		// do not display entered characters on the screen
+		unixDisplayCharacterOnScreen(false)
+		var b []byte = make([]byte, 1)
+		for {
+			os.Stdin.Read(b)
+			time.Sleep(50 * time.Millisecond)
+			if b[0] == 27 {
+				unixDisplayCharacterOnScreen(true)
+				cancel()
+				return
+			}
+		}
 	}(cancel)
 }
 

@@ -24,6 +24,6 @@ func main() {
 		runTransmitter(ctx, &wg)
 	}
 
-	utils.WaitToAbortByENTER(cancel, &wg)
+	utils.WaitToAbortByESC(cancel, &wg)
 	wg.Wait()
 }
