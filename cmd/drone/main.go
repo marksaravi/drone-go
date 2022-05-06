@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/marksaravi/drone-go/apps/flightcontrol"
@@ -32,11 +33,12 @@ func main() {
 	flightcontrol, radioReceiver, logger := initDevices()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	utils.WaitToAbortByENTER(cancel, &wg)
+	utils.WaitToAbortByESC(cancel, &wg)
 	radioReceiver.Start(ctx, &wg)
 	logger.Start(ctx, &wg)
 	flightcontrol.Start(ctx, &wg)
 	wg.Wait()
+	os.Exit(0)
 }
 
 type pidsettings struct {

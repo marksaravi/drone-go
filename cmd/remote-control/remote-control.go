@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/marksaravi/drone-go/apps/remotecontrol"
@@ -102,6 +103,7 @@ func main() {
 
 	radioDev.StartTransmitter(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
-	utils.WaitToAbortByENTER(cancel, &waitGroup)
+	utils.WaitToAbortByESC(cancel, &waitGroup)
 	waitGroup.Wait()
+	os.Exit(0)
 }
