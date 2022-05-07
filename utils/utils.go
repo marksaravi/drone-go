@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -34,8 +36,17 @@ func WaitToAbortByESC(cancel context.CancelFunc, wg *sync.WaitGroup) {
 		unixDisableInputBuffering()
 		// do not display entered characters on the screen
 		unixDisplayCharacterOnScreen(false)
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGQUIT)
 		var b []byte = make([]byte, 1)
 		for {
+			select {
+			case <-sigs:
+				unixDisplayCharacterOnScreen(true)
+				cancel()
+				return
+			default:
+			}
 			os.Stdin.Read(b)
 			time.Sleep(50 * time.Millisecond)
 			if b[0] == 27 {
