@@ -16,9 +16,13 @@ StandardError=syslog
 StandardOutput=null
 SyslogIdentifier=drone_remote_control_service
 
+Wants=network.target
+After=syslog.target network-online.target
+
+KillMode=process
+
 [Install]
 WantedBy=muti-user.target
-
 
 
 
