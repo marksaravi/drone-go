@@ -1,28 +1,19 @@
 [Unit]
 Description=Remote Control
+After=network.target
 
 [Service]
 Type=simple
 User=pi
 Group=pi
-
 WorkingDirectory=/home/pi/go/src/drone-go
 ExecStart=/usr/local/go/bin/go run ./cmd/remote-control > /dev/null
-
-Restart=always
-RestartSec=10s
-
-StandardError=syslog
+Restart=no
+StandardError=null
 StandardOutput=null
 SyslogIdentifier=drone_remote_control_service
-
-Wants=network.target
-After=syslog.target network-online.target
-
 KillMode=process
 
 [Install]
-WantedBy=muti-user.target
-
-
-
+Alias=drone-remote-control
+WantedBy=multi-user.target
