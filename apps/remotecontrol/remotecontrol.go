@@ -112,6 +112,8 @@ func (rc *remoteControl) Start(ctx context.Context, wg *sync.WaitGroup, cancel c
 
 	go func() {
 		defer wg.Done()
+		defer time.Sleep(time.Second)
+		defer rc.buzzer.PlaySound(piezobuzzer.ExitSound)
 		defer log.Println("Remote Control is stopped.")
 
 		var readingInterval time.Duration = time.Second / time.Duration(rc.commandPerSecond)

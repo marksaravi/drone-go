@@ -69,6 +69,12 @@ var DisconnectedSound = Notes{
 	{Frequency: C, Duration: time.Second / 6, Octet: 4},
 }
 
+var ExitSound = Notes{
+	{Frequency: C, Duration: time.Second / 6, Octet: 4},
+	{Frequency: G, Duration: time.Second / 6, Octet: 4},
+	{Frequency: C, Duration: time.Second / 6, Octet: 4},
+}
+
 type Buzzer struct {
 	playing int
 	out     gpio.PinOut
