@@ -1,6 +1,7 @@
 [Unit]
 Description=Drone
-After=network.target
+After=systemd-user-sessions.service plymouth-quit-wait.service
+After=rc-local.service
 
 [Service]
 Type=simple
@@ -12,8 +13,7 @@ Restart=no
 StandardError=null
 StandardOutput=null
 SyslogIdentifier=drone_service
-KillMode=process
+KillMode=mixed
 
 [Install]
 Alias=drone
-WantedBy=multi-user.target

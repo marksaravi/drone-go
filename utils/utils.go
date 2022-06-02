@@ -37,7 +37,7 @@ func WaitToAbortByESC(cancel context.CancelFunc, wg *sync.WaitGroup) {
 		// do not display entered characters on the screen
 		unixDisplayCharacterOnScreen(false)
 		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGQUIT)
+		signal.Notify(sigs, syscall.SIGTERM)
 		var b []byte = make([]byte, 1)
 		for {
 			select {
