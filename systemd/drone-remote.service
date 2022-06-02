@@ -1,9 +1,9 @@
-[UNIT]
+[Unit]
 Description=Remote Control
 After=systemd-user-sessions.service plymouth-quit-wait.service
 After=rc-local.service
 
-[SERVICE]
+[Service]
 Type=simple
 User=pi
 Group=pi
@@ -15,5 +15,6 @@ StandardOutput=null
 SyslogIdentifier=drone_remote_service
 KillMode=mixed
 
-[INSTALL]
+[Install]
 Alias=drone-remote
+WantedBy=multi-user.target

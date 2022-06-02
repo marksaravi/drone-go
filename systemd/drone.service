@@ -17,3 +17,4 @@ KillMode=mixed
 
 [Install]
 Alias=drone
+WantedBy=multi-user.target
