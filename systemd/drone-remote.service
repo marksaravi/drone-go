@@ -17,3 +17,6 @@ KillMode=mixed
 
 [Install]
 Alias=drone-remote
+WantedBy=
+RequiredBy=
+Also=
