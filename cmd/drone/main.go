@@ -33,7 +33,7 @@ func main() {
 	flightcontrol, radioReceiver, logger := initDevices()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	utils.WaitToAbortByESC(cancel, &wg)
+	utils.WaitToAbortByESC(cancel)
 	radioReceiver.Start(ctx, &wg)
 	logger.Start(ctx, &wg)
 	flightcontrol.Start(ctx, &wg)

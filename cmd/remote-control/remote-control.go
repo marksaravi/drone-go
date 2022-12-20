@@ -103,7 +103,7 @@ func main() {
 
 	radioDev.StartTransmitter(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
-	utils.WaitToAbortByESC(cancel, &waitGroup)
+	utils.WaitToAbortByESC(cancel)
 	waitGroup.Wait()
 	os.Exit(0)
 }
