@@ -24,10 +24,6 @@ const (
 	GYRO_CONFIG_MASK_FULL_SCALE_2000DPS byte = 0b00011000
 )
 
-type Settings struct {
-	SPI hardware.SPISettings
-}
-
 type imuIcm20789 struct {
 	spiConn spi.Conn
 }
