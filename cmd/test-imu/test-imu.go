@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/icm20789"
@@ -17,19 +18,24 @@ func main() {
 	}(cancel)
 
 	imu := icm20789.NewIcm20987(0, 0)
-	imu.Initialize()
+	whoami, _ := imu.WhoAmI()
+	log.Println("WHOAMI: ", whoami)
+	imu.Initialize("500dps")
 
+	lastReadTime := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
+			if time.Since(lastReadTime) >= time.Second {
+				data, err := imu.ReadAccelerometer()
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(data)
+				lastReadTime = time.Now()
+			}
 		}
-		data, err := imu.ReadAccelerometer()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(data)
-		time.Sleep(time.Second)
 	}
 }

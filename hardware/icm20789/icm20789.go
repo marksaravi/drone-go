@@ -1,7 +1,6 @@
 package icm20789
 
 import (
-	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -14,8 +13,15 @@ const (
 )
 
 const (
-	ACCEL_XOUT_H     byte = 0x3B
-	GYROSCOPE_CONFIG byte = 0x1B
+	ACCEL_XOUT_H byte = 0x3B
+	GYRO_CONFIG  byte = 0x1B
+)
+
+const (
+	GYRO_CONFIG_MASK_FULL_SCALE_250DPS  byte = 0b00000000
+	GYRO_CONFIG_MASK_FULL_SCALE_500DPS  byte = 0b00001000
+	GYRO_CONFIG_MASK_FULL_SCALE_1000DPS byte = 0b00010000
+	GYRO_CONFIG_MASK_FULL_SCALE_2000DPS byte = 0b00011000
 )
 
 type Settings struct {
@@ -52,131 +58,15 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 	return err
 }
 
-func (imu *imuIcm20789) WhoAmI() ([]byte, error) {
-	return imu.readSPI(0x75, 1)
-}
-
-func (imu *imuIcm20789) Initialize() {
-	const DELAY = 10
-	imu.writeSPI(0x6B, []byte{0x01})
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6C, []byte{0x3f})
-	imu.writeSPI(0xF5, []byte{0x00})
-	imu.writeSPI(0x19, []byte{0x09})
-	imu.writeSPI(0xEA, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x23, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x1D, []byte{0xC0})
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x1A, []byte{0xC0})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x38, []byte{0x01})
-
-	// spi_dev->read_registers(0x6A, &v, 1);
-	// printf("reg 0x6A=0x%02x\n", v);
-	// spi_dev->read_registers(0x6B, &v, 1);
-	// printf("reg 0x6B=0x%02x\n", v);
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x23, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x41})
-	imu.writeSPI(0x6C, []byte{0x3f})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	// spi_dev->read_registers(0x6A, &v, 1);
-	// printf("reg 0x6A=0x%02x\n", v);
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x23, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	// spi_dev->read_registers(0x6A, &v, 1);
-	// printf("reg 0x6A=0x%02x\n", v);
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x23, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x41})
-	imu.writeSPI(0x6C, []byte{0x3f})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	// spi_dev->read_registers(0x6A, &v, 1);
-	// printf("reg 0x6A=0x%02x\n", v);
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6A, []byte{0x10})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x6B, []byte{0x01})
-
-	time.Sleep(DELAY * time.Millisecond)
-	imu.writeSPI(0x23, []byte{0x00})
-	imu.writeSPI(0x6B, []byte{0x41})
-
-	imu.setGyroConfigs()
-}
-
-func (imu *imuIcm20789) setGyroConfigs() {
-	config, err := imu.readSPI(GYROSCOPE_CONFIG, 1)
-	if err != nil {
-		log.Fatalf("can't configure the gyroscope %v", err)
-	}
-	log.Printf("gyro: %b\n", config[0])
+func (imu *imuIcm20789) WhoAmI() (byte, error) {
+	data, err := imu.readSPI(0x75, 1)
+	return data[0], err
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
 	return imu.readSPI(ACCEL_XOUT_H, ACCELEROMETER_DATA_SIZE)
+}
+
+func delay(ms int) {
+	time.Sleep(time.Duration(ms) * time.Millisecond)
 }
