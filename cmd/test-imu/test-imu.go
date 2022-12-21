@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -8,8 +9,22 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func(cancel context.CancelFunc) {
+		fmt.Scanln()
+		cancel()
+	}(cancel)
+
 	imu := icm20789.NewIcm20987(0, 0)
+	imu.Initialize()
+
 	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 		data, err := imu.ReadAccelerometer()
 		if err != nil {
 			fmt.Println(err)
