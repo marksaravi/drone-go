@@ -10,7 +10,7 @@ import (
 func main() {
 	imu := icm20789.NewIcm20987(0, 0)
 	for {
-		data, err := imu.ReadAccelerometer()
+		data, err := imu.WhoAmI()
 		if err != nil {
 			fmt.Println(err)
 		}

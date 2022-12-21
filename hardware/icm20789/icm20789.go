@@ -41,6 +41,24 @@ func (imu *imuIcm20789) readSPI(address uint8, size int) ([]uint8, error) {
 	return r[1:], err
 }
 
+func (imu *imuIcm20789) writeSPI(address uint8, data []uint8) error {
+	w := make([]uint8, 0, len(data)+1)
+
+	w = append(w, address)
+	w = append(w, data...)
+
+	err := imu.spiConn.Tx(w, nil)
+	fmt.Println(w)
+	return err
+}
+
+func (imu *imuIcm20789) initialise() {
+}
+
 func (imu *imuIcm20789) ReadAccelerometer() ([]uint8, error) {
 	return imu.readSPI(ACCEL_XOUT_H, ACCELEROMETER_DATA_SIZE)
+}
+
+func (imu *imuIcm20789) WhoAmI() ([]uint8, error) {
+	return imu.readSPI(0x75, 1)
 }
