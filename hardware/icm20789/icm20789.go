@@ -82,8 +82,7 @@ func (imu *imuIcm20789) SPIWriteTest() (bool, byte, byte, error) {
 	if err != nil {
 		return false, v[0], 0, err
 	}
-	nv := []byte{0}
-	nv, err = imu.readRegister(XA_OFFSET_H, 1)
+	nv, err := imu.readRegister(XA_OFFSET_H, 1)
 	return nv[0] == v[0]+5, v[0], nv[0], err
 }
 
