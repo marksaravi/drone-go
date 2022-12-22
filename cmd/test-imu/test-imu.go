@@ -20,7 +20,7 @@ func main() {
 	imu := icm20789.NewIcm20987(0, 0)
 	whoami, _ := imu.WhoAmI()
 	log.Println("WHOAMI: ", whoami)
-	imu.Initialize("500dps")
+	imu.Initialize("4g")
 
 	lastReadTime := time.Now()
 	for {

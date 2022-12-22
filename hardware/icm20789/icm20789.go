@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -13,11 +14,16 @@ const (
 )
 
 const (
+	ACCEL_CONFIG byte = 0x1C
 	ACCEL_XOUT_H byte = 0x3B
 	GYRO_CONFIG  byte = 0x1B
 )
 
 const (
+	ACCEL_CONFIG_MASK_FULL_SCALE_2G     byte = 0b00000000
+	ACCEL_CONFIG_MASK_FULL_SCALE_4G     byte = 0b00001000
+	ACCEL_CONFIG_MASK_FULL_SCALE_8G     byte = 0b00010000
+	ACCEL_CONFIG_MASK_FULL_SCALE_16G    byte = 0b00011000
 	GYRO_CONFIG_MASK_FULL_SCALE_250DPS  byte = 0b00000000
 	GYRO_CONFIG_MASK_FULL_SCALE_500DPS  byte = 0b00001000
 	GYRO_CONFIG_MASK_FULL_SCALE_1000DPS byte = 0b00010000
@@ -49,6 +55,7 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 
 	w = append(w, address)
 	w = append(w, data...)
+	fmt.Println(w)
 
 	err := imu.spiConn.Tx(w, nil)
 	return err

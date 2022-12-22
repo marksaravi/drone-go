@@ -104,29 +104,30 @@ func (imu *imuIcm20789) Initialize(gyroFullScale string) {
 	// imu.writeSPI(0x23, []byte{0x00})
 	// imu.writeSPI(0x6B, []byte{0x41})
 
-	imu.setGyroConfigs(gyroFullScale)
+	imu.setAccelConfigs(gyroFullScale)
 }
 
-func (imu *imuIcm20789) setGyroConfigs(fullScale string) {
-	rwaconfig, firstReadErr := imu.readSPI(GYRO_CONFIG, 1)
+func (imu *imuIcm20789) setAccelConfigs(fullScale string) {
+	rwaconfig, firstReadErr := imu.readSPI(ACCEL_CONFIG, 1)
 	newconfig := rwaconfig[0]
 	if firstReadErr != nil {
-		log.Fatalf("can't read gyroscope config %v", firstReadErr)
+		log.Fatalf("can't read accel config %v", firstReadErr)
 	}
 	switch fullScale {
-	case "250dps":
-		newconfig = newconfig | GYRO_CONFIG_MASK_FULL_SCALE_250DPS
-	case "500dps":
-		newconfig = newconfig | GYRO_CONFIG_MASK_FULL_SCALE_500DPS
-	case "1000dps":
-		newconfig = newconfig | GYRO_CONFIG_MASK_FULL_SCALE_1000DPS
-	case "2000dps":
-		newconfig = newconfig | GYRO_CONFIG_MASK_FULL_SCALE_2000DPS
+	case "2g":
+		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_2G
+	case "4g":
+		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_4G
+	case "8g":
+		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_8G
+	case "16":
+		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_16G
 	default:
-		log.Printf("incorrect gyro config, using default 250dps")
+		log.Printf("incorrect accel config, using default 250dps")
 	}
-	log.Printf("new gyro config is: %d\n", newconfig)
-	writeErr := imu.writeSPI(GYRO_CONFIG, []byte{newconfig})
+	log.Printf("new accel config is: %d\n", newconfig)
+
+	writeErr := imu.writeSPI(GYRO_CONFIG, []byte{newconfig, 0})
 	if writeErr != nil {
 		log.Fatalf("can't write gyroscope config %v", writeErr)
 	}
@@ -138,5 +139,5 @@ func (imu *imuIcm20789) setGyroConfigs(fullScale string) {
 	if checkConfig[0] != newconfig {
 		log.Fatalf("can't write gyroscope config %d!=%d", checkConfig[0], newconfig)
 	}
-	log.Printf("successful gyro configuration: %b\n", checkConfig[0])
+	log.Printf("successful accel configuration: %b\n", checkConfig[0])
 }
