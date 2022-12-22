@@ -19,7 +19,7 @@ const (
 	GYRO_CONFIG  byte = 0x1B
 	WHO_AM_I     byte = 0x75
 	PWR_MGMT_1   byte = 0x6B
-	XA_OFFSET_H  byte = 0x77
+	XA_OFFSET_H  byte = 0x13
 )
 
 const (
@@ -59,6 +59,7 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 	w = append(w, address)
 	w = append(w, data...)
 	r := make([]byte, len(w))
+	fmt.Println("new v: ", w)
 
 	err := imu.spiConn.Tx(w, r)
 	return err
@@ -70,6 +71,7 @@ func (imu *imuIcm20789) readByteFromSPI(address byte) (byte, error) {
 }
 
 func (imu *imuIcm20789) writeByteToSPI(address, value byte) error {
+
 	return imu.writeSPI(address, []byte{value})
 }
 
@@ -92,7 +94,6 @@ func (imu *imuIcm20789) SPIWriteTest() (bool, error) {
 	}
 	var nv byte
 	nv, err = imu.readByteFromSPI(XA_OFFSET_H)
-	fmt.Println("original v: ", nv)
 	return nv == v+5, err
 }
 
