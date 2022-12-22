@@ -17,15 +17,15 @@ func main() {
 	imu := icm20789.NewIcm20987(0, 0)
 	whoami, powmgm1, readok, readerr := imu.SPIReadTest()
 	if readok {
-		fmt.Printf("WHO AM I: 0x%x, POWER MANAGEMENT 1: 0x%x\n", whoami, powmgm1)
+		fmt.Printf("READ OK, WHO AM I: 0x%x, POWER MANAGEMENT 1: 0x%x\n", whoami, powmgm1)
 	} else {
-		fmt.Printf("spi error: %v\n", readerr)
+		fmt.Printf("READ FAILED: %v\n", readerr)
 	}
-	writeok, writeerr := imu.SPIWriteTest()
+	writeok, oldvalue, newvalue, writeerr := imu.SPIWriteTest()
 	if writeok {
-		fmt.Println("Write ok")
+		fmt.Println("WRITE OK")
 	} else {
-		fmt.Println(writeerr)
+		fmt.Println("WRITE FAILED: ", oldvalue, newvalue, writeerr)
 	}
 
 	// imu.Initialize("4g")

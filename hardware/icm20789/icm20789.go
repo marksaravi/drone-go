@@ -1,7 +1,6 @@
 package icm20789
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -59,7 +58,6 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 	w = append(w, address)
 	w = append(w, data...)
 	r := make([]byte, len(w))
-	fmt.Println("new v: ", w)
 
 	err := imu.spiConn.Tx(w, r)
 	return err
@@ -82,19 +80,18 @@ func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, e
 	}
 	return whoami, powermanagement1, whoami == 0x03 && powermanagement1 == 0x40 && err == nil, err
 }
-func (imu *imuIcm20789) SPIWriteTest() (bool, error) {
+func (imu *imuIcm20789) SPIWriteTest() (bool, byte, byte, error) {
 	v, err := imu.readByteFromSPI(XA_OFFSET_H)
-	fmt.Println("original v: ", v)
 	if err != nil {
-		return false, err
+		return false, v, 0, err
 	}
 	err = imu.writeByteToSPI(XA_OFFSET_H, v+5)
 	if err != nil {
-		return false, err
+		return false, v, 0, err
 	}
 	var nv byte
 	nv, err = imu.readByteFromSPI(XA_OFFSET_H)
-	return nv == v+5, err
+	return nv == v+5, v, nv, err
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
