@@ -110,10 +110,10 @@ func (imu *imuIcm20789) Initialize(gyroFullScale string) {
 
 func (imu *imuIcm20789) setAccelConfigs(fullScale string) {
 	const ADDRESS byte = 0x1B
-	rwaconfig, _ := imu.readRegister(ADDRESS, 1)
-	fmt.Println("RAW: ", rwaconfig[0])
+	rwaconfig, _ := imu.readByteFromRegister(ADDRESS)
+	fmt.Println("RAW: ", rwaconfig)
 	newValue := byte(0b01111111)
-	writeErr := imu.writeRegister(ADDRESS, []byte{newValue})
+	writeErr := imu.writeRegister(ADDRESS, newValue)
 	if writeErr != nil {
 		log.Fatalf("can't write gyroscope config %v", writeErr)
 	}

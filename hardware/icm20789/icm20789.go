@@ -52,46 +52,39 @@ func (imu *imuIcm20789) readRegister(address byte, size int) ([]byte, error) {
 	return r[1:], err
 }
 
-func (imu *imuIcm20789) writeRegister(address byte, data []byte) error {
-	w := make([]byte, 0, len(data)+1)
+func (imu *imuIcm20789) readByteFromRegister(address byte) (byte, error) {
+	res, err := imu.readRegister(address, 1)
+	return res[0], err
+}
 
-	w = append(w, address)
+func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
+	w := make([]byte, 1, len(data)+1)
+	w[0] = address
 	w = append(w, data...)
 	r := make([]byte, len(w))
-
 	err := imu.spiConn.Tx(w, r)
 	return err
 }
 
-func (imu *imuIcm20789) readByteFromSPI(address byte) (byte, error) {
-	r, err := imu.readRegister(address, 1)
-	return r[0], err
-}
-
-func (imu *imuIcm20789) writeByteToSPI(address, value byte) error {
-
-	return imu.writeRegister(address, []byte{value})
-}
-
 func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, err error) {
-	whoami, err = imu.readByteFromSPI(WHO_AM_I)
+	whoami, err = imu.readByteFromRegister(WHO_AM_I)
 	if err == nil {
-		powermanagement1, err = imu.readByteFromSPI(PWR_MGMT_1)
+		powermanagement1, err = imu.readByteFromRegister(PWR_MGMT_1)
 	}
 	return whoami, powermanagement1, whoami == 0x03 && powermanagement1 == 0x40 && err == nil, err
 }
 func (imu *imuIcm20789) SPIWriteTest() (bool, byte, byte, error) {
-	v, err := imu.readByteFromSPI(XA_OFFSET_H)
+	v, err := imu.readRegister(XA_OFFSET_H, 1)
 	if err != nil {
-		return false, v, 0, err
+		return false, v[0], 0, err
 	}
-	err = imu.writeByteToSPI(XA_OFFSET_H, v+5)
+	err = imu.writeRegister(XA_OFFSET_H, v[0]+5)
 	if err != nil {
-		return false, v, 0, err
+		return false, v[0], 0, err
 	}
-	var nv byte
-	nv, err = imu.readByteFromSPI(XA_OFFSET_H)
-	return nv == v+5, v, nv, err
+	nv := []byte{0}
+	nv, err = imu.readRegister(XA_OFFSET_H, 1)
+	return nv[0] == v[0]+5, v[0], nv[0], err
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
