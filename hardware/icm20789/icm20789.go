@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -18,6 +19,7 @@ const (
 	GYRO_CONFIG  byte = 0x1B
 	WHO_AM_I     byte = 0x75
 	PWR_MGMT_1   byte = 0x6B
+	XA_OFFSET_H  byte = 0x77
 )
 
 const (
@@ -77,6 +79,21 @@ func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, e
 		powermanagement1, err = imu.readByteFromSPI(PWR_MGMT_1)
 	}
 	return whoami, powermanagement1, whoami == 0x03 && powermanagement1 == 0x40 && err == nil, err
+}
+func (imu *imuIcm20789) SPIWriteTest() (bool, error) {
+	v, err := imu.readByteFromSPI(XA_OFFSET_H)
+	fmt.Println("original v: ", v)
+	if err != nil {
+		return false, err
+	}
+	err = imu.writeByteToSPI(XA_OFFSET_H, v+5)
+	if err != nil {
+		return false, err
+	}
+	var nv byte
+	nv, err = imu.readByteFromSPI(XA_OFFSET_H)
+	fmt.Println("original v: ", nv)
+	return nv == v+5, err
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {

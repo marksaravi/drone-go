@@ -15,12 +15,19 @@ func main() {
 	// }(cancel)
 
 	imu := icm20789.NewIcm20987(0, 0)
-	whoami, powmgm1, ok, err := imu.SPIReadTest()
-	if ok {
+	whoami, powmgm1, readok, readerr := imu.SPIReadTest()
+	if readok {
 		fmt.Printf("WHO AM I: 0x%x, POWER MANAGEMENT 1: 0x%x\n", whoami, powmgm1)
 	} else {
-		fmt.Printf("spi error: %v\n", err)
+		fmt.Printf("spi error: %v\n", readerr)
 	}
+	writeok, writeerr := imu.SPIWriteTest()
+	if writeok {
+		fmt.Println("Write ok")
+	} else {
+		fmt.Println(writeerr)
+	}
+
 	// imu.Initialize("4g")
 	// lastReadTime := time.Now()
 	// for {
