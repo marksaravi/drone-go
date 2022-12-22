@@ -29,10 +29,9 @@ func (imu *imuIcm20789) readByteFromRegister(address byte) (byte, error) {
 
 func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 	w := make([]byte, 1, len(data)+1)
-	r := make([]byte, cap(w))
 	w[0] = address
 	w = append(w, data...)
-	err := imu.spiConn.Tx(w, r)
+	err := imu.spiConn.Tx(w, nil)
 	return err
 }
 
@@ -54,7 +53,7 @@ func main() {
 	const NEW_VALUE byte = 13
 	originalValue, _ := imu.readByteFromRegister(WRITE_ADDRESS)
 	fmt.Printf("ORIGINAL: 0x%x\n", originalValue)
-	imu.writeRegister(WRITE_ADDRESS, NEW_VALUE, NEW_VALUE)
+	imu.writeRegister(WRITE_ADDRESS, NEW_VALUE)
 	newValue, err := imu.readByteFromRegister(WRITE_ADDRESS)
 	fmt.Printf("NEW: 0x%x, %v\n", newValue, err)
 }
