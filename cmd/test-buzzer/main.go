@@ -5,9 +5,12 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
 )
+
+type gpio interface{}
+type gpioreg interface{}
+type i2c interface{}
+type i2creg interface{}
 
 func main() {
 	hardware.InitHost()

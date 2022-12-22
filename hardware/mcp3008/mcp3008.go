@@ -1,8 +1,6 @@
 package mcp3008
 
-import (
-	"periph.io/x/periph/conn/spi"
-)
+type spi interface{}
 
 const (
 	DIGITAL_MAX_VALUE uint16 = 1024

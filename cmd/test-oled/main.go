@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
-	"periph.io/x/periph/host"
 )
+
+type host interface{}
+type gpio interface{}
+type gpioreg interface{}
+type i2c interface{}
+type i2creg interface{}
 
 func main() {
 	if _, err := host.Init(); err != nil {

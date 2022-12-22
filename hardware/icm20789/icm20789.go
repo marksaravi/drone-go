@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
-	"periph.io/x/periph/conn/spi"
 )
+
+type spi interface{}
 
 const (
 	ACCELEROMETER_DATA_SIZE = 6

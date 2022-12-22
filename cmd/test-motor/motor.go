@@ -12,9 +12,12 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/models"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
 )
+
+type gpio interface{}
+type gpioreg interface{}
+type i2c interface{}
+type i2creg interface{}
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)

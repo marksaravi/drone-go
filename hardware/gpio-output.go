@@ -2,11 +2,12 @@ package hardware
 
 import (
 	"log"
-
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
 )
 
+type gpio interface{}
+type gpioreg interface{}
+type i2c interface{}
+type i2creg interface{}
 type gpiooutput struct {
 	pin gpio.PinOut
 }

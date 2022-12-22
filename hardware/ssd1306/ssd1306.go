@@ -3,11 +3,10 @@ package ssd1306
 import (
 	"errors"
 	"image"
-
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/devices/ssd1306/image1bit"
 )
 
+type i2c interface{}
+type image1bit interface{}
 type Options struct {
 	Width         int
 	Height        int

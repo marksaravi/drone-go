@@ -3,19 +3,18 @@ package pca9685
 import (
 	"fmt"
 	"time"
-
-	"periph.io/x/periph/conn/i2c"
 )
 
+type i2c interface{}
 type powerbreaker interface {
 	Connect()
 	Disconnect()
 }
 
-//PCA9685Address is i2c address of device
+// PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
 
-//Addresses
+// Addresses
 const (
 	PCA9685Mode1      = 0x00
 	PCA9685Mode2      = 0x01
@@ -97,7 +96,7 @@ func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
 	// 		log.Printf("%4.1f,    %4.1f,    %4.1f,    %4.1f\n", throttles[0], throttles[1], throttles[2], throttles[3])
 }
 
-//Calibrate
+// Calibrate
 func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int) {
 	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxThrottle: 0, ChannelMappings: mappings})
 	if err != nil {
@@ -238,7 +237,7 @@ func (d *pca9685Dev) setAllPWM(pulseWidth float64) (err error) {
 	return
 }
 
-//Start starts the device with a frequency
+// Start starts the device with a frequency
 func (d *pca9685Dev) init() error {
 	if err := d.setAllPWM(0); err != nil {
 		return err

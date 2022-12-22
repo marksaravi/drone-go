@@ -19,9 +19,11 @@ import (
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
 )
+
+type i2creg interface{}
+type i2c interface {
+}
 
 type routine interface {
 	Start(context.Context, *sync.WaitGroup)

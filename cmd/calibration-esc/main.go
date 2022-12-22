@@ -5,9 +5,11 @@ import (
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
 )
+
+type i2creg interface{}
+type i2c interface {
+}
 
 func main() {
 	hardware.InitHost()

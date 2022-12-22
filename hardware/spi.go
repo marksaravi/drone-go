@@ -3,11 +3,11 @@ package hardware
 import (
 	"fmt"
 	"log"
-
-	"periph.io/x/periph/conn/physic"
-	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/host/sysfs"
 )
+
+type physic interface{}
+type spi interface{}
+type sysfs interface{}
 
 func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
 	spibus, _ := sysfs.NewSPI(

@@ -16,11 +16,12 @@ import (
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"github.com/marksaravi/drone-go/utils"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
 )
+
+type gpio interface{}
+type gpioreg interface{}
+type i2c interface{}
+type i2creg interface{}
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
