@@ -1,6 +1,7 @@
 package hardware
 
 import (
+	"fmt"
 	"log"
 
 	"periph.io/x/periph/conn/physic"
@@ -21,5 +22,12 @@ func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if p, ok := spiConn.(spi.Pins); ok {
+		fmt.Printf("  CLK : %s\n", p.CLK())
+		fmt.Printf("  MOSI: %s\n", p.MOSI())
+		fmt.Printf("  MISO: %s\n", p.MISO())
+		fmt.Printf("  CS  : %s\n", p.CS())
+	}
+
 	return spiConn
 }

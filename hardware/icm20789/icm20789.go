@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -59,9 +60,10 @@ func (imu *imuIcm20789) readByteFromRegister(address byte) (byte, error) {
 
 func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 	w := make([]byte, 1, len(data)+1)
-	r := make([]byte, len(w))
+	r := make([]byte, cap(w))
 	w[0] = address
 	w = append(w, data...)
+	fmt.Println("len: ", len(w), len(r))
 	err := imu.spiConn.Tx(w, r)
 	return err
 }
