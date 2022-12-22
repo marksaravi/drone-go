@@ -32,7 +32,6 @@ func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 	r := make([]byte, cap(w))
 	w[0] = address
 	w = append(w, data...)
-	fmt.Println("len: ", len(w), len(r))
 	err := imu.spiConn.Tx(w, r)
 	return err
 }
@@ -50,6 +49,14 @@ func main() {
 
 	power, _ := imu.readByteFromRegister(107)
 	fmt.Printf("POWER: 0x%x\n", power)
+
+	const WRITE_ADDRESS = 19
+	const NEW_VALUE byte = 13
+	originalValue, _ := imu.readByteFromRegister(WRITE_ADDRESS)
+	fmt.Printf("ORIGINAL: 0x%x\n", originalValue)
+	imu.writeRegister(WRITE_ADDRESS, NEW_VALUE, NEW_VALUE)
+	newValue, err := imu.readByteFromRegister(WRITE_ADDRESS)
+	fmt.Printf("NEW: 0x%x, %v\n", newValue, err)
 }
 
 func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
