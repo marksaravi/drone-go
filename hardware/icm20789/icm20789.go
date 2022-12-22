@@ -16,6 +16,8 @@ const (
 	ACCEL_CONFIG byte = 0x1C
 	ACCEL_XOUT_H byte = 0x3B
 	GYRO_CONFIG  byte = 0x1B
+	WHO_AM_I     byte = 0x75
+	PWR_MGMT_1   byte = 0x6B
 )
 
 const (
@@ -60,13 +62,25 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 	return err
 }
 
-func (imu *imuIcm20789) WhoAmI() (byte, error) {
-	data, err := imu.readSPI(0x75, 1)
-	return data[0], err
+func (imu *imuIcm20789) readByteFromSPI(address byte) (byte, error) {
+	r, err := imu.readSPI(address, 1)
+	return r[0], err
+}
+
+func (imu *imuIcm20789) writeByteToSPI(address, value byte) error {
+	return imu.writeSPI(address, []byte{value})
+}
+
+func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, err error) {
+	whoami, err = imu.readByteFromSPI(WHO_AM_I)
+	if err == nil {
+		powermanagement1, err = imu.readByteFromSPI(PWR_MGMT_1)
+	}
+	return whoami, powermanagement1, whoami == 0x03 && powermanagement1 == 0x40 && err == nil, err
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
-	return imu.readSPI(ACCEL_XOUT_H, ACCELEROMETER_DATA_SIZE)
+	return imu.readSPI(107, 1)
 }
 
 func delay(ms int) {

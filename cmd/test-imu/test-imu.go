@@ -1,8 +1,7 @@
 package main
 
 import (
-	"log"
-	"time"
+	"fmt"
 
 	"github.com/marksaravi/drone-go/hardware/icm20789"
 )
@@ -16,10 +15,13 @@ func main() {
 	// }(cancel)
 
 	imu := icm20789.NewIcm20987(0, 0)
-	whoami, _ := imu.WhoAmI()
-	log.Println("WHOAMI: ", whoami)
-	imu.Initialize("4g")
-	time.Sleep(100 * time.Millisecond)
+	whoami, powmgm1, ok, err := imu.SPIReadTest()
+	if ok {
+		fmt.Printf("WHO AM I: 0x%x, POWER MANAGEMENT 1: 0x%x\n", whoami, powmgm1)
+	} else {
+		fmt.Printf("spi error: %v\n", err)
+	}
+	// imu.Initialize("4g")
 	// lastReadTime := time.Now()
 	// for {
 	// 	select {
