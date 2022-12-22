@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -108,36 +109,15 @@ func (imu *imuIcm20789) Initialize(gyroFullScale string) {
 }
 
 func (imu *imuIcm20789) setAccelConfigs(fullScale string) {
-	rwaconfig, firstReadErr := imu.readSPI(ACCEL_CONFIG, 1)
-	newconfig := rwaconfig[0]
-	if firstReadErr != nil {
-		log.Fatalf("can't read accel config %v", firstReadErr)
-	}
-	switch fullScale {
-	case "2g":
-		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_2G
-	case "4g":
-		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_4G
-	case "8g":
-		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_8G
-	case "16":
-		newconfig = newconfig | ACCEL_CONFIG_MASK_FULL_SCALE_16G
-	default:
-		log.Printf("incorrect accel config, using default 250dps")
-	}
-	log.Printf("new accel config is: %d\n", newconfig)
-
-	writeErr := imu.writeSPI(GYRO_CONFIG, []byte{newconfig, 0})
+	const ADDRESS byte = 0x1B
+	rwaconfig, _ := imu.readSPI(ADDRESS, 1)
+	fmt.Println("RAW: ", rwaconfig[0])
+	newValue := byte(0b01111111)
+	writeErr := imu.writeSPI(ADDRESS, []byte{newValue})
 	if writeErr != nil {
 		log.Fatalf("can't write gyroscope config %v", writeErr)
 	}
 	delay(5)
-	checkConfig, checkErr := imu.readSPI(GYRO_CONFIG, 1)
-	if checkErr != nil {
-		log.Fatalf("can't read gyroscope config %v", checkErr)
-	}
-	if checkConfig[0] != newconfig {
-		log.Fatalf("can't write gyroscope config %d!=%d", checkConfig[0], newconfig)
-	}
-	log.Printf("successful accel configuration: %b\n", checkConfig[0])
+	checkConfig, _ := imu.readSPI(ADDRESS, 1)
+	fmt.Println(checkConfig[0], newValue)
 }

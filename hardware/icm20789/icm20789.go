@@ -1,7 +1,6 @@
 package icm20789
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -55,9 +54,9 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 
 	w = append(w, address)
 	w = append(w, data...)
-	fmt.Println(w)
+	r := make([]byte, len(w))
 
-	err := imu.spiConn.Tx(w, nil)
+	err := imu.spiConn.Tx(w, r)
 	return err
 }
 
