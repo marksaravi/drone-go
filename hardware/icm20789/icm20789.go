@@ -43,7 +43,7 @@ func NewIcm20987(spiBusNumber, spiChiSelect int) *imuIcm20789 {
 	}
 }
 
-func (imu *imuIcm20789) readSPI(address byte, size int) ([]byte, error) {
+func (imu *imuIcm20789) readRegister(address byte, size int) ([]byte, error) {
 	w := make([]byte, size+1)
 	r := make([]byte, size+1)
 	w[0] = address | byte(0x80)
@@ -52,7 +52,7 @@ func (imu *imuIcm20789) readSPI(address byte, size int) ([]byte, error) {
 	return r[1:], err
 }
 
-func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
+func (imu *imuIcm20789) writeRegister(address byte, data []byte) error {
 	w := make([]byte, 0, len(data)+1)
 
 	w = append(w, address)
@@ -64,13 +64,13 @@ func (imu *imuIcm20789) writeSPI(address byte, data []byte) error {
 }
 
 func (imu *imuIcm20789) readByteFromSPI(address byte) (byte, error) {
-	r, err := imu.readSPI(address, 1)
+	r, err := imu.readRegister(address, 1)
 	return r[0], err
 }
 
 func (imu *imuIcm20789) writeByteToSPI(address, value byte) error {
 
-	return imu.writeSPI(address, []byte{value})
+	return imu.writeRegister(address, []byte{value})
 }
 
 func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, err error) {
@@ -95,7 +95,7 @@ func (imu *imuIcm20789) SPIWriteTest() (bool, byte, byte, error) {
 }
 
 func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
-	return imu.readSPI(107, 1)
+	return imu.readRegister(107, 1)
 }
 
 func delay(ms int) {
