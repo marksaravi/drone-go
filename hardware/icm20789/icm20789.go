@@ -59,9 +59,9 @@ func (imu *imuIcm20789) readByteFromRegister(address byte) (byte, error) {
 
 func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 	w := make([]byte, 1, len(data)+1)
+	r := make([]byte, len(w))
 	w[0] = address
 	w = append(w, data...)
-	r := make([]byte, len(w))
 	err := imu.spiConn.Tx(w, r)
 	return err
 }
