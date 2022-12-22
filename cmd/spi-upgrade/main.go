@@ -39,33 +39,9 @@ func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 
 func main() {
 	initialize()
-	// Make sure periph is initialized.
-	// TODO: Use host.Init(). It is not used in this example to prevent circular
-	// go package import.
-	// if _, err := driverreg.Init(); err != nil {
-	// 	log.Fatal(err)
-	// }
 	fmt.Println("initializing SPI")
 
-	// Use spireg SPI port registry to find the first available SPI bus.
-	// p, err := spireg.Open("")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	p, err := sysfs.NewSPI(0, 0)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Convert the spi.Port into a spi.Conn so it can be used for communication.
-	c, err := p.Connect(physic.MegaHertz, spi.Mode3, 8)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	c := NewSPIConnection(0, 0)
 	// Write 0x10 to the device, and read a byte right after.
 	write := []byte{0x10, 0x00}
 	read := make([]byte, len(write))
@@ -84,7 +60,7 @@ func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
 	}
 
 	// Convert the spi.Port into a spi.Conn so it can be used for communication.
-	c, err := p.Connect(physic.MegaHertz, spi.Mode3, 8)
+	c, err := p.Connect(physic.MegaHertz, spi.Mode0, 8)
 
 	if err != nil {
 		log.Fatal(err)
