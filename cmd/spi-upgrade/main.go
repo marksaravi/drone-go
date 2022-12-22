@@ -40,16 +40,16 @@ func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 func main() {
 	initialize()
 	fmt.Println("initializing SPI")
-
 	c := NewSPIConnection(0, 0)
-	// Write 0x10 to the device, and read a byte right after.
-	write := []byte{0x10, 0x00}
-	read := make([]byte, len(write))
-	if err := c.Tx(write, read); err != nil {
-		log.Fatal(err)
+	imu := imuIcm20789{
+		spiConn: c,
 	}
-	// Use read.
-	fmt.Printf("READ VALUE%v\n", read[1:])
+
+	whoami, _ := imu.readByteFromRegister(0x75)
+	fmt.Printf("WHO AM I: 0x%x\n", whoami)
+
+	power, _ := imu.readByteFromRegister(107)
+	fmt.Printf("POWER: 0x%x\n", power)
 }
 
 func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
