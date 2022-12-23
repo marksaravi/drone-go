@@ -1,4 +1,4 @@
-package hardware
+package hardware2
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"periph.io/x/host/v3"
 )
 
-func InitHost() {
+func InitializeHost() {
 	state, err := host.Init()
 	if err != nil {
 		log.Fatalf("failed to initialize periph: %v", err)
