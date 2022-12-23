@@ -6,7 +6,7 @@ import (
 	"periph.io/x/host/v3"
 )
 
-func InitHost() {
+func HostInitialize() {
 	state, err := host.Init()
 	if err != nil {
 		log.Fatalf("failed to initialize periph: %v", err)

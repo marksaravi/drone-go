@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"periph.io/x/conn/v3/physic"
+	"github.com/marksaravi/drone-go/hardware"
 	"periph.io/x/conn/v3/spi"
-	"periph.io/x/host/v3"
-	"periph.io/x/host/v3/sysfs"
 )
 
 const (
@@ -70,10 +67,10 @@ func (imu *imuIcm20789) setupGyro() {
 }
 
 func main() {
-	HostInitialize()
+	hardware.HostInitialize()
 
 	fmt.Println("initializing SPI")
-	c := NewSPIConnection(0, 0)
+	c := hardware.NewSPIConnection(0, 0)
 	imu := imuIcm20789{
 		spiConn: c,
 	}
@@ -86,46 +83,6 @@ func main() {
 	// fmt.Printf("POWER: 0x%x\n", power)
 
 	// imu.writeRegister(19, 13)
-}
-
-func HostInitialize() {
-	state, err := host.Init()
-	if err != nil {
-		log.Fatalf("failed to initialize periph: %v", err)
-	}
-	spiloaded := false
-	i2cloaded := false
-
-	for _, driver := range state.Loaded {
-		if driver.String() == "sysfs-spi" {
-			spiloaded = true
-		}
-		if driver.String() == "sysfs-i2c" {
-			i2cloaded = true
-		}
-	}
-	if !spiloaded {
-		log.Fatalf("failed to initialize spi")
-	}
-	if !i2cloaded {
-		log.Fatalf("failed to initialize i2c")
-	}
-}
-
-func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
-	p, err := sysfs.NewSPI(0, 0)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Convert the spi.Port into a spi.Conn so it can be used for communication.
-	c, err := p.Connect(physic.MegaHertz, spi.Mode0, 8)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	return c
 }
 
 func delay(ms int) {
