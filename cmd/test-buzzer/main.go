@@ -5,15 +5,12 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
 )
 
-type gpio interface{}
-type gpioreg interface{}
-type i2c interface{}
-type i2creg interface{}
-
 func main() {
-	hardware.InitHost()
+	hardware.HostInitialize()
 	var pin gpio.PinOut = gpioreg.ByName("GPIO5")
 	buzzer := piezobuzzer.NewBuzzer(pin)
 	fmt.Println("Warning sound, press ENTER to next sound")

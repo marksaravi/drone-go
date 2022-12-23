@@ -75,6 +75,10 @@ func (imu *imuIcm20789) setupPower() {
 	log.Printf("PWR_MGMT_1_v1: 0x%x, PWR_MGMT_1_v2: 0x%x\n", powerManagement1v1, powerManagement1v2)
 }
 
+func (imu *imuIcm20789) ReadIMUData() ([]byte, error) {
+	return imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+}
+
 func delay(ms int) {
 	time.Sleep(time.Duration(ms) * time.Millisecond)
 }

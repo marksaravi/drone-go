@@ -16,12 +16,11 @@ import (
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"github.com/marksaravi/drone-go/utils"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
-
-type gpio interface{}
-type gpioreg interface{}
-type i2c interface{}
-type i2creg interface{}
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
@@ -31,7 +30,7 @@ func main() {
 	radioConfigs := configs.Radio
 	joysticksConfigs := configs.Joysticks
 	buttonsConfis := configs.Buttons
-	hardware.InitHost()
+	hardware.HostInitialize()
 
 	oledConn, err := i2creg.Open("")
 	if err != nil {

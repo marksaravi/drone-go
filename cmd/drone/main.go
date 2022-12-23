@@ -19,11 +19,9 @@ import (
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
-
-type i2creg interface{}
-type i2c interface {
-}
 
 type routine interface {
 	Start(context.Context, *sync.WaitGroup)
@@ -31,7 +29,7 @@ type routine interface {
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	hardware.InitHost()
+	hardware.HostInitialize()
 	flightcontrol, radioReceiver, logger := initDevices()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup

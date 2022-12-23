@@ -3,9 +3,9 @@ package piezobuzzer
 import (
 	"math"
 	"time"
-)
 
-type gpio interface{}
+	"periph.io/x/conn/v3/gpio"
+)
 
 // CBGE
 

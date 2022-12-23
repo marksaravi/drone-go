@@ -7,11 +7,10 @@ import (
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/models"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/spi"
 )
-
-type gpio interface{}
-type gpioreg interface{}
-type spi interface{}
 
 const (
 	ADDRESS_CONFIG      byte = 0x0

@@ -3,9 +3,10 @@ package pca9685
 import (
 	"fmt"
 	"time"
+
+	"periph.io/x/conn/v3/i2c"
 )
 
-type i2c interface{}
 type powerbreaker interface {
 	Connect()
 	Disconnect()

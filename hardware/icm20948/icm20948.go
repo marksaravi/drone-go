@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
+	"periph.io/x/conn/v3/spi"
 )
 
-type spi interface{}
 type register struct {
 	Address uint8
 	Bank    uint8

@@ -12,7 +12,7 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	hardware.InitHost()
+	hardware.HostInitialize()
 	rxtxType := flag.String("t", "rx", "t")
 	flag.Parse()
 
