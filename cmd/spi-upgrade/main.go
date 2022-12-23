@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -48,9 +49,11 @@ func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 }
 
 func (imu *imuIcm20789) setup() {
+	log.Println("IMU Setup soft reset")
 	imu.writeRegister(PWR_MGMT_1, 0x80) // soft reset
 	delay(1)
 	powerManagement1v1, _ := imu.readByteFromRegister(PWR_MGMT_1)
+	log.Println("IMU Setup power")
 	imu.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(1)
 	powerManagement1v2, _ := imu.readByteFromRegister(PWR_MGMT_1)
@@ -59,6 +62,7 @@ func (imu *imuIcm20789) setup() {
 }
 
 func (imu *imuIcm20789) setupGyro() {
+	log.Println("IMU Setup gyroscope")
 	gyrosetup1, _ := imu.readByteFromRegister(GYRO_CONFIG)
 	imu.writeRegister(GYRO_CONFIG, gyrosetup1|0b00110000)
 	delay(1)

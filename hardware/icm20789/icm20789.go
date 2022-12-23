@@ -1,47 +1,32 @@
 package icm20789
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
-)
-
-type spi interface{}
-
-const (
-	ACCELEROMETER_DATA_SIZE = 6
-	GYROSCOPE_DATA_SIZE     = ACCELEROMETER_DATA_SIZE
+	"periph.io/x/conn/v3/spi"
 )
 
 const (
-	ACCEL_CONFIG byte = 0x1C
-	ACCEL_XOUT_H byte = 0x3B
-	GYRO_CONFIG  byte = 0x1B
-	WHO_AM_I     byte = 0x75
-	PWR_MGMT_1   byte = 0x6B
-	XA_OFFSET_H  byte = 0x13
+	GYRO_CONFIG byte = 0x1B
+	WHO_AM_I    byte = 0x75
+	PWR_MGMT_1  byte = 0x6B
+	PWR_MGMT_2  byte = 0x6C
 )
 
 const (
-	ACCEL_CONFIG_MASK_FULL_SCALE_2G     byte = 0b00000000
-	ACCEL_CONFIG_MASK_FULL_SCALE_4G     byte = 0b00001000
-	ACCEL_CONFIG_MASK_FULL_SCALE_8G     byte = 0b00010000
-	ACCEL_CONFIG_MASK_FULL_SCALE_16G    byte = 0b00011000
-	GYRO_CONFIG_MASK_FULL_SCALE_250DPS  byte = 0b00000000
-	GYRO_CONFIG_MASK_FULL_SCALE_500DPS  byte = 0b00001000
-	GYRO_CONFIG_MASK_FULL_SCALE_1000DPS byte = 0b00010000
-	GYRO_CONFIG_MASK_FULL_SCALE_2000DPS byte = 0b00011000
+	PWR_MGMT_1_CONFIG byte = 0b00000000
+	PWR_MGMT_2_CONFIG byte = 0b00000000
 )
 
 type imuIcm20789 struct {
 	spiConn spi.Conn
 }
 
-func NewIcm20987(spiBusNumber, spiChiSelect int) *imuIcm20789 {
-	spiConn := hardware.NewSPIConnection(spiBusNumber, spiChiSelect)
+func NewICM20789() *imuIcm20789 {
 	return &imuIcm20789{
-		spiConn: spiConn,
+		spiConn: hardware.NewSPIConnection(0, 0),
 	}
 }
 
@@ -64,33 +49,25 @@ func (imu *imuIcm20789) writeRegister(address byte, data ...byte) error {
 	r := make([]byte, cap(w))
 	w[0] = address
 	w = append(w, data...)
-	fmt.Println("len: ", len(w), len(r))
 	err := imu.spiConn.Tx(w, r)
 	return err
 }
 
-func (imu *imuIcm20789) SPIReadTest() (whoami, powermanagement1 byte, ok bool, err error) {
-	whoami, err = imu.readByteFromRegister(WHO_AM_I)
-	if err == nil {
-		powermanagement1, err = imu.readByteFromRegister(PWR_MGMT_1)
-	}
-	return whoami, powermanagement1, whoami == 0x03 && powermanagement1 == 0x40 && err == nil, err
-}
-func (imu *imuIcm20789) SPIWriteTest() (bool, byte, byte, error) {
-	v, err := imu.readRegister(XA_OFFSET_H, 1)
-	if err != nil {
-		return false, v[0], 0, err
-	}
-	err = imu.writeRegister(XA_OFFSET_H, v[0]+5)
-	if err != nil {
-		return false, v[0], 0, err
-	}
-	nv, err := imu.readRegister(XA_OFFSET_H, 1)
-	return nv[0] == v[0]+5, v[0], nv[0], err
+func (imu *imuIcm20789) Setup() {
+	log.Println("SETUP IMU")
+	imu.setupPower()
+	imu.setupGyro()
 }
 
-func (imu *imuIcm20789) ReadAccelerometer() ([]byte, error) {
-	return imu.readRegister(107, 1)
+func (imu *imuIcm20789) setupPower() {
+	log.Println("SETUP IMU power")
+	imu.writeRegister(PWR_MGMT_1, 0x80) // soft reset
+	delay(1)
+	powerManagement1v1, _ := imu.readByteFromRegister(PWR_MGMT_1)
+	imu.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
+	delay(1)
+	powerManagement1v2, _ := imu.readByteFromRegister(PWR_MGMT_1)
+	log.Printf("PWR_MGMT_1_v1: 0x%x, PWR_MGMT_1_v2: 0x%x\n", powerManagement1v1, powerManagement1v2)
 }
 
 func delay(ms int) {
