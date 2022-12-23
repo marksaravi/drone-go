@@ -3,23 +3,23 @@ package hardware
 import (
 	"log"
 
-	"periph.io/x/periph/conn/physic"
-	"periph.io/x/periph/conn/spi"
-	"periph.io/x/periph/host/sysfs"
+	"periph.io/x/conn/v3/physic"
+	"periph.io/x/conn/v3/spi"
+	"periph.io/x/host/v3/sysfs"
 )
 
 func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
-	spibus, _ := sysfs.NewSPI(
-		busNumber,
-		chipSelect,
-	)
-	spiConn, err := spibus.Connect(
-		physic.Frequency(7)*physic.MegaHertz,
-		spi.Mode0,
-		8,
-	)
+	p, err := sysfs.NewSPI(0, 0)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	return spiConn
+
+	// Convert the spi.Port into a spi.Conn so it can be used for communication.
+	c, err := p.Connect(physic.MegaHertz, spi.Mode0, 8)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return c
 }

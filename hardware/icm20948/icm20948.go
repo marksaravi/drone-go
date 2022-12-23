@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/models"
-	"periph.io/x/periph/conn/spi"
+	"periph.io/x/conn/v3/spi"
 )
 
 type register struct {

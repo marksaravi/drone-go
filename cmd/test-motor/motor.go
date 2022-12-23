@@ -12,13 +12,13 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/models"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	hardware.InitHost()
+	hardware.HostInitialize()
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 

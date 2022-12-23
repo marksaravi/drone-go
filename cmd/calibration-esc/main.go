@@ -5,12 +5,12 @@ import (
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 func main() {
-	hardware.InitHost()
+	hardware.HostInitialize()
 	configs := config.ReadConfigs().FlightControl
 	escConfigs := configs.ESC
 	powerBreakerPin := configs.PowerBreaker

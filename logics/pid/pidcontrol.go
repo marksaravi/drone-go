@@ -2,8 +2,6 @@ package pid
 
 import (
 	"time"
-
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type pidControl struct {
@@ -36,8 +34,18 @@ func (pidcontrol *pidControl) getP(inputError float64) float64 {
 	return inputError * pidcontrol.pGain
 }
 
+func applyLimits(x, min, max float64) float64 {
+	if x < min {
+		return min
+	}
+	if x > max {
+		return max
+	}
+	return x
+}
+
 func (pidcontrol *pidControl) getI(inputError float64, dt time.Duration) float64 {
-	pidcontrol.iMemory = utils.ApplyLimits(inputError*pidcontrol.iGain*float64(dt)/1000000000+pidcontrol.iMemory, -pidcontrol.maxI, pidcontrol.maxI)
+	pidcontrol.iMemory = applyLimits(inputError*pidcontrol.iGain*float64(dt)/1000000000+pidcontrol.iMemory, -pidcontrol.maxI, pidcontrol.maxI)
 	return pidcontrol.iMemory
 }
 

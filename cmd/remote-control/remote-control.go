@@ -16,10 +16,10 @@ import (
 	piezobuzzer "github.com/marksaravi/drone-go/hardware/piezo-buzzer"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"github.com/marksaravi/drone-go/utils"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 	radioConfigs := configs.Radio
 	joysticksConfigs := configs.Joysticks
 	buttonsConfis := configs.Buttons
-	hardware.InitHost()
+	hardware.HostInitialize()
 
 	oledConn, err := i2creg.Open("")
 	if err != nil {
@@ -103,7 +103,7 @@ func main() {
 
 	radioDev.StartTransmitter(ctx, &waitGroup)
 	remoteControl.Start(ctx, &waitGroup, cancel)
-	utils.WaitToAbortByESC(cancel, &waitGroup)
+	utils.WaitToAbortByESC(cancel)
 	waitGroup.Wait()
 	os.Exit(0)
 }

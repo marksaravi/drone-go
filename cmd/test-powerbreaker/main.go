@@ -11,7 +11,7 @@ import (
 
 func main() {
 	fmt.Println("Started")
-	hardware.InitHost()
+	hardware.HostInitialize()
 	powerbreakerGPIO := config.ReadConfigs().FlightControl.PowerBreaker
 	gpiopin := hardware.NewGPIOOutput(powerbreakerGPIO)
 	powerbreaker := devices.NewPowerBreaker(gpiopin)

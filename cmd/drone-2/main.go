@@ -2,28 +2,23 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"sync"
 
-	"github.com/marksaravi/drone-go/hardware"
+	dronepackage "github.com/marksaravi/drone-go/apps/drone"
+	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	hardware.HostInitialize()
-	rxtxType := flag.String("t", "rx", "t")
-	flag.Parse()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	if *rxtxType == "rx" {
-		runReceiver(ctx, &wg)
-	} else {
-		runTransmitter(ctx, &wg)
-	}
 
 	utils.WaitToAbortByESC(cancel)
-	wg.Wait()
+	drone := dronepackage.NewDrone(
+		imu.NewIMU(icm20789.NewICM20789()),
+	)
+	drone.Start(ctx, &wg)
 }

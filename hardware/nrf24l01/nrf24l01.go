@@ -7,9 +7,9 @@ import (
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/models"
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
-	"periph.io/x/periph/conn/spi"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/conn/v3/spi"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"periph.io/x/periph/conn/gpio"
+	"periph.io/x/conn/v3/gpio"
 )
 
 // CBGE

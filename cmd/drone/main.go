@@ -11,7 +11,7 @@ import (
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/esc"
-	"github.com/marksaravi/drone-go/devices/imu"
+	imu "github.com/marksaravi/drone-go/devices/imu_old"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
@@ -19,8 +19,8 @@ import (
 	"github.com/marksaravi/drone-go/hardware/pca9685"
 	"github.com/marksaravi/drone-go/logics/pid"
 	"github.com/marksaravi/drone-go/utils"
-	"periph.io/x/periph/conn/i2c"
-	"periph.io/x/periph/conn/i2c/i2creg"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 type routine interface {
@@ -29,11 +29,11 @@ type routine interface {
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	hardware.InitHost()
+	hardware.HostInitialize()
 	flightcontrol, radioReceiver, logger := initDevices()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
-	utils.WaitToAbortByESC(cancel, &wg)
+	utils.WaitToAbortByESC(cancel)
 	radioReceiver.Start(ctx, &wg)
 	logger.Start(ctx, &wg)
 	flightcontrol.Start(ctx, &wg)
