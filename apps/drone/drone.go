@@ -6,25 +6,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/hardware/icm20789"
+	"github.com/marksaravi/drone-go/devices/imu"
 )
 
-type imu interface {
+type imuDevice interface {
 	Setup()
-	ReadIMUData() ([]byte, error)
+	ReadInertialDevice() (imu.Rotations, bool)
 }
 
 type drone struct {
-	imu imu
+	imu imuDevice
 
 	imuSampleRate int
 
 	lastIMUReadingTime time.Time
 }
 
-func NewDrone() *drone {
+func NewDrone(imu imuDevice) *drone {
 	return &drone{
-		imu:                icm20789.NewICM20789(),
+		imu:                imu,
 		imuSampleRate:      2,
 		lastIMUReadingTime: time.Now(),
 	}
@@ -45,18 +45,17 @@ func (d *drone) controller(ctx context.Context, wg *sync.WaitGroup) {
 			running = false
 		default:
 		}
-		imuraw, imuok := d.readImuRawData()
+		rotations, imuok := d.readRotations()
 		if imuok {
-			log.Println(imuraw)
+			log.Println(rotations)
 		}
 	}
 }
 
-func (d *drone) readImuRawData() ([]byte, bool) {
+func (d *drone) readRotations() (imu.Rotations, bool) {
 	if time.Since(d.lastIMUReadingTime) < time.Second/time.Duration(d.imuSampleRate) {
-		return nil, false
+		return imu.Rotations{}, false
 	}
 	d.lastIMUReadingTime = time.Now()
-	data, err := d.imu.ReadIMUData()
-	return data, err == nil
+	return d.imu.ReadInertialDevice()
 }
