@@ -11,7 +11,7 @@ import (
 	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/esc"
-	"github.com/marksaravi/drone-go/devices/imu"
+	imu "github.com/marksaravi/drone-go/devices/imu_old"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/devices/udplogger"
 	"github.com/marksaravi/drone-go/hardware"
