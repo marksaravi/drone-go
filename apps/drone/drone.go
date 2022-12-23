@@ -33,6 +33,7 @@ func NewDrone(imu imuDevice) *drone {
 func (d *drone) Start(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("drone started")
 	defer log.Println("drone stopped")
+	d.imu.Setup()
 	d.controller(ctx, wg)
 }
 
