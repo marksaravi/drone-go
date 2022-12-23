@@ -24,7 +24,9 @@ type drone struct {
 
 func NewDrone() *drone {
 	return &drone{
-		imu: icm20789.NewICM20789(),
+		imu:                icm20789.NewICM20789(),
+		imuSampleRate:      2,
+		lastIMUReadingTime: time.Now(),
 	}
 }
 
