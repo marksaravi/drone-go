@@ -12,3 +12,7 @@ func (imu *imuIcm20789) setupGyro() {
 	gyrosetup2, _ := imu.readByteFromRegister(GYRO_CONFIG)
 	log.Printf("GYRO_SETUP1: 0x%x, GYRO_SETUP2: 0x%x\n", gyrosetup1, gyrosetup2)
 }
+
+func (imu *imuIcm20789) ReadIMUData() ([]byte, error) {
+	return imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+}

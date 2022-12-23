@@ -9,15 +9,20 @@ import (
 )
 
 const (
-	GYRO_CONFIG byte = 0x1B
-	WHO_AM_I    byte = 0x75
-	PWR_MGMT_1  byte = 0x6B
-	PWR_MGMT_2  byte = 0x6C
+	ACCEL_XOUT_H byte = 0x3B
+	GYRO_CONFIG  byte = 0x1B
+	WHO_AM_I     byte = 0x75
+	PWR_MGMT_1   byte = 0x6B
+	PWR_MGMT_2   byte = 0x6C
 )
 
 const (
 	PWR_MGMT_1_CONFIG byte = 0b00000000
 	PWR_MGMT_2_CONFIG byte = 0b00000000
+)
+
+const (
+	RAW_DATA_SIZE int = 12
 )
 
 type imuIcm20789 struct {
