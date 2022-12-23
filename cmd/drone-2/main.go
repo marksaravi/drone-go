@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	dronepackage "github.com/marksaravi/drone-go/apps/drone"
+	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/utils"
 )
 
@@ -15,6 +17,8 @@ func main() {
 	var wg sync.WaitGroup
 
 	utils.WaitToAbortByESC(cancel)
-	drone := dronepackage.NewDrone()
+	drone := dronepackage.NewDrone(
+		imu.NewIMU(icm20789.NewICM20789()),
+	)
 	drone.Start(ctx, &wg)
 }
