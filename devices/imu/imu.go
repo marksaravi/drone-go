@@ -1,19 +1,17 @@
 package imu
 
-type inertialDevice interface {
-	Setup()
-	ReadIMUData() ([]byte, error)
-}
+import "github.com/marksaravi/drone-go/types"
 
-type Rotations struct {
-	Roll, Pitch, Yaw float64
+type IMUMems6DOF interface {
+	Setup()
+	ReadIMUData() (types.IMUMems6DOFData, error)
 }
 
 type imuDevice struct {
-	dev inertialDevice
+	dev IMUMems6DOF
 }
 
-func NewIMU(dev inertialDevice) *imuDevice {
+func NewIMU(dev IMUMems6DOF) *imuDevice {
 	return &imuDevice{
 		dev: dev,
 	}
@@ -23,14 +21,14 @@ func (imu *imuDevice) Setup() {
 	imu.dev.Setup()
 }
 
-func (imu *imuDevice) ReadInertialDevice() (Rotations, bool) {
+func (imu *imuDevice) Read() (types.Orientations, bool) {
 	data, err := imu.dev.ReadIMUData()
 	if err != nil {
-		return Rotations{}, false
+		return types.Orientations{}, false
 	}
 	return imu.calcRotations(data), true
 }
 
-func (imu *imuDevice) calcRotations(data []byte) Rotations {
-	return Rotations{}
+func (imu *imuDevice) calcRotations(types.IMUMems6DOFData) types.Orientations {
+	return types.Orientations{}
 }

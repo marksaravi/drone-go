@@ -6,23 +6,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/types"
 )
 
-type imuDevice interface {
+type InertialMeasurementUnit interface {
 	Setup()
-	ReadInertialDevice() (imu.Rotations, bool)
+	Read() (types.Orientations, bool)
 }
 
 type drone struct {
-	imu imuDevice
+	imu InertialMeasurementUnit
 
 	imuSampleRate int
 
 	lastIMUReadingTime time.Time
 }
 
-func NewDrone(imu imuDevice) *drone {
+func NewDrone(imu InertialMeasurementUnit) *drone {
 	return &drone{
 		imu:                imu,
 		imuSampleRate:      2,
@@ -53,10 +53,10 @@ func (d *drone) controller(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
-func (d *drone) readRotations() (imu.Rotations, bool) {
+func (d *drone) readRotations() (types.Orientations, bool) {
 	if time.Since(d.lastIMUReadingTime) < time.Second/time.Duration(d.imuSampleRate) {
-		return imu.Rotations{}, false
+		return types.Orientations{}, false
 	}
 	d.lastIMUReadingTime = time.Now()
-	return d.imu.ReadInertialDevice()
+	return d.imu.Read()
 }

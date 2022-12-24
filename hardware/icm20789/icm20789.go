@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/types"
 	"periph.io/x/conn/v3/spi"
 )
 
@@ -75,8 +76,9 @@ func (imu *imuIcm20789) setupPower() {
 	log.Printf("PWR_MGMT_1_v1: 0x%x, PWR_MGMT_1_v2: 0x%x\n", powerManagement1v1, powerManagement1v2)
 }
 
-func (imu *imuIcm20789) ReadIMUData() ([]byte, error) {
-	return imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+func (imu *imuIcm20789) ReadIMUData() (types.IMUMems6DOFData, error) {
+	imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+	return types.IMUMems6DOFData{}, nil
 }
 
 func delay(ms int) {
