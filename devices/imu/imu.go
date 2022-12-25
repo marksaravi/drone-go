@@ -8,7 +8,6 @@ import (
 )
 
 type IMUMems6DOF interface {
-	Setup()
 	ReadIMUData() (types.IMUMems6DOFRawData, error)
 }
 
@@ -30,10 +29,6 @@ func NewIMU(dev IMUMems6DOF) *imuDevice {
 		},
 		compFilteCoefficient: 0.001,
 	}
-}
-
-func (imu *imuDevice) Setup() {
-	imu.dev.Setup()
 }
 
 func (imu *imuDevice) Read() (types.Rotations, bool) {

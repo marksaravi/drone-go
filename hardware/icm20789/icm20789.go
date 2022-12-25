@@ -11,6 +11,7 @@ import (
 
 const (
 	ACCEL_XOUT_H byte = 0x3B
+	ACCEL_CONFIG byte = 0x1C
 	GYRO_CONFIG  byte = 0x1B
 	WHO_AM_I     byte = 0x75
 	PWR_MGMT_1   byte = 0x6B
@@ -46,11 +47,19 @@ type imuICM20789 struct {
 }
 
 func NewICM20789(configs types.IMUConfigs) *imuICM20789 {
-	return &imuICM20789{
+	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.AccelerometerFullScale)
+	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.GyroscopeFullScale)
+	imu := imuICM20789{
 		spiConn:        hardware.NewSPIConnection(0, 0),
-		accelFullScale: accelerometerFullScale(configs.AccelerometerFullScale),
-		gyroFullScale:  gyroscopeFullScale(configs.GyroscopeFullScale),
+		accelFullScale: accelFullScale,
+		gyroFullScale:  gyroFullScale,
 	}
+	log.Println("SETUP ICM20789")
+	imu.setupPower()
+	imu.setupAccelerometer(accelFullScaleMask)
+	imu.setupGyroscope(gyroFullScaleMask)
+
+	return &imu
 }
 
 func (imu *imuICM20789) readRegister(address byte, size int) ([]byte, error) {
@@ -76,12 +85,6 @@ func (imu *imuICM20789) writeRegister(address byte, data ...byte) error {
 	return err
 }
 
-func (imu *imuICM20789) Setup() {
-	log.Println("SETUP IMU")
-	imu.setupPower()
-	imu.setupGyro()
-}
-
 func (imu *imuICM20789) setupPower() {
 	log.Println("SETUP IMU power")
 	imu.writeRegister(PWR_MGMT_1, 0x80) // soft reset
@@ -94,21 +97,13 @@ func (imu *imuICM20789) setupPower() {
 }
 
 func (imu *imuICM20789) ReadIMUData() (types.IMUMems6DOFRawData, error) {
-	data, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+	memsData, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
 		return types.IMUMems6DOFRawData{}, err
 	}
 	return types.IMUMems6DOFRawData{
-		Accelerometer: types.XYZ{
-			X: float64(towsComplementUint8ToInt16(data[0], data[1])),
-			Y: float64(towsComplementUint8ToInt16(data[2], data[3])),
-			Z: float64(towsComplementUint8ToInt16(data[4], data[5])),
-		},
-		Gyroscope: types.XYZDt{
-			DX: float64(towsComplementUint8ToInt16(data[6], data[7])),
-			DY: float64(towsComplementUint8ToInt16(data[8], data[9])),
-			DZ: float64(towsComplementUint8ToInt16(data[10], data[11])),
-		},
+		Accelerometer: imu.memsDataToAccelerometer(memsData[0:6]),
+		Gyroscope:     imu.memsDataToGyroscope(memsData[6:12]),
 	}, nil
 }
 
@@ -120,11 +115,11 @@ func (imu *imuICM20789) memsDataToAccelerometer(memsData []byte) types.XYZ {
 	}
 }
 
-func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.XYZ {
-	return types.XYZ{
-		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) * imu.gyroFullScale,
-		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) * imu.gyroFullScale,
-		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) * imu.gyroFullScale,
+func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.XYZDt {
+	return types.XYZDt{
+		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) * imu.gyroFullScale,
+		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) * imu.gyroFullScale,
+		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) * imu.gyroFullScale,
 	}
 }
 

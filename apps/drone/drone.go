@@ -10,7 +10,6 @@ import (
 )
 
 type InertialMeasurementUnit interface {
-	Setup()
 	Read() (types.Rotations, bool)
 }
 
@@ -33,7 +32,6 @@ func NewDrone(imu InertialMeasurementUnit) *drone {
 func (d *drone) Start(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("drone started")
 	defer log.Println("drone stopped")
-	d.imu.Setup()
 	d.controller(ctx, wg)
 }
 
