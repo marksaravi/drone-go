@@ -11,7 +11,7 @@ import (
 
 type InertialMeasurementUnit interface {
 	Setup()
-	Read() (types.Orientations, bool)
+	Read() (types.Rotations, bool)
 }
 
 type drone struct {
@@ -53,9 +53,9 @@ func (d *drone) controller(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
-func (d *drone) readRotations() (types.Orientations, bool) {
+func (d *drone) readRotations() (types.Rotations, bool) {
 	if time.Since(d.lastIMUReadingTime) < time.Second/time.Duration(d.imuSampleRate) {
-		return types.Orientations{}, false
+		return types.Rotations{}, false
 	}
 	d.lastIMUReadingTime = time.Now()
 	return d.imu.Read()

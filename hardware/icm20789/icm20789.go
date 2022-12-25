@@ -77,8 +77,26 @@ func (imu *imuIcm20789) setupPower() {
 }
 
 func (imu *imuIcm20789) ReadIMUData() (types.IMUMems6DOFRawData, error) {
-	imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
-	return types.IMUMems6DOFRawData{}, nil
+	data, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+	if err != nil {
+		return types.IMUMems6DOFRawData{}, err
+	}
+	return types.IMUMems6DOFRawData{
+		Accelerometer: types.XYZ{
+			X: float64(dataToFloat64(data[0], data[1])),
+			Y: float64(dataToFloat64(data[2], data[3])),
+			Z: float64(dataToFloat64(data[4], data[5])),
+		},
+		Gyroscope: types.XYZDt{
+			DX: float64(dataToFloat64(data[6], data[7])),
+			DY: float64(dataToFloat64(data[8], data[9])),
+			DZ: float64(dataToFloat64(data[10], data[11])),
+		},
+	}, nil
+}
+
+func dataToFloat64(h, l byte) uint16 {
+	return uint16(h)<<8 | uint16(l)
 }
 
 func delay(ms int) {
