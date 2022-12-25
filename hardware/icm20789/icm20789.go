@@ -45,12 +45,7 @@ type imuICM20789 struct {
 	gyroFullScale  float64
 }
 
-type ICM20789Configs struct {
-	AccelerometerFullScale string
-	GyroscopeFullScale     string
-}
-
-func NewICM20789(configs ICM20789Configs) *imuICM20789 {
+func NewICM20789(configs types.IMUConfigs) *imuICM20789 {
 	return &imuICM20789{
 		spiConn:        hardware.NewSPIConnection(0, 0),
 		accelFullScale: accelerometerFullScale(configs.AccelerometerFullScale),
