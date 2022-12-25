@@ -83,20 +83,24 @@ func (imu *imuIcm20789) ReadIMUData() (types.IMUMems6DOFRawData, error) {
 	}
 	return types.IMUMems6DOFRawData{
 		Accelerometer: types.XYZ{
-			X: float64(dataToFloat64(data[0], data[1])),
-			Y: float64(dataToFloat64(data[2], data[3])),
-			Z: float64(dataToFloat64(data[4], data[5])),
+			X: float64(towsComplementUint8ToInt16(data[0], data[1])),
+			Y: float64(towsComplementUint8ToInt16(data[2], data[3])),
+			Z: float64(towsComplementUint8ToInt16(data[4], data[5])),
 		},
 		Gyroscope: types.XYZDt{
-			DX: float64(dataToFloat64(data[6], data[7])),
-			DY: float64(dataToFloat64(data[8], data[9])),
-			DZ: float64(dataToFloat64(data[10], data[11])),
+			DX: float64(towsComplementUint8ToInt16(data[6], data[7])),
+			DY: float64(towsComplementUint8ToInt16(data[8], data[9])),
+			DZ: float64(towsComplementUint8ToInt16(data[10], data[11])),
 		},
 	}, nil
 }
 
-func dataToFloat64(h, l byte) uint16 {
-	return uint16(h)<<8 | uint16(l)
+// towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
+func towsComplementUint8ToInt16(h, l uint8) int16 {
+	var h16 uint16 = uint16(h)
+	var l16 uint16 = uint16(l)
+
+	return int16((h16 << 8) | l16)
 }
 
 func delay(ms int) {

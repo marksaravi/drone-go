@@ -1,6 +1,7 @@
 package imu
 
 import (
+	"log"
 	"math"
 
 	"github.com/marksaravi/drone-go/types"
@@ -27,6 +28,7 @@ func NewIMU(dev IMUMems6DOF) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
+		compFilteCoefficient: 0.001,
 	}
 }
 
@@ -39,6 +41,7 @@ func (imu *imuDevice) Read() (types.Rotations, bool) {
 	if err != nil {
 		return types.Rotations{}, false
 	}
+	log.Print(data)
 	return imu.calcRotations(data), true
 }
 
@@ -53,9 +56,10 @@ func (imu *imuDevice) calcRotations(memsData types.IMUMems6DOFRawData) types.Rot
 }
 
 func complimentaryFilter(gyroValue float64, accelerometerValue float64, complimentaryFilterCoefficient float64) float64 {
-	v1 := (1 - complimentaryFilterCoefficient) * gyroValue
-	v2 := complimentaryFilterCoefficient * accelerometerValue
-	return v1 + v2
+	// v1 := (1 - complimentaryFilterCoefficient) * gyroValue
+	// v2 := complimentaryFilterCoefficient * accelerometerValue
+	// return v1 + v2
+	return accelerometerValue
 }
 
 func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
@@ -69,9 +73,14 @@ func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
 }
 
 func calcGyroscopeRotations(dGyro types.XYZDt, prevRotations types.Rotations) types.Rotations {
+	// return types.Rotations{
+	// 	Roll:  math.Mod(prevRotations.Roll+dGyro.DX, 360),
+	// 	Pitch: math.Mod(prevRotations.Roll+dGyro.DY, 360),
+	// 	Yaw:   math.Mod(prevRotations.Roll+dGyro.DZ, 360),
+	// }
 	return types.Rotations{
-		Roll:  math.Mod(prevRotations.Roll+dGyro.DX, 360),
-		Pitch: math.Mod(prevRotations.Roll+dGyro.DY, 360),
-		Yaw:   math.Mod(prevRotations.Roll+dGyro.DZ, 360),
+		Roll:  0,
+		Pitch: 0,
+		Yaw:   0,
 	}
 }
