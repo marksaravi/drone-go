@@ -1,7 +1,6 @@
 package icm20789
 
 import (
-	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -54,7 +53,6 @@ func NewICM20789(configs types.IMUConfigs) *imuICM20789 {
 		accelFullScale: accelFullScale,
 		gyroFullScale:  gyroFullScale,
 	}
-	log.Println("SETUP ICM20789")
 	imu.setupPower()
 	imu.setupAccelerometer(accelFullScaleMask)
 	imu.setupGyroscope(gyroFullScaleMask)
@@ -86,14 +84,10 @@ func (imu *imuICM20789) writeRegister(address byte, data ...byte) error {
 }
 
 func (imu *imuICM20789) setupPower() {
-	log.Println("SETUP IMU power")
 	imu.writeRegister(PWR_MGMT_1, 0x80) // soft reset
 	delay(1)
-	powerManagement1v1, _ := imu.readByteFromRegister(PWR_MGMT_1)
 	imu.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(1)
-	powerManagement1v2, _ := imu.readByteFromRegister(PWR_MGMT_1)
-	log.Printf("PWR_MGMT_1_v1: 0x%x, PWR_MGMT_1_v2: 0x%x\n", powerManagement1v1, powerManagement1v2)
 }
 
 func (imu *imuICM20789) ReadIMUData() (types.IMUMems6DOFRawData, error) {

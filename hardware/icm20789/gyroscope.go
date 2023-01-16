@@ -1,16 +1,9 @@
 package icm20789
 
-import (
-	"log"
-)
-
 func (imu *imuICM20789) setupGyroscope(fullScaleMask byte) {
-	log.Println("SETUP IMU gyro")
 	gyrosetup1, _ := imu.readByteFromRegister(GYRO_CONFIG)
 	imu.writeRegister(GYRO_CONFIG, gyrosetup1|fullScaleMask)
 	delay(1)
-	gyrosetup2, _ := imu.readByteFromRegister(GYRO_CONFIG)
-	log.Printf("GYRO_SETUP1: 0x%x, GYRO_SETUP2: 0x%x\n", gyrosetup1, gyrosetup2)
 }
 
 func gyroscopeFullScale(fullScale string) (float64, byte) {
