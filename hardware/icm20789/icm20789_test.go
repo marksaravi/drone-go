@@ -23,7 +23,7 @@ func BenchmarkReadSpeed(b *testing.B) {
 	var data types.IMUMems6DOFRawData
 
 	for i := 0; i < b.N; i++ {
-		data, err = imu.ReadIMUData()
+		data, err = imu.Read()
 	}
 	gdata = data
 	gerr = err

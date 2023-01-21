@@ -8,7 +8,7 @@ import (
 )
 
 type IMUMems6DOF interface {
-	ReadIMUData() (types.IMUMems6DOFRawData, error)
+	Read() (types.IMUMems6DOFRawData, error)
 }
 
 type imuDevice struct {
@@ -31,8 +31,9 @@ func NewIMU(dev IMUMems6DOF) *imuDevice {
 	}
 }
 
+// Read returns Roll, Pitch and Yaw.
 func (imu *imuDevice) Read() (types.Rotations, bool) {
-	data, err := imu.dev.ReadIMUData()
+	data, err := imu.dev.Read()
 	if err != nil {
 		return types.Rotations{}, false
 	}

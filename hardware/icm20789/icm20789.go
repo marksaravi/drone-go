@@ -45,6 +45,17 @@ type imuICM20789 struct {
 	gyroFullScale  float64
 }
 
+func (imu *imuICM20789) Read() (types.IMUMems6DOFRawData, error) {
+	memsData, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+	if err != nil {
+		return types.IMUMems6DOFRawData{}, err
+	}
+	return types.IMUMems6DOFRawData{
+		Accelerometer: imu.memsDataToAccelerometer(memsData[0:6]),
+		Gyroscope:     imu.memsDataToGyroscope(memsData[6:12]),
+	}, nil
+}
+
 func NewICM20789(configs types.IMUConfigs) *imuICM20789 {
 	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.AccelerometerFullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.GyroscopeFullScale)
@@ -88,17 +99,6 @@ func (imu *imuICM20789) setupPower() {
 	delay(1)
 	imu.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(1)
-}
-
-func (imu *imuICM20789) ReadIMUData() (types.IMUMems6DOFRawData, error) {
-	memsData, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
-	if err != nil {
-		return types.IMUMems6DOFRawData{}, err
-	}
-	return types.IMUMems6DOFRawData{
-		Accelerometer: imu.memsDataToAccelerometer(memsData[0:6]),
-		Gyroscope:     imu.memsDataToGyroscope(memsData[6:12]),
-	}, nil
 }
 
 func (imu *imuICM20789) memsDataToAccelerometer(memsData []byte) types.XYZ {

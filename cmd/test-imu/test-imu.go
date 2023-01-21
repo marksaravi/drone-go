@@ -34,7 +34,7 @@ func main() {
 		default:
 			if time.Since(lastRead) > time.Second/2 {
 				lastRead = time.Now()
-				data, err := imu.ReadIMUData()
+				data, err := imu.Read()
 				if err == nil {
 					log.Println(data)
 				} else {
