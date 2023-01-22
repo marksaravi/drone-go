@@ -22,14 +22,18 @@ func main() {
 		cancel()
 	}(cancel)
 
-	configs := types.IMUConfigs{
+	icm20789Configs := icm20789.ICM20789Configs{
 		AccelerometerFullScale: "2g",
 		GyroscopeFullScale:     "250dps",
-		FilterCoefficient:      0.01,
 	}
-	dev := icm20789.NewICM20789(configs)
 
-	imu := imu.NewIMU(dev, configs)
+	imuConfigs := imu.IMUConfigs{
+		FilterCoefficient: 0.01,
+	}
+
+	dev := icm20789.NewICM20789(icm20789Configs)
+
+	imu := imu.NewIMU(dev, imuConfigs)
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 2)

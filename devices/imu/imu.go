@@ -13,6 +13,10 @@ type IMUMems6DOF interface {
 	Read() (types.IMUMems6DOFRawData, error)
 }
 
+type IMUConfigs struct {
+	FilterCoefficient float64
+}
+
 type imuDevice struct {
 	dev               IMUMems6DOF
 	rotations         types.Rotations
@@ -21,7 +25,7 @@ type imuDevice struct {
 	filterCoefficient float64
 }
 
-func NewIMU(dev IMUMems6DOF, configs types.IMUConfigs) *imuDevice {
+func NewIMU(dev IMUMems6DOF, configs IMUConfigs) *imuDevice {
 	return &imuDevice{
 		dev: dev,
 		rotations: types.Rotations{

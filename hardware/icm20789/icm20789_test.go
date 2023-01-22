@@ -14,7 +14,7 @@ var gdata types.IMUMems6DOFRawData
 func BenchmarkReadSpeed(b *testing.B) {
 	hardware.HostInitialize()
 
-	imu := icm20789.NewICM20789(types.IMUConfigs{
+	imu := icm20789.NewICM20789(icm20789.ICM20789Configs{
 		AccelerometerFullScale: "2g",
 		GyroscopeFullScale:     "250dps",
 	})

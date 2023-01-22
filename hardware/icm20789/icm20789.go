@@ -38,6 +38,11 @@ const (
 	RAW_DATA_SIZE int = 14
 )
 
+type ICM20789Configs struct {
+	AccelerometerFullScale string
+	GyroscopeFullScale     string
+}
+
 type imuICM20789 struct {
 	spiConn spi.Conn
 
@@ -45,7 +50,7 @@ type imuICM20789 struct {
 	gyroFullScale  float64
 }
 
-func NewICM20789(configs types.IMUConfigs) *imuICM20789 {
+func NewICM20789(configs ICM20789Configs) *imuICM20789 {
 	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.AccelerometerFullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.GyroscopeFullScale)
 	imu := imuICM20789{
