@@ -21,7 +21,7 @@ func main() {
 
 	utils.WaitToAbortByESC(cancel)
 	var imuMems imu.IMUMems6DOF = icm20789.NewICM20789(icm20789.ICM20789Configs{})
-	var imuDevice dronepackage.InertialMeasurementUnit = imu.NewIMU(imuMems, imu.IMUConfigs{})
+	var imuDevice dronepackage.InertialMeasurementUnit = imu.NewIMU(imuMems)
 	drone := dronepackage.NewDrone(
 		imuDevice,
 	)

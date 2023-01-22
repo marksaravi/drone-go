@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/types"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const MIN_TIME_BETWEEN_READS = time.Millisecond * 50
@@ -13,12 +14,13 @@ type IMUMems6DOF interface {
 	Read() (types.IMUMems6DOFRawData, error)
 }
 
-type IMUConfigs struct {
+type Configs struct {
 	DataPerSecond     int     `yaml:"data_per_second"`
 	FilterCoefficient float64 `yaml:"filter_coefficient"`
 }
 
 type imuDevice struct {
+	configs           Configs
 	dev               IMUMems6DOF
 	rotations         types.Rotations
 	lastReadTime      time.Time
@@ -26,9 +28,11 @@ type imuDevice struct {
 	filterCoefficient float64
 }
 
-func NewIMU(dev IMUMems6DOF, configs IMUConfigs) *imuDevice {
+func NewIMU(dev IMUMems6DOF) *imuDevice {
+	configs := readConfigs()
 	return &imuDevice{
-		dev: dev,
+		configs: configs,
+		dev:     dev,
 		rotations: types.Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -36,6 +40,14 @@ func NewIMU(dev IMUMems6DOF, configs IMUConfigs) *imuDevice {
 		},
 		filterCoefficient: configs.FilterCoefficient,
 	}
+}
+
+func readConfigs() Configs {
+	var configs struct {
+		Imu Configs `yaml:"imu"`
+	}
+	utils.ReadConfigs(&configs)
+	return configs.Imu
 }
 
 // Read returns Roll, Pitch and Yaw.

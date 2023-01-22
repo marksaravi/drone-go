@@ -27,13 +27,9 @@ func main() {
 		GyroscopeFullScale:     "250dps",
 	}
 
-	imuConfigs := imu.IMUConfigs{
-		FilterCoefficient: 0.01,
-	}
-
 	dev := icm20789.NewICM20789(icm20789Configs)
 
-	imu := imu.NewIMU(dev, imuConfigs)
+	imu := imu.NewIMU(dev)
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 2)

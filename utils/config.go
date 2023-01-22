@@ -7,12 +7,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ReadConfigs() any {
+func ReadConfigs(configs any) any {
 	content, err := os.ReadFile("./config-2.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
-	var configs any
-	yaml.Unmarshal([]byte(content), &configs)
+	err = yaml.Unmarshal([]byte(content), configs)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return configs
 }
