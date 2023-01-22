@@ -20,7 +20,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	utils.WaitToAbortByESC(cancel)
-	var mems imu.IMUMems6DOF = icm20789.NewICM20789()
+	var mems imu.IMUMems6DOF = icm20789.NewICM20789(icm20789.ReadConfigs())
 	imudev := imu.NewIMU(mems)
 	drone := dronepackage.NewDrone(
 		imudev,

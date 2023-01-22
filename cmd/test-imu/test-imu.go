@@ -21,7 +21,7 @@ func main() {
 		cancel()
 	}(cancel)
 
-	mems := icm20789.NewICM20789()
+	mems := icm20789.NewICM20789(icm20789.ReadConfigs())
 
 	imudev := imu.NewIMU(mems)
 
