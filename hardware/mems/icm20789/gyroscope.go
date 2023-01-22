@@ -1,8 +1,8 @@
 package icm20789
 
-func (imu *imuICM20789) setupGyroscope(fullScaleMask byte) {
-	gyrosetup1, _ := imu.readByteFromRegister(GYRO_CONFIG)
-	imu.writeRegister(GYRO_CONFIG, gyrosetup1|fullScaleMask)
+func (m *memsIcm20789) setupGyroscope(fullScaleMask byte) {
+	gyrosetup1, _ := m.readByteFromRegister(GYRO_CONFIG)
+	m.writeRegister(GYRO_CONFIG, gyrosetup1|fullScaleMask)
 	delay(1)
 }
 

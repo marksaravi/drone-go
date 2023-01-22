@@ -8,8 +8,7 @@ import (
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/icm20789"
-	"github.com/marksaravi/drone-go/types"
+	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
 )
 
 func main() {
@@ -22,18 +21,13 @@ func main() {
 		cancel()
 	}(cancel)
 
-	configs := types.IMUConfigs{
-		AccelerometerFullScale: "2g",
-		GyroscopeFullScale:     "250dps",
-		FilterCoefficient:      0.01,
-	}
-	dev := icm20789.NewICM20789(configs)
+	mems := icm20789.NewICM20789(icm20789.ReadConfigs())
 
-	imu := imu.NewIMU(dev, configs)
+	imudev := imu.NewIMU(mems, imu.ReadConfigs())
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 2)
-	var rotations types.Rotations
+	var rotations imu.Rotations
 	for {
 		select {
 		case <-ctx.Done():
@@ -43,7 +37,7 @@ func main() {
 		default:
 			if time.Since(lastRead) >= time.Millisecond {
 				lastRead = time.Now()
-				rotations, _ = imu.Read()
+				rotations, _ = imudev.Read()
 			}
 		}
 
