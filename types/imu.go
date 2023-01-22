@@ -1,11 +1,12 @@
 package types
 
-// Raw x, y, z data
+// x, y, z data
 type XYZ struct {
 	X, Y, Z float64
 }
 
-type XYZDt struct {
+// dx/dt, dy/dt, dz/dt
+type DXYZ struct {
 	DX, DY, DZ float64
 }
 
@@ -17,5 +18,5 @@ type Rotations struct {
 // Inertial Measurment Unit Data (6 Degree of Freedom, Micro-electromechanical Systems)
 type IMUMems6DOFRawData struct {
 	Accelerometer XYZ
-	Gyroscope     XYZDt
+	Gyroscope     DXYZ
 }

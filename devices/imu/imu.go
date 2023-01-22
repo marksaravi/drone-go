@@ -1,7 +1,6 @@
 package imu
 
 import (
-	"log"
 	"math"
 	"time"
 
@@ -36,29 +35,29 @@ func NewIMU(dev IMUMems6DOF, configs types.IMUConfigs) *imuDevice {
 
 // Read returns Roll, Pitch and Yaw.
 func (imu *imuDevice) Read() (types.Rotations, error) {
+	imu.currReadTime = time.Now()
 	data, err := imu.dev.Read()
 	if err != nil {
 		return types.Rotations{}, err
 	}
-	log.Print(data)
-	return imu.calcRotations(data), nil
+	imu.calcRotations(data)
+	imu.lastReadTime = imu.currReadTime
+	return imu.rotations, nil
 }
 
-func (imu *imuDevice) calcRotations(memsData types.IMUMems6DOFRawData) types.Rotations {
+func (imu *imuDevice) calcRotations(memsData types.IMUMems6DOFRawData) {
 	acc := calcaAcelerometerRotations(memsData.Accelerometer)
-	gyro := calcGyroscopeRotations(memsData.Gyroscope, imu.rotations)
-	return types.Rotations{
+	dt := imu.currReadTime.Sub(imu.lastReadTime)
+	gyro := calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations)
+	imu.rotations = types.Rotations{
 		Roll:  complimentaryFilter(gyro.Roll, acc.Roll, imu.filterCoefficient),
 		Pitch: complimentaryFilter(gyro.Pitch, acc.Pitch, imu.filterCoefficient),
 		Yaw:   gyro.Yaw,
 	}
 }
 
-func complimentaryFilter(gyroValue float64, accelerometerValue float64, complimentaryFilterCoefficient float64) float64 {
-	// v1 := (1 - complimentaryFilterCoefficient) * gyroValue
-	// v2 := complimentaryFilterCoefficient * accelerometerValue
-	// return v1 + v2
-	return accelerometerValue
+func complimentaryFilter(gyro float64, accelerometer float64, complimentaryFilterCoefficient float64) float64 {
+	return (1-complimentaryFilterCoefficient)*gyro + complimentaryFilterCoefficient*accelerometer
 }
 
 func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
@@ -71,15 +70,16 @@ func calcaAcelerometerRotations(data types.XYZ) types.Rotations {
 	}
 }
 
-func calcGyroscopeRotations(dGyro types.XYZDt, prevRotations types.Rotations) types.Rotations {
-	// return types.Rotations{
-	// 	Roll:  math.Mod(prevRotations.Roll+dGyro.DX, 360),
-	// 	Pitch: math.Mod(prevRotations.Roll+dGyro.DY, 360),
-	// 	Yaw:   math.Mod(prevRotations.Roll+dGyro.DZ, 360),
-	// }
+func calcGyroscopeRotations(gyroData types.DXYZ, dt time.Duration, prevRotations types.Rotations) types.Rotations {
+	if dt > MIN_TIME_BETWEEN_READS {
+		return prevRotations
+	}
+	roll := prevRotations.Roll + gyroData.DX*float64(dt.Seconds())
+	pitch := prevRotations.Pitch + gyroData.DX*float64(dt.Seconds())
+	yaw := prevRotations.Yaw + gyroData.DX*float64(dt.Seconds())
 	return types.Rotations{
-		Roll:  0,
-		Pitch: 0,
-		Yaw:   0,
+		Roll:  math.Mod(roll, 360),
+		Pitch: math.Mod(pitch, 360),
+		Yaw:   math.Mod(yaw, 360),
 	}
 }

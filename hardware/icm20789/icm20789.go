@@ -109,8 +109,8 @@ func (imu *imuICM20789) memsDataToAccelerometer(memsData []byte) types.XYZ {
 	}
 }
 
-func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.XYZDt {
-	return types.XYZDt{
+func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.DXYZ {
+	return types.DXYZ{
 		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) * imu.gyroFullScale,
 		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) * imu.gyroFullScale,
 		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) * imu.gyroFullScale,
