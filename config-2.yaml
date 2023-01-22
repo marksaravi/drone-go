@@ -1,0 +1,15 @@
+#inertial motion unit
+imu:
+  data_per_second: 500
+icm20789:
+  #gyroscope values: [250dps, 500dps, 1000dps, 2000dps] (dps=degree per second)
+  gyroscope_full_scale: "250dps"
+  gyroscope_x_offset: 0
+  gyroscope_y_offset: 0
+  gyroscope_z_offset: 0
+
+  #accelerometer values: [2g, 4g, 8g, 16g]
+  accelerometer_full_scale: "2g"
+  accelerometer_x_offset: 0
+  accelerometer_y_offset: 0
+  accelerometer_z_offset: 0 #accelerometer is not used for yaw calculation, this value will not have effect
