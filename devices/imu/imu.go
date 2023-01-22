@@ -74,9 +74,9 @@ func calcGyroscopeRotations(gyroData types.DXYZ, dt time.Duration, prevRotations
 	if dt > MIN_TIME_BETWEEN_READS {
 		return prevRotations
 	}
-	roll := prevRotations.Roll + gyroData.DX*float64(dt.Seconds())
-	pitch := prevRotations.Pitch + gyroData.DX*float64(dt.Seconds())
-	yaw := prevRotations.Yaw + gyroData.DX*float64(dt.Seconds())
+	roll := prevRotations.Roll + gyroData.DX*dt.Seconds()
+	pitch := prevRotations.Pitch + gyroData.DY*dt.Seconds()
+	yaw := prevRotations.Yaw + gyroData.DY*dt.Seconds()
 	return types.Rotations{
 		Roll:  math.Mod(roll, 360),
 		Pitch: math.Mod(pitch, 360),

@@ -35,7 +35,7 @@ const (
 )
 
 const (
-	RAW_DATA_SIZE int = 12
+	RAW_DATA_SIZE int = 14
 )
 
 type imuICM20789 struct {
@@ -66,8 +66,8 @@ func (imu *imuICM20789) Read() (types.IMUMems6DOFRawData, error) {
 		return types.IMUMems6DOFRawData{}, err
 	}
 	return types.IMUMems6DOFRawData{
-		Accelerometer: imu.memsDataToAccelerometer(memsData[0:6]),
-		Gyroscope:     imu.memsDataToGyroscope(memsData[6:12]),
+		Accelerometer: imu.memsDataToAccelerometer(memsData),
+		Gyroscope:     imu.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
 }
 
@@ -118,11 +118,11 @@ func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.DXYZ {
 }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
-func towsComplementUint8ToInt16(h, l uint8) int16 {
-	var h16 uint16 = uint16(h)
-	var l16 uint16 = uint16(l)
+func towsComplementUint8ToInt16(h, l byte) int16 {
+	h16 := uint16(h)
+	l16 := uint16(l)
 
-	return int16((h16 << 8) | l16)
+	return int16(h16<<8 | l16)
 }
 
 func delay(ms int) {
