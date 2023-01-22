@@ -10,11 +10,6 @@ type DXYZ struct {
 	DX, DY, DZ float64
 }
 
-// Orientations (Roll, Pitch, Yaw)
-type Rotations struct {
-	Roll, Pitch, Yaw float64
-}
-
 // Inertial Measurment Unit Data (6 Degree of Freedom, Micro-electromechanical Systems)
 type IMUMems6DOFRawData struct {
 	Accelerometer XYZ

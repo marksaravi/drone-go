@@ -20,10 +20,10 @@ func main() {
 	var wg sync.WaitGroup
 
 	utils.WaitToAbortByESC(cancel)
-	var imuMems imu.IMUMems6DOF = icm20789.NewICM20789()
-	var imuDevice dronepackage.InertialMeasurementUnit = imu.NewIMU(imuMems)
+	var mems imu.IMUMems6DOF = icm20789.NewICM20789()
+	imudev := imu.NewIMU(mems)
 	drone := dronepackage.NewDrone(
-		imuDevice,
+		imudev,
 	)
 	drone.Fly(ctx, &wg)
 }
