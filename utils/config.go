@@ -8,7 +8,7 @@ import (
 )
 
 func ReadConfigs(configs any) any {
-	content, err := os.ReadFile("./config-2.yaml")
+	content, err := os.ReadFile("./configs.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
