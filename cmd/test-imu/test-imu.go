@@ -23,7 +23,7 @@ func main() {
 
 	mems := icm20789.NewICM20789(icm20789.ReadConfigs())
 
-	imudev := imu.NewIMU(mems)
+	imudev := imu.NewIMU(mems, imu.ReadConfigs())
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 2)

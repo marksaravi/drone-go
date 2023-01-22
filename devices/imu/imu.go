@@ -32,8 +32,7 @@ type imuDevice struct {
 	filterCoefficient float64
 }
 
-func NewIMU(dev IMUMems6DOF) *imuDevice {
-	configs := readConfigs()
+func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	return &imuDevice{
 		configs: configs,
 		dev:     dev,
@@ -46,7 +45,7 @@ func NewIMU(dev IMUMems6DOF) *imuDevice {
 	}
 }
 
-func readConfigs() Configs {
+func ReadConfigs() Configs {
 	var configs struct {
 		Imu Configs `yaml:"imu"`
 	}
