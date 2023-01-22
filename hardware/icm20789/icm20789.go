@@ -39,7 +39,7 @@ const (
 	RAW_DATA_SIZE int = 14
 )
 
-type memsConfigs struct {
+type inertialDeviceConfigs struct {
 	FullScale string `yaml:"full_scale"`
 	Offsets   struct {
 		X uint16 `yaml:"x"`
@@ -49,31 +49,30 @@ type memsConfigs struct {
 }
 
 type Configs struct {
-	Accelerometer memsConfigs `yaml:"accelerometer"`
-	Gyroscope     memsConfigs `yaml:"gyroscope"`
+	Accelerometer inertialDeviceConfigs `yaml:"accelerometer"`
+	Gyroscope     inertialDeviceConfigs `yaml:"gyroscope"`
 }
 
-type imuICM20789 struct {
+type mems struct {
 	spiConn spi.Conn
 
 	accelFullScale float64
 	gyroFullScale  float64
 }
 
-func NewICM20789() *imuICM20789 {
+func NewICM20789() *mems {
 	configs := readConfigs()
 	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.Accelerometer.FullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
-	imu := imuICM20789{
+	m := mems{
 		spiConn:        hardware.NewSPIConnection(0, 0),
 		accelFullScale: accelFullScale,
 		gyroFullScale:  gyroFullScale,
 	}
-	imu.setupPower()
-	imu.setupAccelerometer(accelFullScaleMask)
-	imu.setupGyroscope(gyroFullScaleMask)
-
-	return &imu
+	m.setupPower()
+	m.setupAccelerometer(accelFullScaleMask)
+	m.setupGyroscope(gyroFullScaleMask)
+	return &m
 }
 
 func readConfigs() Configs {
@@ -83,60 +82,60 @@ func readConfigs() Configs {
 	utils.ReadConfigs(&configs)
 	return configs.Imu
 }
-func (imu *imuICM20789) Read() (types.IMUMems6DOFRawData, error) {
-	memsData, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+func (m *mems) Read() (types.IMUMems6DOFRawData, error) {
+	memsData, err := m.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
 		return types.IMUMems6DOFRawData{}, err
 	}
 	return types.IMUMems6DOFRawData{
-		Accelerometer: imu.memsDataToAccelerometer(memsData),
-		Gyroscope:     imu.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
+		Accelerometer: m.memsDataToAccelerometer(memsData),
+		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
 }
 
-func (imu *imuICM20789) readRegister(address byte, size int) ([]byte, error) {
+func (m *mems) readRegister(address byte, size int) ([]byte, error) {
 	w := make([]byte, size+1)
 	r := make([]byte, size+1)
 	w[0] = address | byte(0x80)
 
-	err := imu.spiConn.Tx(w, r)
+	err := m.spiConn.Tx(w, r)
 	return r[1:], err
 }
 
-func (imu *imuICM20789) readByteFromRegister(address byte) (byte, error) {
-	res, err := imu.readRegister(address, 1)
+func (m *mems) readByteFromRegister(address byte) (byte, error) {
+	res, err := m.readRegister(address, 1)
 	return res[0], err
 }
 
-func (imu *imuICM20789) writeRegister(address byte, data ...byte) error {
+func (m *mems) writeRegister(address byte, data ...byte) error {
 	w := make([]byte, 1, len(data)+1)
 	r := make([]byte, cap(w))
 	w[0] = address
 	w = append(w, data...)
-	err := imu.spiConn.Tx(w, r)
+	err := m.spiConn.Tx(w, r)
 	return err
 }
 
-func (imu *imuICM20789) setupPower() {
-	imu.writeRegister(PWR_MGMT_1, 0x80) // soft reset
+func (m *mems) setupPower() {
+	m.writeRegister(PWR_MGMT_1, 0x80) // soft reset
 	delay(1)
-	imu.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
+	m.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(1)
 }
 
-func (imu *imuICM20789) memsDataToAccelerometer(memsData []byte) types.XYZ {
+func (m *mems) memsDataToAccelerometer(memsData []byte) types.XYZ {
 	return types.XYZ{
-		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / imu.accelFullScale,
-		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / imu.accelFullScale,
-		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / imu.accelFullScale,
+		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.accelFullScale,
+		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.accelFullScale,
+		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.accelFullScale,
 	}
 }
 
-func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.DXYZ {
+func (m *mems) memsDataToGyroscope(memsData []byte) types.DXYZ {
 	return types.DXYZ{
-		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / imu.gyroFullScale,
-		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / imu.gyroFullScale,
-		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / imu.gyroFullScale,
+		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
+		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
+		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
 	}
 }
 

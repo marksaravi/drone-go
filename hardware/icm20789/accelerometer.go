@@ -1,8 +1,8 @@
 package icm20789
 
-func (imu *imuICM20789) setupAccelerometer(fullScaleMask byte) {
-	accelsetup1, _ := imu.readByteFromRegister(ACCEL_CONFIG)
-	imu.writeRegister(ACCEL_CONFIG, accelsetup1|fullScaleMask)
+func (m *mems) setupAccelerometer(fullScaleMask byte) {
+	accelsetup1, _ := m.readByteFromRegister(ACCEL_CONFIG)
+	m.writeRegister(ACCEL_CONFIG, accelsetup1|fullScaleMask)
 	delay(1)
 }
 
