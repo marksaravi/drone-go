@@ -5,11 +5,10 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20789"
-	"github.com/marksaravi/drone-go/types"
 )
 
 var gerr error
-var gdata types.IMUMems6DOFRawData
+var gdata icm20789.Mems6DOFData
 
 func BenchmarkReadSpeed(b *testing.B) {
 	hardware.HostInitialize()
@@ -17,7 +16,7 @@ func BenchmarkReadSpeed(b *testing.B) {
 	imu := icm20789.NewICM20789()
 
 	var err error
-	var data types.IMUMems6DOFRawData
+	var data icm20789.Mems6DOFData
 
 	for i := 0; i < b.N; i++ {
 		data, err = imu.Read()

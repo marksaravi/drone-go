@@ -4,14 +4,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/marksaravi/drone-go/types"
+	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/utils"
 )
 
 const MIN_TIME_BETWEEN_READS = time.Millisecond * 50
 
 type IMUMems6DOF interface {
-	Read() (types.IMUMems6DOFRawData, error)
+	Read() (icm20789.Mems6DOFData, error)
 }
 
 type Configs struct {
@@ -66,7 +66,7 @@ func (imu *imuDevice) Read() (Rotations, error) {
 	return imu.rotations, nil
 }
 
-func (imu *imuDevice) calcRotations(memsData types.IMUMems6DOFRawData) {
+func (imu *imuDevice) calcRotations(memsData icm20789.Mems6DOFData) {
 	acc := calcaAcelerometerRotations(memsData.Accelerometer)
 	dt := imu.currReadTime.Sub(imu.lastReadTime)
 	gyro := calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations)
@@ -81,7 +81,7 @@ func complimentaryFilter(gyro float64, accelerometer float64, complimentaryFilte
 	return (1-complimentaryFilterCoefficient)*gyro + complimentaryFilterCoefficient*accelerometer
 }
 
-func calcaAcelerometerRotations(data types.XYZ) Rotations {
+func calcaAcelerometerRotations(data icm20789.XYZ) Rotations {
 	yrot := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
 	xrot := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
 	return Rotations{
@@ -91,7 +91,7 @@ func calcaAcelerometerRotations(data types.XYZ) Rotations {
 	}
 }
 
-func calcGyroscopeRotations(gyroData types.DXYZ, dt time.Duration, prevRotations Rotations) Rotations {
+func calcGyroscopeRotations(gyroData icm20789.DXYZ, dt time.Duration, prevRotations Rotations) Rotations {
 	if dt > MIN_TIME_BETWEEN_READS {
 		return prevRotations
 	}

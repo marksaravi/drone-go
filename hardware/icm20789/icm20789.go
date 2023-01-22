@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/types"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/conn/v3/spi"
 )
@@ -53,6 +52,22 @@ type Configs struct {
 	Gyroscope     inertialDeviceConfigs `yaml:"gyroscope"`
 }
 
+// XYZ: x, y, z data
+type XYZ struct {
+	X, Y, Z float64
+}
+
+// DXYZ: dx/dt, dy/dt, dz/dt
+type DXYZ struct {
+	DX, DY, DZ float64
+}
+
+// Inertial Measurment Unit Data (6 Degree of Freedom, Micro-electromechanical Systems)
+type Mems6DOFData struct {
+	Accelerometer XYZ
+	Gyroscope     DXYZ
+}
+
 type mems struct {
 	spiConn spi.Conn
 
@@ -82,12 +97,12 @@ func readConfigs() Configs {
 	utils.ReadConfigs(&configs)
 	return configs.Imu
 }
-func (m *mems) Read() (types.IMUMems6DOFRawData, error) {
+func (m *mems) Read() (Mems6DOFData, error) {
 	memsData, err := m.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
-		return types.IMUMems6DOFRawData{}, err
+		return Mems6DOFData{}, err
 	}
-	return types.IMUMems6DOFRawData{
+	return Mems6DOFData{
 		Accelerometer: m.memsDataToAccelerometer(memsData),
 		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
@@ -123,16 +138,16 @@ func (m *mems) setupPower() {
 	delay(1)
 }
 
-func (m *mems) memsDataToAccelerometer(memsData []byte) types.XYZ {
-	return types.XYZ{
+func (m *mems) memsDataToAccelerometer(memsData []byte) XYZ {
+	return XYZ{
 		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.accelFullScale,
 		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.accelFullScale,
 		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.accelFullScale,
 	}
 }
 
-func (m *mems) memsDataToGyroscope(memsData []byte) types.DXYZ {
-	return types.DXYZ{
+func (m *mems) memsDataToGyroscope(memsData []byte) DXYZ {
+	return DXYZ{
 		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
 		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
 		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
