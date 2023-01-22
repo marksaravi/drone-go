@@ -3,23 +3,26 @@ package imu
 import (
 	"log"
 	"math"
+	"time"
 
 	"github.com/marksaravi/drone-go/types"
 )
+
+const MIN_TIME_BETWEEN_READS = time.Millisecond * 50
 
 type IMUMems6DOF interface {
 	Read() (types.IMUMems6DOFRawData, error)
 }
 
 type imuDevice struct {
-	dev IMUMems6DOF
-
-	rotations types.Rotations
-
-	compFilteCoefficient float64
+	dev               IMUMems6DOF
+	rotations         types.Rotations
+	lastReadTime      time.Time
+	currReadTime      time.Time
+	filterCoefficient float64
 }
 
-func NewIMU(dev IMUMems6DOF) *imuDevice {
+func NewIMU(dev IMUMems6DOF, configs types.IMUConfigs) *imuDevice {
 	return &imuDevice{
 		dev: dev,
 		rotations: types.Rotations{
@@ -27,26 +30,26 @@ func NewIMU(dev IMUMems6DOF) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
-		compFilteCoefficient: 0.001,
+		filterCoefficient: configs.FilterCoefficient,
 	}
 }
 
 // Read returns Roll, Pitch and Yaw.
-func (imu *imuDevice) Read() (types.Rotations, bool) {
+func (imu *imuDevice) Read() (types.Rotations, error) {
 	data, err := imu.dev.Read()
 	if err != nil {
-		return types.Rotations{}, false
+		return types.Rotations{}, err
 	}
 	log.Print(data)
-	return imu.calcRotations(data), true
+	return imu.calcRotations(data), nil
 }
 
 func (imu *imuDevice) calcRotations(memsData types.IMUMems6DOFRawData) types.Rotations {
 	acc := calcaAcelerometerRotations(memsData.Accelerometer)
 	gyro := calcGyroscopeRotations(memsData.Gyroscope, imu.rotations)
 	return types.Rotations{
-		Roll:  complimentaryFilter(gyro.Roll, acc.Roll, imu.compFilteCoefficient),
-		Pitch: complimentaryFilter(gyro.Pitch, acc.Pitch, imu.compFilteCoefficient),
+		Roll:  complimentaryFilter(gyro.Roll, acc.Roll, imu.filterCoefficient),
+		Pitch: complimentaryFilter(gyro.Pitch, acc.Pitch, imu.filterCoefficient),
 		Yaw:   gyro.Yaw,
 	}
 }

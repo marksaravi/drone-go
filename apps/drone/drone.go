@@ -10,7 +10,7 @@ import (
 )
 
 type InertialMeasurementUnit interface {
-	Read() (types.Rotations, bool)
+	Read() (types.Rotations, error)
 }
 
 type drone struct {
@@ -56,5 +56,9 @@ func (d *drone) readRotations() (types.Rotations, bool) {
 		return types.Rotations{}, false
 	}
 	d.lastIMUReadingTime = time.Now()
-	return d.imu.Read()
+	rotations, err := d.imu.Read()
+	if err != nil {
+		return rotations, false
+	}
+	return rotations, true
 }

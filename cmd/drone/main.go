@@ -23,7 +23,7 @@ func main() {
 
 	utils.WaitToAbortByESC(cancel)
 	var imuMems imu.IMUMems6DOF = icm20789.NewICM20789(configs.IMU)
-	var imuDevice dronepackage.InertialMeasurementUnit = imu.NewIMU(imuMems)
+	var imuDevice dronepackage.InertialMeasurementUnit = imu.NewIMU(imuMems, configs.IMU)
 	drone := dronepackage.NewDrone(
 		imuDevice,
 	)
@@ -35,6 +35,7 @@ func setConfigs() types.Configs {
 		IMU: types.IMUConfigs{
 			AccelerometerFullScale: "2g",
 			GyroscopeFullScale:     "250dps",
+			FilterCoefficient:      0.01,
 		},
 	}
 }
