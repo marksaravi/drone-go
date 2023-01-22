@@ -22,12 +22,7 @@ func main() {
 		cancel()
 	}(cancel)
 
-	icm20789Configs := icm20789.ICM20789Configs{
-		AccelerometerFullScale: "2g",
-		GyroscopeFullScale:     "250dps",
-	}
-
-	dev := icm20789.NewICM20789(icm20789Configs)
+	dev := icm20789.NewICM20789()
 
 	imu := imu.NewIMU(dev)
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/types"
+	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/conn/v3/spi"
 )
 
@@ -38,16 +39,18 @@ const (
 	RAW_DATA_SIZE int = 14
 )
 
-type ICM20789Configs struct {
-	AccelerometerFullScale string `yaml:"accelerometer_full_scale"`
-	AccelerometerXOffset   uint16 `yaml:"accelerometer_x_offset"`
-	AccelerometerYOffset   uint16 `yaml:"accelerometer_y_offset"`
-	AccelerometerZOffset   uint16 `yaml:"accelerometer_z_offset"`
+type memsConfigs struct {
+	FullScale string `yaml:"full_scale"`
+	Offsets   struct {
+		X uint16 `yaml:"x"`
+		Y uint16 `yaml:"y"`
+		Z uint16 `yaml:"z"`
+	} `yaml:"offsets"`
+}
 
-	GyroscopeFullScale string `yaml:"gyroscope_full_scale"`
-	GyroscopeXOffset   uint16 `yaml:"gyroscope_x_offset"`
-	GyroscopeYOffset   uint16 `yaml:"gyroscope_y_offset"`
-	GyroscopeZOffset   uint16 `yaml:"gyroscope_z_offset"`
+type Configs struct {
+	Accelerometer memsConfigs `yaml:"accelerometer"`
+	Gyroscope     memsConfigs `yaml:"gyroscope"`
 }
 
 type imuICM20789 struct {
@@ -57,9 +60,10 @@ type imuICM20789 struct {
 	gyroFullScale  float64
 }
 
-func NewICM20789(configs ICM20789Configs) *imuICM20789 {
-	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.AccelerometerFullScale)
-	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.GyroscopeFullScale)
+func NewICM20789() *imuICM20789 {
+	configs := readConfigs()
+	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.Accelerometer.FullScale)
+	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
 	imu := imuICM20789{
 		spiConn:        hardware.NewSPIConnection(0, 0),
 		accelFullScale: accelFullScale,
@@ -72,6 +76,13 @@ func NewICM20789(configs ICM20789Configs) *imuICM20789 {
 	return &imu
 }
 
+func readConfigs() Configs {
+	var configs struct {
+		Imu Configs `yaml:"icm20789"`
+	}
+	utils.ReadConfigs(&configs)
+	return configs.Imu
+}
 func (imu *imuICM20789) Read() (types.IMUMems6DOFRawData, error) {
 	memsData, err := imu.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
