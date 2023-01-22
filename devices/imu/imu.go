@@ -76,7 +76,7 @@ func calcGyroscopeRotations(gyroData types.DXYZ, dt time.Duration, prevRotations
 	}
 	roll := prevRotations.Roll + gyroData.DX*dt.Seconds()
 	pitch := prevRotations.Pitch + gyroData.DY*dt.Seconds()
-	yaw := prevRotations.Yaw + gyroData.DY*dt.Seconds()
+	yaw := prevRotations.Yaw + gyroData.DZ*dt.Seconds()
 	return types.Rotations{
 		Roll:  math.Mod(roll, 360),
 		Pitch: math.Mod(pitch, 360),

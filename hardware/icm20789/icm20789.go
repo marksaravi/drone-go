@@ -103,17 +103,17 @@ func (imu *imuICM20789) setupPower() {
 
 func (imu *imuICM20789) memsDataToAccelerometer(memsData []byte) types.XYZ {
 	return types.XYZ{
-		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) * imu.accelFullScale,
-		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) * imu.accelFullScale,
-		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) * imu.accelFullScale,
+		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / imu.accelFullScale,
+		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / imu.accelFullScale,
+		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / imu.accelFullScale,
 	}
 }
 
 func (imu *imuICM20789) memsDataToGyroscope(memsData []byte) types.DXYZ {
 	return types.DXYZ{
-		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) * imu.gyroFullScale,
-		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) * imu.gyroFullScale,
-		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) * imu.gyroFullScale,
+		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / imu.gyroFullScale,
+		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / imu.gyroFullScale,
+		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / imu.gyroFullScale,
 	}
 }
 

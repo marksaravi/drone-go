@@ -25,7 +25,7 @@ func main() {
 	configs := types.IMUConfigs{
 		AccelerometerFullScale: "2g",
 		GyroscopeFullScale:     "250dps",
-		FilterCoefficient:      0,
+		FilterCoefficient:      0.01,
 	}
 	dev := icm20789.NewICM20789(configs)
 
