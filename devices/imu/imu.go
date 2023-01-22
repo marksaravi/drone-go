@@ -14,7 +14,8 @@ type IMUMems6DOF interface {
 }
 
 type IMUConfigs struct {
-	FilterCoefficient float64
+	DataPerSecond     int     `yaml:"data_per_second"`
+	FilterCoefficient float64 `yaml:"filter_coefficient"`
 }
 
 type imuDevice struct {

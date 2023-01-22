@@ -39,8 +39,15 @@ const (
 )
 
 type ICM20789Configs struct {
-	AccelerometerFullScale string
-	GyroscopeFullScale     string
+	AccelerometerFullScale string `yaml:"accelerometer_full_scale"`
+	AccelerometerXOffset   uint16 `yaml:"accelerometer_x_offset"`
+	AccelerometerYOffset   uint16 `yaml:"accelerometer_y_offset"`
+	AccelerometerZOffset   uint16 `yaml:"accelerometer_z_offset"`
+
+	GyroscopeFullScale string `yaml:"gyroscope_full_scale"`
+	GyroscopeXOffset   uint16 `yaml:"gyroscope_x_offset"`
+	GyroscopeYOffset   uint16 `yaml:"gyroscope_y_offset"`
+	GyroscopeZOffset   uint16 `yaml:"gyroscope_z_offset"`
 }
 
 type imuICM20789 struct {
