@@ -8,7 +8,7 @@ import (
 	dronepackage "github.com/marksaravi/drone-go/apps/drone"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/icm20789"
+	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
 	"github.com/marksaravi/drone-go/utils"
 )
 

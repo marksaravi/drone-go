@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/mems"
 	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/conn/v3/spi"
 )
@@ -52,34 +53,18 @@ type Configs struct {
 	Gyroscope     inertialDeviceConfigs `yaml:"gyroscope"`
 }
 
-// XYZ: x, y, z data
-type XYZ struct {
-	X, Y, Z float64
-}
-
-// DXYZ: dx/dt, dy/dt, dz/dt
-type DXYZ struct {
-	DX, DY, DZ float64
-}
-
-// Inertial Measurment Unit Data (6 Degree of Freedom, Micro-electromechanical Systems)
-type Mems6DOFData struct {
-	Accelerometer XYZ
-	Gyroscope     DXYZ
-}
-
-type mems struct {
+type memsIcm20789 struct {
 	spiConn spi.Conn
 
 	accelFullScale float64
 	gyroFullScale  float64
 }
 
-func NewICM20789() *mems {
+func NewICM20789() *memsIcm20789 {
 	configs := readConfigs()
 	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.Accelerometer.FullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
-	m := mems{
+	m := memsIcm20789{
 		spiConn:        hardware.NewSPIConnection(0, 0),
 		accelFullScale: accelFullScale,
 		gyroFullScale:  gyroFullScale,
@@ -97,18 +82,18 @@ func readConfigs() Configs {
 	utils.ReadConfigs(&configs)
 	return configs.Imu
 }
-func (m *mems) Read() (Mems6DOFData, error) {
+func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
 	memsData, err := m.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
-		return Mems6DOFData{}, err
+		return mems.Mems6DOFData{}, err
 	}
-	return Mems6DOFData{
+	return mems.Mems6DOFData{
 		Accelerometer: m.memsDataToAccelerometer(memsData),
 		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
 }
 
-func (m *mems) readRegister(address byte, size int) ([]byte, error) {
+func (m *memsIcm20789) readRegister(address byte, size int) ([]byte, error) {
 	w := make([]byte, size+1)
 	r := make([]byte, size+1)
 	w[0] = address | byte(0x80)
@@ -117,12 +102,12 @@ func (m *mems) readRegister(address byte, size int) ([]byte, error) {
 	return r[1:], err
 }
 
-func (m *mems) readByteFromRegister(address byte) (byte, error) {
+func (m *memsIcm20789) readByteFromRegister(address byte) (byte, error) {
 	res, err := m.readRegister(address, 1)
 	return res[0], err
 }
 
-func (m *mems) writeRegister(address byte, data ...byte) error {
+func (m *memsIcm20789) writeRegister(address byte, data ...byte) error {
 	w := make([]byte, 1, len(data)+1)
 	r := make([]byte, cap(w))
 	w[0] = address
@@ -131,23 +116,23 @@ func (m *mems) writeRegister(address byte, data ...byte) error {
 	return err
 }
 
-func (m *mems) setupPower() {
+func (m *memsIcm20789) setupPower() {
 	m.writeRegister(PWR_MGMT_1, 0x80) // soft reset
 	delay(1)
 	m.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(1)
 }
 
-func (m *mems) memsDataToAccelerometer(memsData []byte) XYZ {
-	return XYZ{
+func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {
+	return mems.XYZ{
 		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.accelFullScale,
 		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.accelFullScale,
 		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.accelFullScale,
 	}
 }
 
-func (m *mems) memsDataToGyroscope(memsData []byte) DXYZ {
-	return DXYZ{
+func (m *memsIcm20789) memsDataToGyroscope(memsData []byte) mems.DXYZ {
+	return mems.DXYZ{
 		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
 		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
 		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
