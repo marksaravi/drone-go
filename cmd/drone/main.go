@@ -25,5 +25,5 @@ func main() {
 	drone := dronepackage.NewDrone(
 		imuDevice,
 	)
-	drone.Start(ctx, &wg)
+	drone.Fly(ctx, &wg)
 }
