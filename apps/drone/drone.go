@@ -14,7 +14,7 @@ type inertialMeasurementUnit interface {
 }
 
 type plotter interface {
-	AppendRotations()
+	SendRotation(imu.Rotations)
 }
 
 type drone struct {
