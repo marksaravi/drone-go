@@ -102,6 +102,12 @@ func (c *compactSerialiser) Send(r imu.Rotations) bool {
 	return c.buffer.Len() >= c.packetSize
 }
 
+func (c *compactSerialiser) Read() []byte {
+	b := c.buffer.Bytes()
+	c.buffer.Reset()
+	return b
+}
+
 func compactAngle(value float64) int16 {
 	return int16(int(math.Round(value * DIGIT_FACTOR)))
 }

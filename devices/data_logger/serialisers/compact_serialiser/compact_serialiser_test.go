@@ -33,14 +33,30 @@ func TestCompactSerialiser(t *testing.T) {
 	})
 
 	t.Run("test after adding n len", func(t *testing.T) {
-		const N = 3
 		size := HEADER_SIZE
-		for i := 0; i < N; i++ {
-			serialiser.Send(imu.Rotations{})
+		for i := 0; i < serialiser.config.DataPerPacket-1; i++ {
+			ok := serialiser.Send(imu.Rotations{})
 			size += DATA_SIZE
 			if serialiser.buffer.Len() != size {
 				t.Errorf("buffer len must be %d but is %d", size, serialiser.buffer.Len())
 			}
+			if ok {
+				t.Error("serialiser in not full yet")
+			}
+		}
+		ok := serialiser.Send(imu.Rotations{})
+		if !ok {
+			t.Error("serialiser must be full")
 		}
 	})
+	t.Run("test after reset", func(t *testing.T) {
+		buffer := serialiser.Read()
+		if len(buffer) != packetSize {
+			t.Errorf("buffer size must be %d but is %d", packetSize, len(buffer))
+		}
+		if serialiser.buffer.Len() != 0 {
+			t.Error("buffer must be empty after reset")
+		}
+	})
+
 }
