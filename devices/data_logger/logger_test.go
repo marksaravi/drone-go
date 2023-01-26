@@ -1,4 +1,4 @@
-package logger
+package datalogger
 
 import (
 	"encoding/binary"

@@ -1,4 +1,4 @@
-package logger
+package datalogger
 
 import (
 	"bytes"
@@ -11,15 +11,15 @@ import (
 const DIGIT_FACTOR = 10
 const DATA_SIZE = 6
 
-type udpLogger struct {
+type dataLogger struct {
 	buffer     *bytes.Buffer
 	dt         int16
 	packetSize int16
 	wg         *sync.WaitGroup
 }
 
-func NewUDPLogger(wg *sync.WaitGroup, numberOfData, dt int16) *udpLogger {
-	return &udpLogger{
+func NewUDPLogger(wg *sync.WaitGroup, numberOfData, dt int16) *dataLogger {
+	return &dataLogger{
 		buffer:     new(bytes.Buffer),
 		packetSize: numberOfData * DATA_SIZE,
 		dt:         dt,
@@ -27,7 +27,7 @@ func NewUDPLogger(wg *sync.WaitGroup, numberOfData, dt int16) *udpLogger {
 	}
 }
 
-func (l *udpLogger) SendRotation(rotations imu.Rotations) {
+func (l *dataLogger) SendRotation(rotations imu.Rotations) {
 	if l.buffer.Len() == 0 {
 		l.serialiseInt16(l.packetSize)
 		l.serialiseInt16(l.dt)
@@ -38,15 +38,15 @@ func (l *udpLogger) SendRotation(rotations imu.Rotations) {
 	}
 }
 
-func (l *udpLogger) serialiseFloat64(f float64) {
+func (l *dataLogger) serialiseFloat64(f float64) {
 	l.serialiseInt16(int16(int(f * DIGIT_FACTOR)))
 }
 
-func (l *udpLogger) serialiseInt16(value int16) {
+func (l *dataLogger) serialiseInt16(value int16) {
 	binary.Write(l.buffer, binary.LittleEndian, value)
 }
 
-func (l *udpLogger) transmit() {
+func (l *dataLogger) transmit() {
 	l.wg.Add(1)
 	go func() {
 		defer l.wg.Done()
