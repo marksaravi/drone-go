@@ -9,7 +9,7 @@ bytes: 0          1            2           3            4          5           6
 └────────────┴────────────┴───────────┴───────────┴───────────┴───────────┴─────────────┴─────────┘
 
 
-Simple Roll, Pitch, Yaw data
+Type 16, Simple Roll, Pitch, Yaw data serialisation
 packet len: 10 + 6 * (number of data)
 Packet ID is in ms from start time
 Format Code: 16
