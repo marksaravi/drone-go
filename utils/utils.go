@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -63,4 +64,10 @@ func PrintIntervally(msg string, id string, interval time.Duration, useLog bool)
 			fmt.Print(msg)
 		}
 	}
+}
+
+func UInt64ToBytes2(n int64) []byte {
+	big := new(big.Int)
+	big.SetInt64(n)
+	return big.Bytes()
 }
