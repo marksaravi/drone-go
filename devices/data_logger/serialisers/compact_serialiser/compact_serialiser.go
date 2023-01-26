@@ -80,7 +80,7 @@ func NewCompactSerialiser(config CompactSerialiserConfig) *compactSerialiser {
 	}
 }
 
-func (c *compactSerialiser) SetHeader() {
+func (c *compactSerialiser) setHeader() {
 	c.buffer.Reset()
 	binary.Write(c.buffer, binary.LittleEndian, uint16(c.packetSize))
 	t := time.Since(c.startTime).Milliseconds()
@@ -90,7 +90,10 @@ func (c *compactSerialiser) SetHeader() {
 	binary.Write(c.buffer, binary.LittleEndian, uint16(c.config.DataPerPacket))
 }
 
-func (c *compactSerialiser) AddRotation(r imu.Rotations) bool {
+func (c *compactSerialiser) Send(r imu.Rotations) bool {
+	if c.buffer.Len() == 0 {
+		c.setHeader()
+	}
 	if c.buffer.Len() < c.packetSize {
 		binary.Write(c.buffer, binary.LittleEndian, compactAngle(r.Roll))
 		binary.Write(c.buffer, binary.LittleEndian, compactAngle(r.Pitch))

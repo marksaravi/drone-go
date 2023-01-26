@@ -1,6 +1,10 @@
 package compactserialiser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/marksaravi/drone-go/devices/imu"
+)
 
 func TestCompactSerialiser(t *testing.T) {
 	serialiser := NewCompactSerialiser(
@@ -22,9 +26,21 @@ func TestCompactSerialiser(t *testing.T) {
 	})
 
 	t.Run("test header len", func(t *testing.T) {
-		serialiser.SetHeader()
+		serialiser.setHeader()
 		if serialiser.buffer.Len() != HEADER_SIZE {
 			t.Errorf("buffer len must be %d but is %d", HEADER_SIZE, serialiser.buffer.Len())
+		}
+	})
+
+	t.Run("test after adding n len", func(t *testing.T) {
+		const N = 3
+		size := HEADER_SIZE
+		for i := 0; i < N; i++ {
+			serialiser.Send(imu.Rotations{})
+			size += DATA_SIZE
+			if serialiser.buffer.Len() != size {
+				t.Errorf("buffer len must be %d but is %d", size, serialiser.buffer.Len())
+			}
 		}
 	})
 }
