@@ -19,7 +19,7 @@ func TestCompactSerialiser(t *testing.T) {
 	t.Run("test capacity", func(t *testing.T) {
 		serialiser := NewCompactSerialiser(config)
 		if serialiser.buffer.Cap() < packetSize {
-			t.Errorf("buffer capacity must be %d but is %d", 26, serialiser.buffer.Cap())
+			t.Errorf("buffer capacity must be >= %d but is %d", packetSize, serialiser.buffer.Cap())
 		}
 	})
 	t.Run("test empty len", func(t *testing.T) {
