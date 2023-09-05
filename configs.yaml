@@ -1,18 +1,23 @@
-#inertial motion unit
-imu:
-  data_per_second: 500
-  filter_coefficient: 0.01
+remote:
+  buttons:
+  - button-l0: 
+    name: "GPIO2"
+  - button-l1:  
+    name: "GPIO3"
+  - button-l2:  
+    name: "GPIO4"
+  - button-l3:  
+    name: "GPIO17"
+  - button-l4:  
+    name: "GPIO27"
+  - button-r0:  
+    name: "GPIO14"
+  - button-r1:  
+    name: "GPIO15"
+  - button-r2:  
+    name: "GPIO18"
+  - button-r3:  
+    name: "GPIO23"
+  - button-r4:  
+    name: "GPIO24"
 
-icm20789:
-  gyroscope:
-    full_scale: "250dps" #values: [250dps, 500dps, 1000dps, 2000dps] (dps=degree per second)
-    offsets:
-      x: 11
-      y: 12
-      z: 13
-  accelerometer:
-    full_scale: "2g" #values: [2g, 4g, 8g, 16g]
-    offsets:
-      x: 14
-      y: 15
-      z: 16
