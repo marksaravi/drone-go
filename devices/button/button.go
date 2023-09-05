@@ -11,18 +11,20 @@ const ON_LEVEL = gpio.Low
 const OFF_LEVEL = gpio.High
 
 type Button struct {
+	gpio string
 	name string
 	pin  gpio.PinIn
 	prev gpio.Level
 }
 
-func NewButton(gpioName string) *Button {
-	pin := gpioreg.ByName(gpioName)
+func NewButton(gpio string, name string) *Button {
+	pin := gpioreg.ByName(gpio)
 	if pin == nil {
-		log.Fatal("Failed to find ", gpioName)
+		log.Fatal("Failed to find ", gpio)
 	}
 	return &Button{
-		name: gpioName,
+		gpio: gpio,
+		name: name,
 		pin:  pin,
 		prev: OFF_LEVEL,
 	}
@@ -38,4 +40,8 @@ func (b *Button) Read() (level bool, pressed bool) {
 
 func (b *Button) Name() string {
 	return b.name
+}
+
+func (b *Button) GPIO() string {
+	return b.gpio
 }

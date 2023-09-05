@@ -14,6 +14,7 @@ import (
 type btn interface {
 	Read() (level bool, pressed bool)
 	Name() string
+	GPIO() string
 }
 
 func main() {
@@ -25,9 +26,10 @@ func main() {
 	configs := remote.ReadConfigs("./configs.yaml")
 	buttons := make([]btn, len(configs.Buttons))
 	for i, btn := range configs.Buttons {
-		fmt.Println(btn.Name)
-		buttons[i] = button.NewButton(btn.Name)
+		// fmt.Println(btn.Name)
+		buttons[i] = button.NewButton(btn.GPIO, btn.Name)
 	}
+	fmt.Println()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -46,7 +48,7 @@ func main() {
 		for i := 0; i < len(buttons); i++ {
 			level, pressed := buttons[i].Read()
 			if level && pressed {
-				fmt.Println(buttons[i].Name())
+				fmt.Printf("%s:%s\n", buttons[i].GPIO(), buttons[i].Name())
 			}
 		}
 	}

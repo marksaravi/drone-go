@@ -9,7 +9,8 @@ import (
 
 type RemoteConfig struct {
 	Buttons []struct {
-		Name string
+		GPIO string `yaml:"gpio"`
+		Name string `yaml:"name"`
 	} `yaml:"buttons"`
 }
 
