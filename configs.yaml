@@ -1,10 +1,10 @@
 remote:
   buttons:
   - button-l0: 
-    gpio: "GPIO2"
+    gpio: "GPIO5"
     name: "btn-l0"
   - button-l1:  
-    gpio: "GPIO3"
+    gpio: "GPIO6"
     name: "btn-l1"
   - button-l2:  
     gpio: "GPIO4"

@@ -9,7 +9,7 @@ import (
 )
 
 func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
-	p, err := sysfs.NewSPI(0, 0)
+	p, err := sysfs.NewSPI(busNumber, chipSelect)
 
 	if err != nil {
 		log.Fatal(err)
