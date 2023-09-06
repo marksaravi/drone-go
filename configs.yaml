@@ -1,33 +1,32 @@
 remote:
   buttons:
   - button-l0: 
-    gpio: "GPIO17"
+    gpio: "GPIO2"
     name: "btn-l0"
-  # - button-l1:  
-  #   gpio: "GPIO3"
-  #   name: "btn-l1"
-  # - button-l2:  
-  #   gpio: "GPIO4"
-  #   name: "btn-l2"
-  # - button-l3:  
-  #   gpio: "GPIO17"
-  #   name: "btn-l3"
-  # - button-l4:  
-  #   gpio: "GPIO27"
-  #   name: "btn-l4"
-  # - button-r0:  
-  #   gpio: "GPIO14"
-  #   name: "btn-r0"
-  # - button-r1:  
-  #   gpio: "GPIO15"
-  #   name: "btn-r1"
-  # - button-r2:  
-  #   gpio: "GPIO2"
-  #   name: "btn-r2"
-  # - button-r3:  
-  #   gpio: "GPIO3"
-  #   name: "btn-r3"
-  # - button-r4:  
-  #   gpio: "GPIO4"
-  #   name: "btn-r4"
-
+  - button-l1:  
+    gpio: "GPIO3"
+    name: "btn-l1"
+  - button-l2:  
+    gpio: "GPIO4"
+    name: "btn-l2"
+  - button-l3:  
+    gpio: "GPIO17"
+    name: "btn-l3"
+  - button-l4:  
+    gpio: "GPIO27"
+    name: "btn-l4"
+  - button-r0:  
+    gpio: "GPIO14"
+    name: "btn-r0"
+  - button-r1:  
+    gpio: "GPIO15"
+    name: "btn-r1"
+  - button-r2:  
+    gpio: "GPIO18"
+    name: "btn-r2"
+  - button-r3:  
+    gpio: "GPIO23"
+    name: "btn-r3"
+  - button-r4:  
+    gpio: "GPIO22"
+    name: "btn-r4"

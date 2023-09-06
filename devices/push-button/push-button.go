@@ -9,7 +9,7 @@ import (
 	"periph.io/x/conn/v3/gpio/gpioreg"
 )
 
-const TIMEOUT = time.Millisecond * 200
+const TIMEOUT = time.Millisecond * 100
 
 type Button struct {
 	gpioPin  string
@@ -46,10 +46,8 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 				return
 			default:
 				for b.pin.WaitForEdge(time.Millisecond * 10) {
-					if time.Since(b.lastPush) >= TIMEOUT {
-						ch <- true
-						b.lastPush = time.Now()
-					}
+					ch <- true
+					b.lastPush = time.Now()
 				}
 			}
 		}
