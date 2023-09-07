@@ -9,13 +9,12 @@ import (
 	"periph.io/x/conn/v3/gpio/gpioreg"
 )
 
-const TIMEOUT = time.Millisecond * 100
+const EDGE_TIMEOUT = time.Millisecond * 10
 
 type Button struct {
 	gpioPin string
 	name    string
 	pin     gpio.PinIn
-	// lastPush time.Time
 }
 
 func NewPushButton(gpioPin string, name string, pullUp bool) *Button {
@@ -38,17 +37,14 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 	ch := make(chan bool, 1)
 
 	go func() {
-		// b.lastPush = time.Now()
 		for ch != nil {
 			select {
 			case <-ctx.Done():
 				close(ch)
 				return
 			default:
-				for b.pin.WaitForEdge(time.Millisecond * 10) {
+				if b.IsPushed() {
 					ch <- true
-					// fmt.Println("push")
-					// b.lastPush = time.Now()
 				}
 			}
 		}
@@ -56,6 +52,9 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 	return ch
 }
 
+func (b *Button) IsPushed() bool {
+	return b.pin.WaitForEdge(EDGE_TIMEOUT)
+}
 func (b *Button) Name() string {
 	return b.name
 }
