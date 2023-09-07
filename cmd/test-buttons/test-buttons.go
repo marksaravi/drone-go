@@ -14,17 +14,17 @@ import (
 type pushButton interface {
 	Start(ctx context.Context) <-chan bool
 	Name() string
-	GPIO() string
 }
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
-	configs := remote.ReadConfigs("./configs.yaml")
+	configs := remote.ReadConfigs("./remote-configs.yaml")
 	buttons := make(map[string]pushButton)
 	for name, gpioPin := range configs.Buttons {
 		fmt.Printf("%s:%s\n", name, gpioPin)
-		buttons[name] = pushbutton.NewPushButton(name, gpioPin)
+		pin := hardware.NewPullupPushButton(gpioPin)
+		buttons[name] = pushbutton.NewPushButton(name, pin)
 	}
 	fmt.Println()
 	ctx, cancel := context.WithCancel(context.Background())

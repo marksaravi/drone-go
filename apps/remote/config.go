@@ -20,7 +20,7 @@ func ReadConfigs(configPath string) RemoteConfig {
 		Remote RemoteConfig `yaml:"remote"`
 	}
 
-	var configs Configs
+	var configs RemoteConfig
 	yaml.Unmarshal([]byte(content), &configs)
-	return configs.Remote
+	return configs
 }
