@@ -12,10 +12,10 @@ import (
 const TIMEOUT = time.Millisecond * 100
 
 type Button struct {
-	gpioPin  string
-	name     string
-	pin      gpio.PinIn
-	lastPush time.Time
+	gpioPin string
+	name    string
+	pin     gpio.PinIn
+	// lastPush time.Time
 }
 
 func NewPushButton(gpioPin string, name string, pullUp bool) *Button {
@@ -38,7 +38,7 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 	ch := make(chan bool, 1)
 
 	go func() {
-		b.lastPush = time.Now()
+		// b.lastPush = time.Now()
 		for ch != nil {
 			select {
 			case <-ctx.Done():
@@ -47,7 +47,8 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 			default:
 				for b.pin.WaitForEdge(time.Millisecond * 10) {
 					ch <- true
-					b.lastPush = time.Now()
+					// fmt.Println("push")
+					// b.lastPush = time.Now()
 				}
 			}
 		}
