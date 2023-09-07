@@ -1,32 +1,12 @@
 remote:
-  buttons:
-  - button-l0: 
-    gpio: "GPIO5"
-    name: "btn-l0"
-  - button-l1:  
-    gpio: "GPIO6"
-    name: "btn-l1"
-  - button-l2:  
-    gpio: "GPIO4"
-    name: "btn-l2"
-  - button-l3:  
-    gpio: "GPIO17"
-    name: "btn-l3"
-  - button-l4:  
-    gpio: "GPIO27"
-    name: "btn-l4"
-  - button-r0:  
-    gpio: "GPIO14"
-    name: "btn-r0"
-  - button-r1:  
-    gpio: "GPIO15"
-    name: "btn-r1"
-  - button-r2:  
-    gpio: "GPIO18"
-    name: "btn-r2"
-  - button-r3:  
-    gpio: "GPIO23"
-    name: "btn-r3"
-  - button-r4:  
-    gpio: "GPIO22"
-    name: "btn-r4"
+  push-buttons:
+    push-button-left-0: "GPIO5"
+    push-button-left-1: "GPIO6"
+    push-button-left-2: "GPIO4"
+    push-button-left-3: "GPIO17"
+    push-button-left-4: "GPIO27"
+    push-button-right-0: "GPIO14"
+    push-button-right-1: "GPIO15"
+    push-button-right-2: "GPIO18"
+    push-button-right-3: "GPIO23"
+    push-button-right-4: "GPIO22"

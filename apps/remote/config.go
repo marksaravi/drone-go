@@ -8,10 +8,7 @@ import (
 )
 
 type RemoteConfig struct {
-	Buttons []struct {
-		GPIO string `yaml:"gpio"`
-		Name string `yaml:"name"`
-	} `yaml:"buttons"`
+	Buttons map[string]string `yaml:"push-buttons"`
 }
 
 func ReadConfigs(configPath string) RemoteConfig {

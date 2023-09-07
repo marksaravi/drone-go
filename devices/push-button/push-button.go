@@ -11,29 +11,29 @@ import (
 
 const EDGE_TIMEOUT = time.Millisecond * 10
 
-type Button struct {
+type pushButton struct {
 	gpioPin string
 	name    string
 	pin     gpio.PinIn
 }
 
-func NewPushButton(gpioPin string, name string, pullUp bool) *Button {
+func NewPushButton(name string, gpioPin string) *pushButton {
 	pin := gpioreg.ByName(gpioPin)
 	if pin == nil {
-		log.Fatal("Failed to find ", gpioPin)
+		log.Fatal("Failed to find ", name)
 	}
 	if err := pin.In(gpio.PullUp, gpio.FallingEdge); err != nil {
 		log.Fatal(err)
 	}
 
-	return &Button{
+	return &pushButton{
 		gpioPin: gpioPin,
 		name:    name,
 		pin:     pin,
 	}
 }
 
-func (b *Button) Start(ctx context.Context) <-chan bool {
+func (b *pushButton) Start(ctx context.Context) <-chan bool {
 	ch := make(chan bool, 1)
 
 	go func() {
@@ -43,7 +43,7 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 				close(ch)
 				return
 			default:
-				if b.IsPushed() {
+				if b.WaitForPush() {
 					ch <- true
 				}
 			}
@@ -52,13 +52,14 @@ func (b *Button) Start(ctx context.Context) <-chan bool {
 	return ch
 }
 
-func (b *Button) IsPushed() bool {
+func (b *pushButton) WaitForPush() bool {
 	return b.pin.WaitForEdge(EDGE_TIMEOUT)
 }
-func (b *Button) Name() string {
+
+func (b *pushButton) Name() string {
 	return b.name
 }
 
-func (b *Button) GPIO() string {
+func (b *pushButton) GPIO() string {
 	return b.gpioPin
 }
