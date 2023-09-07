@@ -7,8 +7,7 @@ import (
 
 	"github.com/marksaravi/drone-go/apps/remote"
 	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
-	"periph.io/x/conn/v3/driver/driverreg"
-	"periph.io/x/host/v3"
+	"github.com/marksaravi/drone-go/hardware"
 )
 
 type btn interface {
@@ -19,14 +18,7 @@ type btn interface {
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
-	_, err := host.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := driverreg.Init(); err != nil {
-		log.Fatal(err)
-	}
-	// fmt.Println(state)
+	hardware.HostInitialize()
 	configs := remote.ReadConfigs("./configs.yaml")
 	buttons := make(map[string]btn)
 	for _, btn := range configs.Buttons {
