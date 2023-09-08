@@ -155,8 +155,8 @@ func (tr *nrf24l01dev) setPower(on bool) {
 	time.Sleep(time.Millisecond)
 }
 
-func (tr *nrf24l01dev) Transmit(payload models.Payload) error {
-	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
+func (tr *nrf24l01dev) Transmit(payload []byte) error {
+	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload, tr.conn)
 	if err != nil {
 		return err
 	}
