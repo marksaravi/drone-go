@@ -190,6 +190,14 @@ func (tr *nrf24l01dev) init() {
 	tr.setRxTxAddress()
 }
 
+func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
+	if update {
+		tr.updateStatus()
+	}
+
+	return tr.status&0b01000000 != 0
+}
+
 func (tr *nrf24l01dev) PrintConfigurations() {
 	config, _ := tr.readRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
@@ -230,14 +238,6 @@ func (tr *nrf24l01dev) setRxTxAddress() {
 func (tr *nrf24l01dev) updateStatus() {
 	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
 	tr.status = res[0]
-}
-
-func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
-	if update {
-		tr.updateStatus()
-	}
-
-	return tr.status&0b01000000 != 0
 }
 
 func (tr *nrf24l01dev) IsTransmitFailed(update bool) bool {
