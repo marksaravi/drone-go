@@ -37,6 +37,7 @@ func main() {
 	lastSent := time.Now()
 	running := true
 	const DATA_PER_SECOND = 25
+	counter := 0
 	for running {
 		select {
 		case _, ok := <-ctx.Done():
@@ -51,8 +52,10 @@ func main() {
 				err := r.Transmit(data)
 				if err != nil {
 					fmt.Println(err)
+				} else {
+					counter++
+					fmt.Printf("%6d, %v\n", counter, data)
 				}
-				fmt.Println(data)
 				setData(data, data[0]+1)
 				lastSent = time.Now()
 			}
