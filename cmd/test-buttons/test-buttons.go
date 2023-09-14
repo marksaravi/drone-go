@@ -23,7 +23,7 @@ func main() {
 	buttons := make(map[string]pushButton)
 	for name, gpioPin := range configs.Buttons {
 		fmt.Printf("%s:%s\n", name, gpioPin)
-		pin := hardware.NewPullupPushButton(gpioPin)
+		pin := hardware.NewPullDownPushButton(gpioPin)
 		buttons[name] = pushbutton.NewPushButton(name, pin)
 	}
 	fmt.Println()

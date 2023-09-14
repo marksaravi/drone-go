@@ -24,7 +24,7 @@ func main() {
 	r := nrf24l01.NewNRF24L01EnhancedBurst(
 		0,
 		0,
-		"GPIO24",
+		"GPIO25",
 		"03896",
 	)
 	r.TransmitterOn()
