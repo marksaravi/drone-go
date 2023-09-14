@@ -31,6 +31,7 @@ func (b *pushButton) Start(ctx context.Context) <-chan bool {
 	ch := make(chan bool, 1)
 
 	go func() {
+		lastChange := time.Now()
 		for ch != nil {
 			select {
 			case <-ctx.Done():
@@ -41,7 +42,10 @@ func (b *pushButton) Start(ctx context.Context) <-chan bool {
 				if state == gpio.High && b.prevState == gpio.Low {
 					ch <- true
 				}
-				b.prevState = state
+				if b.prevState != state && time.Since(lastChange) >= time.Second/10 {
+					b.prevState = state
+					lastChange = time.Now()
+				}
 			}
 		}
 		time.Sleep(time.Second / 100)
