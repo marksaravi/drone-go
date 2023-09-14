@@ -3,23 +3,27 @@ package pushbutton
 import (
 	"context"
 	"time"
+
+	"periph.io/x/conn/v3/gpio"
 )
 
 const EDGE_TIMEOUT = time.Millisecond * 10
 
 type gpioPin interface {
-	WaitForEdge(timeout time.Duration) bool
+	Read() gpio.Level
 }
 
 type pushButton struct {
-	name string
-	pin  gpioPin
+	name      string
+	pin       gpioPin
+	prevState gpio.Level
 }
 
 func NewPushButton(name string, pin gpioPin) *pushButton {
 	return &pushButton{
-		name: name,
-		pin:  pin,
+		name:      name,
+		pin:       pin,
+		prevState: gpio.Low,
 	}
 }
 
@@ -33,17 +37,16 @@ func (b *pushButton) Start(ctx context.Context) <-chan bool {
 				close(ch)
 				return
 			default:
-				if b.WaitForPush() {
+				state := b.pin.Read()
+				if state == gpio.High && b.prevState == gpio.Low {
 					ch <- true
 				}
+				b.prevState = state
 			}
 		}
+		time.Sleep(time.Second / 100)
 	}()
 	return ch
-}
-
-func (b *pushButton) WaitForPush() bool {
-	return b.pin.WaitForEdge(EDGE_TIMEOUT)
 }
 
 func (b *pushButton) Name() string {
