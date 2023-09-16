@@ -40,11 +40,13 @@ func main() {
 			defer wg.Done()
 			running := true
 			pressed := pb.Start(ctx)
+			count := 0
 			for running {
 				select {
 				case _, ok := <-pressed:
 					if ok {
-						log.Printf("%s pressed\n", pb.Name())
+						count++
+						log.Printf("%s pressed  %3d\n", pb.Name(), count)
 					} else {
 						running = false
 						log.Printf("%s closed\n", pb.Name())
