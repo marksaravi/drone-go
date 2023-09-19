@@ -104,23 +104,8 @@ func NewNRF24L01EnhancedBurst(
 	return &tr
 }
 
-func bitEnable(value byte, bit byte, enable bool) byte {
-	var mask byte = 0b00000001
-	mask = mask << bit
-	if enable {
-		return value | mask
-	}
-	return value & ^mask
-
-}
-
-func (tr *nrf24l01dev) selectRadioMode(isRx bool) {
-	tr.ceLow()
-	tr.ClearStatus()
-	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
-	tr.writeRegister(ADDRESS_CONFIG)
-	tr.flushRx()
-	tr.flushTx()
+func (tr *nrf24l01dev) ClearStatus() {
+	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
 func (tr *nrf24l01dev) Listen() {
@@ -141,20 +126,6 @@ func (tr *nrf24l01dev) PowerOn() {
 
 func (tr *nrf24l01dev) PowerOff() {
 	tr.setPower(false)
-}
-
-func (tr *nrf24l01dev) ceHigh() {
-	tr.ce.Out(gpio.High)
-}
-
-func (tr *nrf24l01dev) ceLow() {
-	tr.ce.Out(gpio.Low)
-}
-
-func (tr *nrf24l01dev) setPower(on bool) {
-	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
-	tr.writeRegister(ADDRESS_CONFIG)
-	time.Sleep(time.Millisecond)
 }
 
 func (tr *nrf24l01dev) Transmit(payload []byte) error {
@@ -182,14 +153,6 @@ func (tr *nrf24l01dev) Receive() ([]byte, error) {
 	return payload, err
 }
 
-func (tr *nrf24l01dev) init() {
-	tr.PowerOff()
-	tr.ceLow()
-	time.Sleep(time.Millisecond)
-	tr.writeConfigRegisters()
-	tr.setRxTxAddress()
-}
-
 func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
 	if update {
 		tr.updateStatus()
@@ -198,7 +161,7 @@ func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
 	return tr.status&0b01000000 != 0
 }
 
-func (tr *nrf24l01dev) PrintConfigurations() {
+func (tr *nrf24l01dev) PrintConfigurations() map[string][]byte {
 	config, _ := tr.readRegister(ADDRESS_CONFIG)
 	enaa, _ := tr.readRegister(ADDRESS_EN_AA)
 	enrxaddr, _ := tr.readRegister(ADDRESS_EN_RXADDR)
@@ -209,35 +172,18 @@ func (tr *nrf24l01dev) PrintConfigurations() {
 	rxpw0, _ := tr.readRegister(ADDRESS_RX_PW_P0)
 	rxadd, _ := readSPI(ADDRESS_RX_ADDR_P0, 5, tr.conn)
 	txadd, _ := readSPI(ADDRESS_TX_ADDR, 5, tr.conn)
-	log.Printf(
-		"\n	CONFIG: %b\n	EN_AA: %b\n	EN_RXADDR: %b\n	SETUP_AW: %b\n	SETUP_RETR: %b\n	RFCH: %b\n	RF_SETUP: %b\n	RX_PW0: %b\n	rx-add: %v\n	tx-add: %v",
-		config, enaa, enrxaddr, setupaw, setupretr, rfch, rfsetup, rxpw0, rxadd, txadd)
-}
-
-func (tr *nrf24l01dev) readRegister(address byte) ([]byte, error) {
-	return readSPI(address, 1, tr.conn)
-}
-
-func (tr *nrf24l01dev) writeRegister(address byte) {
-	tr.ceLow()
-	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
-}
-
-func (tr *nrf24l01dev) writeConfigRegisters() {
-	for address := range tr.registers {
-		tr.writeRegister(address)
-	}
-}
-
-func (tr *nrf24l01dev) setRxTxAddress() {
-	tr.ceLow()
-	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
-	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
-}
-
-func (tr *nrf24l01dev) updateStatus() {
-	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
-	tr.status = res[0]
+	s := make(map[string][]byte)
+	s["CONFIG"] = config
+	s["EN_AA"] = enaa
+	s["EN_RXADDR"] = enrxaddr
+	s["SETUP_AW"] = setupaw
+	s["SETUP_RETR"] = setupretr
+	s["RFCH"] = rfch
+	s["RF_SETUP"] = rfsetup
+	s["RX_PW0"] = rxpw0
+	s["rx-add"] = rxadd
+	s["tx-add"] = txadd
+	return s
 }
 
 func (tr *nrf24l01dev) IsTransmitFailed(update bool) bool {
@@ -245,10 +191,6 @@ func (tr *nrf24l01dev) IsTransmitFailed(update bool) bool {
 		tr.updateStatus()
 	}
 	return tr.status&0b00010000 != 0
-}
-
-func (tr *nrf24l01dev) ClearStatus() {
-	writeSPI(ADDRESS_STATUS, []byte{DEFAULT_STATUS}, tr.conn)
 }
 
 func (tr *nrf24l01dev) flushRx() {
@@ -287,4 +229,71 @@ func initPin(pinName string) gpio.PinIO {
 		log.Fatal("Failed to find ", pinName)
 	}
 	return pin
+}
+
+func bitEnable(value byte, bit byte, enable bool) byte {
+	var mask byte = 0b00000001
+	mask = mask << bit
+	if enable {
+		return value | mask
+	}
+	return value & ^mask
+
+}
+
+func (tr *nrf24l01dev) selectRadioMode(isRx bool) {
+	tr.ceLow()
+	tr.ClearStatus()
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 0, isRx)
+	tr.writeRegister(ADDRESS_CONFIG)
+	tr.flushRx()
+	tr.flushTx()
+}
+
+func (tr *nrf24l01dev) ceHigh() {
+	tr.ce.Out(gpio.High)
+}
+
+func (tr *nrf24l01dev) ceLow() {
+	tr.ce.Out(gpio.Low)
+}
+
+func (tr *nrf24l01dev) setPower(on bool) {
+	tr.registers[ADDRESS_CONFIG] = bitEnable(tr.registers[ADDRESS_CONFIG], 1, on)
+	tr.writeRegister(ADDRESS_CONFIG)
+	time.Sleep(time.Millisecond)
+}
+
+func (tr *nrf24l01dev) init() {
+	tr.PowerOff()
+	tr.ceLow()
+	time.Sleep(time.Millisecond)
+	tr.writeConfigRegisters()
+	tr.setRxTxAddress()
+}
+
+func (tr *nrf24l01dev) readRegister(address byte) ([]byte, error) {
+	return readSPI(address, 1, tr.conn)
+}
+
+func (tr *nrf24l01dev) writeRegister(address byte) {
+	tr.ceLow()
+	writeSPI(address, []byte{tr.registers[address]}, tr.conn)
+}
+
+func (tr *nrf24l01dev) writeConfigRegisters() {
+	for address := range tr.registers {
+		tr.writeRegister(address)
+	}
+}
+
+func (tr *nrf24l01dev) setRxTxAddress() {
+	tr.ceLow()
+	writeSPI(ADDRESS_RX_ADDR_P0, tr.address, tr.conn)
+	writeSPI(ADDRESS_TX_ADDR, tr.address, tr.conn)
+}
+
+func (tr *nrf24l01dev) updateStatus() {
+	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
+	tr.status = res[0]
 }
