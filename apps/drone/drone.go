@@ -31,7 +31,8 @@ func NewDrone(settings DroneSettings) *droneApp {
 }
 
 func (d *droneApp) Start(ctx context.Context) {
-	running := false
+	running := true
+	d.receiver.On()
 	for running {
 		select {
 		default:
