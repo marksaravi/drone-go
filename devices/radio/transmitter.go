@@ -18,7 +18,7 @@ type radioTransmitter struct {
 	radiolink radioTransmitterLink
 }
 
-func NewTransmitter(radiolink radioTransmitterLink, connectionTimeoutMs int) *radioTransmitter {
+func NewTransmitter(radiolink radioTransmitterLink) *radioTransmitter {
 	return &radioTransmitter{
 		radiolink: radiolink,
 	}

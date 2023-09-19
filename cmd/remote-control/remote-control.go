@@ -4,23 +4,31 @@ import (
 	"log"
 
 	"github.com/marksaravi/drone-go/apps/remote"
+	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
 	configs := remote.ReadConfigs("./configs/remote-configs.json")
-	log.Println(configs.PushButtons.Right)
-	log.Println(configs.PushButtons.Left)
+	log.Println(configs)
 	hardware.HostInitialize()
 
-	// radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
-	// 	0,
-	// 	0,
-	// 	"GPIO25",
-	// 	"03896",
-	// )
+	radioConfigs := configs.Radio
+	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
+		radioConfigs.SPI.BusNum,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.SPI.SpiChipEnabledGPIO,
+		radioConfigs.RxTxAddress,
+	)
+	radioTransmitter := radio.NewTransmitter(radioLink)
+
+	remoteControl := remote.NewRemote(remote.RemoteCongigs{
+		Transmitter: radioTransmitter,
+	})
+	remoteControl.Start()
 
 	// oledConn, err := i2creg.Open("")
 	// if err != nil {

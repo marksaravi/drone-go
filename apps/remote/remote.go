@@ -1,8 +1,25 @@
 package remote
 
-type remote struct {
+type radioTransmiter interface {
+	Start()
+	Transmit(payload []byte) error
+	PayloadSize() int
 }
 
-func NewRemote() *remote {
-	return &remote{}
+type remote struct {
+	transmitter radioTransmiter
+}
+
+type RemoteCongigs struct {
+	Transmitter radioTransmiter
+}
+
+func NewRemote(configs RemoteCongigs) *remote {
+	return &remote{
+		transmitter: configs.Transmitter,
+	}
+}
+
+func (r *remote) Start() {
+
 }

@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -13,6 +12,14 @@ type RemoteConfig struct {
 		Right []string `json:"right"`
 		Left  []string `json:"left"`
 	} `json:"push-buttons-gpio"`
+	Radio struct {
+		RxTxAddress string `json:"rx-tx-address"`
+		SPI         struct {
+			BusNum             int    `json:"bus-num"`
+			ChipSelect         int    `json:"chip-select"`
+			SpiChipEnabledGPIO string `json:"chip-enabled-gpio"`
+		}
+	} `json:"radio"`
 }
 
 func ReadConfigs(configPath string) RemoteConfig {
@@ -20,7 +27,7 @@ func ReadConfigs(configPath string) RemoteConfig {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(content))
+
 	var configs RemoteConfig
 	json.Unmarshal([]byte(content), &configs)
 	return configs
