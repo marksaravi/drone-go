@@ -8,8 +8,8 @@ import (
 )
 
 type RemoteConfigs struct {
-	CommandPerSecond int `json:"commands-per-second"`
-	Radio            struct {
+	CommandsPerSecond int `json:"commands-per-second"`
+	Radio             struct {
 		RxTxAddress string `json:"rx-tx-address"`
 		SPI         struct {
 			BusNum             int    `json:"bus-num"`
