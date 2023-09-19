@@ -19,7 +19,7 @@ type commands struct {
 	throttle byte
 }
 
-type remote struct {
+type remoteControl struct {
 	transmitter radioTransmiter
 
 	lastCommand      time.Time
@@ -27,23 +27,25 @@ type remote struct {
 }
 
 type RemoteCongigs struct {
-	Transmitter radioTransmiter
+	Transmitter      radioTransmiter
+	CommandPerSecond int
 }
 
-func NewRemote(configs RemoteCongigs) *remote {
-	return &remote{
-		transmitter: configs.Transmitter,
-		lastCommand: time.Now(),
+func NewRemote(configs RemoteCongigs) *remoteControl {
+	return &remoteControl{
+		transmitter:      configs.Transmitter,
+		commandPerSecond: configs.CommandPerSecond,
+		lastCommand:      time.Now(),
 	}
 }
 
-func (r *remote) Start(ctx context.Context) {
+func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 
 	for running {
 		select {
 		default:
-			if ok, commands := r.ReadCommands(); ok {
+			if commands, ok := r.ReadCommands(); ok {
 				r.transmitter.Transmit([]byte{
 					commands.roll,
 					commands.pitch,

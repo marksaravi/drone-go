@@ -2,10 +2,10 @@ package remote
 
 import "time"
 
-func (r *remote) ReadCommands() (bool, commands) {
+func (r *remoteControl) ReadCommands() (commands, bool) {
 	if time.Since(r.lastCommand) < time.Second/time.Duration(r.commandPerSecond) {
-		return false, commands{}
+		return commands{}, false
 	}
 	r.lastCommand = time.Now()
-	return true, commands{}
+	return commands{}, true
 }
