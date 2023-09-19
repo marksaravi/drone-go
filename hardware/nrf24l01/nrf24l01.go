@@ -4,9 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/spi"
@@ -46,6 +44,10 @@ const (
 )
 
 const (
+	RADIO_PAYLOAD_SIZE = 8
+)
+
+const (
 	DEFAULT_CONFIG     byte = 0b00001000
 	DEFAULT_EN_AA      byte = 0b00111111
 	DEFAULT_EN_RXADDR  byte = 0b00000001
@@ -54,7 +56,7 @@ const (
 	DEFAULT_RF_CH      byte = 0b01001100
 	DEFAULT_RF_SETUP   byte = 0b00001111
 	DEFAULT_STATUS     byte = 0b01110000
-	DEFAULT_RX_PW_P0   byte = constants.RADIO_PAYLOAD_SIZE
+	DEFAULT_RX_PW_P0   byte = RADIO_PAYLOAD_SIZE
 	DEFAULT_RX_PW_P1   byte = 0b00000000
 	DEFAULT_RX_PW_P2   byte = 0b00000000
 	DEFAULT_RX_PW_P3   byte = 0b00000000
@@ -155,8 +157,8 @@ func (tr *nrf24l01dev) setPower(on bool) {
 	time.Sleep(time.Millisecond)
 }
 
-func (tr *nrf24l01dev) Transmit(payload models.Payload) error {
-	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload[:], tr.conn)
+func (tr *nrf24l01dev) Transmit(payload []byte) error {
+	_, err := writeSPI(ADDRESS_W_TX_PAYLOAD, payload, tr.conn)
 	if err != nil {
 		return err
 	}
@@ -168,10 +170,10 @@ func (tr *nrf24l01dev) Transmit(payload models.Payload) error {
 	return err
 }
 
-func (tr *nrf24l01dev) Receive() (models.Payload, error) {
+func (tr *nrf24l01dev) Receive() ([]byte, error) {
 	tr.ceLow()
-	payload := models.Payload{0, 0, 0, 0, 0, 0, 0, 0}
-	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(constants.RADIO_PAYLOAD_SIZE), tr.conn)
+	payload := make([]byte, RADIO_PAYLOAD_SIZE)
+	data, err := readSPI(ADDRESS_R_RX_PAYLOAD, int(RADIO_PAYLOAD_SIZE), tr.conn)
 	if err != nil {
 		return payload, err
 	}
@@ -186,6 +188,14 @@ func (tr *nrf24l01dev) init() {
 	time.Sleep(time.Millisecond)
 	tr.writeConfigRegisters()
 	tr.setRxTxAddress()
+}
+
+func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
+	if update {
+		tr.updateStatus()
+	}
+
+	return tr.status&0b01000000 != 0
 }
 
 func (tr *nrf24l01dev) PrintConfigurations() {
@@ -228,14 +238,6 @@ func (tr *nrf24l01dev) setRxTxAddress() {
 func (tr *nrf24l01dev) updateStatus() {
 	res, _ := readSPI(ADDRESS_STATUS, 1, tr.conn)
 	tr.status = res[0]
-}
-
-func (tr *nrf24l01dev) IsReceiverDataReady(update bool) bool {
-	if update {
-		tr.updateStatus()
-	}
-
-	return tr.status&0b01000000 != 0
 }
 
 func (tr *nrf24l01dev) IsTransmitFailed(update bool) bool {

@@ -3,6 +3,7 @@ package hardware
 import (
 	"log"
 
+	"periph.io/x/conn/v3/driver/driverreg"
 	"periph.io/x/host/v3"
 )
 
@@ -10,6 +11,9 @@ func HostInitialize() {
 	state, err := host.Init()
 	if err != nil {
 		log.Fatalf("failed to initialize periph: %v", err)
+	}
+	if _, err := driverreg.Init(); err != nil {
+		log.Fatal(err)
 	}
 	spiloaded := false
 	i2cloaded := false

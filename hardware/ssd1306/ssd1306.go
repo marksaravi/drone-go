@@ -2,8 +2,10 @@ package ssd1306
 
 import (
 	"errors"
+	"image"
 
 	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/devices/v3/ssd1306/image1bit"
 )
 
 type Options struct {
@@ -25,14 +27,14 @@ var DefaultOptions = Options{
 type SSD1306 struct {
 	i2cdev  *i2c.Dev
 	Options Options
-	// buffer  *image1bit.VerticalLSB
+	buffer  *image1bit.VerticalLSB
 }
 
 func NewSSD1306(dev *i2c.Dev, options Options) *SSD1306 {
 	return &SSD1306{
 		i2cdev:  dev,
 		Options: options,
-		// buffer:  image1bit.NewVerticalLSB(image.Rect(0, 0, options.Width, options.Height)),
+		buffer:  image1bit.NewVerticalLSB(image.Rect(0, 0, options.Width, options.Height)),
 	}
 }
 
@@ -57,38 +59,37 @@ func (d *SSD1306) DisplayOn() error {
 }
 
 func (d *SSD1306) Draw() error {
-	// _, err := d.i2cdev.Write(append([]byte{0x40}, d.buffer.Pix...))
-	// return err
-	return nil
+	_, err := d.i2cdev.Write(append([]byte{0x40}, d.buffer.Pix...))
+	return err
 }
 
 func (d *SSD1306) clearPixel(row, col int) error {
-	// if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
-	// 	return errors.New("coordinates out of range")
-	// }
-	// absIndex := (row/8)*d.Options.Width + col
-	// maskIndex := row % 8
-	// maskValue := byte(1) << byte(maskIndex)
-	// maskValue = ^maskValue
+	if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
+		return errors.New("coordinates out of range")
+	}
+	absIndex := (row/8)*d.Options.Width + col
+	maskIndex := row % 8
+	maskValue := byte(1) << byte(maskIndex)
+	maskValue = ^maskValue
 
-	// d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
+	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
 	return nil
 }
 
 func (d *SSD1306) SetPixel(row, col int, pixel byte) error {
-	// if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
-	// 	return errors.New("coordinates out of range")
-	// }
-	// absIndex := (row/8)*d.Options.Width + col
-	// maskIndex := row % 8
-	// maskValue := byte(1) << byte(maskIndex)
+	if row < 0 || row >= d.Options.Height || col < 0 || col >= d.Options.Width {
+		return errors.New("coordinates out of range")
+	}
+	absIndex := (row/8)*d.Options.Width + col
+	maskIndex := row % 8
+	maskValue := byte(1) << byte(maskIndex)
 
-	// if pixel == 1 {
-	// 	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] | maskValue
-	// } else {
-	// 	maskValue = ^maskValue
-	// 	d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
-	// }
+	if pixel == 1 {
+		d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] | maskValue
+	} else {
+		maskValue = ^maskValue
+		d.buffer.Pix[absIndex] = d.buffer.Pix[absIndex] & maskValue
+	}
 
 	return nil
 }
