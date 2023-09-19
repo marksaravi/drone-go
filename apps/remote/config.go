@@ -8,11 +8,8 @@ import (
 )
 
 type RemoteConfig struct {
-	PushButtons struct {
-		Right []string `json:"right"`
-		Left  []string `json:"left"`
-	} `json:"push-buttons-gpio"`
-	Radio struct {
+	CommandPerSecond int `json:"command-per-second"`
+	Radio            struct {
 		RxTxAddress string `json:"rx-tx-address"`
 		SPI         struct {
 			BusNum             int    `json:"bus-num"`
@@ -20,6 +17,10 @@ type RemoteConfig struct {
 			SpiChipEnabledGPIO string `json:"chip-enabled-gpio"`
 		}
 	} `json:"radio"`
+	PushButtons struct {
+		Right []string `json:"right"`
+		Left  []string `json:"left"`
+	} `json:"push-buttons-gpio"`
 }
 
 func ReadConfigs(configPath string) RemoteConfig {

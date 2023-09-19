@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 
 	"github.com/marksaravi/drone-go/apps/remote"
@@ -28,7 +30,14 @@ func main() {
 	remoteControl := remote.NewRemote(remote.RemoteCongigs{
 		Transmitter: radioTransmitter,
 	})
-	remoteControl.Start()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		fmt.Scanln()
+		cancel()
+	}()
+
+	remoteControl.Start(ctx)
 
 	// oledConn, err := i2creg.Open("")
 	// if err != nil {

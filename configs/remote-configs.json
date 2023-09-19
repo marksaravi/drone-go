@@ -1,4 +1,5 @@
 {
+    "command-per-second": 5,
     "push-buttons-gpio": {
         "right": [ "GPIO4", "GPIO14","GPIO15","GPIO18","GPIO23"],
         "left": ["GPIO17", "GPIO27","GPIO22","GPIO5","GPIO6"]
