@@ -9,7 +9,6 @@ import (
 type radioTransmiter interface {
 	On()
 	Transmit(payload []byte) error
-	PayloadSize() int
 }
 
 type commands struct {
