@@ -1,6 +1,8 @@
 package remote
 
-import "time"
+import (
+	"time"
+)
 
 var roll byte = 0
 var pitch byte = 10

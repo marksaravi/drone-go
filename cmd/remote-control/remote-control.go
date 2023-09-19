@@ -28,7 +28,8 @@ func main() {
 	radioTransmitter := radio.NewTransmitter(radioLink)
 
 	remoteControl := remote.NewRemote(remote.RemoteCongigs{
-		Transmitter: radioTransmitter,
+		Transmitter:      radioTransmitter,
+		CommandPerSecond: configs.CommandPerSecond,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

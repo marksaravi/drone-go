@@ -24,7 +24,7 @@ func NewTransmitter(radiolink radioTransmitterLink) *radioTransmitter {
 	}
 }
 
-func (t *radioTransmitter) Start() {
+func (t *radioTransmitter) On() {
 	t.radiolink.TransmitterOn()
 	t.radiolink.PowerOn()
 }

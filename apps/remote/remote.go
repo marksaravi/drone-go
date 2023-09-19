@@ -7,7 +7,7 @@ import (
 )
 
 type radioTransmiter interface {
-	Start()
+	On()
 	Transmit(payload []byte) error
 	PayloadSize() int
 }
@@ -41,11 +41,12 @@ func NewRemote(configs RemoteCongigs) *remoteControl {
 
 func (r *remoteControl) Start(ctx context.Context) {
 	running := true
-
+	r.transmitter.On()
 	for running {
 		select {
 		default:
 			if commands, ok := r.ReadCommands(); ok {
+				log.Println(commands)
 				r.transmitter.Transmit([]byte{
 					commands.roll,
 					commands.pitch,
@@ -53,7 +54,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 					commands.throttle,
 					0, 0, 0, 0,
 				})
-				log.Println(commands)
+
 			}
 		case <-ctx.Done():
 			running = false
