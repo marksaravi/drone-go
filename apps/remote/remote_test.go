@@ -9,7 +9,7 @@ import (
 
 func TestReadCommandsBeforeTimeout(t *testing.T) {
 	commandPerSecond := 20
-	r := remote.NewRemote(remote.RemoteCongigs{CommandPerSecond: commandPerSecond})
+	r := remote.NewRemote(remote.RemoteSetups{CommandPerSecond: commandPerSecond})
 	timeout := time.Second / time.Duration(commandPerSecond)
 	time.Sleep(timeout / 2)
 	_, ok := r.ReadCommands()
@@ -20,7 +20,7 @@ func TestReadCommandsBeforeTimeout(t *testing.T) {
 
 func TestReadCommandsAfterTimeout(t *testing.T) {
 	commandPerSecond := 20
-	r := remote.NewRemote(remote.RemoteCongigs{CommandPerSecond: commandPerSecond})
+	r := remote.NewRemote(remote.RemoteSetups{CommandPerSecond: commandPerSecond})
 	timeout := time.Second / time.Duration(commandPerSecond)
 	time.Sleep(timeout / 2)
 	time.Sleep(timeout)

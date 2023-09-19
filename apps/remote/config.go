@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 )
 
-type RemoteConfig struct {
+type RemoteConfigs struct {
 	CommandPerSecond int `json:"commands-per-second"`
 	Radio            struct {
 		RxTxAddress string `json:"rx-tx-address"`
@@ -23,13 +23,13 @@ type RemoteConfig struct {
 	} `json:"push-buttons-gpio"`
 }
 
-func ReadConfigs(configPath string) RemoteConfig {
+func ReadConfigs(configPath string) RemoteConfigs {
 	content, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var configs RemoteConfig
+	var configs RemoteConfigs
 	json.Unmarshal([]byte(content), &configs)
 	return configs
 }

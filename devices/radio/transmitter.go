@@ -7,7 +7,6 @@ import (
 type radioTransmitterLink interface {
 	PayloadSize() int
 	PowerOn()
-	PowerOff()
 	ClearStatus()
 	TransmitterOn()
 	Transmit(data []byte) error

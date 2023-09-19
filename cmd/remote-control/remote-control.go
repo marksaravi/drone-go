@@ -13,10 +13,10 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
+	hardware.HostInitialize()
 	log.Println("Starting RemoteControl")
 	configs := remote.ReadConfigs("./configs/remote-configs.json")
 	log.Println(configs)
-	hardware.HostInitialize()
 
 	radioConfigs := configs.Radio
 	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
@@ -27,7 +27,7 @@ func main() {
 	)
 	radioTransmitter := radio.NewTransmitter(radioLink)
 
-	remoteControl := remote.NewRemote(remote.RemoteCongigs{
+	remoteControl := remote.NewRemote(remote.RemoteSetups{
 		Transmitter:      radioTransmitter,
 		CommandPerSecond: configs.CommandPerSecond,
 	})
