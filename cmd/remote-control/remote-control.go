@@ -27,7 +27,7 @@ func main() {
 	)
 	radioTransmitter := radio.NewTransmitter(radioLink)
 
-	remoteControl := remote.NewRemote(remote.RemoteSetups{
+	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:      radioTransmitter,
 		CommandPerSecond: configs.CommandPerSecond,
 	})

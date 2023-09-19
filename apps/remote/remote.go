@@ -26,12 +26,12 @@ type remoteControl struct {
 	commandPerSecond int
 }
 
-type RemoteSetups struct {
+type RemoteSettings struct {
 	Transmitter      radioTransmiter
 	CommandPerSecond int
 }
 
-func NewRemote(configs RemoteSetups) *remoteControl {
+func NewRemoteControl(configs RemoteSettings) *remoteControl {
 	return &remoteControl{
 		transmitter:      configs.Transmitter,
 		commandPerSecond: configs.CommandPerSecond,
