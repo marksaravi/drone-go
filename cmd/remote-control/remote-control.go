@@ -10,12 +10,17 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	log.Println("Starting RemoteControl")
-	configs := remote.ReadConfigs("./remote-configs.yaml")
-	log.Println(configs)
-	// radioConfigs := configs.Radio
-	// joysticksConfigs := configs.Joysticks
-	// buttonsConfis := configs.Buttons
+	configs := remote.ReadConfigs("./configs/remote-configs.json")
+	log.Println(configs.PushButtons.Right)
+	log.Println(configs.PushButtons.Left)
 	hardware.HostInitialize()
+
+	// radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
+	// 	0,
+	// 	0,
+	// 	"GPIO25",
+	// 	"03896",
+	// )
 
 	// oledConn, err := i2creg.Open("")
 	// if err != nil {
