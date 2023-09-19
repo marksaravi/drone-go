@@ -12,7 +12,9 @@ import (
 )
 
 type radioReceiverLink interface {
-	radioLink
+	PowerOn()
+	PowerOff()
+	ClearStatus()
 	ReceiverOn()
 	Listen()
 	Receive() (models.Payload, error)
@@ -83,6 +85,7 @@ func (r *RadioReceiver) Start(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}()
 }
+
 func (r *RadioReceiver) updateConnectionStateAsync(connectionState int) {
 	r.connectionState = connectionState
 	func() {

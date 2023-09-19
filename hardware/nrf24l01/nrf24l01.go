@@ -141,6 +141,10 @@ func (tr *nrf24l01dev) Transmit(payload []byte) error {
 	return err
 }
 
+func (tr *nrf24l01dev) PayloadSize() int {
+	return RADIO_PAYLOAD_SIZE
+}
+
 func (tr *nrf24l01dev) Receive() ([]byte, error) {
 	tr.ceLow()
 	payload := make([]byte, RADIO_PAYLOAD_SIZE)
