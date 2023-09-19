@@ -2,28 +2,41 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"sync"
 
-	dronepackage "github.com/marksaravi/drone-go/apps/drone"
-	"github.com/marksaravi/drone-go/devices/imu"
+	dronePackage "github.com/marksaravi/drone-go/apps/drone"
+	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
-	"github.com/marksaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
+	log.Println("Starting RemoteControl")
+	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
+	log.Println(configs)
+
+	radioConfigs := configs.Radio
+	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
+		radioConfigs.SPI.BusNum,
+		radioConfigs.SPI.ChipSelect,
+		radioConfigs.SPI.SpiChipEnabledGPIO,
+		radioConfigs.RxTxAddress,
+	)
+	radioReceiver := radio.NewReceiver(radioLink)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
+	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
+		Receiver:          radioReceiver,
+		CommandsPerSecond: configs.CommandsPerSecond,
+	})
 
-	utils.WaitToAbortByESC(cancel)
-	var mems imu.IMUMems6DOF = icm20789.NewICM20789(icm20789.ReadConfigs())
-	imudev := imu.NewIMU(mems, imu.ReadConfigs())
-	drone := dronepackage.NewDrone(
-		imudev,
-	)
-	drone.Fly(ctx, &wg)
+	go func() {
+		fmt.Scanln()
+		cancel()
+	}()
+
+	drone.Start(ctx)
 }
