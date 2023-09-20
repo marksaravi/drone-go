@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/mems"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 const MIN_TIME_BETWEEN_READS = time.Millisecond * 50
@@ -49,7 +48,7 @@ func ReadConfigs() Configs {
 	var configs struct {
 		Imu Configs `yaml:"imu"`
 	}
-	utils.ReadConfigs(&configs)
+	// utils.ReadConfigs(&configs)
 	return configs.Imu
 }
 
