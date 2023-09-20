@@ -20,14 +20,14 @@ type RemoteConfigs struct {
 		SPI         SPI    `json:"spi"`
 	}
 	Joysticks struct {
-		SPI             SPI `json:"spi"`
-		RollChannel     int `json:"roll-channel"`
-		PitchChannel    int `json:"pitch-channel"`
-		YawChannel      int `json:"yaw-channel"`
-		ThrottleChannel int `json:"throttle-channel"`
-		RollMidValue    int `json:"roll-mid-value"`
-		PitchMidValue   int `json:"pitch-mid-value"`
-		YawMidValue     int `json:"yaw-mid-value"`
+		SPI             SPI    `json:"spi"`
+		RollChannel     int    `json:"roll-channel"`
+		PitchChannel    int    `json:"pitch-channel"`
+		YawChannel      int    `json:"yaw-channel"`
+		ThrottleChannel int    `json:"throttle-channel"`
+		RollMidValue    uint16 `json:"roll-mid-value"`
+		PitchMidValue   uint16 `json:"pitch-mid-value"`
+		YawMidValue     uint16 `json:"yaw-mid-value"`
 	} `json:"joysticks"`
 	PushButtons struct {
 		Right []string `json:"right"`

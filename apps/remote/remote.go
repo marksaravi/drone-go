@@ -2,7 +2,6 @@ package remote
 
 import (
 	"context"
-	"log"
 	"time"
 )
 
@@ -11,29 +10,42 @@ type radioTransmiter interface {
 	Transmit(payload []byte) error
 }
 
+type joystick interface {
+	Read() uint16
+}
+
 type commands struct {
-	roll     byte
-	pitch    byte
-	yaw      byte
-	throttle byte
+	roll     uint16
+	pitch    uint16
+	yaw      uint16
+	throttle uint16
 }
 
 type remoteControl struct {
 	transmitter radioTransmiter
+	roll        joystick
+	pitch       joystick
+	yaw         joystick
+	throttle    joystick
 
 	lastCommand      time.Time
 	commandPerSecond int
 }
 
 type RemoteSettings struct {
-	Transmitter      radioTransmiter
-	CommandPerSecond int
+	Transmitter                radioTransmiter
+	CommandPerSecond           int
+	Roll, Pitch, Yaw, Throttle joystick
 }
 
-func NewRemoteControl(configs RemoteSettings) *remoteControl {
+func NewRemoteControl(settings RemoteSettings) *remoteControl {
 	return &remoteControl{
-		transmitter:      configs.Transmitter,
-		commandPerSecond: configs.CommandPerSecond,
+		transmitter:      settings.Transmitter,
+		commandPerSecond: settings.CommandPerSecond,
+		roll:             settings.Roll,
+		pitch:            settings.Pitch,
+		yaw:              settings.Yaw,
+		throttle:         settings.Throttle,
 		lastCommand:      time.Now(),
 	}
 }
@@ -45,12 +57,12 @@ func (r *remoteControl) Start(ctx context.Context) {
 		select {
 		default:
 			if commands, ok := r.ReadCommands(); ok {
-				log.Println(commands)
+				// log.Println(commands)
 				r.transmitter.Transmit([]byte{
-					commands.roll,
-					commands.pitch,
-					commands.yaw,
-					commands.throttle,
+					byte(commands.roll),
+					byte(commands.pitch),
+					byte(commands.yaw),
+					byte(commands.throttle),
 					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				})
 
