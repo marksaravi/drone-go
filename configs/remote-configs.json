@@ -1,0 +1,41 @@
+{
+    "commands-per-second": 25,
+    "radio": {
+        "rx-tx-address": "03896",
+        "spi": {
+            "bus-num": 0,
+            "chip-select": 0,
+            "chip-enabled-gpio": "GPIO25"
+        }
+    },
+    "joysticks": {
+        "roll-channel": 0,
+        "pitch-channel": 1,
+        "yaw-channel": 2,
+        "throttle-channel": 3,
+        "roll-mid-value": 500,
+        "pitch-mid-value": 523,
+        "yaw-mid-value": 515,
+        "spi": {
+            "bus-num": 1,
+            "chip-select": 0,
+            "chip-enabled-gpio": ""
+        }
+    },
+    "push-buttons-gpio": {
+        "right": [
+            "GPIO4",
+            "GPIO14",
+            "GPIO15",
+            "GPIO18",
+            "GPIO23"
+        ],
+        "left": [
+            "GPIO17",
+            "GPIO27",
+            "GPIO22",
+            "GPIO5",
+            "GPIO6"
+        ]
+    }
+}

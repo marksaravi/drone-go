@@ -16,15 +16,20 @@ type pushButton interface {
 	Name() string
 }
 
+func addButton(tag string, index int, gpioPin string, buttons map[string]pushButton) {
+	name := fmt.Sprintf("%s-%d", tag, index)
+	pin := hardware.NewPullDownPushButton(gpioPin)
+	buttons[name] = pushbutton.NewPushButton(name, pin)
+}
+
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
-	configs := remote.ReadConfigs("./remote-configs.yaml")
+	configs := remote.ReadConfigs("./configs/remote-configs.json")
 	buttons := make(map[string]pushButton)
-	for name, gpioPin := range configs.Buttons {
-		fmt.Printf("%s:%s\n", name, gpioPin)
-		pin := hardware.NewPullDownPushButton(gpioPin)
-		buttons[name] = pushbutton.NewPushButton(name, pin)
+	for i := 0; i < len(configs.PushButtons.Left); i++ {
+		addButton("left", i, configs.PushButtons.Left[i], buttons)
+		addButton("right", i, configs.PushButtons.Right[i], buttons)
 	}
 	fmt.Println()
 	ctx, cancel := context.WithCancel(context.Background())
