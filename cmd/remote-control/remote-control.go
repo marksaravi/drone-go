@@ -8,6 +8,7 @@ import (
 	"github.com/marksaravi/drone-go/apps/remote"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 )
 
@@ -25,11 +26,38 @@ func main() {
 		radioConfigs.SPI.SpiChipEnabledGPIO,
 		radioConfigs.RxTxAddress,
 	)
+
 	radioTransmitter := radio.NewTransmitter(radioLink)
+
+	analogToDigitalSPIConn := hardware.NewSPIConnection(
+		configs.Joysticks.SPI.BusNum,
+		configs.Joysticks.SPI.ChipSelect,
+	)
+
+	joystickRoll := mcp3008.NewMCP3008(
+		analogToDigitalSPIConn,
+		configs.Joysticks.RollChannel,
+	)
+	joystickPitch := mcp3008.NewMCP3008(
+		analogToDigitalSPIConn,
+		configs.Joysticks.PitchChannel,
+	)
+	joystickYaw := mcp3008.NewMCP3008(
+		analogToDigitalSPIConn,
+		configs.Joysticks.YawChannel,
+	)
+	joystickThrottle := mcp3008.NewMCP3008(
+		analogToDigitalSPIConn,
+		configs.Joysticks.ThrottleChannel,
+	)
 
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:      radioTransmitter,
 		CommandPerSecond: configs.CommandsPerSecond,
+		Roll:             joystickRoll,
+		Pitch:            joystickPitch,
+		Yaw:              joystickYaw,
+		Throttle:         joystickThrottle,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

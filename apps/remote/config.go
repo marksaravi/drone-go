@@ -7,16 +7,28 @@ import (
 	"encoding/json"
 )
 
+type SPI struct {
+	BusNum             int    `json:"bus-num"`
+	ChipSelect         int    `json:"chip-select"`
+	SpiChipEnabledGPIO string `json:"chip-enabled-gpio"`
+}
+
 type RemoteConfigs struct {
 	CommandsPerSecond int `json:"commands-per-second"`
 	Radio             struct {
 		RxTxAddress string `json:"rx-tx-address"`
-		SPI         struct {
-			BusNum             int    `json:"bus-num"`
-			ChipSelect         int    `json:"chip-select"`
-			SpiChipEnabledGPIO string `json:"chip-enabled-gpio"`
-		}
-	} `json:"radio"`
+		SPI         SPI    `json:"spi"`
+	}
+	Joysticks struct {
+		SPI             SPI `json:"spi"`
+		RollChannel     int `json:"roll-channel"`
+		PitchChannel    int `json:"pitch-channel"`
+		YawChannel      int `json:"yaw-channel"`
+		ThrottleChannel int `json:"throttle-channel"`
+		RollMidValue    int `json:"roll-mid-value"`
+		PitchMidValue   int `json:"pitch-mid-value"`
+		YawMidValue     int `json:"yaw-mid-value"`
+	} `json:"joysticks"`
 	PushButtons struct {
 		Right []string `json:"right"`
 		Left  []string `json:"left"`
