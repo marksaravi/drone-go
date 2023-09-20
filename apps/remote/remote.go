@@ -51,7 +51,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 					commands.pitch,
 					commands.yaw,
 					commands.throttle,
-					0, 0, 0, 0,
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				})
 
 			}
