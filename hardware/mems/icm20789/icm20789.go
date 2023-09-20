@@ -5,7 +5,6 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mems"
-	"github.com/marksaravi/drone-go/utils"
 	"periph.io/x/conn/v3/spi"
 )
 
@@ -80,7 +79,7 @@ func ReadConfigs() Configs {
 	var configs struct {
 		Imu Configs `yaml:"icm20789"`
 	}
-	utils.ReadConfigs(&configs)
+	//utils.ReadConfigs(&configs)
 	return configs.Imu
 }
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {

@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/models"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -76,7 +75,6 @@ func NewFlightControl(
 		radio:              radio,
 		logger:             logger,
 		settings:           settings,
-		connectionState:    constants.CONNECTED,
 		connectionChanOpen: true,
 		commandChanOpen:    true,
 		running:            true,
@@ -107,20 +105,20 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 			case fc.flightCommands, fc.commandChanOpen = <-fc.radio.GetReceiverChannel():
 				if fc.commandChanOpen {
-					targetStates = flightCommandsToRotations(fc.flightCommands, fc.settings)
-					throttle := flightCommandsToThrottle(fc.flightCommands, fc.settings)
-					fc.checkForEnablingSafeStart(throttle)
+					// targetStates = flightCommandsToRotations(fc.flightCommands, fc.settings)
+					// throttle := flightCommandsToThrottle(fc.flightCommands, fc.settings)
+					// fc.checkForEnablingSafeStart(throttle)
 					fc.pid.SetTargetStates(targetStates)
 					fc.pid.Calibrate(fc.flightCommands.ButtonTopRight, fc.flightCommands.ButtonTopLeft)
 				}
 
-			case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
-				if fc.connectionChanOpen {
-					if fc.connectionState == constants.DISCONNECTED {
-						fc.isSafeStarted = false
-					}
-					fc.showConnectionState()
-				}
+			// case fc.connectionState, fc.connectionChanOpen = <-fc.radio.GetConnectionStateChannel():
+			// 	if fc.connectionChanOpen {
+			// 		if fc.connectionState == constants.DISCONNECTED {
+			// 			fc.isSafeStarted = false
+			// 		}
+			// 		// fc.showConnectionState()
+			// 	}
 
 			default:
 				fc.safeReduceThrottle()
@@ -142,14 +140,14 @@ func (fc *flightControl) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func (fc *flightControl) showConnectionState() {
-	switch fc.connectionState {
-	case constants.CONNECTED:
-		log.Println("Connected")
-	case constants.DISCONNECTED:
-		log.Println("Disconnected")
-	}
-}
+// func (fc *flightControl) showConnectionState() {
+// 	switch fc.connectionState {
+// 	case constants.CONNECTED:
+// 		log.Println("Connected")
+// 	case constants.DISCONNECTED:
+// 		log.Println("Disconnected")
+// 	}
+// }
 
 func (fc *flightControl) safeReduceThrottle() {
 	if fc.isSafeStarted || fc.throttle == 0 || time.Since(fc.stopTimeout) < time.Millisecond*10 {
@@ -187,17 +185,17 @@ func rotationsAroundZ(x, y, angle float64) (xR, yR float64) {
 	return
 }
 
-func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundImuAxis {
-	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
-	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
-	xrot, yrot := rotationsAroundZ(roll, pitch, -45)
-	return models.RotationsAroundImuAxis{
-		X: xrot,
-		Y: yrot,
-		Z: joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
-	}
-}
+// func flightCommandsToRotations(command models.FlightCommands, settings Settings) models.RotationsAroundImuAxis {
+// 	roll := joystickToTwoWayCommand(command.Roll, constants.JOYSTICK_RESOLUTION, settings.MaxRoll)
+// 	pitch := joystickToTwoWayCommand(command.Pitch, constants.JOYSTICK_RESOLUTION, settings.MaxPitch)
+// 	xrot, yrot := rotationsAroundZ(roll, pitch, -45)
+// 	return models.RotationsAroundImuAxis{
+// 		X: xrot,
+// 		Y: yrot,
+// 		Z: joystickToTwoWayCommand(command.Yaw, constants.JOYSTICK_RESOLUTION, settings.MaxYaw),
+// 	}
+// }
 
-func flightCommandsToThrottle(command models.FlightCommands, settings Settings) float64 {
-	return joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle)
-}
+// func flightCommandsToThrottle(command models.FlightCommands, settings Settings) float64 {
+// 	return joystickToOneWayCommand(command.Throttle, constants.JOYSTICK_RESOLUTION, settings.MaxThrottle)
+// }
