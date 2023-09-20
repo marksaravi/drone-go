@@ -1,7 +1,7 @@
 {
     "commands-per-second": 25,
     "radio": {
-        "rx-tx-address":"03896",
+        "rx-tx-address": "03896",
         "spi": {
             "bus-num": 1,
             "chip-select": 0,
