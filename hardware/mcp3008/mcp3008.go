@@ -1,6 +1,8 @@
 package mcp3008
 
-import "periph.io/x/conn/v3/spi"
+import (
+	"periph.io/x/conn/v3/spi"
+)
 
 const (
 	DIGITAL_MAX_VALUE uint16 = 1024
@@ -57,6 +59,8 @@ func (dev *mcp3008dev) ConvertToOutputRange(v uint16) uint16 {
 	}
 	x := float32(v)
 	diff := x - float32(dev.midValue)
-	return uint16(float32(dev.outputRange)/float32(dev.maxValue-dev.minValue)*diff + float32(dev.outputRange)/2)
 
+	y := diff*float32(dev.outputRange)/float32(dev.maxValue-dev.minValue) + float32(dev.outputRange)/2
+	// fmt.Printf("%8.2f    %8.2f   %8.2f  %8.2f\n", diff, float32(dev.outputRange), float32(dev.maxValue-dev.minValue), y)
+	return uint16(y)
 }
