@@ -17,6 +17,7 @@ type joystick interface {
 
 type PushButton interface {
 	Name() string
+	Hold() bool
 	IsPressed() bool
 }
 
@@ -55,7 +56,7 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		yaw:              settings.Yaw,
 		throttle:         settings.Throttle,
 		buttons:          settings.PushButtons,
-		buttonsPressed: make([]byte, len(settings.PushButtons)),
+		buttonsPressed:   make([]byte, len(settings.PushButtons)),
 	}
 }
 
@@ -70,14 +71,18 @@ func (r *remoteControl) Start(ctx context.Context) {
 			if time.Since(lastCommand)>=commandTimeout {
 				r.ReadCommands()
 				r.ReadButtons()
+				b:=r.buttonsPressed
+				fmt.Println(b)
 				payload:= []byte {
 					byte(r.commands.roll),
 					byte(r.commands.pitch),
 					byte(r.commands.yaw),
 					byte(r.commands.throttle),
-					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					b[0] | b[6]<<1,
+					0,
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				}
-				fmt.Println(payload)
+				// fmt.Println(payload)
 				r.transmitter.Transmit(payload)
 				
 				lastCommand=time.Now()

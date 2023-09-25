@@ -32,6 +32,7 @@ type RemoteConfigs struct {
 	PushButtons []struct {
 		Name string `json:"name"`
 		GPIO string `json:"gpio"`
+		Hold bool   `json:"hold"`
 	} `json:"push-buttons-gpio"`
 }
 

@@ -32,6 +32,10 @@ func (b *pushButton) Name() string {
 	return b.name
 }
 
+func (b *pushButton) Hold() bool {
+	return b.hold
+}
+
 func (b *pushButton) IsPressed() bool {
 	pressed:= b.pin.Read() == gpio.Low
 	if b.hold {

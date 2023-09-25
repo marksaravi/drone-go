@@ -25,43 +25,53 @@
     "push-buttons-gpio": [
         {
             "name": "right-0",
-            "gpio": "GPIO4"
+            "gpio": "GPIO4",
+            "hold": true
         },
         {
             "name": "right-1",
-            "gpio": "GPIO14"
+            "gpio": "GPIO14",
+            "hold": false
         },
         {
             "name": "right-2",
-            "gpio": "GPIO15"
+            "gpio": "GPIO15",
+            "hold": false
         },
         {
             "name": "right-3",
-            "gpio": "GPIO18"
+            "gpio": "GPIO18",
+            "hold": false
         },
         {
             "name": "right-4",
-            "gpio": "GPIO23"
+            "gpio": "GPIO23",
+            "hold": false
         },
         {
             "name": "left-0",
-            "gpio": "GPIO17"
+            "gpio": "GPIO17",
+            "hold": true
         },
         {
             "name": "left-1",
-            "gpio": "GPIO27"
+            "gpio": "GPIO27",
+            "hold": false
         },
         {
             "name": "left-2",
-            "gpio": "GPIO22"
+            "gpio": "GPIO22",
+            "hold": false
         },
         {
             "name": "left-3",
-            "gpio": "GPIO5"
+            "gpio": "GPIO5",
+            "hold": false
         },
         {
             "name": "left-4",
-            "gpio": "GPIO6"
+            "gpio": "GPIO6",
+            "hold": false
         }
     ]
 }

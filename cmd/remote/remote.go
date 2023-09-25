@@ -64,12 +64,8 @@ func main() {
 	buttons := make([]remote.PushButton, 0, 10)
 	buttonsCount:=make([]int,0 , 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
-		hold:=false
-		if configs.PushButtons[i].Name == "right-0" || configs.PushButtons[i].Name == "left-0" {
-			hold=true
-		}
 		pin:=hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
-		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin, hold))
+		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin, configs.PushButtons[i].Hold))
 		buttonsCount=append(buttonsCount, 0)
 	}
 
