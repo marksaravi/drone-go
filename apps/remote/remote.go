@@ -28,14 +28,15 @@ type commands struct {
 }
 
 type remoteControl struct {
-	transmitter radioTransmiter
-	roll        joystick
-	pitch       joystick
-	yaw         joystick
-	throttle    joystick
-	buttons     []PushButton
-
+	transmitter      radioTransmiter
+	roll             joystick
+	pitch            joystick
+	yaw              joystick
+	throttle         joystick
+	buttons          []PushButton
 	commandPerSecond int
+	buttonsPressed   []byte
+	commands         commands
 }
 
 type RemoteSettings struct {
@@ -54,6 +55,7 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		yaw:              settings.Yaw,
 		throttle:         settings.Throttle,
 		buttons:          settings.PushButtons,
+		buttonsPressed: make([]byte, len(settings.PushButtons)),
 	}
 }
 
@@ -66,17 +68,18 @@ func (r *remoteControl) Start(ctx context.Context) {
 		select {
 		default:
 			if time.Since(lastCommand)>=commandTimeout {
-				if commands, ok := r.ReadCommands(); ok {
-					payload:= []byte {
-						byte(commands.roll),
-						byte(commands.pitch),
-						byte(commands.yaw),
-						byte(commands.throttle),
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-					}
-					fmt.Println(payload)
-					r.transmitter.Transmit(payload)
+				r.ReadCommands()
+				r.ReadButtons()
+				payload:= []byte {
+					byte(r.commands.roll),
+					byte(r.commands.pitch),
+					byte(r.commands.yaw),
+					byte(r.commands.throttle),
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				}
+				fmt.Println(payload)
+				r.transmitter.Transmit(payload)
+				
 				lastCommand=time.Now()
 			}
 		case <-ctx.Done():
