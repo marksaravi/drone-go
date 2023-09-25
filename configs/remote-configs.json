@@ -26,52 +26,52 @@
         {
             "name": "right-0",
             "gpio": "GPIO4",
-            "hold": true
+            "pulse-mode": false
         },
         {
             "name": "right-1",
             "gpio": "GPIO14",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "right-2",
             "gpio": "GPIO15",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "right-3",
             "gpio": "GPIO18",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "right-4",
             "gpio": "GPIO23",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "left-0",
             "gpio": "GPIO17",
-            "hold": true
+            "pulse-mode": false
         },
         {
             "name": "left-1",
             "gpio": "GPIO27",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "left-2",
             "gpio": "GPIO22",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "left-3",
             "gpio": "GPIO5",
-            "hold": false
+            "pulse-mode": true
         },
         {
             "name": "left-4",
             "gpio": "GPIO6",
-            "hold": false
+            "pulse-mode": true
         }
     ]
 }

@@ -16,8 +16,8 @@ type joystick interface {
 }
 
 type PushButton interface {
-	Name() string
-	Hold() bool
+	Name()      string
+	PulseMode() bool
 	IsPressed() bool
 }
 
@@ -71,18 +71,18 @@ func (r *remoteControl) Start(ctx context.Context) {
 			if time.Since(lastCommand)>=commandTimeout {
 				r.ReadCommands()
 				r.ReadButtons()
-				b:=r.buttonsPressed
-				fmt.Println(b)
+
+				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
 				payload:= []byte {
 					byte(r.commands.roll),
 					byte(r.commands.pitch),
 					byte(r.commands.yaw),
 					byte(r.commands.throttle),
-					b[0] | b[6]<<1,
-					0,
+					continuesOutputButtons,
+					pulseOutputButtons,
 					0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				}
-				// fmt.Println(payload)
+				fmt.Println(payload)
 				r.transmitter.Transmit(payload)
 				
 				lastCommand=time.Now()
@@ -91,4 +91,21 @@ func (r *remoteControl) Start(ctx context.Context) {
 			running = false
 		}
 	}
+}
+
+func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
+	continuesOutputs:=byte(0)
+	coshift:=0
+	pulseOutputs:=byte(0)
+	pshift:=0
+	for i, bp := range r.buttonsPressed {
+		if r.buttons[i].PulseMode() {
+			pulseOutputs |= bp << pshift
+			pshift++
+		} else {
+			continuesOutputs |= bp << coshift
+			coshift++
+		}
+	}
+	return continuesOutputs, pulseOutputs
 }
