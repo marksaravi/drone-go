@@ -22,20 +22,46 @@
             "chip-enabled-gpio": ""
         }
     },
-    "push-buttons-gpio": {
-        "right": [
-            "GPIO4",
-            "GPIO14",
-            "GPIO15",
-            "GPIO18",
-            "GPIO23"
-        ],
-        "left": [
-            "GPIO17",
-            "GPIO27",
-            "GPIO22",
-            "GPIO5",
-            "GPIO6"
-        ]
-    }
+    "push-buttons-gpio": [
+        {
+            "name": "right-0",
+            "gpio": "GPIO4"
+        },
+        {
+            "name": "right-1",
+            "gpio": "GPIO14"
+        },
+        {
+            "name": "right-2",
+            "gpio": "GPIO15"
+        },
+        {
+            "name": "right-3",
+            "gpio": "GPIO18"
+        },
+        {
+            "name": "right-4",
+            "gpio": "GPIO23"
+        },
+        {
+            "name": "lrft-0",
+            "gpio": "GPIO17"
+        },
+        {
+            "name": "lrft-1",
+            "gpio": "GPIO27"
+        },
+        {
+            "name": "lrft-2",
+            "gpio": "GPIO22"
+        },
+        {
+            "name": "lrft-3",
+            "gpio": "GPIO5"
+        },
+        {
+            "name": "lrft-4",
+            "gpio": "GPIO6"
+        }
+    ]
 }

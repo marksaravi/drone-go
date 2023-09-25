@@ -29,9 +29,9 @@ type RemoteConfigs struct {
 		PitchMidValue   uint16 `json:"pitch-mid-value"`
 		YawMidValue     uint16 `json:"yaw-mid-value"`
 	} `json:"joysticks"`
-	PushButtons struct {
-		Right []string `json:"right"`
-		Left  []string `json:"left"`
+	PushButtons []struct {
+		Name string `json:"name"`
+		GPIO string `json:"gpio"`
 	} `json:"push-buttons-gpio"`
 }
 
