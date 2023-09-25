@@ -71,7 +71,6 @@ func (r *remoteControl) Start(ctx context.Context) {
 			if time.Since(lastCommand)>=commandTimeout {
 				r.ReadCommands()
 				r.ReadButtons()
-
 				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
 				payload:= []byte {
 					byte(r.commands.roll),
