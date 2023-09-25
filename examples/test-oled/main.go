@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -24,5 +25,19 @@ func main() {
 	time.Sleep(time.Second)
 	oled.Println("Hello Mark!", 0)
 	oled.WriteString("Disconnected", 0, 1)
-	oled.WriteString("T: 15.7%", 0, 2)
+	max:=float32(100)
+	min:=float32(0)
+	dt:=float32(0.1)
+	throttle:=float32(0)
+	for {
+		time.Sleep(time.Second/4)
+		oled.WriteString("            ", 0, 2)
+		s:=fmt.Sprintf("T: %0.1f%s", throttle, "%")
+		fmt.Println(s)
+		oled.WriteString(s, 0, 2)
+		throttle += dt
+		if throttle>max || throttle <min {
+			dt = -dt
+		}
+	}
 }

@@ -140,7 +140,7 @@ func (d *SSD1306) Println(msg string, y int) {
 }
 
 func (d *SSD1306) writeString(msg string, x, y int) {
-	charCodes := []byte(msg)
+	charCodes := []rune(msg)
 	for i := 0; i < len(charCodes); i++ {
 		d.WriteChar(int(charCodes[i]), x+i, y)
 	}
