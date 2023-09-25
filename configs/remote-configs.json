@@ -44,23 +44,23 @@
             "gpio": "GPIO23"
         },
         {
-            "name": "lrft-0",
+            "name": "left-0",
             "gpio": "GPIO17"
         },
         {
-            "name": "lrft-1",
+            "name": "left-1",
             "gpio": "GPIO27"
         },
         {
-            "name": "lrft-2",
+            "name": "left-2",
             "gpio": "GPIO22"
         },
         {
-            "name": "lrft-3",
+            "name": "left-3",
             "gpio": "GPIO5"
         },
         {
-            "name": "lrft-4",
+            "name": "left-4",
             "gpio": "GPIO6"
         }
     ]

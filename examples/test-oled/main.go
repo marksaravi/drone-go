@@ -36,7 +36,7 @@ func main() {
 		fmt.Println(s)
 		oled.WriteString(s, 0, 2)
 		throttle += dt
-		if throttle>max || throttle <min {
+		if throttle>=max || throttle =<min {
 			dt = -dt
 		}
 	}

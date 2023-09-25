@@ -2,6 +2,7 @@ package remote
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -12,6 +13,11 @@ type radioTransmiter interface {
 
 type joystick interface {
 	Read() uint16
+}
+
+type PushButton interface {
+	Name() string
+	IsPressed() bool
 }
 
 type commands struct {
@@ -27,8 +33,8 @@ type remoteControl struct {
 	pitch       joystick
 	yaw         joystick
 	throttle    joystick
+	buttons     []PushButton
 
-	lastCommand      time.Time
 	commandPerSecond int
 }
 
@@ -36,6 +42,7 @@ type RemoteSettings struct {
 	Transmitter                radioTransmiter
 	CommandPerSecond           int
 	Roll, Pitch, Yaw, Throttle joystick
+	PushButtons                []PushButton
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
@@ -46,30 +53,34 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		pitch:            settings.Pitch,
 		yaw:              settings.Yaw,
 		throttle:         settings.Throttle,
-		lastCommand:      time.Now(),
+		buttons:          settings.PushButtons,
 	}
 }
 
 func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
+	lastCommand:=time.Now()
+	commandTimeout:=time.Second/time.Duration(r.commandPerSecond)
 	for running {
 		select {
 		default:
-			if commands, ok := r.ReadCommands(); ok {
-				// log.Println(commands)
-				r.transmitter.Transmit([]byte{
-					byte(commands.roll),
-					byte(commands.pitch),
-					byte(commands.yaw),
-					byte(commands.throttle),
-					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				})
-
+			if time.Since(lastCommand)>=commandTimeout {
+				if commands, ok := r.ReadCommands(); ok {
+					payload:= []byte {
+						byte(commands.roll),
+						byte(commands.pitch),
+						byte(commands.yaw),
+						byte(commands.throttle),
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					}
+					fmt.Println(payload)
+					r.transmitter.Transmit(payload)
+				}
+				lastCommand=time.Now()
 			}
 		case <-ctx.Done():
 			running = false
 		}
 	}
-
 }
