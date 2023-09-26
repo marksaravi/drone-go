@@ -34,6 +34,7 @@ type RemoteConfigs struct {
 		GPIO      string `json:"gpio"`
 		PulseMode bool   `json:"pulse-mode"`
 	} `json:"push-buttons-gpio"`
+	DisplayUpdatePerSecond int `json:"display-update-per-second"`
 }
 
 func ReadConfigs(configPath string) RemoteConfigs {

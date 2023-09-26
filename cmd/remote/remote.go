@@ -12,6 +12,9 @@ import (
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
+	"github.com/marksaravi/drone-go/hardware/ssd1306"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 func main() {
@@ -69,14 +72,27 @@ func main() {
 		buttonsCount=append(buttonsCount, 0)
 	}
 
+	b, err := i2creg.Open("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer b.Close()
+	d := &i2c.Dev{Addr: 0x3D, Bus: b}
+	oled := ssd1306.NewSSD1306(d, ssd1306.DefaultOptions)
+	err = oled.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
-		Transmitter:      radioTransmitter,
-		CommandPerSecond: configs.CommandsPerSecond,
-		Roll:             joystickRoll,
-		Pitch:            joystickPitch,
-		Yaw:              joystickYaw,
-		Throttle:         joystickThrottle,
-		PushButtons:      buttons,
+		Transmitter:            radioTransmitter,
+		CommandPerSecond:       configs.CommandsPerSecond,
+		Roll:                   joystickRoll,
+		Pitch:                  joystickPitch,
+		Yaw:                    joystickYaw,
+		Throttle:               joystickThrottle,
+		PushButtons:            buttons,
+		OLED:                   oled,
+		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
 	})
 
 
