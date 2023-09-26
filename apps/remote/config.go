@@ -29,10 +29,12 @@ type RemoteConfigs struct {
 		PitchMidValue   uint16 `json:"pitch-mid-value"`
 		YawMidValue     uint16 `json:"yaw-mid-value"`
 	} `json:"joysticks"`
-	PushButtons struct {
-		Right []string `json:"right"`
-		Left  []string `json:"left"`
+	PushButtons []struct {
+		Name      string `json:"name"`
+		GPIO      string `json:"gpio"`
+		PulseMode bool   `json:"pulse-mode"`
 	} `json:"push-buttons-gpio"`
+	DisplayUpdatePerSecond int `json:"display-update-per-second"`
 }
 
 func ReadConfigs(configPath string) RemoteConfigs {
