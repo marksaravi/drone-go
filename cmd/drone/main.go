@@ -25,7 +25,7 @@ func main() {
 		radioConfigs.SPI.SpiChipEnabledGPIO,
 		radioConfigs.RxTxAddress,
 	)
-	radioReceiver := radio.NewReceiver(radioLink)
+	radioReceiver := radio.NewRadioReceiver(radioLink)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{

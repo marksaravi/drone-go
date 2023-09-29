@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/marksaravi/drone-go/apps/remote"
-	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/constants"
+	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mcp3008"
@@ -32,7 +32,7 @@ func main() {
 		radioConfigs.RxTxAddress,
 	)
 
-	radioTransmitter := radio.NewTransmitter(radioLink)
+	radioTransmitter := radio.NewRadioTransmitter(radioLink)
 
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
 		configs.Joysticks.SPI.BusNum,
@@ -65,11 +65,11 @@ func main() {
 	)
 
 	buttons := make([]remote.PushButton, 0, 10)
-	buttonsCount:=make([]int,0 , 10)
+	buttonsCount := make([]int, 0, 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
-		pin:=hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
+		pin := hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
 		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin, configs.PushButtons[i].PulseMode))
-		buttonsCount=append(buttonsCount, 0)
+		buttonsCount = append(buttonsCount, 0)
 	}
 
 	b, err := i2creg.Open("")
@@ -94,7 +94,6 @@ func main() {
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
 	})
-
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {

@@ -1,6 +1,8 @@
 package drone
 
-import "time"
+import (
+	"time"
+)
 
 func (d *droneApp) ReceiveCommand() ([]byte, bool) {
 	if time.Since(d.lastCommand) < time.Second/time.Duration(2*d.commandsPerSecond) {

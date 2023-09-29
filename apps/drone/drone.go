@@ -38,7 +38,7 @@ func (d *droneApp) Start(ctx context.Context) {
 		default:
 			command, ok := d.ReceiveCommand()
 			if ok {
-				fmt.Printf("%4v\n", command[0:4])
+				fmt.Printf("%4v\n", command)
 			}
 		case <-ctx.Done():
 			running = false
