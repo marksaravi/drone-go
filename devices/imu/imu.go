@@ -14,7 +14,6 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	DataPerSecond     int     `yaml:"data_per_second"`
 	FilterCoefficient float64 `yaml:"filter_coefficient"`
 }
 

@@ -1,4 +1,5 @@
 {
+    "imu-data-per-second": 1000,
     "commands-per-second": 25,
     "radio": {
         "rx-tx-address": "03896",

@@ -45,7 +45,6 @@ func main() {
 
 	mems := icm20789.NewICM20789(icm20789Configs)
 	imuConfigs := imu.Configs{
-		DataPerSecond:     1000,
 		FilterCoefficient: 0.001,
 	}
 
@@ -61,7 +60,7 @@ func main() {
 		case <-ticker.C:
 			log.Printf("%6.2f, %6.2f, %6.2f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
 		default:
-			if time.Since(lastRead) >= time.Second/time.Duration(imuConfigs.DataPerSecond) {
+			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
 				rotations, _ = imudev.Read()
 			}

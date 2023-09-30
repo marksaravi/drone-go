@@ -5,17 +5,15 @@ import (
 	"os"
 
 	"encoding/json"
+
+	"github.com/marksaravi/drone-go/hardware"
 )
 
 type DroneConfigs struct {
 	CommandsPerSecond int `json:"commands-per-second"`
 	Radio             struct {
-		RxTxAddress string `json:"rx-tx-address"`
-		SPI         struct {
-			BusNum             int    `json:"bus-num"`
-			ChipSelect         int    `json:"chip-select"`
-			SpiChipEnabledGPIO string `json:"chip-enabled-gpio"`
-		}
+		RxTxAddress string                  `json:"rx-tx-address"`
+		SPI         hardware.SPIConnConfigs `json:"spi"`
 	} `json:"radio"`
 }
 
