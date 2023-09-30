@@ -3,7 +3,7 @@
     "radio": {
         "rx-tx-address": "03896",
         "spi": {
-            "bus-num": 0,
+            "bus-number": 0,
             "chip-select": 0,
             "chip-enabled-gpio": "GPIO25"
         }
@@ -17,7 +17,7 @@
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "spi": {
-            "bus-num": 1,
+            "bus-number": 1,
             "chip-select": 0,
             "chip-enabled-gpio": ""
         }

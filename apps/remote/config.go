@@ -14,7 +14,7 @@ type RemoteConfigs struct {
 	Radio             struct {
 		RxTxAddress string                  `json:"rx-tx-address"`
 		SPI         hardware.SPIConnConfigs `json:"spi"`
-	}
+	} `json:"radio"`
 	Joysticks struct {
 		SPI             hardware.SPIConnConfigs `json:"spi"`
 		RollChannel     int                     `json:"roll-channel"`
