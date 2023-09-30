@@ -25,3 +25,9 @@ func (d *droneApp) ReceiveCommand() ([]byte, bool) {
 	d.lastCommand = time.Now()
 	return d.receiver.Receive()
 }
+
+func (d *droneApp) PlotterData(rotations imu.Rotations) {
+	if !d.plotterActive {
+		return
+	}
+}

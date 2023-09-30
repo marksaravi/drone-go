@@ -57,6 +57,7 @@ func main() {
 		Imu:               imudev,
 		Receiver:          radioReceiver,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
+		PlotterActive:     configs.Plotter.Active,
 	})
 
 	go func() {

@@ -22,6 +22,7 @@ type DroneSettings struct {
 	Receiver          radioReceiver
 	ImuDataPerSecond  int
 	CommandsPerSecond int
+	PlotterActive     bool
 }
 
 type droneApp struct {
@@ -31,6 +32,7 @@ type droneApp struct {
 	receiver          radioReceiver
 	lastImuData       time.Time
 	lastCommand       time.Time
+	plotterActive     bool
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
@@ -41,6 +43,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		commandsPerSecond: settings.CommandsPerSecond,
 		lastCommand:       time.Now(),
 		lastImuData:       time.Now(),
+		plotterActive:     settings.PlotterActive,
 	}
 }
 
@@ -53,6 +56,9 @@ func (d *droneApp) Start(ctx context.Context) {
 		default:
 			rotations, imuok := d.ReadIMU()
 			command, commandok := d.ReceiveCommand()
+			if imuok {
+				d.PlotterData(rotations)
+			}
 			if (imuok || commandok) && time.Since(lp) > time.Second/10 {
 				lp = time.Now()
 				if imuok {

@@ -35,6 +35,9 @@ type DroneConfigs struct {
 			SPI         hardware.SPIConnConfigs `json:"spi"`
 		} `json:"radio"`
 	} `json:"remote-control"`
+	Plotter struct {
+		Active bool `json:"active"`
+	} `json:"plotter"`
 }
 
 func ReadConfigs(configPath string) DroneConfigs {

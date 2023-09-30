@@ -35,5 +35,8 @@
                 "chip-enabled-gpio": "GPIO16"
             }
         }
+    },
+    "plotter": {
+        "active": true
     }
 }
