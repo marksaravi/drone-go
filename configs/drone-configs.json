@@ -30,7 +30,7 @@
         "radio": {
             "rx-tx-address": "03896",
             "spi": {
-                "bus-num": 1,
+                "bus-number": 1,
                 "chip-select": 0,
                 "chip-enabled-gpio": "GPIO16"
             }

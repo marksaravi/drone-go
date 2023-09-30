@@ -59,11 +59,11 @@ func (d *droneApp) Start(ctx context.Context) {
 			if imuok {
 				d.PlotterData(rotations)
 			}
-			if (imuok || commandok) && time.Since(lp) > time.Second/10 {
+			if (commandok) && time.Since(lp) > time.Second/10 {
 				lp = time.Now()
-				if imuok {
-					fmt.Printf("%6.1f %6.1f %6.1f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
-				}
+				// if imuok {
+				// 	fmt.Printf("%6.1f %6.1f %6.1f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
+				// }
 				if commandok {
 					fmt.Printf("%4v\n", command)
 				}
