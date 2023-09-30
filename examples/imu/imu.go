@@ -62,7 +62,7 @@ func main() {
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				rotations, _ = imudev.Read()
+				rotations, _, _, _ = imudev.Read()
 			}
 		}
 

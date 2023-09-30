@@ -14,7 +14,7 @@ type radioReceiver interface {
 }
 
 type Imu interface {
-	Read() (imu.Rotations, error)
+	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
 type DroneSettings struct {
@@ -28,6 +28,9 @@ type DroneSettings struct {
 type droneApp struct {
 	imuDataPerSecond  int
 	commandsPerSecond int
+	rotations         imu.Rotations
+	accRotations      imu.Rotations
+	gyroRotations     imu.Rotations
 	imu               Imu
 	receiver          radioReceiver
 	lastImuData       time.Time
@@ -44,6 +47,9 @@ func NewDrone(settings DroneSettings) *droneApp {
 		lastCommand:       time.Now(),
 		lastImuData:       time.Now(),
 		plotterActive:     settings.PlotterActive,
+		rotations:         imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		accRotations:      imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyroRotations:     imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 	}
 }
 
@@ -54,10 +60,10 @@ func (d *droneApp) Start(ctx context.Context) {
 	for running {
 		select {
 		default:
-			rotations, imuok := d.ReadIMU()
+			imuok := d.ReadIMU()
 			command, commandok := d.ReceiveCommand()
 			if imuok {
-				d.PlotterData(rotations)
+				d.PlotterData()
 			}
 			if (commandok) && time.Since(lp) > time.Second/10 {
 				lp = time.Now()

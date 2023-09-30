@@ -6,16 +6,19 @@ import (
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
-func (d *droneApp) ReadIMU() (imu.Rotations, bool) {
+func (d *droneApp) ReadIMU() bool {
 	if time.Since(d.lastImuData) < time.Second/time.Duration(d.imuDataPerSecond) {
-		return imu.Rotations{}, false
+		return false
 	}
 	d.lastImuData = time.Now()
-	rotations, err := d.imu.Read()
+	rotations, accRotations, gyroRotations, err := d.imu.Read()
 	if err != nil {
-		return rotations, false
+		return false
 	}
-	return rotations, true
+	d.rotations = rotations
+	d.accRotations = accRotations
+	d.gyroRotations = gyroRotations
+	return true
 }
 
 func (d *droneApp) ReceiveCommand() ([]byte, bool) {
@@ -26,8 +29,11 @@ func (d *droneApp) ReceiveCommand() ([]byte, bool) {
 	return d.receiver.Receive()
 }
 
-func (d *droneApp) PlotterData(rotations imu.Rotations) {
+func (d *droneApp) PlotterData() {
 	if !d.plotterActive {
 		return
 	}
+}
+
+func SerializeRotations(r imu.Rotations) {
 }
