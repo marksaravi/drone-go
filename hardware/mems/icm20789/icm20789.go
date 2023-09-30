@@ -39,19 +39,20 @@ const (
 )
 
 type Offsets struct {
-	X uint16 `yaml:"x"`
-	Y uint16 `yaml:"y"`
-	Z uint16 `yaml:"z"`
+	X uint16 `json:"x"`
+	Y uint16 `json:"y"`
+	Z uint16 `json:"z"`
 }
 
 type InertialDeviceConfigs struct {
-	FullScale string  `yaml:"full_scale"`
-	Offsets   Offsets `yaml:"offsets"`
+	FullScale string  `json:"full_scale"`
+	Offsets   Offsets `json:"offsets"`
 }
 
 type Configs struct {
-	Accelerometer InertialDeviceConfigs `yaml:"accelerometer"`
-	Gyroscope     InertialDeviceConfigs `yaml:"gyroscope"`
+	SPI           hardware.SPIConnConfigs `json:"spi"`
+	Accelerometer InertialDeviceConfigs   `json:"accelerometer"`
+	Gyroscope     InertialDeviceConfigs   `json:"gyroscope"`
 }
 
 type memsIcm20789 struct {
@@ -65,7 +66,7 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.Accelerometer.FullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
 	m := memsIcm20789{
-		spiConn:        hardware.NewSPIConnection(0, 0),
+		spiConn:        hardware.NewSPIConnection(configs.SPI),
 		accelFullScale: accelFullScale,
 		gyroFullScale:  gyroFullScale,
 	}
@@ -75,13 +76,6 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	return &m
 }
 
-func ReadConfigs() Configs {
-	var configs struct {
-		Imu Configs `yaml:"icm20789"`
-	}
-	//utils.ReadConfigs(&configs)
-	return configs.Imu
-}
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
 	memsData, err := m.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {

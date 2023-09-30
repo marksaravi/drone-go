@@ -26,18 +26,13 @@ func main() {
 
 	radioConfigs := configs.Radio
 	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
-		radioConfigs.SPI.BusNum,
-		radioConfigs.SPI.ChipSelect,
-		radioConfigs.SPI.SpiChipEnabledGPIO,
+		radioConfigs.SPI,
 		radioConfigs.RxTxAddress,
 	)
 
 	radioTransmitter := radio.NewRadioTransmitter(radioLink)
 
-	analogToDigitalSPIConn := hardware.NewSPIConnection(
-		configs.Joysticks.SPI.BusNum,
-		configs.Joysticks.SPI.ChipSelect,
-	)
+	analogToDigitalSPIConn := hardware.NewSPIConnection(configs.Joysticks.SPI)
 
 	joystickRoll := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,

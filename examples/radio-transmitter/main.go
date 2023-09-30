@@ -22,9 +22,11 @@ func main() {
 	data := make([]byte, 8)
 	setData(data, 0)
 	r := nrf24l01.NewNRF24L01EnhancedBurst(
-		0,
-		0,
-		"GPIO25",
+		hardware.SPIConnConfigs{
+			BusNumber:       1,
+			ChipSelect:      0,
+			ChipEnabledGPIO: "GPIO25",
+		},
 		"03896",
 	)
 	r.TransmitterOn()

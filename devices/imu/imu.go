@@ -44,14 +44,6 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	}
 }
 
-func ReadConfigs() Configs {
-	var configs struct {
-		Imu Configs `yaml:"imu"`
-	}
-	// utils.ReadConfigs(&configs)
-	return configs.Imu
-}
-
 // Read returns Roll, Pitch and Yaw.
 func (imu *imuDevice) Read() (Rotations, error) {
 	imu.currReadTime = time.Now()

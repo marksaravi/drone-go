@@ -8,8 +8,14 @@ import (
 	"periph.io/x/host/v3/sysfs"
 )
 
-func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
-	p, err := sysfs.NewSPI(busNumber, chipSelect)
+type SPIConnConfigs struct {
+	BusNumber       int    `json:"bus-number"`
+	ChipSelect      int    `json:"chip-select"`
+	ChipEnabledGPIO string `json:"chip-enabled-gpio"`
+}
+
+func NewSPIConnection(configs SPIConnConfigs) spi.Conn {
+	p, err := sysfs.NewSPI(configs.BusNumber, configs.ChipSelect)
 
 	if err != nil {
 		log.Fatal(err)
