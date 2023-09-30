@@ -52,17 +52,21 @@ func main() {
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 10)
-	var rotations imu.Rotations
+	var rotations, accrotations, gyrorotations imu.Rotations
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Printf("%6.2f, %6.2f, %6.2f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
+			log.Printf("R: %6.2f, %6.2f, %6.2f    A: %6.2f, %6.2f, %6.2f    G: %6.2f, %6.2f, %6.2f\n",
+				rotations.Roll, rotations.Pitch, rotations.Yaw,
+				accrotations.Roll, accrotations.Pitch, accrotations.Yaw,
+				gyrorotations.Roll, gyrorotations.Pitch, gyrorotations.Yaw,
+			)
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				rotations, _, _, _ = imudev.Read()
+				rotations, accrotations, gyrorotations, _ = imudev.Read()
 			}
 		}
 
