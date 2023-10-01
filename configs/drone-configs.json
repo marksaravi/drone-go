@@ -22,7 +22,7 @@
             "spi": {
                 "bus-number": 0,
                 "chip-select": 0,
-                "speed-mhz": 65
+                "speed-mhz": 96
             }
         }
     },
@@ -33,7 +33,7 @@
             "spi": {
                 "bus-number": 1,
                 "chip-select": 0,
-                "speed-mhz": 32,
+                "speed-mhz": 48,
                 "chip-enabled-gpio": "GPIO16"
             }
         }
