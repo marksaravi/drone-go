@@ -5,6 +5,7 @@
         "spi": {
             "bus-number": 0,
             "chip-select": 0,
+            "speed-mhz": 11,
             "chip-enabled-gpio": "GPIO25"
         }
     },
@@ -19,6 +20,7 @@
         "spi": {
             "bus-number": 1,
             "chip-select": 0,
+            "speed-mhz": 11,
             "chip-enabled-gpio": ""
         }
     },
