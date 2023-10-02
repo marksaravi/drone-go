@@ -49,6 +49,11 @@ func (d *droneApp) SendPlotterData() bool {
 	if !d.plotterActive {
 		return false
 	}
+	if d.plotterDataCounter == 0 {
+		dpp := []byte{0, 0}
+		binary.LittleEndian.PutUint16(dpp, uint16(PLOTTER_DATA_PER_OACKET))
+		d.plotterBuffer = append(d.plotterBuffer, dpp...)
+	}
 	d.plotterBuffer = append(d.plotterBuffer, d.SerializeRotations()...)
 	d.plotterDataCounter++
 	if d.plotterDataCounter < d.ploterDataPerPacket {

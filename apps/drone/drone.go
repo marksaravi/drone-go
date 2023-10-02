@@ -64,7 +64,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		plotterBuffer:       make([]byte, 0, PLOTTER_BUFFER_SIZE),
-		plotterAddress:      "192.168.1.101:6433",
+		plotterAddress:      "192.168.1.101:6437",
 		plotterDataCounter:  0,
 		ploterDataPerPacket: PLOTTER_DATA_PER_OACKET,
 	}
