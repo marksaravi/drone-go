@@ -3,13 +3,15 @@ package drone
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
+const PLOTTER_DATA_LEN = 26
+const PLOTTER_DATA_PER_OACKET = 256
 const PLOTTER_BUFFER_SIZE = 9216
-const PLOTTER_SAMPLE_RATE = 50
 
 type radioReceiver interface {
 	On()
@@ -42,28 +44,29 @@ type droneApp struct {
 	lastCommand       time.Time
 	plotterActive     bool
 
-	plotterBuffer               []byte
-	plotterDataCounter          int
-	plotterSampleInterval       int
-	ploterSampleIntervalCounter int
+	plotterUdpConn      *net.UDPConn
+	plotterAddress      string
+	plotterBuffer       []byte
+	plotterDataCounter  int
+	ploterDataPerPacket int
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
-		imu:                         settings.Imu,
-		imuDataPerSecond:            settings.ImuDataPerSecond,
-		receiver:                    settings.Receiver,
-		commandsPerSecond:           settings.CommandsPerSecond,
-		lastCommand:                 time.Now(),
-		lastImuData:                 time.Now(),
-		plotterActive:               settings.PlotterActive,
-		rotations:                   imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		accRotations:                imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyroRotations:               imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		plotterBuffer:               make([]byte, 0, PLOTTER_BUFFER_SIZE),
-		plotterDataCounter:          0,
-		plotterSampleInterval:       settings.ImuDataPerSecond / PLOTTER_SAMPLE_RATE,
-		ploterSampleIntervalCounter: 0,
+		imu:                 settings.Imu,
+		imuDataPerSecond:    settings.ImuDataPerSecond,
+		receiver:            settings.Receiver,
+		commandsPerSecond:   settings.CommandsPerSecond,
+		lastCommand:         time.Now(),
+		lastImuData:         time.Now(),
+		plotterActive:       settings.PlotterActive,
+		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		plotterBuffer:       make([]byte, 0, PLOTTER_BUFFER_SIZE),
+		plotterAddress:      "192.168.1.101:6433",
+		plotterDataCounter:  0,
+		ploterDataPerPacket: PLOTTER_DATA_PER_OACKET,
 	}
 }
 
@@ -71,26 +74,55 @@ func (d *droneApp) Start(ctx context.Context) {
 	running := true
 	d.receiver.On()
 	lp := time.Now()
+	d.InitUdp()
+	maxCommand := time.Duration(0)
+	maxIMU := time.Duration(0)
+	maxUDP := time.Duration(0)
+	t := byte(0)
 	for running {
 		select {
 		default:
+			ts := time.Now()
 			imuok := d.ReadIMU()
-			command, commandok := d.ReceiveCommand()
-			if imuok {
-				d.BufferPlotterData()
-				d.SendPlotterData()
+			dur := time.Since(ts)
+			if dur > maxIMU {
+				maxIMU = dur
 			}
-			if (commandok) && time.Since(lp) > time.Second/10 {
+			ts = time.Now()
+			command, cmdok := d.ReceiveCommand()
+			if cmdok {
+				t = command[3]
+			}
+			dur = time.Since(ts)
+			if dur > maxCommand {
+				maxCommand = dur
+
+			}
+			if imuok {
+				ts = time.Now()
+				udpOk := d.SendPlotterData()
+				dur = time.Since(ts)
+				if udpOk && dur > maxUDP {
+					maxUDP = dur
+				}
+			}
+			if time.Since(lp) > time.Second*3 {
 				lp = time.Now()
+				fmt.Printf("imu: %10v, cmd: %10v, udp: %10v, roll: %10.1f, throttle: %5d\n", maxIMU, maxCommand, maxUDP, d.accRotations.Roll, t)
+				maxCommand = time.Duration(0)
+				maxIMU = time.Duration(0)
+				maxUDP = time.Duration(0)
 				// if imuok {
 				// 	fmt.Printf("%6.1f %6.1f %6.1f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
 				// }
-				if commandok {
-					fmt.Printf("%4v\n", command)
-				}
+				// if cmd {
+				// 	// fmt.Printf("%4v\n", command)
+				// }
 			}
 		case <-ctx.Done():
 			running = false
+			d.plotterActive = false
+			d.plotterUdpConn.Close()
 		}
 	}
 }

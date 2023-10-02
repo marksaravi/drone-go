@@ -3,6 +3,7 @@ package drone
 import (
 	"encoding/binary"
 	"fmt"
+	"net"
 	"time"
 )
 
@@ -29,29 +30,38 @@ func (d *droneApp) ReceiveCommand() ([]byte, bool) {
 	return d.receiver.Receive()
 }
 
-func (d *droneApp) SendPlotterData() {
-	d.plotterDataCounter++
-	if d.plotterDataCounter < PLOTTER_SAMPLE_RATE {
-		return
-	}
-	d.plotterDataCounter = 0
-	buffer := make([]byte, len(d.plotterBuffer))
-	copy(buffer, d.plotterBuffer)
-	d.plotterBuffer = make([]byte, 0, PLOTTER_BUFFER_SIZE)
-	go func(b []byte) {
-		fmt.Println("sending plotter data")
-	}(buffer)
-}
-func (d *droneApp) BufferPlotterData() {
+func (d *droneApp) InitUdp() {
 	if !d.plotterActive {
 		return
 	}
-	d.ploterSampleIntervalCounter++
-	if d.ploterSampleIntervalCounter < d.plotterSampleInterval {
-		return
+	plotterUdpServer, err := net.ResolveUDPAddr("udp", d.plotterAddress)
+	if err != nil {
+		d.plotterActive = false
+		fmt.Println("unable to initialise plotter server. Plotter deactivated.")
 	}
-	d.ploterSampleIntervalCounter = 0
+	d.plotterUdpConn, err = net.DialUDP("udp", nil, plotterUdpServer)
+	if err != nil || d.plotterUdpConn == nil {
+		d.plotterActive = false
+		fmt.Println("unable to initialise plotter connection. Plotter deactivated.")
+	}
+}
+func (d *droneApp) SendPlotterData() bool {
+	if !d.plotterActive {
+		return false
+	}
 	d.plotterBuffer = append(d.plotterBuffer, d.SerializeRotations()...)
+	d.plotterDataCounter++
+	if d.plotterDataCounter < d.ploterDataPerPacket {
+		return false
+	}
+	fmt.Println(d.ploterDataPerPacket, d.plotterDataCounter, len(d.plotterBuffer))
+	if d.plotterUdpConn != nil {
+		d.plotterUdpConn.Write(d.plotterBuffer)
+	}
+
+	d.plotterDataCounter = 0
+	d.plotterBuffer = make([]byte, 0, PLOTTER_BUFFER_SIZE)
+	return true
 }
 
 func (d *droneApp) SerializeRotations() []byte {
