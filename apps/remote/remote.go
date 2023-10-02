@@ -18,7 +18,7 @@ type joystick interface {
 }
 
 type PushButton interface {
-	Name()      string
+	Name() string
 	PulseMode() bool
 	IsPressed() bool
 }
@@ -85,14 +85,13 @@ func (r *remoteControl) Start(ctx context.Context) {
 		default:
 			if r.ReadCommands() {
 				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
-				payload:= []byte {
+				payload := []byte{
 					byte(r.commands.roll),
 					byte(r.commands.pitch),
 					byte(r.commands.yaw),
 					byte(r.commands.throttle),
 					continuesOutputButtons,
 					pulseOutputButtons,
-					0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				}
 				fmt.Println(payload, r.JoystickToString())
 				r.transmitter.Transmit(payload)
@@ -105,10 +104,10 @@ func (r *remoteControl) Start(ctx context.Context) {
 }
 
 func (r *remoteControl) ReadCommands() bool {
-	if time.Since(r.lastCommandRead)<time.Second/time.Duration(r.commandPerSecond) {
+	if time.Since(r.lastCommandRead) < time.Second/time.Duration(r.commandPerSecond) {
 		return false
 	}
-	r.lastCommandRead=time.Now()
+	r.lastCommandRead = time.Now()
 	r.ReadJoysticks()
 	r.ReadButtons()
 	return true
@@ -119,19 +118,19 @@ func (r *remoteControl) Initisplay() {
 }
 
 func (r *remoteControl) UpdateDisplay() {
-	if time.Since(r.lastDisplayUpdate)<time.Second/time.Duration(r.displayUpdatePerSecond) {
+	if time.Since(r.lastDisplayUpdate) < time.Second/time.Duration(r.displayUpdatePerSecond) {
 		return
 	}
-	r.lastDisplayUpdate=time.Now()
+	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
 	r.oled.WriteString(fmt.Sprintf("%2.1f%%", r.Throttle()), 9, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
-	continuesOutputs:=byte(0)
-	coshift:=0
-	pulseOutputs:=byte(0)
-	pshift:=0
+	continuesOutputs := byte(0)
+	coshift := 0
+	pulseOutputs := byte(0)
+	pshift := 0
 	for i, bp := range r.buttonsPressed {
 		if r.buttons[i].PulseMode() {
 			pulseOutputs |= bp << pshift
@@ -160,20 +159,18 @@ func (r *remoteControl) ReadJoysticks() {
 
 func (r *remoteControl) ReadButtons() {
 	for i, button := range r.buttons {
-		pressed:=button.IsPressed()
+		pressed := button.IsPressed()
 		if pressed {
-			r.buttonsPressed[i]=byte(1)
+			r.buttonsPressed[i] = byte(1)
 		} else {
-			r.buttonsPressed[i]=byte(0)
+			r.buttonsPressed[i] = byte(0)
 		}
 	}
 }
 
 func (r *remoteControl) Throttle() float32 {
-	return float32(r.commands.throttle)/constants.THROTTLE_MAX*100
+	return float32(r.commands.throttle) / constants.THROTTLE_MAX * 100
 }
-
-
 
 func jsticktofloat(x uint16) float32 {
 	const OUTPUT_RANGE_DEG = float32(90)
