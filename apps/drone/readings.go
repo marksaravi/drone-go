@@ -1,10 +1,12 @@
 package drone
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/marksaravi/drone-go/constants"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func (d *droneApp) ReadIMU() bool {
@@ -50,46 +52,44 @@ func (d *droneApp) SendPlotterData() bool {
 		return false
 	}
 	if d.plotterDataCounter == 0 {
-		dpp := []byte{0, 0}
-		binary.LittleEndian.PutUint16(dpp, uint16(PLOTTER_DATA_PER_OACKET))
-		d.plotterBuffer = append(d.plotterBuffer, dpp...)
+		d.plotterDataPacket = make([]byte, 0, constants.PLOTTER_PACKET_SIZE)
+		d.serialiseInt(constants.PLOTTER_PACKET_SIZE)
+		d.serialiseInt(constants.PLOTTER_DATA_PER_PACKET)
+		d.serialiseInt(constants.PLOTTER_DATA_LEN)
 	}
-	d.plotterBuffer = append(d.plotterBuffer, d.SerializeRotations()...)
-	d.plotterDataCounter++
+	d.SerializeRotations()
 	if d.plotterDataCounter < d.ploterDataPerPacket {
 		return false
 	}
-	fmt.Println(d.ploterDataPerPacket, d.plotterDataCounter, len(d.plotterBuffer))
 	if d.plotterUdpConn != nil {
-		d.plotterUdpConn.Write(d.plotterBuffer)
+		d.plotterUdpConn.Write(d.plotterDataPacket)
 	}
-
 	d.plotterDataCounter = 0
-	d.plotterBuffer = make([]byte, 0, PLOTTER_BUFFER_SIZE)
 	return true
 }
 
-func (d *droneApp) SerializeRotations() []byte {
-	data := make([]byte, 0, 64)
-	t := make([]byte, 8)
-	binary.LittleEndian.PutUint64(t, uint64(time.Now().UnixMicro()))
-	data = append(data, t...)
-	data = append(data, rotationToInt(d.rotations.Roll)...)
-	data = append(data, rotationToInt(d.rotations.Pitch)...)
-	data = append(data, rotationToInt(d.rotations.Yaw)...)
-	data = append(data, rotationToInt(d.accRotations.Roll)...)
-	data = append(data, rotationToInt(d.accRotations.Pitch)...)
-	data = append(data, rotationToInt(d.accRotations.Yaw)...)
-	data = append(data, rotationToInt(d.gyroRotations.Roll)...)
-	data = append(data, rotationToInt(d.gyroRotations.Pitch)...)
-	data = append(data, rotationToInt(d.gyroRotations.Yaw)...)
-
-	return data
+func (d *droneApp) SerializeRotations() {
+	d.serialiseTimeStamp(time.Since(d.startTime))
+	d.serialiseRotattion(d.rotations.Roll)
+	d.serialiseRotattion(d.rotations.Pitch)
+	d.serialiseRotattion(d.rotations.Yaw)
+	d.serialiseRotattion(d.accRotations.Roll)
+	d.serialiseRotattion(d.accRotations.Pitch)
+	d.serialiseRotattion(d.accRotations.Yaw)
+	d.serialiseRotattion(d.gyroRotations.Roll)
+	d.serialiseRotattion(d.gyroRotations.Pitch)
+	d.serialiseRotattion(d.gyroRotations.Yaw)
+	d.plotterDataCounter++
 }
 
-func rotationToInt(r float64) []byte {
-	n := uint16(r*10) + 16000
-	d := []byte{0, 0}
-	binary.LittleEndian.PutUint16(d, n)
-	return d
+func (d *droneApp) serialiseTimeStamp(dur time.Duration) {
+	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeDuration(dur)...)
+}
+
+func (d *droneApp) serialiseInt(n int) {
+	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeInt(int16(n))...)
+}
+
+func (d *droneApp) serialiseRotattion(r float64) {
+	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeFloat64(r)...)
 }

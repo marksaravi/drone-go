@@ -6,12 +6,11 @@ import (
 	"net"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
-const PLOTTER_DATA_LEN = 26
-const PLOTTER_DATA_PER_OACKET = 256
-const PLOTTER_BUFFER_SIZE = 9216
+const PLOTTER_ADDRESS = "192.168.1.101:4000"
 
 type radioReceiver interface {
 	On()
@@ -31,6 +30,7 @@ type DroneSettings struct {
 }
 
 type droneApp struct {
+	startTime        time.Time
 	imuDataPerSecond int
 	imu              Imu
 
@@ -46,13 +46,14 @@ type droneApp struct {
 
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
-	plotterBuffer       []byte
+	plotterDataPacket   []byte
 	plotterDataCounter  int
 	ploterDataPerPacket int
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
+		startTime:           time.Now(),
 		imu:                 settings.Imu,
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
@@ -63,10 +64,10 @@ func NewDrone(settings DroneSettings) *droneApp {
 		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		plotterBuffer:       make([]byte, 0, PLOTTER_BUFFER_SIZE),
-		plotterAddress:      "192.168.1.101:6437",
+		plotterDataPacket:   make([]byte, 0, constants.PLOTTER_PACKET_SIZE),
+		plotterAddress:      PLOTTER_ADDRESS,
 		plotterDataCounter:  0,
-		ploterDataPerPacket: PLOTTER_DATA_PER_OACKET,
+		ploterDataPerPacket: constants.PLOTTER_DATA_PER_PACKET,
 	}
 }
 

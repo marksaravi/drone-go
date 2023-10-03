@@ -6,17 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"sync"
 	"time"
-
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 const (
-	SERVER_PORT   int = 8081
-	UDP_PORT      int = 6437
+	SERVER_PORT   int = 3000
+	UDP_PORT      int = 4000
 	IMU_DATA_SIZE int = 26
 	TIME_SIZE     int = 8
 )
@@ -24,21 +20,17 @@ const (
 func Start() {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
+
 	dataChannel := make(chan string)
 	startUDPReceiverServer(ctx, &wg, dataChannel)
-	handler := createWebSocketHandler(ctx, dataChannel)
-	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
-	http.HandleFunc("/conn", handler)
-	var server = http.Server{
-		Addr: fmt.Sprintf(":%d", SERVER_PORT),
-	}
+	// http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
+	// handler := createWebSocketHandler(ctx, dataChannel)
 
-	go func() {
-		log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
-		if err := server.ListenAndServe(); err != nil {
-			log.Printf("HTTP server Shutdown: %v", err)
-		}
-	}()
+	// http.HandleFunc("/conn", handler)
+	// var server = http.Server{
+	// 	Addr: fmt.Sprintf(":%d", SERVER_PORT),
+	// }
+
 	go func() {
 		log.Println("Press ENTER to stop server")
 		fmt.Scanln()
@@ -46,39 +38,42 @@ func Start() {
 		cancel()
 	}()
 
+	log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
+	// if err := server.ListenAndServe(); err != nil {
+	// 	log.Printf("HTTP server Shutdown: %v", err)
+	// }
 	wg.Wait()
-	fmt.Println("Stopping HTTP Server...")
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatal(err)
-	}
+	// fmt.Println("Stopping HTTP Server...")
+	// if err := server.Shutdown(ctx); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 }
 
-func createWebSocketHandler(ctx context.Context, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Establishing connection")
-		c, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer c.Close(websocket.StatusInternalError, "Closing the connection")
-		for {
-			select {
-			case <-ctx.Done():
-				fmt.Println("createWebSocketHandler done...")
-				c.Close(websocket.StatusNormalClosure, "")
-				return
-			case json := <-dataChannel:
-				err = wsjson.Write(ctx, c, json)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-			}
-		}
-	}
-}
+// func createWebSocketHandler(ctx context.Context, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		log.Println("Establishing connection")
+// 		c, err := websocket.Accept(w, r, nil)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
+
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				c.Close(websocket.StatusInternalError, "closing the websocket connection...")
+// 				fmt.Println("Stopping WebSocketHandler...")
+// 				return
+// 			case json := <-dataChannel:
+// 				err = wsjson.Write(ctx, c, json)
+// 				if err != nil {
+// 					log.Println(err)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) {
 	wg.Add(1)
@@ -86,13 +81,12 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 		defer wg.Done()
 		defer fmt.Println("End...")
 
-		var value float32 = 0
 		conn, err := net.ListenUDP("udp", &net.UDPAddr{
 			Port: UDP_PORT,
 			IP:   net.ParseIP("0.0.0.0"),
 		})
 		if err != nil {
-			panic(err)
+			return
 		}
 
 		log.Printf("UDP Server Listening %s\n", conn.LocalAddr().String())
@@ -100,26 +94,22 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 		const bufferSize int = 16348
 		data := make([]byte, bufferSize)
 
-		running := true
-
-		for running {
+		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("Stopping UDP Server...")
 				conn.Close()
-				running = false
+				fmt.Println("Stopping UDP Server...")
+				return
 			default:
 				conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
 				nBytes, _, err := conn.ReadFromUDP(data)
 				if err == nil && nBytes > 0 {
 					dataPerPacket := dataPerPacket(data[0:2])
-					fmt.Println(dataPerPacket)
-					jsonData := extractPackets(data[2:], dataPerPacket)
-					// fmt.Println(jsonData)
-					dataChannel <- jsonData
-
+					fmt.Println(len(data), dataPerPacket)
+					// jsonData := extractPackets(data[2:], dataPerPacket)
+					// fmt.Println(jsonData[0:32])
+					// dataChannel <- jsonData
 				}
-				value += 0.1
 			}
 		}
 	}()
