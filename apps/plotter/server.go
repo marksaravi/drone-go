@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/utils"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 const (
 	SERVER_PORT   int = 3000
-	UDP_PORT      int = 4000
+	UDP_PORT      int = 4007
 	IMU_DATA_SIZE int = 26
 	TIME_SIZE     int = 8
 )
@@ -24,13 +27,13 @@ func Start() {
 
 	dataChannel := make(chan string)
 	startUDPReceiverServer(ctx, &wg, dataChannel)
-	// http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
-	// handler := createWebSocketHandler(ctx, dataChannel)
+	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
+	handler := createWebSocketHandler(ctx, &wg, dataChannel)
 
-	// http.HandleFunc("/conn", handler)
-	// var server = http.Server{
-	// 	Addr: fmt.Sprintf(":%d", SERVER_PORT),
-	// }
+	http.HandleFunc("/conn", handler)
+	server := http.Server{
+		Addr: fmt.Sprintf(":%d", SERVER_PORT),
+	}
 
 	go func() {
 		log.Println("Press ENTER to stop server")
@@ -38,43 +41,51 @@ func Start() {
 		fmt.Println("Stopping All Servers...")
 		cancel()
 	}()
-
-	log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
-	// if err := server.ListenAndServe(); err != nil {
-	// 	log.Printf("HTTP server Shutdown: %v", err)
-	// }
+	go func() {
+		log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
+		if err := server.ListenAndServe(); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+	}()
 	wg.Wait()
-	// fmt.Println("Stopping HTTP Server...")
-	// if err := server.Shutdown(ctx); err != nil {
-	// 	log.Fatal(err)
-	// }
+	fmt.Println("Stopping HTTP Server...")
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
 
 }
 
-// func createWebSocketHandler(ctx context.Context, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		log.Println("Establishing connection")
-// 		c, err := websocket.Accept(w, r, nil)
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
+func createWebSocketHandler(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
+	wg.Add(1)
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Establishing connection")
+		c, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
-// 		for {
-// 			select {
-// 			case <-ctx.Done():
-// 				c.Close(websocket.StatusInternalError, "closing the websocket connection...")
-// 				fmt.Println("Stopping WebSocketHandler...")
-// 				return
-// 			case json := <-dataChannel:
-// 				err = wsjson.Write(ctx, c, json)
-// 				if err != nil {
-// 					log.Println(err)
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+		go func() {
+			defer wg.Done()
+
+			for {
+				select {
+				case <-ctx.Done():
+					c.Close(websocket.StatusInternalError, "closing the websocket connection...")
+					fmt.Println("Stopping WebSocketHandler...")
+					return
+				case json := <-dataChannel:
+					// fmt.Println(json[0:3])
+					err = wsjson.Write(ctx, c, json)
+					if err != nil {
+						log.Println(err)
+					}
+				default:
+				}
+			}
+		}()
+	}
+}
 
 func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) {
 	wg.Add(1)
@@ -87,6 +98,7 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 			IP:   net.ParseIP("0.0.0.0"),
 		})
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
@@ -98,6 +110,7 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 		for {
 			select {
 			case <-ctx.Done():
+				close(dataChannel)
 				conn.Close()
 				fmt.Println("Stopping UDP Server...")
 				return
@@ -111,9 +124,9 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 					dataLen := int(utils.DeSerializeInt(data[4:6]))
 					fmt.Println(packetSize, dataPerPacket, dataLen)
 					jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
-					fmt.Println(jsonData[0:32])
+					// fmt.Println(jsonData[0:32])
 
-					// dataChannel <- jsonData
+					dataChannel <- jsonData
 				}
 			}
 		}
