@@ -2,12 +2,13 @@ package plotter
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const (
@@ -91,7 +92,7 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 
 		log.Printf("UDP Server Listening %s\n", conn.LocalAddr().String())
 
-		const bufferSize int = 16348
+		const bufferSize int = 8192
 		data := make([]byte, bufferSize)
 
 		for {
@@ -104,10 +105,14 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 				conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
 				nBytes, _, err := conn.ReadFromUDP(data)
 				if err == nil && nBytes > 0 {
-					dataPerPacket := dataPerPacket(data[0:2])
-					fmt.Println(len(data), dataPerPacket)
-					// jsonData := extractPackets(data[2:], dataPerPacket)
-					// fmt.Println(jsonData[0:32])
+					packetSize := int(utils.DeSerializeInt(data[0:2]))
+					data = data[0:packetSize]
+					dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
+					dataLen := int(utils.DeSerializeInt(data[4:6]))
+					fmt.Println(packetSize, dataPerPacket, dataLen)
+					jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
+					fmt.Println(jsonData[0:32])
+
 					// dataChannel <- jsonData
 				}
 			}
@@ -115,11 +120,11 @@ func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel
 	}()
 }
 
-func extractPackets(data []byte, dataPerPacket int) string {
+func extractPackets(data []byte, dataLen, dataPerPacket int) string {
 	var jsonData string = "["
 	var comma string = ""
-	for i := 0; i < 256; i++ {
-		imudata := extractImuRotations(data[i*26 : (i+1)*26])
+	for i := 0; i < dataPerPacket; i++ {
+		imudata := extractImuRotations(data[i*dataLen : (i+1)*dataLen])
 		jsonData += comma + imudata
 		comma = ","
 	}
@@ -127,27 +132,17 @@ func extractPackets(data []byte, dataPerPacket int) string {
 }
 
 func extractImuRotations(data []byte) string {
-	t := binary.LittleEndian.Uint64(data[0:8])
-	a := extractRotations(data[8:14])
-	g := extractRotations(data[14:20])
-	r := extractRotations(data[20:26])
+	t := utils.DeSerializeDuration(data[0:4])
+	a := extractRotations(data[4:10])
+	g := extractRotations(data[10:16])
+	r := extractRotations(data[16:22])
 	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d}", a, g, r, t)
 }
 
 func extractRotations(data []byte) string {
 	rot := make([]float64, 3)
 	for i := 0; i < 3; i++ {
-		rot[i] = rpy(data[8+i*2 : 10+i*2])
+		rot[i] = utils.DeSerializeFloat64(data[i*2 : (i+1)*2])
 	}
 	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", rot[0], rot[1], rot[2])
-}
-
-func dataPerPacket(data []byte) int {
-	return int(binary.LittleEndian.Uint16(data))
-}
-
-func rpy(data []byte) float64 {
-	i := binary.LittleEndian.Uint16(data)
-	i -= 16000
-	return float64(i) / 10
 }
