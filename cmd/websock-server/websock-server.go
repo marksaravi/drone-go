@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"golang.org/x/net/websocket"
 )
 
 func main() {
@@ -31,8 +33,13 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(time.Now().Local().Format(time.RFC1123Z)))
+		w.Write([]byte("hello mark!"))
 	})
+
+	http.Handle("/echo", websocket.Handler(func(ws *websocket.Conn) {
+		// io.Copy(ws, ws)
+		ws.Write([]byte(time.Now().Local().Format(time.RFC1123Z)))
+	}))
 
 	log.Printf("Listening at http://%s", *listenAddress)
 
