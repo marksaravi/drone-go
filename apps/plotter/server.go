@@ -13,36 +13,43 @@ import (
 
 	"github.com/marksaravi/drone-go/utils"
 	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 const (
 	MAX_BUFFER_SIZE     = 8192
-	SERVER_PORT     int = 3000
-	UDP_PORT        int = 4007
 	IMU_DATA_SIZE   int = 26
 	TIME_SIZE       int = 8
 )
 
 type plotter struct {
-	udpAddress string
-	udpConn    net.PacketConn
-	udpBuffer  []byte
+	udpServerAddress  string
+	udpConn           net.PacketConn
+	udpBuffer         []byte
+	httpServerAddress string
+	httpServer        http.Server
+	websocketConn     *websocket.Conn
 }
 
 type PlotterSettings struct {
-	UDPAddress string
+	UDPServerAddress  string
+	HTTPServerAddress string
 }
 
 func NewPlotter(settings PlotterSettings) *plotter {
-	udpConn, err := net.ListenPacket("udp", settings.UDPAddress)
+	udpConn, err := net.ListenPacket("udp", settings.UDPServerAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
+	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
 	return &plotter{
-		udpAddress: settings.UDPAddress,
-		udpBuffer:  make([]byte, MAX_BUFFER_SIZE),
-		udpConn:    udpConn,
+		udpServerAddress:  settings.UDPServerAddress,
+		udpBuffer:         make([]byte, MAX_BUFFER_SIZE),
+		udpConn:           udpConn,
+		httpServerAddress: settings.HTTPServerAddress,
+		httpServer: http.Server{
+			Addr: settings.HTTPServerAddress,
+		},
+		websocketConn: nil,
 	}
 }
 
@@ -56,13 +63,32 @@ func (p *plotter) StartPlotter() {
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		cancel()
+		waitGroup.Wait()
+		if err := p.httpServer.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP Server Shutdown Error: %v", err)
+		}
+		fmt.Println("HTTP server stopped.")
 	}()
 
 	p.startUDPServer(ctx, &waitGroup)
+	fmt.Println("HTTP server started...")
+	if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+		cancel()
+	}
 
 	<-ctx.Done()
 	waitGroup.Wait()
-	fmt.Println("Plotter Stopped.")
+	fmt.Println("Plotter stopped.")
+}
+
+func (p *plotter) readUDP() (int, error) {
+	p.udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
+	n, _, err := p.udpConn.ReadFrom(p.udpBuffer)
+	if err == nil {
+		fmt.Println(n)
+	}
+	return n, err
 }
 
 func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
@@ -70,22 +96,30 @@ func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
 	fmt.Println("UDP server started...")
 	go func() {
 		defer wg.Done()
-		fmt.Println("UDP server stopped.")
+		defer fmt.Println("UDP server stopped.")
 
 		for {
-			p.udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
-			n, _, err := p.udpConn.ReadFrom(p.udpBuffer)
-			if err == nil {
-				fmt.Println(n)
-			}
+			p.readUDP()
 			select {
 			case <-ctx.Done():
 				p.udpConn.Close()
+				p.readUDP()
 				return
 			default:
 			}
 		}
 	}()
+}
+
+func (p *plotter) acceptingWebsocketConnection(w http.ResponseWriter, r *http.Request) {
+	var err error
+	p.websocketConn, err = websocket.Accept(w, r, nil)
+	if err != nil {
+		p.websocketConn = nil
+		log.Println(err)
+	} else {
+		log.Println("Websocket Connection Accepted")
+	}
 }
 
 // func Start() {
@@ -122,83 +156,81 @@ func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
 
 // }
 
-func createWebSocketHandler(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
-	wg.Add(1)
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Establishing connection")
-		c, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+// func createWebSocketHandler(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		log.Println("Establishing connection")
+// 		c, err := websocket.Accept(w, r, nil)
+// 		if err != nil {
+// 			log.Println(err)
+// 		}
 
-		go func() {
-			defer wg.Done()
+// 		go func() {
+// 			defer wg.Done()
 
-			for {
-				select {
-				case <-ctx.Done():
-					c.Close(websocket.StatusInternalError, "closing the websocket connection...")
-					fmt.Println("Stopping WebSocketHandler...")
-					return
-				case json := <-dataChannel:
-					// fmt.Println(json[0:3])
-					err = wsjson.Write(ctx, c, json)
-					if err != nil {
-						log.Println(err)
-					}
-				default:
-				}
-			}
-		}()
-	}
-}
+// 			for {
+// 				select {
+// 				case <-ctx.Done():
+// 					c.Close(websocket.StatusInternalError, "closing the websocket connection...")
+// 					fmt.Println("Stopping WebSocketHandler...")
+// 					return
+// 				case json := <-dataChannel:
+// 					// fmt.Println(json[0:3])
+// 					err = wsjson.Write(ctx, c, json)
+// 					if err != nil {
+// 						log.Println(err)
+// 					}
+// 				default:
+// 				}
+// 			}
+// 		}()
+// 	}
+// }
 
-func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer fmt.Println("End...")
+// func startUDPReceiverServer(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) {
+// 	wg.Add(1)
+// 	go func() {
+// 		defer wg.Done()
+// 		defer fmt.Println("End...")
 
-		conn, err := net.ListenUDP("udp", &net.UDPAddr{
-			Port: UDP_PORT,
-			IP:   net.ParseIP("0.0.0.0"),
-		})
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+// 		conn, err := net.ListenUDP("udp", &net.UDPAddr{
+// 			Port: UDP_PORT,
+// 			IP:   net.ParseIP("0.0.0.0"),
+// 		})
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			return
+// 		}
 
-		log.Printf("UDP Server Listening %s\n", conn.LocalAddr().String())
+// 		log.Printf("UDP Server Listening %s\n", conn.LocalAddr().String())
 
-		const bufferSize int = 8192
-		data := make([]byte, bufferSize)
+// 		const bufferSize int = 8192
+// 		data := make([]byte, bufferSize)
 
-		for {
-			select {
-			case <-ctx.Done():
-				close(dataChannel)
-				conn.Close()
-				fmt.Println("Stopping UDP Server...")
-				return
-			default:
-				conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
-				nBytes, _, err := conn.ReadFromUDP(data)
-				if err == nil && nBytes > 0 {
-					packetSize := int(utils.DeSerializeInt(data[0:2]))
-					data = data[0:packetSize]
-					dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
-					dataLen := int(utils.DeSerializeInt(data[4:6]))
-					fmt.Println(packetSize, dataPerPacket, dataLen)
-					jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
-					// fmt.Println(jsonData[0:32])
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				close(dataChannel)
+// 				conn.Close()
+// 				fmt.Println("Stopping UDP Server...")
+// 				return
+// 			default:
+// 				conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
+// 				nBytes, _, err := conn.ReadFromUDP(data)
+// 				if err == nil && nBytes > 0 {
+// 					packetSize := int(utils.DeSerializeInt(data[0:2]))
+// 					data = data[0:packetSize]
+// 					dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
+// 					dataLen := int(utils.DeSerializeInt(data[4:6]))
+// 					fmt.Println(packetSize, dataPerPacket, dataLen)
+// 					jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
+// 					// fmt.Println(jsonData[0:32])
 
-					dataChannel <- jsonData
-				}
-			}
-		}
-	}()
-}
+// 					dataChannel <- jsonData
+// 				}
+// 			}
+// 		}
+// 	}()
+// }
 
 func extractPackets(data []byte, dataLen, dataPerPacket int) string {
 	var jsonData string = "["
