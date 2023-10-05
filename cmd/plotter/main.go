@@ -3,5 +3,8 @@ package main
 import "github.com/marksaravi/drone-go/apps/plotter"
 
 func main() {
-	plotter.Start()
+	p := plotter.NewPlotter(plotter.PlotterSettings{
+		UDPAddress: ":4010",
+	})
+	p.StartPlotter()
 }

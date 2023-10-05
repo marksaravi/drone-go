@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 
@@ -15,45 +17,110 @@ import (
 )
 
 const (
-	SERVER_PORT   int = 3000
-	UDP_PORT      int = 4007
-	IMU_DATA_SIZE int = 26
-	TIME_SIZE     int = 8
+	MAX_BUFFER_SIZE     = 8192
+	SERVER_PORT     int = 3000
+	UDP_PORT        int = 4007
+	IMU_DATA_SIZE   int = 26
+	TIME_SIZE       int = 8
 )
 
-func Start() {
-	var wg sync.WaitGroup
-	ctx, cancel := context.WithCancel(context.Background())
+type plotter struct {
+	udpAddress string
+	udpConn    net.PacketConn
+	udpBuffer  []byte
+}
 
-	dataChannel := make(chan string)
-	startUDPReceiverServer(ctx, &wg, dataChannel)
-	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
-	handler := createWebSocketHandler(ctx, &wg, dataChannel)
+type PlotterSettings struct {
+	UDPAddress string
+}
 
-	http.HandleFunc("/conn", handler)
-	server := http.Server{
-		Addr: fmt.Sprintf(":%d", SERVER_PORT),
-	}
-
-	go func() {
-		log.Println("Press ENTER to stop server")
-		fmt.Scanln()
-		fmt.Println("Stopping All Servers...")
-		cancel()
-	}()
-	go func() {
-		log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
-		if err := server.ListenAndServe(); err != nil {
-			log.Printf("HTTP server Shutdown: %v", err)
-		}
-	}()
-	wg.Wait()
-	fmt.Println("Stopping HTTP Server...")
-	if err := server.Shutdown(ctx); err != nil {
+func NewPlotter(settings PlotterSettings) *plotter {
+	udpConn, err := net.ListenPacket("udp", settings.UDPAddress)
+	if err != nil {
 		log.Fatal(err)
 	}
-
+	return &plotter{
+		udpAddress: settings.UDPAddress,
+		udpBuffer:  make([]byte, MAX_BUFFER_SIZE),
+		udpConn:    udpConn,
+	}
 }
+
+func (p *plotter) StartPlotter() {
+	fmt.Println("Plotter Started...")
+	var waitGroup sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+		cancel()
+	}()
+
+	p.startUDPServer(ctx, &waitGroup)
+
+	<-ctx.Done()
+	waitGroup.Wait()
+	fmt.Println("Plotter Stopped.")
+}
+
+func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+	fmt.Println("UDP server started...")
+	go func() {
+		defer wg.Done()
+		fmt.Println("UDP server stopped.")
+
+		for {
+			p.udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
+			n, _, err := p.udpConn.ReadFrom(p.udpBuffer)
+			if err == nil {
+				fmt.Println(n)
+			}
+			select {
+			case <-ctx.Done():
+				p.udpConn.Close()
+				return
+			default:
+			}
+		}
+	}()
+}
+
+// func Start() {
+// 	var wg sync.WaitGroup
+// 	ctx, cancel := context.WithCancel(context.Background())
+
+// 	dataChannel := make(chan string)
+// 	startUDPReceiverServer(ctx, &wg, dataChannel)
+// 	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
+// 	handler := createWebSocketHandler(ctx, &wg, dataChannel)
+
+// 	http.HandleFunc("/conn", handler)
+// 	server := http.Server{
+// 		Addr: fmt.Sprintf(":%d", SERVER_PORT),
+// 	}
+
+// 	go func() {
+// 		log.Println("Press ENTER to stop server")
+// 		fmt.Scanln()
+// 		fmt.Println("Stopping All Servers...")
+// 		cancel()
+// 	}()
+// 	go func() {
+// 		log.Println(fmt.Sprintf("Server is listening on port %d\n", SERVER_PORT))
+// 		if err := server.ListenAndServe(); err != nil {
+// 			log.Printf("HTTP server Shutdown: %v", err)
+// 		}
+// 	}()
+// 	wg.Wait()
+// 	fmt.Println("Stopping HTTP Server...")
+// 	if err := server.Shutdown(ctx); err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// }
 
 func createWebSocketHandler(ctx context.Context, wg *sync.WaitGroup, dataChannel chan string) func(w http.ResponseWriter, r *http.Request) {
 	wg.Add(1)
