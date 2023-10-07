@@ -51,23 +51,23 @@ func (p *plotter) StartPlotter() {
 	fmt.Println("Plotter Started...")
 	var waitGroup sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
-	p.startUDPServer(ctx, &waitGroup)
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		log.Printf("Shutting Down  HTTP Server...")
-		if err := p.httpServer.Shutdown(context.Background()); err != nil {
-			log.Printf("HTTP Server Shutdown Error: %v", err)
-		}
+		// if err := p.httpServer.Shutdown(context.Background()); err != nil {
+		// 	log.Printf("HTTP Server Shutdown Error: %v", err)
+		// }
 		cancel()
 	}()
+	p.startUDPServer(ctx, &waitGroup)
 
-	fmt.Println("HTTP server started...")
-	if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
-		cancel()
-	}
+	// fmt.Println("HTTP server started...")
+	// if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
+	// 	log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+	// 	cancel()
+	// }
 
 	<-ctx.Done()
 	waitGroup.Wait()
@@ -75,43 +75,77 @@ func (p *plotter) StartPlotter() {
 }
 
 func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
-	fmt.Println("UDP server started...")
-	go func() {
-		defer wg.Done()
-		defer fmt.Println("UDP server stopped.")
+	udpAddr, err := net.ResolveUDPAddr("udp", "192.168.1.101:8010")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	// // Start listening for UDP packages on the given address
+	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer conn.Close()
 
-		address := &net.UDPAddr{
-			IP:   net.ParseIP("192.168.1.101"),
-			Port: 8009,
-		}
-		udpConn, err := net.ListenUDP("udp", address)
-		if err != nil {
-			log.Fatal(err)
+	for {
+		buf := make([]byte, 8912)
+		conn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
+		n, _, err := conn.ReadFromUDP(buf)
+		if err != nil && strings.Contains(err.Error(), "closed network connection") {
+			fmt.Println(err)
 			return
 		}
-		defer udpConn.Close()
-		udpConn.SetReadBuffer(8192)
-		for {
-			select {
-			case <-ctx.Done():
-				err := udpConn.Close()
-				log.Printf("Closing UDP Connection, error:%v\n", err)
-				return
-			default:
-				udpBuffer := make([]byte, 8192)
-				udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
-				n, _, err := udpConn.ReadFromUDP(udpBuffer)
-				if err != nil && strings.Contains(err.Error(), "closed network connection") {
-					return
-				}
-				if err == nil {
-					fmt.Println(n)
-				}
-			}
+
+		if err == nil && n > 0 {
+			fmt.Println(n)
 		}
-	}()
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+	}
 }
+
+// func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
+// 	wg.Add(1)
+// 	fmt.Println("UDP server started...")
+// 	go func() {
+// 		defer wg.Done()
+// 		defer fmt.Println("UDP server stopped.")
+
+// 		address := &net.UDPAddr{
+// 			IP:   net.ParseIP("192.168.1.101"),
+// 			Port: 8009,
+// 		}
+// 		udpConn, err := net.ListenUDP("udp", address)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 			return
+// 		}
+// 		defer udpConn.Close()
+// 		udpConn.SetReadBuffer(8192)
+// 		for {
+// 			select {
+// 			case <-ctx.Done():
+// 				err := udpConn.Close()
+// 				log.Printf("Closing UDP Connection, error:%v\n", err)
+// 				return
+// 			default:
+// 				udpBuffer := make([]byte, 8192)
+// 				udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
+// 				n, _, err := udpConn.ReadFromUDP(udpBuffer)
+// 				if err != nil && strings.Contains(err.Error(), "closed network connection") {
+// 					return
+// 				}
+// 				if err == nil {
+// 					fmt.Println(n)
+// 				}
+// 			}
+// 		}
+// 	}()
+// }
 
 func (p *plotter) acceptingWebsocketConnection(w http.ResponseWriter, r *http.Request) {
 	var err error
