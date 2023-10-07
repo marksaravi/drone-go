@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/utils"
@@ -49,33 +48,30 @@ func NewPlotter(settings PlotterSettings) *plotter {
 
 func (p *plotter) StartPlotter() {
 	fmt.Println("Plotter Started...")
-	var waitGroup sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		log.Printf("Shutting Down  HTTP Server...")
-		// if err := p.httpServer.Shutdown(context.Background()); err != nil {
-		// 	log.Printf("HTTP Server Shutdown Error: %v", err)
-		// }
 		cancel()
 	}()
-	p.startUDPServer(ctx, &waitGroup)
-
-	// fmt.Println("HTTP server started...")
-	// if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
-	// 	log.Fatalf("HTTP server ListenAndServe Error: %v", err)
-	// 	cancel()
-	// }
-
-	<-ctx.Done()
-	waitGroup.Wait()
+	// go func() {
+	// 	fmt.Println("HTTP server started...")
+	// 	if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
+	// 		log.Fatalf("HTTP server ListenAndServe Error: %v", err)
+	// 		cancel()
+	// 	}
+	// }()
+	p.startUDPServer(ctx)
+	if err := p.httpServer.Shutdown(ctx); err != nil {
+		log.Printf("HTTP Server Shutdown Error: %v", err)
+	}
 	fmt.Println("Plotter stopped.")
 }
 
-func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
-	udpAddr, err := net.ResolveUDPAddr("udp", "192.168.1.101:8010")
+func (p *plotter) startUDPServer(ctx context.Context) {
+	udpAddr, err := net.ResolveUDPAddr("udp", "192.168.1.101:8014")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
