@@ -24,7 +24,6 @@ const (
 
 type plotter struct {
 	udpServerAddress  string
-	udpBuffer         []byte
 	httpServerAddress string
 	httpServer        http.Server
 	websocketConn     *websocket.Conn
@@ -40,7 +39,6 @@ func NewPlotter(settings PlotterSettings) *plotter {
 	http.Handle("/", http.FileServer(http.Dir("./apps/plotter/static")))
 	return &plotter{
 		udpServerAddress:  settings.UDPServerAddress,
-		udpBuffer:         make([]byte, MAX_BUFFER_SIZE),
 		httpServerAddress: settings.HTTPServerAddress,
 		httpServer: http.Server{
 			Addr: settings.HTTPServerAddress,
@@ -85,7 +83,7 @@ func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
 
 		address := &net.UDPAddr{
 			IP:   net.ParseIP("192.168.1.101"),
-			Port: 8007,
+			Port: 8009,
 		}
 		udpConn, err := net.ListenUDP("udp", address)
 		if err != nil {
@@ -101,8 +99,9 @@ func (p *plotter) startUDPServer(ctx context.Context, wg *sync.WaitGroup) {
 				log.Printf("Closing UDP Connection, error:%v\n", err)
 				return
 			default:
+				udpBuffer := make([]byte, 8192)
 				udpConn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
-				n, _, err := udpConn.ReadFromUDP(p.udpBuffer)
+				n, _, err := udpConn.ReadFromUDP(udpBuffer)
 				if err != nil && strings.Contains(err.Error(), "closed network connection") {
 					return
 				}
