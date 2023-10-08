@@ -1,4 +1,4 @@
-package plotter
+package main
 
 import (
 	"context"
@@ -16,12 +16,7 @@ type plotter struct {
 	httpServers map[int]*http.Server
 }
 
-type PlotterSettings struct {
-	UDPServerAddress  string
-	HTTPServerAddress string
-}
-
-func NewPlotter(settings PlotterSettings) *plotter {
+func MultiServer() *plotter {
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt)
 
@@ -31,12 +26,13 @@ func NewPlotter(settings PlotterSettings) *plotter {
 	}
 }
 
-func (p *plotter) StartPlotter() {
+func (p *plotter) StartMultiServer(numberOfServers int) {
 	log.SetFlags(log.Lmicroseconds)
 	ctx, cancel := context.WithCancelCause(context.Background())
 	var wg sync.WaitGroup
-	p.createHttpServer(0)
-	p.createHttpServer(1)
+	for serverIndex := 0; serverIndex < numberOfServers; serverIndex++ {
+		p.createHttpServer(serverIndex)
+	}
 	p.waitForInterrupt(ctx, cancel, &wg)
 	p.stopByEnter(cancel)
 	p.startHttpServers(&wg, cancel)
@@ -103,4 +99,9 @@ func createFuncHandler(id string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte(fmt.Sprintf("from server %s: %d", id, time.Now().UnixMilli())))
 	}
+}
+
+func main() {
+	plotter := MultiServer()
+	plotter.StartMultiServer(4)
 }
