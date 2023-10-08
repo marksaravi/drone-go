@@ -69,12 +69,10 @@ func (p *plotter) shutdownHttpServer(wg *sync.WaitGroup) {
 }
 
 func (p *plotter) waitForInterrupt(ctx context.Context, cancel context.CancelCauseFunc, wg *sync.WaitGroup) {
-	wg.Add(1)
 	go func() {
 		defer log.Printf("Stopping Plotter...")
 		defer p.shutdownHttpServer(wg)
 		defer close(p.sigint)
-		defer wg.Done()
 
 		select {
 		case <-p.sigint:
