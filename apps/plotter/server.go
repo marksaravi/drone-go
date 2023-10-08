@@ -117,7 +117,7 @@ func (p *plotter) waitForInterrupt(ctx context.Context, wg *sync.WaitGroup) {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		defer p.udpConn.Close()
-		log.Println("Stopping UDP Server ...")
+		defer log.Println("Stopping UDP Server ...")
 		defer p.shutdownHttpServer(wg)
 		defer close(sigint)
 		defer log.Printf("Stopping Plotter...")
