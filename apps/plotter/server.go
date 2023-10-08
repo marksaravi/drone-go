@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/marksaravi/drone-go/utils"
 	"nhooyr.io/websocket"
 )
 
@@ -30,7 +31,7 @@ type plotter struct {
 func NewPlotter() *plotter {
 	return &plotter{
 		httpServerAddress: "localhost:3000",
-		udpServerAddress:  "localhost:8000",
+		udpServerAddress:  "192.168.1.101:8000",
 	}
 }
 
@@ -86,8 +87,13 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 			}
 			if err == nil && nBytes > 0 {
 				counter++
+				packetSize := int(utils.DeSerializeInt(p.udpBuffer[0:2]))
+				data := p.udpBuffer[0:packetSize]
+				dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
+				dataLen := int(utils.DeSerializeInt(data[4:6]))
+				jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
 				if time.Since(lastPrint) >= time.Second {
-					log.Printf("udp packet size: %d, packet per second: %d\n", nBytes, counter)
+					log.Println(packetSize, dataPerPacket, dataLen, counter, jsonData[0:32])
 					counter = 0
 					lastPrint = time.Now()
 				}
@@ -149,4 +155,31 @@ func (p *plotter) createSocketHandler() func(http.ResponseWriter, *http.Request)
 			log.Println("Websocket Connection Accepted")
 		}
 	}
+}
+
+func extractPackets(data []byte, dataLen, dataPerPacket int) string {
+	var jsonData string = "["
+	var comma string = ""
+	for i := 0; i < dataPerPacket; i++ {
+		imudata := extractImuRotations(data[i*dataLen : (i+1)*dataLen])
+		jsonData += comma + imudata
+		comma = ","
+	}
+	return jsonData + "]"
+}
+
+func extractImuRotations(data []byte) string {
+	t := utils.DeSerializeDuration(data[0:4])
+	a := extractRotations(data[4:10])
+	g := extractRotations(data[10:16])
+	r := extractRotations(data[16:22])
+	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d}", a, g, r, t)
+}
+
+func extractRotations(data []byte) string {
+	rot := make([]float64, 3)
+	for i := 0; i < 3; i++ {
+		rot[i] = utils.DeSerializeFloat64(data[i*2 : (i+1)*2])
+	}
+	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", rot[0], rot[1], rot[2])
 }
