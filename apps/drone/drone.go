@@ -10,7 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
-const PLOTTER_ADDRESS = "192.168.1.101:4007"
+const PLOTTER_ADDRESS = "192.168.1.101:8000"
 
 type radioReceiver interface {
 	On()
