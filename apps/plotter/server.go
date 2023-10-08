@@ -44,7 +44,7 @@ func (p *plotter) StartPlotter() {
 	p.createHttpServer()
 	p.waitForInterrupt(ctx, &wg)
 	p.stopByEnter()
-	// p.startHttpServer(&wg)
+	p.startHttpServer(&wg)
 	p.startUdpServer(&wg)
 	log.Println("Plotter started...")
 	wg.Wait()
@@ -118,7 +118,7 @@ func (p *plotter) waitForInterrupt(ctx context.Context, wg *sync.WaitGroup) {
 		signal.Notify(sigint, os.Interrupt)
 		defer p.udpConn.Close()
 		log.Println("Stopping UDP Server ...")
-		// defer p.shutdownHttpServer(wg)
+		defer p.shutdownHttpServer(wg)
 		defer close(sigint)
 		defer log.Printf("Stopping Plotter...")
 
