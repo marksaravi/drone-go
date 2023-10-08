@@ -3,10 +3,7 @@ package main
 import "github.com/marksaravi/drone-go/apps/plotter"
 
 func main() {
-	p := plotter.NewPlotter(plotter.PlotterSettings{
-		UDPServerAddress:  ":4014",
-		HTTPServerAddress: ":3000",
-	})
+	p := plotter.NewPlotter()
 	p.StartPlotter()
 	// // Resolve the string address to a UDP address
 	// udpAddr, err := net.ResolveUDPAddr("udp", "192.168.1.101:8009")
