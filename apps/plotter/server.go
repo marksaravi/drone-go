@@ -13,7 +13,6 @@ import (
 )
 
 type plotter struct {
-	sigint            chan os.Signal
 	websocketConn     *websocket.Conn
 	httpServerAddress string
 	httpServer        *http.Server
@@ -21,11 +20,7 @@ type plotter struct {
 }
 
 func NewPlotter() *plotter {
-	sigint := make(chan os.Signal, 1)
-	signal.Notify(sigint, os.Interrupt)
-
 	return &plotter{
-		sigint:            sigint,
 		httpServerAddress: "localhost:3000",
 	}
 }
@@ -73,12 +68,14 @@ func (p *plotter) shutdownHttpServer(wg *sync.WaitGroup) {
 
 func (p *plotter) waitForInterrupt(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
 		defer log.Printf("Stopping Plotter...")
 		defer p.shutdownHttpServer(wg)
-		defer close(p.sigint)
+		defer close(sigint)
 
 		select {
-		case <-p.sigint:
+		case <-sigint:
 			p.stopPlotter(fmt.Errorf("signal interrupt"))
 		case <-ctx.Done():
 			return
