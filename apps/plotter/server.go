@@ -14,6 +14,7 @@ import (
 
 	"github.com/marksaravi/drone-go/utils"
 	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 const UDP_BUFFER_SIZE = 8192
@@ -92,6 +93,9 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 				dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
 				dataLen := int(utils.DeSerializeInt(data[4:6]))
 				jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
+				if p.websocketConn != nil {
+					err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
+				}
 				if time.Since(lastPrint) >= time.Second {
 					log.Println(packetSize, dataPerPacket, dataLen, counter, jsonData[0:32])
 					counter = 0
