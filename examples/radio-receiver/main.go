@@ -14,9 +14,11 @@ func main() {
 	hardware.HostInitialize()
 
 	r := nrf24l01.NewNRF24L01EnhancedBurst(
-		1,
-		0,
-		"GPIO16",
+		hardware.SPIConnConfigs{
+			BusNumber:       1,
+			ChipSelect:      0,
+			ChipEnabledGPIO: "GPIO16",
+		},
 		"03896",
 	)
 	r.ReceiverOn()

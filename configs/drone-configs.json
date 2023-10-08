@@ -1,11 +1,44 @@
 {
-    "commands-per-second": 25,
-    "radio": {
-        "rx-tx-address": "03896",
-        "spi": {
-            "bus-num": 1,
-            "chip-select": 0,
-            "chip-enabled-gpio": "GPIO16"
+    "imu": {
+        "data-per-second": 1000,
+        "filter-coefficient": 0.001,
+        "icm20789": {
+            "accelerometer": {
+                "full-scale": "4g",
+                "offsets": {
+                    "x": 32696,
+                    "y": 836,
+                    "z": 31979
+                }
+            },
+            "gyroscope": {
+                "full-scale": "500dps",
+                "offsets": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "spi": {
+                "bus-number": 0,
+                "chip-select": 0,
+                "speed-mhz": 96
+            }
         }
+    },
+    "remote-control": {
+        "commands-per-second": 25,
+        "radio": {
+            "rx-tx-address": "03896",
+            "spi": {
+                "bus-number": 1,
+                "chip-select": 0,
+                "speed-mhz": 48,
+                "chip-enabled-gpio": "GPIO16"
+            }
+        }
+    },
+    "plotter": {
+        "active": true
     }
 }

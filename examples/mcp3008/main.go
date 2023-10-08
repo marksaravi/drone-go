@@ -10,8 +10,10 @@ import (
 
 func main() {
 	analogToDigitalSPIConn := hardware.NewSPIConnection(
-		1,
-		0,
+		hardware.SPIConnConfigs{
+			BusNumber:  1,
+			ChipSelect: 0,
+		},
 	)
 	xAxisAnalogToDigitalConvertor := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,

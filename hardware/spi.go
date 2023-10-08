@@ -1,6 +1,7 @@
 package hardware
 
 import (
+	"fmt"
 	"log"
 
 	"periph.io/x/conn/v3/physic"
@@ -8,15 +9,25 @@ import (
 	"periph.io/x/host/v3/sysfs"
 )
 
-func NewSPIConnection(busNumber int, chipSelect int) spi.Conn {
-	p, err := sysfs.NewSPI(busNumber, chipSelect)
+type SPIConnConfigs struct {
+	BusNumber       int    `json:"bus-number"`
+	ChipSelect      int    `json:"chip-select"`
+	SpeedMHz        int    `json:"speed-mhz"`
+	ChipEnabledGPIO string `json:"chip-enabled-gpio"`
+}
+
+func NewSPIConnection(configs SPIConnConfigs) spi.Conn {
+	p, err := sysfs.NewSPI(configs.BusNumber, configs.ChipSelect)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	if configs.SpeedMHz == 0 {
+		configs.SpeedMHz = 1
+		fmt.Println("warning: using spi default speed 1mhz")
+	}
 	// Convert the spi.Port into a spi.Conn so it can be used for communication.
-	c, err := p.Connect(physic.MegaHertz, spi.Mode0, 8)
+	c, err := p.Connect(physic.MegaHertz*physic.Frequency(configs.SpeedMHz), spi.Mode0, 8)
 
 	if err != nil {
 		log.Fatal(err)

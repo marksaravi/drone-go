@@ -25,18 +25,18 @@ func main() {
 	time.Sleep(time.Second)
 	oled.Println("Hello Mark!", 0)
 	oled.WriteString("Disconnected", 0, 1)
-	max:=float32(100)
-	min:=float32(0)
-	dt:=float32(0.1)
-	throttle:=float32(0)
+	max := float32(100)
+	min := float32(0)
+	dt := float32(0.1)
+	throttle := float32(0)
 	for {
-		time.Sleep(time.Second/4)
+		time.Sleep(time.Second / 4)
 		oled.WriteString("            ", 0, 2)
-		s:=fmt.Sprintf("T: %0.1f%s", throttle, "%")
+		s := fmt.Sprintf("T: %0.1f%s", throttle, "%")
 		fmt.Println(s)
 		oled.WriteString(s, 0, 2)
 		throttle += dt
-		if throttle>=max || throttle =<min {
+		if throttle >= max || throttle <= min {
 			dt = -dt
 		}
 	}

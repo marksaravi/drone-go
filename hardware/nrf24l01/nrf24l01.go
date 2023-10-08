@@ -70,19 +70,16 @@ type nrf24l01dev struct {
 }
 
 func NewNRF24L01EnhancedBurst(
-	spiBusNum int,
-	spiChipSelect int,
-	spiChipEnabledGPIO string,
+	spiConnConfigs hardware.SPIConnConfigs,
 	rxTxAddress string,
 ) *nrf24l01dev {
 	radioSPIConn := hardware.NewSPIConnection(
-		spiBusNum,
-		spiChipSelect,
+		spiConnConfigs,
 	)
 
 	tr := nrf24l01dev{
 		address: []byte(rxTxAddress),
-		ce:      initPin(spiChipEnabledGPIO),
+		ce:      initPin(spiConnConfigs.ChipEnabledGPIO),
 		conn:    radioSPIConn,
 		registers: map[byte]byte{
 			ADDRESS_CONFIG:     DEFAULT_CONFIG,

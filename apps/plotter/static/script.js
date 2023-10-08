@@ -197,7 +197,7 @@ function setSecondsAndMarkers(l) {
 function createWebSocket() {
     // Create WebSocket connection.
     console.log("establishing connection");
-    const socket = new WebSocket('ws://localhost:8081/conn');
+    const socket = new WebSocket('ws://localhost:3000/ws');
 
     const firstlink = {
         next: null,
