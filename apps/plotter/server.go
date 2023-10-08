@@ -17,6 +17,7 @@ type plotter struct {
 	websocketConn     *websocket.Conn
 	httpServerAddress string
 	httpServer        *http.Server
+	stopPlotter       context.CancelCauseFunc
 }
 
 func NewPlotter() *plotter {
@@ -31,12 +32,14 @@ func NewPlotter() *plotter {
 
 func (p *plotter) StartPlotter() {
 	log.SetFlags(log.Lmicroseconds)
-	ctx, cancel := context.WithCancelCause(context.Background())
+	var ctx context.Context
+	ctx, p.stopPlotter = context.WithCancelCause(context.Background())
 	var wg sync.WaitGroup
+
 	p.createHttpServer()
-	p.waitForInterrupt(ctx, cancel, &wg)
-	p.stopByEnter(cancel)
-	p.startHttpServer(&wg, cancel)
+	p.waitForInterrupt(ctx, &wg)
+	p.stopByEnter()
+	p.startHttpServer(&wg)
 	log.Println("Plotter started...")
 	wg.Wait()
 	log.Printf("plotter stopped for: %v\n", context.Cause(ctx))
@@ -52,12 +55,12 @@ func (p *plotter) createHttpServer() {
 	}
 }
 
-func (p *plotter) startHttpServer(wg *sync.WaitGroup, cancel context.CancelCauseFunc) {
+func (p *plotter) startHttpServer(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		log.Println("Starting HttpServer ...")
 		if err := p.httpServer.ListenAndServe(); err != http.ErrServerClosed {
-			cancel(err)
+			p.stopPlotter(err)
 		}
 	}()
 }
@@ -68,7 +71,7 @@ func (p *plotter) shutdownHttpServer(wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func (p *plotter) waitForInterrupt(ctx context.Context, cancel context.CancelCauseFunc, wg *sync.WaitGroup) {
+func (p *plotter) waitForInterrupt(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer log.Printf("Stopping Plotter...")
 		defer p.shutdownHttpServer(wg)
@@ -76,17 +79,17 @@ func (p *plotter) waitForInterrupt(ctx context.Context, cancel context.CancelCau
 
 		select {
 		case <-p.sigint:
-			cancel(fmt.Errorf("signal interrupt"))
+			p.stopPlotter(fmt.Errorf("signal interrupt"))
 		case <-ctx.Done():
 			return
 		}
 	}()
 }
 
-func (p *plotter) stopByEnter(cancel context.CancelCauseFunc) {
+func (p *plotter) stopByEnter() {
 	go func() {
 		fmt.Scanln()
-		cancel(fmt.Errorf("enter"))
+		p.stopPlotter(fmt.Errorf("enter"))
 	}()
 }
 
