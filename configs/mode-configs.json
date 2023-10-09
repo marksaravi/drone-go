@@ -1,0 +1,8 @@
+{
+    "debug": {
+        "plotter-active": true
+    },
+    "flight": {
+        "plotter-active": false
+    }
+}
