@@ -9,7 +9,7 @@ type rotations struct {
 	Yaw uint16
 }
 
-type PlotterRotationsDataPacket string {
+type PlotterRotationsDataPacket struct {
 	DurationFromDroneStart uint32
 	Rotations rotations
 	AccelerometerRotattions rotations
