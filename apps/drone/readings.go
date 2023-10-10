@@ -62,7 +62,10 @@ func (d *droneApp) SendPlotterData() bool {
 		return false
 	}
 	if d.plotterUdpConn != nil {
-		d.plotterUdpConn.Write(d.plotterDataPacket)
+		copy(d.plotterSendBuffer, d.plotterDataPacket)
+		go func() {
+			d.plotterUdpConn.Write(d.plotterSendBuffer)
+		}()
 	}
 	d.plotterDataCounter = 0
 	return true

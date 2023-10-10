@@ -47,6 +47,7 @@ type droneApp struct {
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
 	plotterDataPacket   []byte
+	plotterSendBuffer   []byte
 	plotterDataCounter  int
 	ploterDataPerPacket int
 }
@@ -65,6 +66,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		plotterDataPacket:   make([]byte, 0, constants.PLOTTER_PACKET_SIZE),
+		plotterSendBuffer:   make([]byte, constants.PLOTTER_PACKET_SIZE),
 		plotterAddress:      PLOTTER_ADDRESS,
 		plotterDataCounter:  0,
 		ploterDataPerPacket: constants.PLOTTER_DATA_PER_PACKET,
@@ -79,6 +81,7 @@ func (d *droneApp) Start(ctx context.Context) {
 	maxCommand := time.Duration(0)
 	maxIMU := time.Duration(0)
 	maxUDP := time.Duration(0)
+	imuPerSecond:=0
 	t := byte(0)
 	for running {
 		select {
@@ -100,6 +103,7 @@ func (d *droneApp) Start(ctx context.Context) {
 
 			}
 			if imuok {
+				imuPerSecond++
 				ts = time.Now()
 				udpOk := d.SendPlotterData()
 				dur = time.Since(ts)
@@ -107,12 +111,13 @@ func (d *droneApp) Start(ctx context.Context) {
 					maxUDP = dur
 				}
 			}
-			if time.Since(lp) > time.Second*3 {
+			if time.Since(lp) > time.Second {
 				lp = time.Now()
-				fmt.Printf("imu: %10v, cmd: %10v, udp: %10v, roll: %10.1f, throttle: %5d\n", maxIMU, maxCommand, maxUDP, d.accRotations.Roll, t)
+				fmt.Printf("imu: %10v, cmd: %10v, udp: %10v, roll: %10.1f, throttle: %5d, imuPerSecond: %d\n", maxIMU, maxCommand, maxUDP, d.accRotations.Roll, t, imuPerSecond)
 				maxCommand = time.Duration(0)
 				maxIMU = time.Duration(0)
 				maxUDP = time.Duration(0)
+				imuPerSecond=0
 				// if imuok {
 				// 	fmt.Printf("%6.1f %6.1f %6.1f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
 				// }
