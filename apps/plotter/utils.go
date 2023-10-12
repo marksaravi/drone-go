@@ -7,8 +7,23 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+func SerializeHeader() []byte {
+	packet:=make([]byte, 0, PLOTER_PACKET_HEADER_SIZE)
+	packet=append(packet, utils.SerializeInt(PLOTTER_PACKET_SIZE)...)
+	packet=append(packet, utils.SerializeInt(PLOTTER_DATA_PER_PACKET)...)
+	packet=append(packet, utils.SerializeInt(PLOTTER_DATA_LEN)...)
+	return packet
+}
+
+func DeSerializeHeader(packet []byte) (packetSize, dataPerPacket, dataLen int) {
+	packetSize = int(utils.DeSerializeInt(packet[0:2]))
+	dataPerPacket = int(utils.DeSerializeInt(packet[2:4]))
+	dataLen = int(utils.DeSerializeInt(packet[4:6]))
+	return
+}
+
 func SerializeDroneData(dur time.Duration, rotations, accelerometer, gyroscope imu.Rotations, throttle byte) []byte {
-	packet:=make([]byte, 0, 256)
+	packet:=make([]byte, 0, PLOTTER_DATA_LEN)
 
 	packet=append(packet, utils.SerializeDuration(dur)...)
 	packet=append(packet, utils.SerializeFloat64(rotations.Roll)...)

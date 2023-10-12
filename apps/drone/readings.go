@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/plotter"
-	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 func (d *droneApp) ReadIMU() bool {
@@ -53,10 +51,8 @@ func (d *droneApp) SendPlotterData() bool {
 		return false
 	}
 	if d.plotterDataCounter == 0 {
-		d.plotterDataPacket = make([]byte, 0, constants.PLOTTER_PACKET_SIZE)
-		d.serialiseInt(constants.PLOTTER_PACKET_SIZE)
-		d.serialiseInt(constants.PLOTTER_DATA_PER_PACKET)
-		d.serialiseInt(constants.PLOTTER_DATA_LEN)
+		d.plotterDataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_SIZE)
+		d.plotterDataPacket = append(d.plotterDataPacket, plotter.SerializeHeader()...)
 	}
 	d.SerializeRotations()
 	if d.plotterDataCounter < d.ploterDataPerPacket {

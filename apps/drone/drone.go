@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
+	"github.com/marksaravi/drone-go/apps/plotter"
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
@@ -65,11 +65,11 @@ func NewDrone(settings DroneSettings) *droneApp {
 		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		plotterDataPacket:   make([]byte, 0, constants.PLOTTER_PACKET_SIZE),
-		plotterSendBuffer:   make([]byte, constants.PLOTTER_PACKET_SIZE),
+		plotterDataPacket:   make([]byte, 0, plotter.PLOTTER_PACKET_SIZE),
+		plotterSendBuffer:   make([]byte, plotter.PLOTTER_PACKET_SIZE),
 		plotterAddress:      PLOTTER_ADDRESS,
 		plotterDataCounter:  0,
-		ploterDataPerPacket: constants.PLOTTER_DATA_PER_PACKET,
+		ploterDataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
 	}
 }
 
