@@ -8,17 +8,17 @@ import (
 )
 
 func SerializeHeader() []byte {
-	packet:=make([]byte, 0, PLOTER_PACKET_HEADER_SIZE)
-	packet=append(packet, utils.SerializeInt(PLOTTER_PACKET_SIZE)...)
+	packet:=make([]byte, 0, PLOTER_PACKET_HEADER_LEN)
+	packet=append(packet, utils.SerializeInt(PLOTTER_PACKET_LEN)...)
 	packet=append(packet, utils.SerializeInt(PLOTTER_DATA_PER_PACKET)...)
 	packet=append(packet, utils.SerializeInt(PLOTTER_DATA_LEN)...)
 	return packet
 }
 
 func DeSerializeHeader(packet []byte) (packetSize, dataPerPacket, dataLen int) {
-	packetSize = int(utils.DeSerializeInt(packet[0:2]))
-	dataPerPacket = int(utils.DeSerializeInt(packet[2:4]))
-	dataLen = int(utils.DeSerializeInt(packet[4:6]))
+	packetSize = int(utils.DeSerializeInt(packet[0:PLOTTER_INT_DATA_LEN]))
+	dataPerPacket = int(utils.DeSerializeInt(packet[PLOTTER_INT_DATA_LEN:2*PLOTTER_INT_DATA_LEN]))
+	dataLen = int(utils.DeSerializeInt(packet[PLOTTER_INT_DATA_LEN*2:PLOTTER_INT_DATA_LEN*3]))
 	return
 }
 
@@ -40,26 +40,26 @@ func SerializeDroneData(dur time.Duration, rotations, accelerometer, gyroscope i
 }
 
 func DeSerializeDroneData(dataPacket []byte) (dur time.Duration, rotations, accelerometer, gyroscope imu.Rotations, throttle byte) {
-	dur = utils.DeSerializeDuration(dataPacket[0:4])
+	dur = utils.DeSerializeDuration(dataPacket[0:PLOTTER_DUR_DATA_LEN])
 	floats:=make([]float64, 9)
 	for i:=0; i<9; i++ {
-		floats[i] = utils.DeSerializeFloat64(dataPacket[4+i*2:4+(i+1)*2])
+		floats[i] = utils.DeSerializeFloat64(dataPacket[PLOTTER_DUR_DATA_LEN+PLOTTER_FLOAT_DATA_LEN*i:PLOTTER_DUR_DATA_LEN+PLOTTER_FLOAT_DATA_LEN*(i+1)])
 	}
 	rotations = imu.Rotations {
-		Roll: utils.DeSerializeFloat64(dataPacket[4:6]),
-		Pitch: utils.DeSerializeFloat64(dataPacket[6:8]),
-		Yaw: utils.DeSerializeFloat64(dataPacket[8:10]),
+		Roll: floats[0],
+		Pitch: floats[1],
+		Yaw:  floats[2],
 	} 
 	accelerometer = imu.Rotations {
-		Roll: utils.DeSerializeFloat64(dataPacket[10:12]),
-		Pitch: utils.DeSerializeFloat64(dataPacket[12:14]),
-		Yaw: utils.DeSerializeFloat64(dataPacket[14:16]),
+		Roll:  floats[3],
+		Pitch: floats[4],
+		Yaw:  floats[5],
 	} 
 	gyroscope = imu.Rotations {
-		Roll: utils.DeSerializeFloat64(dataPacket[16:18]),
-		Pitch: utils.DeSerializeFloat64(dataPacket[18:20]),
-		Yaw: utils.DeSerializeFloat64(dataPacket[20:22]),
+		Roll:  floats[6],
+		Pitch:  floats[7],
+		Yaw:  floats[8],
 	}
-	throttle=dataPacket[22]
+	throttle=dataPacket[PLOTTER_DUR_DATA_LEN+PLOTTER_FLOAT_DATA_LEN*9]
 	return
 }

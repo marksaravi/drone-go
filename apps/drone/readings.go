@@ -51,7 +51,7 @@ func (d *droneApp) SendPlotterData() bool {
 		return false
 	}
 	if d.plotterDataCounter == 0 {
-		d.plotterDataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_SIZE)
+		d.plotterDataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_LEN)
 		d.plotterDataPacket = append(d.plotterDataPacket, plotter.SerializeHeader()...)
 	}
 	d.SerializeRotations()
