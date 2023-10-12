@@ -5,8 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/apps/plotter"
 )
 
 func (d *droneApp) ReadIMU() bool {
@@ -52,44 +51,32 @@ func (d *droneApp) SendPlotterData() bool {
 		return false
 	}
 	if d.plotterDataCounter == 0 {
-		d.plotterDataPacket = make([]byte, 0, constants.PLOTTER_PACKET_SIZE)
-		d.serialiseInt(constants.PLOTTER_PACKET_SIZE)
-		d.serialiseInt(constants.PLOTTER_DATA_PER_PACKET)
-		d.serialiseInt(constants.PLOTTER_DATA_LEN)
+		d.plotterDataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_LEN)
+		d.plotterDataPacket = append(d.plotterDataPacket, plotter.SerializeHeader()...)
 	}
 	d.SerializeRotations()
 	if d.plotterDataCounter < d.ploterDataPerPacket {
 		return false
 	}
 	if d.plotterUdpConn != nil {
-		d.plotterUdpConn.Write(d.plotterDataPacket)
+		copy(d.plotterSendBuffer, d.plotterDataPacket)
+		go func() {
+			d.plotterUdpConn.Write(d.plotterSendBuffer)
+		}()
 	}
 	d.plotterDataCounter = 0
 	return true
 }
 
 func (d *droneApp) SerializeRotations() {
-	d.serialiseTimeStamp(time.Since(d.startTime))
-	d.serialiseRotattion(d.rotations.Roll)
-	d.serialiseRotattion(d.rotations.Pitch)
-	d.serialiseRotattion(d.rotations.Yaw)
-	d.serialiseRotattion(d.accRotations.Roll)
-	d.serialiseRotattion(d.accRotations.Pitch)
-	d.serialiseRotattion(d.accRotations.Yaw)
-	d.serialiseRotattion(d.gyroRotations.Roll)
-	d.serialiseRotattion(d.gyroRotations.Pitch)
-	d.serialiseRotattion(d.gyroRotations.Yaw)
+	d.plotterDataPacket = append(
+		d.plotterDataPacket,
+		plotter.SerializeDroneData(
+			time.Since(d.startTime),
+			d.rotations,
+			d.accRotations,
+			d.gyroRotations,
+			0,
+		)...)
 	d.plotterDataCounter++
-}
-
-func (d *droneApp) serialiseTimeStamp(dur time.Duration) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeDuration(dur)...)
-}
-
-func (d *droneApp) serialiseInt(n int) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeInt(int16(n))...)
-}
-
-func (d *droneApp) serialiseRotattion(r float64) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeFloat64(r)...)
 }

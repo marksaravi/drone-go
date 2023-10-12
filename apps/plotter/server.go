@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/devices/imu"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
-const UDP_BUFFER_SIZE = 8192
+const UDP_BUFFER_LEN = 8192
 
 type plotter struct {
 	websocketConn     *websocket.Conn
@@ -61,7 +61,7 @@ func (p *plotter) createUdpServer() {
 		p.stopPlotter(err)
 		return
 	}
-	p.udpBuffer = make([]byte, UDP_BUFFER_SIZE)
+	p.udpBuffer = make([]byte, UDP_BUFFER_LEN)
 }
 
 func (p *plotter) createHttpServer() {
@@ -86,13 +86,11 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 			if err != nil && strings.Contains(err.Error(), "closed network connection") {
 				return
 			}
-			if err == nil && nBytes > 0 {
+			if err == nil && nBytes >= PLOTER_PACKET_HEADER_LEN {
+				packet := p.udpBuffer[:nBytes]
 				counter++
-				packetSize := int(utils.DeSerializeInt(p.udpBuffer[0:2]))
-				data := p.udpBuffer[0:packetSize]
-				dataPerPacket := int(utils.DeSerializeInt(data[2:4]))
-				dataLen := int(utils.DeSerializeInt(data[4:6]))
-				jsonData := extractPackets(data[6:], dataLen, dataPerPacket)
+				packetSize, dataPerPacket, dataLen := DeSerializeHeader(packet)
+				jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataLen, dataPerPacket)
 				if p.websocketConn != nil {
 					err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
 				}
@@ -173,17 +171,16 @@ func extractPackets(data []byte, dataLen, dataPerPacket int) string {
 }
 
 func extractImuRotations(data []byte) string {
-	t := utils.DeSerializeDuration(data[0:4])
-	a := extractRotations(data[4:10])
-	g := extractRotations(data[10:16])
-	r := extractRotations(data[16:22])
-	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d}", a, g, r, t)
+	dur, rotations, accelerometer, gyroscope, throttle := DeSerializeDroneData(data)
+	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d,\"p\":%d}",
+		extractRotations(accelerometer),
+		extractRotations(gyroscope),
+		extractRotations(rotations),
+		dur,
+		throttle,
+	)
 }
 
-func extractRotations(data []byte) string {
-	rot := make([]float64, 3)
-	for i := 0; i < 3; i++ {
-		rot[i] = utils.DeSerializeFloat64(data[i*2 : (i+1)*2])
-	}
-	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", rot[0], rot[1], rot[2])
+func extractRotations(r imu.Rotations) string {
+	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", r.Roll, r.Pitch, r.Yaw)
 }
