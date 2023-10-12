@@ -23,31 +23,3 @@ type ImuRotations struct {
 	ReadTime      time.Time
 	ReadInterval  time.Duration
 }
-
-type FlightCommandType = uint8
-
-type FlightCommands struct {
-	Type              FlightCommandType
-	Roll              uint16
-	Pitch             uint16
-	Yaw               uint16
-	Throttle          uint16
-	ButtonFrontLeft   bool
-	ButtonFrontRight  bool
-	ButtonTopLeft     bool
-	ButtonTopRight    bool
-	ButtonBottomLeft  bool
-	ButtonBottomRight bool
-}
-
-type Payload = [constants.RADIO_PAYLOAD_SIZE]byte
-
-type Logger interface {
-	Send(ImuRotations)
-	Close()
-}
-
-type Throttles struct {
-	BaseThrottle float64
-	Throttles    map[int]float64
-}

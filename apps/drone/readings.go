@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/marksaravi/drone-go/apps/plotter"
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -72,27 +73,14 @@ func (d *droneApp) SendPlotterData() bool {
 }
 
 func (d *droneApp) SerializeRotations() {
-	d.serialiseTimeStamp(time.Since(d.startTime))
-	d.serialiseRotattion(d.rotations.Roll)
-	d.serialiseRotattion(d.rotations.Pitch)
-	d.serialiseRotattion(d.rotations.Yaw)
-	d.serialiseRotattion(d.accRotations.Roll)
-	d.serialiseRotattion(d.accRotations.Pitch)
-	d.serialiseRotattion(d.accRotations.Yaw)
-	d.serialiseRotattion(d.gyroRotations.Roll)
-	d.serialiseRotattion(d.gyroRotations.Pitch)
-	d.serialiseRotattion(d.gyroRotations.Yaw)
+	d.plotterDataPacket = append(
+		d.plotterDataPacket,
+		plotter.SerializeDroneData(
+			time.Since(d.startTime),
+			d.rotations,
+			d.accRotations,
+			d.gyroRotations,
+			0,
+		)...)
 	d.plotterDataCounter++
-}
-
-func (d *droneApp) serialiseTimeStamp(dur time.Duration) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeDuration(dur)...)
-}
-
-func (d *droneApp) serialiseInt(n int) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeInt(int16(n))...)
-}
-
-func (d *droneApp) serialiseRotattion(r float64) {
-	d.plotterDataPacket = append(d.plotterDataPacket, utils.SerializeFloat64(r)...)
 }
