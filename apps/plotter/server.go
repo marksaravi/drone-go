@@ -172,15 +172,15 @@ func extractPackets(data []byte, dataLen, dataPerPacket int) string {
 
 func extractImuRotations(data []byte) string {
 	dur, rotations, accelerometer, gyroscope, throttle := DeSerializeDroneData(data)
-	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d,\"p\":%d}", 
+	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d,\"p\":%d}",
 		extractRotations(accelerometer),
 		extractRotations(gyroscope),
 		extractRotations(rotations),
-		dur.Microseconds(),
+		dur,
 		throttle,
 	)
 }
 
-func extractRotations(r imu.Rotations ) string {
+func extractRotations(r imu.Rotations) string {
 	return fmt.Sprintf("{\"roll\":%0.2f,\"pitch\":%0.2f,\"yaw\":%0.2f}", r.Roll, r.Pitch, r.Yaw)
 }
