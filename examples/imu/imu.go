@@ -24,9 +24,9 @@ func main() {
 		Accelerometer: icm20789.InertialDeviceConfigs{
 			FullScale: "4g",
 			Offsets: icm20789.Offsets{
-				X: 32696,
-				Y: 836,
-				Z: 31979,
+				X: 0,
+				Y: 0,
+				Z: 0,
 			},
 		},
 		Gyroscope: icm20789.InertialDeviceConfigs{
@@ -52,21 +52,27 @@ func main() {
 
 	lastRead := time.Now()
 	ticker := time.NewTicker(time.Second / 10)
-	var rotations, accrotations, gyrorotations imu.Rotations
+	// var rotations, accrotations, gyrorotations imu.Rotations
+	var _, accrotations, _ imu.Rotations
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Printf("R: %6.2f, %6.2f, %6.2f    A: %6.2f, %6.2f, %6.2f    G: %6.2f, %6.2f, %6.2f\n",
-				rotations.Roll, rotations.Pitch, rotations.Yaw,
+			// log.Printf("R: %6.2f, %6.2f, %6.2f\n",
+			// 	rotations.Roll, rotations.Pitch, rotations.Yaw,
+			// )
+			log.Printf("A: %6.2f, %6.2f, %6.2f\n",
 				accrotations.Roll, accrotations.Pitch, accrotations.Yaw,
-				gyrorotations.Roll, gyrorotations.Pitch, gyrorotations.Yaw,
 			)
+			// log.Printf("G: %6.2f, %6.2f, %6.2f\n",
+			// 	gyrorotations.Roll, gyrorotations.Pitch, gyrorotations.Yaw,
+			// )
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				rotations, accrotations, gyrorotations, _ = imudev.Read()
+				// rotations, accrotations, gyrorotations, _ = imudev.Read()
+				_, accrotations, _, _ = imudev.Read()
 			}
 		}
 
