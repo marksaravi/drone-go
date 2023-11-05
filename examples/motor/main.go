@@ -35,20 +35,27 @@ func main() {
 	const minThrottle float64 = 5
 	const steps int = 10
 	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
-	esc := esc.NewESC(pwmDev, powerBreaker, 50, false)
+	motorsToChannelsMappings:=make(map[int]int)
+	motorsToChannelsMappings[3]=4
+	motorsToChannelsMappings[1]=6
+	motorsToChannelsMappings[2]=5
+	motorsToChannelsMappings[0]=7
+	esc := esc.NewESC(pwmDev, motorsToChannelsMappings, powerBreaker, 50, false)
 	var wg sync.WaitGroup
 	esc.On()
 	time.Sleep(5 * time.Second)
 	throttle:=float64(minThrottle)
 	fmt.Println(*motor)
-	throttles:=make([]float64, pwmDev.NumberOfChannels())
+	motors:=[]float64{0, 0, 0, 0}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
 			// log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			for i:=0; i<len(throttles); i++ {
-				throttles[i]=throttle
-			}
-			esc.SetThrottles(throttles)
+			// for i:=0; i<len(throttles); i++ {
+			// 	throttles[i]=throttle
+			// }
+			// esc.SetThrottles(throttles)
+			motors[*motor]=throttle
+			esc.SetThrottles(motors)
 			time.Sleep(250 * time.Millisecond)
 			throttle += dThrottle
 		}
