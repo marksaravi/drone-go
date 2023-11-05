@@ -2,8 +2,6 @@ package esc
 
 import (
 	"time"
-
-	"github.com/marksaravi/drone-go/models"
 )
 
 const (
@@ -16,7 +14,7 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottles(map[int]float64)
+	SetThrottles([]float64)
 }
 
 type escDev struct {
@@ -39,7 +37,7 @@ func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, d
 }
 
 func (e *escDev) zeroThrottle() {
-	e.pwmDev.SetThrottles(map[int]float64{0: 0, 1: 0, 2: 0, 3: 0})
+	e.pwmDev.SetThrottles([]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,})
 }
 
 func (e *escDev) On() {
@@ -54,11 +52,11 @@ func (e *escDev) Off() {
 	e.powerbreaker.Disconnect()
 }
 
-func (e *escDev) SetThrottles(throttles models.Throttles) {
+func (e *escDev) SetThrottles(throttles []float64) {
 	if time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
-		func(throttles map[int]float64) {
+		func(throttles []float64) {
 			e.pwmDev.SetThrottles(throttles)
-		}(throttles.Throttles)
+		}(throttles)
 	}
 }
