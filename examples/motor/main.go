@@ -41,7 +41,7 @@ func main() {
 	time.Sleep(5 * time.Second)
 	throttle:=float64(minThrottle)
 	fmt.Println(*motor)
-	throttles:=make([]float64, 16)
+	throttles:=make([]float64, pwmDev.NumberOfChannels())
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
 			// log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")

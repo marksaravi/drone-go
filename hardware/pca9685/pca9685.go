@@ -14,7 +14,7 @@ type powerbreaker interface {
 
 // PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
-
+const NUMBER_OF_CHANNELS=8
 // Addresses
 const (
 	PCA9685Mode1      = 0x00
@@ -84,13 +84,21 @@ func limitThrottle(throttle float64) float64 {
 	return throttle
 }
 
-func (d *pca9685Dev) SetThrottles(throttles []float64) {
+func (d *pca9685Dev) NumberOfChannels() int {
+	return NUMBER_OF_CHANNELS
+}
+
+func (d *pca9685Dev) SetThrottles(throttles []float64) error {
+	if len(throttles)!=NUMBER_OF_CHANNELS {
+		return fmt.Errorf("pca9685 must have %d channel data", NUMBER_OF_CHANNELS)
+	}
 	for channel := 0; channel < len(throttles); channel++ {
 		throttle := limitThrottle(throttles[channel])
 		pulseWidth := throttleToPulseWidth(throttle)
 		d.setPWMByThrottle(channel, pulseWidth)
 		fmt.Printf("channel[%d]: %f\n", channel, pulseWidth)
 	}
+	return nil
 }
 
 // Calibrate

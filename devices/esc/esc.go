@@ -14,7 +14,9 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottles([]float64)
+	SetThrottles([]float64) error
+	NumberOfChannels()      int
+
 }
 
 type escDev struct {
@@ -37,7 +39,11 @@ func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, d
 }
 
 func (e *escDev) zeroThrottle() {
-	e.pwmDev.SetThrottles([]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,})
+	z:=make([]float64, e.pwmDev.NumberOfChannels())
+	for i:=0; i<len(z); i++ {
+		z[i]=0
+	}
+	e.pwmDev.SetThrottles(z)
 }
 
 func (e *escDev) On() {
