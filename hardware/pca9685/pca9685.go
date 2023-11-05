@@ -14,7 +14,7 @@ type powerbreaker interface {
 
 // PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
-
+const NUMBER_OF_CHANNELS=8
 // Addresses
 const (
 	PCA9685Mode1      = 0x00
@@ -43,7 +43,7 @@ const (
 	Frequency          float64 = 384
 	MinPW              float64 = 0.000995
 	MaxPW              float64 = 0.00199
-	MaxAllowedThrottle float64 = 60
+	MaxAllowedThrottle float64 = 30
 )
 
 type pca9685Dev struct {
@@ -51,12 +51,10 @@ type pca9685Dev struct {
 	address         uint8
 	connection      *i2c.Dev
 	frequency       float64
-	channelMappings map[int]int
 }
 
 type PCA9685Settings struct {
 	Connection      *i2c.Dev
-	ChannelMappings map[int]int
 	MaxThrottle     float64
 }
 
@@ -67,7 +65,6 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 		name:            "pca9685Dev",
 		address:         PCA9685Address,
 		connection:      settings.Connection,
-		channelMappings: settings.ChannelMappings,
 	}
 	dev.init()
 	return dev, nil
@@ -87,19 +84,26 @@ func limitThrottle(throttle float64) float64 {
 	return throttle
 }
 
-func (d *pca9685Dev) SetThrottles(throttles map[int]float64) {
-	for i := 0; i < len(throttles); i++ {
-		throttle := limitThrottle(throttles[i])
-		channel := d.channelMappings[i]
+func (d *pca9685Dev) NumberOfChannels() int {
+	return NUMBER_OF_CHANNELS
+}
+
+func (d *pca9685Dev) SetThrottles(throttles []float64) error {
+	if len(throttles)!=NUMBER_OF_CHANNELS {
+		return fmt.Errorf("pca9685 must have %d channel data", NUMBER_OF_CHANNELS)
+	}
+	for channel := 0; channel < len(throttles); channel++ {
+		throttle := limitThrottle(throttles[channel])
 		pulseWidth := throttleToPulseWidth(throttle)
 		d.setPWMByThrottle(channel, pulseWidth)
+		fmt.Printf("channel[%d]: %f\n", channel, pulseWidth)
 	}
-	// 		log.Printf("%4.1f,    %4.1f,    %4.1f,    %4.1f\n", throttles[0], throttles[1], throttles[2], throttles[3])
+	return nil
 }
 
 // Calibrate
-func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker, mappings map[int]int) {
-	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxThrottle: 0, ChannelMappings: mappings})
+func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
+	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxThrottle: 0})
 	if err != nil {
 		fmt.Println(err)
 		return

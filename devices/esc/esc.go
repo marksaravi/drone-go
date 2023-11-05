@@ -2,8 +2,6 @@ package esc
 
 import (
 	"time"
-
-	"github.com/marksaravi/drone-go/models"
 )
 
 const (
@@ -16,21 +14,33 @@ type powerbreaker interface {
 }
 
 type pwmDevice interface {
-	SetThrottles(map[int]float64)
+	SetThrottles([]float64) error
+	NumberOfChannels()      int
+
 }
 
 type escDev struct {
-	pwmDev         pwmDevice
-	powerbreaker   powerbreaker
-	lastUpdate     time.Time
-	updateInterval time.Duration
-	debug          bool
+	pwmDev                   pwmDevice
+	motorsToChannelsMappings map[int]int
+	throttles                []float64
+	powerbreaker             powerbreaker
+	lastUpdate               time.Time
+	updateInterval           time.Duration
+	debug                    bool
 }
 
-func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, debug bool) *escDev {
+func NewESC(
+		pwmDev pwmDevice,
+		motorsToChannelsMappings map[int]int,
+		powerbreaker powerbreaker,
+		updatesPerSecond int, 
+		debug bool,
+	) *escDev {
 	powerbreaker.Disconnect()
 	return &escDev{
 		pwmDev:         pwmDev,
+		motorsToChannelsMappings: motorsToChannelsMappings,
+		throttles       : make([]float64, pwmDev.NumberOfChannels()),
 		powerbreaker:   powerbreaker,
 		lastUpdate:     time.Now().Add(-time.Second),
 		updateInterval: time.Second / time.Duration(updatesPerSecond),
@@ -39,7 +49,11 @@ func NewESC(pwmDev pwmDevice, powerbreaker powerbreaker, updatesPerSecond int, d
 }
 
 func (e *escDev) zeroThrottle() {
-	e.pwmDev.SetThrottles(map[int]float64{0: 0, 1: 0, 2: 0, 3: 0})
+	z:=make([]float64, e.pwmDev.NumberOfChannels())
+	for i:=0; i<len(z); i++ {
+		z[i]=0
+	}
+	e.pwmDev.SetThrottles(z)
 }
 
 func (e *escDev) On() {
@@ -54,11 +68,21 @@ func (e *escDev) Off() {
 	e.powerbreaker.Disconnect()
 }
 
-func (e *escDev) SetThrottles(throttles models.Throttles) {
+func (e *escDev) mapMotorsToChannels(motors []float64) {
+	for i:=0; i<len(e.throttles); i++ {
+		e.throttles[i]=0
+	}
+	for i:=0; i<len(motors); i++ {
+		e.throttles[e.motorsToChannelsMappings[i]]=motors[i]
+	}
+}
+
+func (e *escDev) SetThrottles(motors []float64) {
+	e.mapMotorsToChannels(motors)
 	if time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
-		func(throttles map[int]float64) {
-			e.pwmDev.SetThrottles(throttles)
-		}(throttles.Throttles)
+		func() {
+			e.pwmDev.SetThrottles(e.throttles)
+		}()
 	}
 }

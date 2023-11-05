@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"github.com/marksaravi/drone-go/constants"
 )
 
 type XYZ struct {

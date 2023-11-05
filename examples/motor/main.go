@@ -2,16 +2,15 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/devices/esc"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
-	"github.com/marksaravi/drone-go/models"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
 )
@@ -22,38 +21,43 @@ func main() {
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
 
-	configs := config.ReadConfigs().FlightControl
-	powerBreakerPin := configs.PowerBreaker
-	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
+	powerBreakerGPIO := hardware.NewGPIOOutput("GPIO17")
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open(configs.ESC.I2CDev)
+	b, _ := i2creg.Open("/dev/i2c-1")
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
 		Connection:      i2cConn,
 		MaxThrottle:     15,
-		ChannelMappings: configs.ESC.PwmDeviceToESCMappings,
 	})
 
-	const maxThrottle float64 = 10
+	const maxThrottle float64 = 20
 	const minThrottle float64 = 5
 	const steps int = 10
 	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
-	esc := esc.NewESC(pwmDev, powerBreaker, configs.ESC.UpdatePerSecond, false)
+	motorsToChannelsMappings:=make(map[int]int)
+	motorsToChannelsMappings[3]=4
+	motorsToChannelsMappings[1]=6
+	motorsToChannelsMappings[2]=5
+	motorsToChannelsMappings[0]=7
+	esc := esc.NewESC(pwmDev, motorsToChannelsMappings, powerBreaker, 50, false)
 	var wg sync.WaitGroup
 	esc.On()
 	time.Sleep(5 * time.Second)
-	throttles := models.Throttles{
-		BaseThrottle: minThrottle,
-		Throttles:    map[int]float64{0: 0, 1: 0, 2: 0, 3: 0},
-	}
+	throttle:=float64(minThrottle)
+	fmt.Println(*motor)
+	motors:=[]float64{0, 0, 0, 0}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
-			log.Println("motor: ", *motor, ", throttle:  ", throttles.BaseThrottle, "%")
-			throttles.Throttles[*motor] = throttles.BaseThrottle
-			esc.SetThrottles(throttles)
+			// log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
+			// for i:=0; i<len(throttles); i++ {
+			// 	throttles[i]=throttle
+			// }
+			// esc.SetThrottles(throttles)
+			motors[*motor]=throttle
+			esc.SetThrottles(motors)
 			time.Sleep(250 * time.Millisecond)
-			throttles.BaseThrottle += dThrottle
+			throttle += dThrottle
 		}
 		dThrottle = -dThrottle
 	}

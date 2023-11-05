@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/marksaravi/drone-go/config"
 	"github.com/marksaravi/drone-go/devices"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
@@ -11,12 +10,9 @@ import (
 
 func main() {
 	hardware.HostInitialize()
-	configs := config.ReadConfigs().FlightControl
-	escConfigs := configs.ESC
-	powerBreakerPin := configs.PowerBreaker
-	powerBreakerGPIO := hardware.NewGPIOOutput(powerBreakerPin)
+	powerBreakerGPIO := hardware.NewGPIOOutput("GPIO17")
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open(escConfigs.I2CDev)
+	b, _ := i2creg.Open("/dev/i2c-1")
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
-	pca9685.Calibrate(i2cConn, powerBreaker, configs.ESC.PwmDeviceToESCMappings)
+	pca9685.Calibrate(i2cConn, powerBreaker)
 }
