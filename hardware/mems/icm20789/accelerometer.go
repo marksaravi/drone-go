@@ -1,8 +1,8 @@
 package icm20789
 
 func (m *memsIcm20789) setupAccelerometer(fullScaleMask byte) {
-	accelsetup1, _ := m.readByteFromRegister(ACCEL_CONFIG)
-	m.writeRegister(ACCEL_CONFIG, accelsetup1|fullScaleMask)
+	accelsetup1, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG)
+	m.writeRegister(ADDRESS_ACCEL_CONFIG, accelsetup1|fullScaleMask)
 	delay(1)
 }
 

@@ -9,17 +9,30 @@ import (
 )
 
 const (
-	ACCEL_XOUT_H byte = 0x3B
-	ACCEL_CONFIG byte = 0x1C
-	GYRO_CONFIG  byte = 0x1B
-	WHO_AM_I     byte = 0x75
-	PWR_MGMT_1   byte = 0x6B
-	PWR_MGMT_2   byte = 0x6C
+	ADDRESS_ACCEL_XOUT_H byte = 0x3B
+	ADDRESS_ACCEL_CONFIG byte = 0x1C
+	ADRESS_GYRO_CONFIG   byte = 0x1B
+	ADDRESS_PWR_MGMT_1   byte = 0x6B
+	ADDRESS_PWR_MGMT_2   byte = 0x6C
+	ADDRESS_WHO_AM_I     byte = 0x75
+	ADDRESS_XA_OFFSH     byte = 0x77
+	ADDRESS_XA_OFFSL     byte = 0x78
+	ADDRESS_YA_OFFSH     byte = 0x7A
+	ADDRESS_YA_OFFSL     byte = 0x7B
+	ADDRESS_ZA_OFFSH     byte = 0x7D
+	ADDRESS_ZA_OFFSL     byte = 0x7E
 )
 
 const (
-	PWR_MGMT_1_CONFIG byte = 0b00000000
-	PWR_MGMT_2_CONFIG byte = 0b00000000
+	PWR_MGMT_1_CONFIG_DEVICE_RESET byte = 0b10000000
+	PWR_MGMT_1_CONFIG              byte = 0b00000000
+	PWR_MGMT_2_CONFIG              byte = 0b00000000
+)
+
+const (
+	PWR_MGMT_1_CONFIG_DEVICE_RESET byte = 0b10000000
+	PWR_MGMT_1_CONFIG              byte = 0b00000000
+	PWR_MGMT_2_CONFIG              byte = 0b00000000
 )
 
 const (
@@ -76,8 +89,13 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	return &m
 }
 
+func (m *memsIcm20789) WhoAmI() (byte, error) {
+	memsData, err := m.readRegister(ADDRESS_WHO_AM_I, 1)
+	return memsData[0], err
+}
+
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
-	memsData, err := m.readRegister(ACCEL_XOUT_H, RAW_DATA_SIZE)
+	memsData, err := m.readRegister(ADDRESS_ACCEL_XOUT_H, RAW_DATA_SIZE)
 	if err != nil {
 		return mems.Mems6DOFData{}, err
 	}
@@ -111,10 +129,10 @@ func (m *memsIcm20789) writeRegister(address byte, data ...byte) error {
 }
 
 func (m *memsIcm20789) setupPower() {
-	m.writeRegister(PWR_MGMT_1, 0x80) // soft reset
-	delay(1)
-	m.writeRegister(PWR_MGMT_1, PWR_MGMT_1_CONFIG)
-	delay(1)
+	m.writeRegister(ADDRESS_PWR_MGMT_1, PWR_MGMT_1_CONFIG_DEVICE_RESET)
+	delay(10)
+	m.writeRegister(ADDRESS_PWR_MGMT_1, PWR_MGMT_1_CONFIG)
+	delay(10)
 }
 
 func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {

@@ -44,6 +44,10 @@ func main() {
 	}
 
 	mems := icm20789.NewICM20789(icm20789Configs)
+	whoAmI, err:=mems.WhoAmI()
+	if err == nil {
+		fmt.Printf("WHO AM I: %x\n", whoAmI)
+	}
 	imuConfigs := imu.Configs{
 		FilterCoefficient: 0.001,
 	}
