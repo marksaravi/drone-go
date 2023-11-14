@@ -66,7 +66,7 @@ func main() {
 			// log.Printf("R: %6.2f, %6.2f, %6.2f\n",
 			// 	rotations.Roll, rotations.Pitch, rotations.Yaw,
 			// )
-			log.Printf("A: %6.2f, %6.2f, %6.2f\n",
+			log.Printf("Accelerometer(Roll: %6.2f, Pitch: %6.2f, yaw: %6.2f)\n",
 				accrotations.Roll, accrotations.Pitch, accrotations.Yaw,
 			)
 			// log.Printf("G: %6.2f, %6.2f, %6.2f\n",
