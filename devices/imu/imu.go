@@ -14,7 +14,7 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	FilterCoefficient float64 `yaml:"filter_coefficient"`
+	ComplimentaryFilterCoefficient float64 `yaml:"complimentary_filter_coefficient"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
@@ -22,14 +22,14 @@ type Rotations struct {
 	Roll, Pitch, Yaw float64
 }
 type imuDevice struct {
-	configs           Configs
-	dev               IMUMems6DOF
-	rotations         Rotations
-	accRotations      Rotations
-	gyroRotations     Rotations
-	lastReadTime      time.Time
-	currReadTime      time.Time
-	filterCoefficient float64
+	configs                        Configs
+	dev                            IMUMems6DOF
+	rotations                      Rotations
+	accRotations                   Rotations
+	gyroRotations                  Rotations
+	lastReadTime                   time.Time
+	currReadTime                   time.Time
+	complimentaryFilterCoefficient float64
 }
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
@@ -51,7 +51,7 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
-		filterCoefficient: configs.FilterCoefficient,
+		complimentaryFilterCoefficient: configs.ComplimentaryFilterCoefficient,
 	}
 }
 
@@ -74,8 +74,8 @@ func (imu *imuDevice) calcRotations(memsData mems.Mems6DOFData) {
 	rotations, imu.gyroRotations = calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations, imu.gyroRotations)
 
 	imu.rotations = Rotations{
-		Roll:  complimentaryFilter(rotations.Roll, imu.accRotations.Roll, imu.filterCoefficient),
-		Pitch: complimentaryFilter(rotations.Pitch, imu.accRotations.Pitch, imu.filterCoefficient),
+		Roll:  complimentaryFilter(rotations.Roll, imu.accRotations.Roll, imu.complimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(rotations.Pitch, imu.accRotations.Pitch, imu.complimentaryFilterCoefficient),
 		Yaw:   rotations.Yaw,
 	}
 }

@@ -38,15 +38,22 @@ type Offsets struct {
 	Z uint16 `json:"z"`
 }
 
-type InertialDeviceConfigs struct {
-	FullScale string  `json:"full_scale"`
-	Offsets   Offsets `json:"offsets"`
+type AccelerometerConfigs struct {
+	FullScale                      string  `json:"full_scale"`
+	Offsets                        Offsets `json:"offsets"`
+	LowPassFilterFrequency         string  `json:"lowpass_filter_frequency"`
+	NumberOfSamples                int     `json:"number_of_samples"`
+}
+
+type GyroscopeConfigs struct {
+	FullScale string              `json:"full_scale"`
+	Offsets   Offsets             `json:"offsets"`
 }
 
 type Configs struct {
 	SPI           hardware.SPIConnConfigs `json:"spi"`
-	Accelerometer InertialDeviceConfigs   `json:"accelerometer"`
-	Gyroscope     InertialDeviceConfigs   `json:"gyroscope"`
+	Accelerometer AccelerometerConfigs    `json:"accelerometer"`
+	Gyroscope     GyroscopeConfigs        `json:"gyroscope"`
 }
 
 type memsIcm20789 struct {
@@ -54,6 +61,7 @@ type memsIcm20789 struct {
 
 	accelFullScale float64
 	gyroFullScale  float64
+	prevAccel      mems.XYZ
 }
 
 func NewICM20789(configs Configs) *memsIcm20789 {
@@ -65,7 +73,12 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	}
 	m.setupPower()
 	// (fullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string)
-	m.setupAccelerometer(configs.Accelerometer.FullScale, 8, 512, "44.8hz")
+	m.setupAccelerometer(
+		configs.Accelerometer.FullScale,
+		4,
+		512,
+		configs.Accelerometer.LowPassFilterFrequency,
+	)
 	m.setupGyroscope(gyroFullScaleMask)
 	return &m
 }

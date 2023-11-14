@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"fmt"
 	"github.com/marksaravi/drone-go/hardware/mems"
 )
 
@@ -68,8 +69,16 @@ var ACCEL_CONFIG2_DLPF_CFG_3dB_BW = map[string]byte {
     "420.0hz"  : 0b00000111, //3-dB BW (Hz) 420.0
 }
 
-func (m *memsIcm20789) setupAccelerometer(fullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string) {
-	m.writeRegister(ADDRESS_ACCEL_CONFIG, ACCEL_CONFIG_DISABLE_SELF_TESTS | ACCEL_CONFIG_G[fullScale])
+func (m *memsIcm20789) setupAccelerometer(accelFullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string) {
+	fmt.Println(
+		"settings: ",
+		ACCEL_CONFIG_G[accelFullScale],
+		ACCEL_CONFIG2_FIFO_SIZE[fifoSize],
+		ACCEL_CONFIG2_DEC2_CFG_N_SAMPLE[numberOfSamples],
+		ACCEL_CONFIG2_DLPF_CFG_3dB_BW[lowPassFilterFrequency],
+		m.accelFullScale,
+	)
+	m.writeRegister(ADDRESS_ACCEL_CONFIG, ACCEL_CONFIG_DISABLE_SELF_TESTS | ACCEL_CONFIG_G[accelFullScale])
 	delay(100)
 	m.writeRegister(ADDRESS_ACCEL_CONFIG2,
 		ACCEL_CONFIG2_FIFO_SIZE[fifoSize] | 
@@ -79,9 +88,10 @@ func (m *memsIcm20789) setupAccelerometer(fullScale string, numberOfSamples int,
 }
 
 func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {
-	return mems.XYZ{
+	accel := mems.XYZ{
 		X: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.accelFullScale,
 		Y: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.accelFullScale,
 		Z: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.accelFullScale,
 	}
+	return accel
 }

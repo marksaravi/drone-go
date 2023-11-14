@@ -21,15 +21,17 @@ func main() {
 		cancel()
 	}(cancel)
 	icm20789Configs := icm20789.Configs{
-		Accelerometer: icm20789.InertialDeviceConfigs{
+		Accelerometer: icm20789.AccelerometerConfigs{
 			FullScale: "4g",
+			LowPassFilterFrequency: "10.2hz",
+			NumberOfSamples: 4,
 			Offsets: icm20789.Offsets{
 				X: 0,
 				Y: 0,
 				Z: 0,
 			},
 		},
-		Gyroscope: icm20789.InertialDeviceConfigs{
+		Gyroscope: icm20789.GyroscopeConfigs{
 			FullScale: "500dps",
 			Offsets: icm20789.Offsets{
 				X: 0,
@@ -49,7 +51,7 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 	imuConfigs := imu.Configs{
-		FilterCoefficient: 0.001,
+		ComplimentaryFilterCoefficient: 0.001,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
