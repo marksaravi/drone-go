@@ -57,15 +57,15 @@ type memsIcm20789 struct {
 }
 
 func NewICM20789(configs Configs) *memsIcm20789 {
-	accelFullScale, accelFullScaleMask := accelerometerFullScale(configs.Accelerometer.FullScale)
 	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
 	m := memsIcm20789{
 		spiConn:        hardware.NewSPIConnection(configs.SPI),
-		accelFullScale: accelFullScale,
+		accelFullScale: ACCEL_FULL_SCALE_G[configs.Gyroscope.FullScale],
 		gyroFullScale:  gyroFullScale,
 	}
 	m.setupPower()
-	m.setupAccelerometer(accelFullScaleMask)
+	// (fullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string)
+	m.setupAccelerometer("4g", 8, 512, "44.8hz")
 	m.setupGyroscope(gyroFullScaleMask)
 	return &m
 }
