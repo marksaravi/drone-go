@@ -51,7 +51,7 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 	imuConfigs := imu.Configs{
-		ComplimentaryFilterCoefficient: 0.001,
+		AccelerometerComplimentaryFilterCoefficient: 0.01,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)

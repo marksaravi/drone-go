@@ -72,7 +72,6 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 		gyroFullScale:  gyroFullScale,
 	}
 	m.setupPower()
-	// (fullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string)
 	m.setupAccelerometer(
 		configs.Accelerometer.FullScale,
 		4,
@@ -95,7 +94,7 @@ func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
 	}
 	return mems.Mems6DOFData{
 		Accelerometer: m.memsDataToAccelerometer(memsData[:6]),
-		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
+		// Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
 }
 
@@ -129,13 +128,13 @@ func (m *memsIcm20789) setupPower() {
 	delay(10)
 }
 
-func (m *memsIcm20789) memsDataToGyroscope(memsData []byte) mems.DXYZ {
-	return mems.DXYZ{
-		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
-		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
-		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
-	}
-}
+// func (m *memsIcm20789) memsDataToGyroscope(memsData []byte) mems.DXYZ {
+// 	return mems.DXYZ{
+// 		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
+// 		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
+// 		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
+// 	}
+// }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
 func towsComplementUint8ToInt16(h, l byte) int16 {

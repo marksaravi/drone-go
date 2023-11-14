@@ -14,7 +14,7 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	ComplimentaryFilterCoefficient float64 `yaml:"complimentary_filter_coefficient"`
+	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"acc-complimentary_filter_coefficient"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
@@ -22,14 +22,14 @@ type Rotations struct {
 	Roll, Pitch, Yaw float64
 }
 type imuDevice struct {
-	configs                        Configs
-	dev                            IMUMems6DOF
-	rotations                      Rotations
-	accRotations                   Rotations
-	gyroRotations                  Rotations
-	lastReadTime                   time.Time
-	currReadTime                   time.Time
-	complimentaryFilterCoefficient float64
+	configs                           Configs
+	dev                               IMUMems6DOF
+	rotations                         Rotations
+	accRotations                      Rotations
+	gyroRotations                     Rotations
+	lastReadTime                      time.Time
+	currReadTime                      time.Time
+	accComplimentaryFilterCoefficient float64
 }
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
@@ -51,7 +51,7 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
-		complimentaryFilterCoefficient: configs.ComplimentaryFilterCoefficient,
+		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
 	}
 }
 
@@ -68,28 +68,25 @@ func (imu *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
 }
 
 func (imu *imuDevice) calcRotations(memsData mems.Mems6DOFData) {
-	imu.accRotations = calcaAcelerometerRotations(memsData.Accelerometer)
-	dt := imu.currReadTime.Sub(imu.lastReadTime)
-	var rotations Rotations
-	rotations, imu.gyroRotations = calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations, imu.gyroRotations)
+	imu.calcaAcelerometerRotations(memsData.Accelerometer)
+	// dt := imu.currReadTime.Sub(imu.lastReadTime)
+	// var rotations Rotations
+	// rotations, imu.gyroRotations = calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations, imu.gyroRotations)
 
-	imu.rotations = Rotations{
-		Roll:  complimentaryFilter(rotations.Roll, imu.accRotations.Roll, imu.complimentaryFilterCoefficient),
-		Pitch: complimentaryFilter(rotations.Pitch, imu.accRotations.Pitch, imu.complimentaryFilterCoefficient),
-		Yaw:   rotations.Yaw,
-	}
+	// imu.rotations = Rotations{
+	// 	Roll:  complimentaryFilter(rotations.Roll, imu.accRotations.Roll, imu.complimentaryFilterCoefficient),
+	// 	Pitch: complimentaryFilter(rotations.Pitch, imu.accRotations.Pitch, imu.complimentaryFilterCoefficient),
+	// 	Yaw:   rotations.Yaw,
+	// }
 }
 
-func complimentaryFilter(gyro float64, accelerometer float64, complimentaryFilterCoefficient float64) float64 {
-	return (1-complimentaryFilterCoefficient)*gyro + complimentaryFilterCoefficient*accelerometer
-}
-
-func calcaAcelerometerRotations(data mems.XYZ) Rotations {
-	yrot := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
-	xrot := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
-	return Rotations{
-		Roll:  xrot,
-		Pitch: yrot,
+func (imu *imuDevice) calcaAcelerometerRotations(data mems.XYZ) {
+	// fmt.Println(imu.accComplimentaryFilterCoefficient)
+	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
+	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
+	imu.accRotations = Rotations{
+		Roll:  complimentaryFilter(roll, imu.accRotations.Roll, imu.accComplimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(pitch, imu.accRotations.Pitch, imu.accComplimentaryFilterCoefficient),
 		Yaw:   0,
 	}
 }
@@ -114,4 +111,9 @@ func calcGyroscopeRotations(gyroData mems.DXYZ, dt time.Duration, prevRotations 
 			Pitch: math.Mod(gyroPitch, 360),
 			Yaw:   math.Mod(gyroYaw, 360),
 		}
+}
+
+func complimentaryFilter(value float64, preValue float64, complimentaryFilterCoefficient float64) float64 {
+	v := (1-complimentaryFilterCoefficient)*value + complimentaryFilterCoefficient*preValue
+	return math.Round(v*10)/10
 }
