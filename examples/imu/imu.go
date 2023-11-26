@@ -57,30 +57,19 @@ func main() {
 	imudev := imu.NewIMU(mems, imuConfigs)
 
 	lastRead := time.Now()
-	ticker := time.NewTicker(time.Second / 10)
-	// var rotations, accrotations, gyrorotations imu.Rotations
-	var _, accrotations, _ imu.Rotations
-	for {
+
+	var accrotations imu.Rotations
+	running:=true
+	for running {
 		select {
 		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			// log.Printf("R: %6.2f, %6.2f, %6.2f\n",
-			// 	rotations.Roll, rotations.Pitch, rotations.Yaw,
-			// )
-			log.Printf("Accelerometer(Roll: %6.2f, Pitch: %6.2f, yaw: %6.2f)\n",
-				accrotations.Roll, accrotations.Pitch, accrotations.Yaw,
-			)
-			// log.Printf("G: %6.2f, %6.2f, %6.2f\n",
-			// 	gyrorotations.Roll, gyrorotations.Pitch, gyrorotations.Yaw,
-			// )
+			running=false
 		default:
-			if time.Since(lastRead) >= time.Second/1000 {
+			if time.Since(lastRead) >= time.Second/2 {
 				lastRead = time.Now()
-				// rotations, accrotations, gyrorotations, _ = imudev.Read()
 				_, accrotations, _, _ = imudev.Read()
+				fmt.Printf(" Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", accrotations.Roll, accrotations.Pitch, accrotations.Yaw)
 			}
 		}
-
 	}
 }

@@ -52,7 +52,7 @@ func main() {
 	}
 
 	lastRead := time.Now()
-	lastPrint := time.Now()
+	// lastPrint := time.Now()
 	var maxX float64=math.SmallestNonzeroFloat64
 	maxY := maxX
 	var minX float64=math.MaxFloat64
@@ -64,14 +64,14 @@ func main() {
 		case <-ctx.Done():
 			running=false
 		default:
-			if time.Since(lastRead) >= time.Second/1000 {
+			if time.Since(lastRead) >= time.Second {
 				lastRead = time.Now()
 				data, _ := mems.Read()
 				acc:=data.Accelerometer
 				// gyro:=data.Gyroscope
 			
 				counter++
-				if counter>100 {
+				if counter>1 {
 					if acc.X > maxX {
 						maxX=acc.X 
 					}
@@ -85,10 +85,11 @@ func main() {
 						minY=acc.Y 
 					}
 				}
-				if time.Since(lastPrint) >= time.Second/2 {
-					log.Printf("Accelerometer(X: %6.2f, Y: %6.2f)\n", acc.X, acc.Y)
-					lastPrint=time.Now()
-				}
+				log.Printf("Accelerometer  X: %6.2f, Y: %6.2f", acc.X, acc.Y)
+				// if time.Since(lastPrint) >= time.Second/2 {
+				// 	log.Printf("Accelerometer  X: %6.2f, Y: %6.2f", acc.X, acc.Y)
+				// 	lastPrint=time.Now()
+				// }
 			}
 		}
 
