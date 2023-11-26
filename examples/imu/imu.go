@@ -24,7 +24,7 @@ func main() {
 		Accelerometer: icm20789.AccelerometerConfigs{
 			FullScale: "16g",
 			LowPassFilterFrequency: "44.8hz",
-			NumberOfSamples: 32,
+			NumberOfSamples: 16,
 			Offsets: icm20789.Offsets{
 				X: 0,
 				Y: 0,
