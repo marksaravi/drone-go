@@ -79,16 +79,18 @@ func (m *memsIcm20789) setupAccelerometer(accelFullScale string, numberOfSamples
 	// 	ACCEL_CONFIG2_DLPF_CFG_3dB_BW[lowPassFilterFrequency],
 	// 	m.accelFullScale,
 	// )
-	m.writeRegister(ADDRESS_ACCEL_CONFIG, ACCEL_CONFIG_DISABLE_SELF_TESTS | ACCEL_CONFIG_G[accelFullScale])
+	config1 := ACCEL_CONFIG_DISABLE_SELF_TESTS | ACCEL_CONFIG_G[accelFullScale]
+	config2 := ACCEL_CONFIG2_FIFO_SIZE[fifoSize] | 
+		ACCEL_CONFIG2_DEC2_CFG_N_SAMPLE[numberOfSamples] |
+		ACCEL_CONFIG2_DLPF_CFG_3dB_BW[lowPassFilterFrequency]
+	m.writeRegister(ADDRESS_ACCEL_CONFIG, config1)
 	delay(100)
-	// m.writeRegister(ADDRESS_ACCEL_CONFIG2,
-	// 	ACCEL_CONFIG2_FIFO_SIZE[fifoSize] | 
-	// 	ACCEL_CONFIG2_DEC2_CFG_N_SAMPLE[numberOfSamples] |
-	// 	ACCEL_CONFIG2_DLPF_CFG_3dB_BW[lowPassFilterFrequency])
-	// delay(100)
-	accelsetup1, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG)
-	accelsetup2, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG2)
-	fmt.Printf("config1: %b, confog2: %b\n", accelsetup1, accelsetup2)
+	m.writeRegister(ADDRESS_ACCEL_CONFIG2,
+		config2)
+	delay(100)
+	accelconfig1, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG)
+	accelconfig2, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG2)
+	fmt.Printf("config1: %b, confog2: %b\n", accelconfig1, accelconfig2)
 }
 
 func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {

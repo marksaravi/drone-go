@@ -74,7 +74,7 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	m.setupPower()
 	m.setupAccelerometer(
 		configs.Accelerometer.FullScale,
-		4,
+		configs.Accelerometer.NumberOfSamples,
 		512,
 		configs.Accelerometer.LowPassFilterFrequency,
 	)
