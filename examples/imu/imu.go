@@ -22,9 +22,9 @@ func main() {
 	}(cancel)
 	icm20789Configs := icm20789.Configs{
 		Accelerometer: icm20789.AccelerometerConfigs{
-			FullScale: "16g",
+			FullScale: "4g",
 			LowPassFilterFrequency: "44.8hz",
-			NumberOfSamples: 16,
+			NumberOfSamples: 32,
 			Offsets: icm20789.Offsets{
 				X: 0,
 				Y: 0,
