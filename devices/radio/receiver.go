@@ -2,6 +2,7 @@ package radio
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -45,13 +46,14 @@ func (r *radioReceiver) Receive() ([]byte, bool) {
 }
 
 func (r *radioReceiver) Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte {
-	outChannel := make(chan []byte)
+	sendChannel := make(chan []byte)
 	dur := time.Second / time.Duration(commandsPerSecond*2)
 	r.On()
 	wg.Add(1)
 	go func() {
-		defer close(outChannel)
+		defer close(sendChannel)
 		defer wg.Done()
+		defer fmt.Println("Closing receiver channel...")
 
 		for {
 			select {
@@ -59,11 +61,11 @@ func (r *radioReceiver) Start(ctx context.Context, wg *sync.WaitGroup, commandsP
 				return
 			default:
 				if data, ok := r.Receive(); ok {
-					outChannel <- data
+					sendChannel <- data
 				}
 				time.Sleep(dur)
 			}
 		}
 	}()
-	return outChannel
+	return sendChannel
 }

@@ -17,7 +17,7 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
-	log.Println("Starting RemoteControl")
+	// log.Println("Starting Drone")
 	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
 	log.Println(configs)
 
@@ -72,7 +72,14 @@ func main() {
 	})
 
 	go func() {
-		fmt.Scanln()
+		for {
+			var input string
+			fmt.Scanln(&input)
+			if input == "q" || input == "Q" {
+				break
+			}	
+		}
+		fmt.Println("Aborting Drone...")
 		cancel()
 	}()
 

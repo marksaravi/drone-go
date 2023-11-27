@@ -79,6 +79,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var imuOk, commandOk, running bool = true, true, true
 
+	fmt.Println("Starting Drone...")
 	lp := time.Now()
 	lc := time.Now()
 	d.InitUdp()
@@ -98,6 +99,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 					fmt.Println(imuData.Rotations)
 				}
 			}
+
 		case command, commandOk := <-commandsChannel:
 			if commandOk {
 				if time.Since(lc) >= time.Second/2 {
@@ -111,5 +113,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
 		}
+		// if (running || imuOk || commandOk) {
+		// 	fmt.Println(running , imuOk ,commandOk)
+		// }
 	}
+	fmt.Println("Stopping Drone...")
 }

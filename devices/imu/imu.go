@@ -2,6 +2,7 @@ package imu
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -81,11 +82,12 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 }
 
 func (imuDev *imuDevice) Start(ctx context.Context, wg *sync.WaitGroup) <-chan ImuData {
-	out := make(chan ImuData, 5)
+	sendChannel := make(chan ImuData)
 	wg.Add(1)
 	go func() {
-		defer close(out)
+		defer close(sendChannel)
 		defer wg.Done()
+		defer fmt.Println("Closing imu channel...")
 
 		lastRead := time.Now()
 		lastOutput := time.Now()
@@ -105,7 +107,7 @@ func (imuDev *imuDevice) Start(ctx context.Context, wg *sync.WaitGroup) <-chan I
 				}
 				if time.Since(lastOutput) > outputInterval {
 					lastOutput = time.Now()
-					out <- ImuData{
+					sendChannel <- ImuData{
 						Rotations:     rot,
 						Accelerometer: acc,
 						Gyroscope:     gyro,
@@ -115,7 +117,7 @@ func (imuDev *imuDevice) Start(ctx context.Context, wg *sync.WaitGroup) <-chan I
 			}
 		}
 	}()
-	return out
+	return sendChannel
 }
 
 func (imuDev *imuDevice) Reset() {
