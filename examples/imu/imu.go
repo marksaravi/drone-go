@@ -52,27 +52,26 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 	imuConfigs := imu.Configs{
+		DataPerSecond: 1200,
 		AccelerometerComplimentaryFilterCoefficient: 0.02,
 		RotationsComplimentaryFilterCoefficient: 0.02,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
-
-	lastRead := time.Now()
 	lastPrint := time.Now()
 
 	var rot, acc, gyro imu.Rotations
 	running:=true
-	imudev.Reset()
+	out:=imudev.Start(ctx)
 	for running {
 		select {
 		case <-ctx.Done():
 			running=false
+		case d := <-out:
+			acc = d.Accelerometer
+			rot = d.Rotations
+			gyro = d.Gyroscope
 		default:
-			if time.Since(lastRead) >= time.Second/1000 {
-				lastRead = time.Now()
-				rot, acc, gyro, err = imudev.Read()
-			}
 			if err!=nil {
 				fmt.Println(err)
 			} else if time.Since(lastPrint) >= time.Second/2 {
