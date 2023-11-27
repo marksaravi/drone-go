@@ -55,6 +55,11 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	}
 }
 
+func (imu *imuDevice) Reset() {
+	imu.currReadTime = time.Now()
+	imu.lastReadTime = imu.currReadTime
+}
+
 // Read returns Roll, Pitch and Yaw.
 func (imu *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
 	imu.currReadTime = time.Now()
@@ -84,12 +89,14 @@ func (imu *imuDevice) calcaAcelerometerRotations(data mems.XYZ) {
 
 func (imu *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	dt := imu.currReadTime.Sub(imu.lastReadTime)
-	if dt > MIN_TIME_BETWEEN_READS {
+	if dt < MIN_TIME_BETWEEN_READS {
 		return
 	}
+
 	dRoll := dxyz.DX*dt.Seconds()
 	dPitch := dxyz.DY*dt.Seconds()
 	dYaw := dxyz.DZ*dt.Seconds()
+
 	imu.gyroRotations.Roll += dRoll
 	imu.gyroRotations.Pitch += dPitch
 	imu.gyroRotations.Yaw += dYaw

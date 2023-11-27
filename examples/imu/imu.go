@@ -62,6 +62,7 @@ func main() {
 
 	var acc, gyro imu.Rotations
 	running:=true
+	imudev.Reset()
 	for running {
 		select {
 		case <-ctx.Done():
@@ -69,9 +70,11 @@ func main() {
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				_, acc, _, _ = imudev.Read()
+				_, acc, gyro, err = imudev.Read()
 			}
-			if time.Since(lastPrint) >= time.Second/2 {
+			if err!=nil {
+				fmt.Println(err)
+			} else if time.Since(lastPrint) >= time.Second/2 {
 				lastPrint = time.Now()
 				fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 			}
