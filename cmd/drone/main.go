@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	dronePackage "github.com/marksaravi/drone-go/apps/drone"
 	"github.com/marksaravi/drone-go/devices/imu"
@@ -20,28 +21,38 @@ func main() {
 	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
 	log.Println(configs)
 
+	icm20789Configs := icm20789.Configs{
+		Accelerometer: icm20789.AccelerometerConfigs{
+			FullScale:              "4g",
+			LowPassFilterFrequency: "44.8hz",
+			NumberOfSamples:        32,
+			Offsets: icm20789.Offsets{
+				X: 0,
+				Y: 0,
+				Z: 0,
+			},
+		},
+		Gyroscope: icm20789.GyroscopeConfigs{
+			FullScale: "500dps",
+			Offsets: icm20789.Offsets{
+				X: 0,
+				Y: 0,
+				Z: 0,
+			},
+		},
+		SPI: hardware.SPIConnConfigs{
+			BusNumber:  0,
+			ChipSelect: 0,
+		},
+	}
+
 	imuConfigs := configs.IMU
-	mems := icm20789.NewICM20789(icm20789.Configs{
-		Accelerometer: icm20789.InertialDeviceConfigs{
-			FullScale: imuConfigs.MEMS.Accelerometer.FullScale,
-			Offsets: icm20789.Offsets{
-				X: imuConfigs.MEMS.Accelerometer.Offsets.X,
-				Y: imuConfigs.MEMS.Accelerometer.Offsets.Y,
-				Z: imuConfigs.MEMS.Accelerometer.Offsets.Z,
-			},
-		},
-		Gyroscope: icm20789.InertialDeviceConfigs{
-			FullScale: imuConfigs.MEMS.Gyroscope.FullScale,
-			Offsets: icm20789.Offsets{
-				X: imuConfigs.MEMS.Gyroscope.Offsets.X,
-				Y: imuConfigs.MEMS.Gyroscope.Offsets.Y,
-				Z: imuConfigs.MEMS.Gyroscope.Offsets.Z,
-			},
-		},
-		SPI: imuConfigs.MEMS.SPI,
-	})
+	mems := icm20789.NewICM20789(icm20789Configs)
 	imudev := imu.NewIMU(mems, imu.Configs{
-		FilterCoefficient: imuConfigs.FilterCoefficient,
+		DataPerSecond:   2500,
+		OutputPerSecond: 5,
+		AccelerometerComplimentaryFilterCoefficient: 0.02,
+		RotationsComplimentaryFilterCoefficient:     0.02,
 	})
 
 	radioConfigs := configs.RemoteControl.Radio
@@ -65,5 +76,7 @@ func main() {
 		cancel()
 	}()
 
-	drone.Start(ctx)
+	var wg sync.WaitGroup
+	drone.Start(ctx, &wg)
+	wg.Wait()
 }

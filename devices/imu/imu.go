@@ -3,6 +3,7 @@ package imu
 import (
 	"context"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/mems"
@@ -15,8 +16,8 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	DataPerSecond                               int `yaml:"data-per-second"`
-	OutputPerSecond                             int `yaml:"output-per-second"`
+	DataPerSecond                               int     `yaml:"data-per-second"`
+	OutputPerSecond                             int     `yaml:"output-per-second"`
 	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"accelerometer-complimentary_filter_coefficient"`
 	RotationsComplimentaryFilterCoefficient     float64 `yaml:"rotation-complimentary_filter_coefficient"`
 }
@@ -28,9 +29,9 @@ type Rotations struct {
 
 type ImuData struct {
 	Accelerometer Rotations
-	Gyroscope    Rotations
-	Rotations    Rotations
-	err          error
+	Gyroscope     Rotations
+	Rotations     Rotations
+	Error         error
 }
 
 type imuDevice struct {
@@ -52,10 +53,10 @@ type imuDevice struct {
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	return &imuDevice{
-		dataPerSecond: configs.DataPerSecond,
+		dataPerSecond:   configs.DataPerSecond,
 		outputPerSecond: configs.OutputPerSecond,
-		configs: configs,
-		dev:     dev,
+		configs:         configs,
+		dev:             dev,
 		rotations: Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -71,22 +72,26 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
-		dRoll: 0,
-		dPitch: 0,
-		dYaw: 0,
+		dRoll:                             0,
+		dPitch:                            0,
+		dYaw:                              0,
 		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
 		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
 	}
 }
 
-func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
+func (imuDev *imuDevice) Start(ctx context.Context, wg *sync.WaitGroup) <-chan ImuData {
 	out := make(chan ImuData, 5)
+	wg.Add(1)
 	go func() {
-		lastRead:=time.Now()
-		lastOutput:=time.Now()
-		readInterval := time.Second/time.Duration(imuDev.dataPerSecond)
-		outputInterval := time.Second/time.Duration(imuDev.outputPerSecond)
-		imuDev.reset()
+		defer close(out)
+		defer wg.Done()
+
+		lastRead := time.Now()
+		lastOutput := time.Now()
+		readInterval := time.Second / time.Duration(imuDev.dataPerSecond)
+		outputInterval := time.Second / time.Duration(imuDev.outputPerSecond)
+		imuDev.Reset()
 		var rot, acc, gyro Rotations
 		var err error
 		for {
@@ -96,15 +101,15 @@ func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
 			default:
 				if time.Since(lastRead) > readInterval {
 					lastRead = time.Now()
-					rot, acc, gyro, err = imuDev.read()
+					rot, acc, gyro, err = imuDev.Read()
 				}
 				if time.Since(lastOutput) > outputInterval {
 					lastOutput = time.Now()
-					out <- ImuData {
-						Rotations    :rot,
-						Accelerometer:acc,
-						Gyroscope    :gyro,
-						err          :err,
+					out <- ImuData{
+						Rotations:     rot,
+						Accelerometer: acc,
+						Gyroscope:     gyro,
+						Error:         err,
 					}
 				}
 			}
@@ -113,12 +118,12 @@ func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
 	return out
 }
 
-func (imuDev *imuDevice) reset() {
+func (imuDev *imuDevice) Reset() {
 	imuDev.currReadTime = time.Now()
 	imuDev.lastReadTime = imuDev.currReadTime
 }
 
-func (imuDev *imuDevice) read() (Rotations, Rotations, Rotations, error) {
+func (imuDev *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
 	imuDev.currReadTime = time.Now()
 	data, err := imuDev.dev.Read()
 	if err != nil {
@@ -151,9 +156,9 @@ func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 		return
 	}
 
-	imuDev.dRoll = dxyz.DX*dt.Seconds()
-	imuDev.dPitch = dxyz.DY*dt.Seconds()
-	imuDev.dYaw = dxyz.DZ*dt.Seconds()
+	imuDev.dRoll = dxyz.DX * dt.Seconds()
+	imuDev.dPitch = dxyz.DY * dt.Seconds()
+	imuDev.dYaw = dxyz.DZ * dt.Seconds()
 
 	imuDev.gyroRotations.Roll += imuDev.dRoll
 	imuDev.gyroRotations.Pitch += imuDev.dPitch

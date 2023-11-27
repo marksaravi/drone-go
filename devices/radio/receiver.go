@@ -1,6 +1,12 @@
 package radio
 
-import "github.com/marksaravi/drone-go/constants"
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/marksaravi/drone-go/constants"
+)
 
 type radioReceiverLink interface {
 	PowerOn()
@@ -36,4 +42,28 @@ func (r *radioReceiver) Receive() ([]byte, bool) {
 		return data, true
 	}
 	return nil, false
+}
+
+func (r *radioReceiver) Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte {
+	outChannel := make(chan []byte)
+	dur := time.Second / time.Duration(commandsPerSecond*2)
+	r.On()
+	wg.Add(1)
+	go func() {
+		defer close(outChannel)
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if data, ok := r.Receive(); ok {
+					outChannel <- data
+				}
+				time.Sleep(dur)
+			}
+		}
+	}()
+	return outChannel
 }

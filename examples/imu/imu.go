@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
@@ -22,9 +23,9 @@ func main() {
 
 	icm20789Configs := icm20789.Configs{
 		Accelerometer: icm20789.AccelerometerConfigs{
-			FullScale: "4g",
+			FullScale:              "4g",
 			LowPassFilterFrequency: "44.8hz",
-			NumberOfSamples: 32,
+			NumberOfSamples:        32,
 			Offsets: icm20789.Offsets{
 				X: 0,
 				Y: 0,
@@ -46,26 +47,27 @@ func main() {
 	}
 
 	mems := icm20789.NewICM20789(icm20789Configs)
-	whoAmI, err:=mems.WhoAmI()
+	whoAmI, err := mems.WhoAmI()
 	if err == nil {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 	imuConfigs := imu.Configs{
-		DataPerSecond: 2500,
+		DataPerSecond:   2500,
 		OutputPerSecond: 5,
 		AccelerometerComplimentaryFilterCoefficient: 0.02,
-		RotationsComplimentaryFilterCoefficient: 0.02,
+		RotationsComplimentaryFilterCoefficient:     0.02,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
 
 	var rot, acc, gyro imu.Rotations
-	running:=true
-	out:=imudev.Start(ctx)
+	running := true
+	var wg sync.WaitGroup
+	out := imudev.Start(ctx, &wg)
 	for running {
 		select {
 		case <-ctx.Done():
-			running=false
+			running = false
 		case d := <-out:
 			acc = d.Accelerometer
 			rot = d.Rotations
