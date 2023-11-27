@@ -88,7 +88,7 @@ func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {
 	x:=float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.accelFullScale
 	y:= float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.accelFullScale
 	z:= float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.accelFullScale
-	fmt.Printf("%0.2f,  %0.2f,  %0.2f  ", x,y,z)
+
 	accel := mems.XYZ{
 		X: x,
 		Y: y,

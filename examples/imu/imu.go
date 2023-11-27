@@ -57,6 +57,7 @@ func main() {
 	imudev := imu.NewIMU(mems, imuConfigs)
 
 	lastRead := time.Now()
+	lastPrint := time.Now()
 
 	var accrotations imu.Rotations
 	running:=true
@@ -65,10 +66,13 @@ func main() {
 		case <-ctx.Done():
 			running=false
 		default:
-			if time.Since(lastRead) >= time.Second/2 {
+			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
 				_, accrotations, _, _ = imudev.Read()
-				fmt.Printf(" Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", accrotations.Roll, accrotations.Pitch, accrotations.Yaw)
+			}
+			if time.Since(lastPrint) >= time.Second/2 {
+				lastPrint = time.Now()
+				fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f\n", accrotations.Roll, accrotations.Pitch)
 			}
 		}
 	}
