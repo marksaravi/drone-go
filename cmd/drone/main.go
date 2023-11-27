@@ -72,13 +72,6 @@ func main() {
 	})
 
 	go func() {
-		// for {
-		// 	var input string
-		// 	fmt.Scanln(&input)
-		// 	if input == "q" || input == "Q" {
-		// 		break
-		// 	}	
-		// }
 		fmt.Scanln()
 		fmt.Println("Aborting Drone...")
 		cancel()
