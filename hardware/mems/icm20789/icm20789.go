@@ -22,13 +22,6 @@ const (
 )
 
 const (
-	GYRO_FULL_SCALE_250DPS  float64 = 131
-	GYRO_FULL_SCALE_500DPS  float64 = 65.5
-	GYRO_FULL_SCALE_1000DPS float64 = 32.8
-	GYRO_FULL_SCALE_2000DPS float64 = 16.4
-)
-
-const (
 	RAW_DATA_SIZE int = 14
 )
 
@@ -65,11 +58,10 @@ type memsIcm20789 struct {
 }
 
 func NewICM20789(configs Configs) *memsIcm20789 {
-	gyroFullScale, gyroFullScaleMask := gyroscopeFullScale(configs.Gyroscope.FullScale)
 	m := memsIcm20789{
 		spiConn:        hardware.NewSPIConnection(configs.SPI),
 		accelFullScale: ACCEL_FULL_SCALE_G[configs.Accelerometer.FullScale],
-		gyroFullScale:  gyroFullScale,
+		gyroFullScale:  GYRO_FULL_SCALE_DPS[configs.Gyroscope.FullScale],
 	}
 	m.setupPower()
 	m.setupAccelerometer(
@@ -78,7 +70,7 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 		512,
 		configs.Accelerometer.LowPassFilterFrequency,
 	)
-	m.setupGyroscope(gyroFullScaleMask)
+	m.setupGyroscope(configs.Gyroscope.FullScale)
 	return &m
 }
 
@@ -94,7 +86,7 @@ func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
 	}
 	return mems.Mems6DOFData{
 		Accelerometer: m.memsDataToAccelerometer(memsData[:6]),
-		// Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
+		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
 	}, nil
 }
 
@@ -127,14 +119,6 @@ func (m *memsIcm20789) setupPower() {
 	m.writeRegister(ADDRESS_PWR_MGMT_1, PWR_MGMT_1_CONFIG)
 	delay(10)
 }
-
-// func (m *memsIcm20789) memsDataToGyroscope(memsData []byte) mems.DXYZ {
-// 	return mems.DXYZ{
-// 		DX: float64(towsComplementUint8ToInt16(memsData[0], memsData[1])) / m.gyroFullScale,
-// 		DY: float64(towsComplementUint8ToInt16(memsData[2], memsData[3])) / m.gyroFullScale,
-// 		DZ: float64(towsComplementUint8ToInt16(memsData[4], memsData[5])) / m.gyroFullScale,
-// 	}
-// }
 
 // towsComplementUint8ToInt16 converts 2's complement H and L uint8 to signed int16
 func towsComplementUint8ToInt16(h, l byte) int16 {

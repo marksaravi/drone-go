@@ -20,6 +20,7 @@ func main() {
 		fmt.Scanln()
 		cancel()
 	}(cancel)
+
 	icm20789Configs := icm20789.Configs{
 		Accelerometer: icm20789.AccelerometerConfigs{
 			FullScale: "4g",
@@ -59,7 +60,7 @@ func main() {
 	lastRead := time.Now()
 	lastPrint := time.Now()
 
-	var accrotations imu.Rotations
+	var acc, gyro imu.Rotations
 	running:=true
 	for running {
 		select {
@@ -68,11 +69,11 @@ func main() {
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				_, accrotations, _, _ = imudev.Read()
+				_, acc, _, _ = imudev.Read()
 			}
 			if time.Since(lastPrint) >= time.Second/2 {
 				lastPrint = time.Now()
-				fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f\n", accrotations.Roll, accrotations.Pitch)
+				fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 			}
 		}
 	}
