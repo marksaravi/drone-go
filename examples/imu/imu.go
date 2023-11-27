@@ -53,6 +53,7 @@ func main() {
 	}
 	imuConfigs := imu.Configs{
 		AccelerometerComplimentaryFilterCoefficient: 0.01,
+		RotationsComplimentaryFilterCoefficient: 0.01,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
@@ -60,7 +61,7 @@ func main() {
 	lastRead := time.Now()
 	lastPrint := time.Now()
 
-	var acc, gyro imu.Rotations
+	var rot, acc, gyro imu.Rotations
 	running:=true
 	imudev.Reset()
 	for running {
@@ -70,13 +71,13 @@ func main() {
 		default:
 			if time.Since(lastRead) >= time.Second/1000 {
 				lastRead = time.Now()
-				_, acc, gyro, err = imudev.Read()
+				rot, acc, gyro, err = imudev.Read()
 			}
 			if err!=nil {
 				fmt.Println(err)
 			} else if time.Since(lastPrint) >= time.Second/2 {
 				lastPrint = time.Now()
-				fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
+				fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 			}
 		}
 	}

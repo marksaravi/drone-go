@@ -14,7 +14,8 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"acc-complimentary_filter_coefficient"`
+	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"accelerometer-complimentary_filter_coefficient"`
+	RotationsComplimentaryFilterCoefficient float64 `yaml:"rotation-complimentary_filter_coefficient"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
@@ -33,6 +34,7 @@ type imuDevice struct {
 	lastReadTime                      time.Time
 	currReadTime                      time.Time
 	accComplimentaryFilterCoefficient float64
+	rotComplimentaryFilterCoefficient float64
 }
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
@@ -54,7 +56,11 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
+		dRoll: 0,
+		dPitch: 0,
+		dYaw: 0,
 		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
+		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
 	}
 }
 
@@ -70,14 +76,15 @@ func (imuDev *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
 	if err != nil {
 		return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, err
 	}
-	imuDev.calcRotations(data)
+	imuDev.calcAllRotations(data)
 	imuDev.lastReadTime = imuDev.currReadTime
 	return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, nil
 }
 
-func (imuDev *imuDevice) calcRotations(memsData mems.Mems6DOFData) {
+func (imuDev *imuDevice) calcAllRotations(memsData mems.Mems6DOFData) {
 	imuDev.calcaAcelerometerRotations(memsData.Accelerometer)
 	imuDev.calcGyroscopeRotations(memsData.Gyroscope)
+	imuDev.calcRotations()
 }
 
 func (imuDev *imuDevice) calcaAcelerometerRotations(data mems.XYZ) {
@@ -96,16 +103,28 @@ func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 		return
 	}
 
-	imuDev.dRoll := dxyz.DX*dt.Seconds()
-	imuDev.dPitch := dxyz.DY*dt.Seconds()
-	imuDev.dYaw := dxyz.DZ*dt.Seconds()
+	imuDev.dRoll = dxyz.DX*dt.Seconds()
+	imuDev.dPitch = dxyz.DY*dt.Seconds()
+	imuDev.dYaw = dxyz.DZ*dt.Seconds()
 
 	imuDev.gyroRotations.Roll += imuDev.dRoll
 	imuDev.gyroRotations.Pitch += imuDev.dPitch
 	imuDev.gyroRotations.Yaw += imuDev.dYaw
 }
 
+func (imuDev *imuDevice) calcRotations() {
+	roll := imuDev.rotations.Roll + imuDev.dRoll
+	pitch := imuDev.rotations.Pitch + imuDev.dPitch
+	yaw := imuDev.rotations.Yaw + imuDev.dYaw
+
+	imuDev.rotations = Rotations{
+		Roll:  complimentaryFilter(roll, imuDev.rotations.Roll, imuDev.rotComplimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(pitch, imuDev.rotations.Pitch, imuDev.rotComplimentaryFilterCoefficient),
+		Yaw:   yaw,
+	}
+}
+
 func complimentaryFilter(value float64, preValue float64, complimentaryFilterCoefficient float64) float64 {
 	v := (1-complimentaryFilterCoefficient)*value + complimentaryFilterCoefficient*preValue
-	return math.Round(v*10)/10
+	return v
 }
