@@ -1,39 +1,59 @@
 package imu
 
 import (
+	"context"
 	"math"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/mems"
 )
 
-const MIN_TIME_BETWEEN_READS = time.Millisecond * 50
+const MIN_TIME_BETWEEN_READS = time.Nanosecond
 
 type IMUMems6DOF interface {
 	Read() (mems.Mems6DOFData, error)
 }
 
 type Configs struct {
-	FilterCoefficient float64 `yaml:"filter_coefficient"`
+	DataPerSecond                               int `yaml:"data-per-second"`
+	OutputPerSecond                             int `yaml:"output-per-second"`
+	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"accelerometer-complimentary_filter_coefficient"`
+	RotationsComplimentaryFilterCoefficient     float64 `yaml:"rotation-complimentary_filter_coefficient"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
 type Rotations struct {
 	Roll, Pitch, Yaw float64
 }
+
+type ImuData struct {
+	Accelerometer Rotations
+	Gyroscope    Rotations
+	Rotations    Rotations
+	err          error
+}
+
 type imuDevice struct {
-	configs           Configs
-	dev               IMUMems6DOF
-	rotations         Rotations
-	accRotations      Rotations
-	gyroRotations     Rotations
-	lastReadTime      time.Time
-	currReadTime      time.Time
-	filterCoefficient float64
+	dataPerSecond                     int
+	outputPerSecond                   int
+	configs                           Configs
+	dev                               IMUMems6DOF
+	rotations                         Rotations
+	accRotations                      Rotations
+	gyroRotations                     Rotations
+	dRoll                             float64
+	dPitch                            float64
+	dYaw                              float64
+	lastReadTime                      time.Time
+	currReadTime                      time.Time
+	accComplimentaryFilterCoefficient float64
+	rotComplimentaryFilterCoefficient float64
 }
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	return &imuDevice{
+		dataPerSecond: configs.DataPerSecond,
+		outputPerSecond: configs.OutputPerSecond,
 		configs: configs,
 		dev:     dev,
 		rotations: Rotations{
@@ -51,67 +71,108 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 			Pitch: 0,
 			Yaw:   0,
 		},
-		filterCoefficient: configs.FilterCoefficient,
+		dRoll: 0,
+		dPitch: 0,
+		dYaw: 0,
+		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
+		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
 	}
 }
 
-// Read returns Roll, Pitch and Yaw.
-func (imu *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
-	imu.currReadTime = time.Now()
-	data, err := imu.dev.Read()
+func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
+	out := make(chan ImuData, 5)
+	go func() {
+		lastRead:=time.Now()
+		lastOutput:=time.Now()
+		readInterval := time.Second/time.Duration(imuDev.dataPerSecond)
+		outputInterval := time.Second/time.Duration(imuDev.outputPerSecond)
+		imuDev.reset()
+		var rot, acc, gyro Rotations
+		var err error
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if time.Since(lastRead) > readInterval {
+					lastRead = time.Now()
+					rot, acc, gyro, err = imuDev.read()
+				}
+				if time.Since(lastOutput) > outputInterval {
+					lastOutput = time.Now()
+					out <- ImuData {
+						Rotations    :rot,
+						Accelerometer:acc,
+						Gyroscope    :gyro,
+						err          :err,
+					}
+				}
+			}
+		}
+	}()
+	return out
+}
+
+func (imuDev *imuDevice) reset() {
+	imuDev.currReadTime = time.Now()
+	imuDev.lastReadTime = imuDev.currReadTime
+}
+
+func (imuDev *imuDevice) read() (Rotations, Rotations, Rotations, error) {
+	imuDev.currReadTime = time.Now()
+	data, err := imuDev.dev.Read()
 	if err != nil {
-		return imu.rotations, imu.accRotations, imu.gyroRotations, err
+		return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, err
 	}
-	imu.calcRotations(data)
-	imu.lastReadTime = imu.currReadTime
-	return imu.rotations, imu.accRotations, imu.gyroRotations, nil
+	imuDev.calcAllRotations(data)
+	imuDev.lastReadTime = imuDev.currReadTime
+	return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, nil
 }
 
-func (imu *imuDevice) calcRotations(memsData mems.Mems6DOFData) {
-	imu.accRotations = calcaAcelerometerRotations(memsData.Accelerometer)
-	dt := imu.currReadTime.Sub(imu.lastReadTime)
-	var rotations Rotations
-	rotations, imu.gyroRotations = calcGyroscopeRotations(memsData.Gyroscope, dt, imu.rotations, imu.gyroRotations)
-
-	imu.rotations = Rotations{
-		Roll:  complimentaryFilter(rotations.Roll, imu.accRotations.Roll, imu.filterCoefficient),
-		Pitch: complimentaryFilter(rotations.Pitch, imu.accRotations.Pitch, imu.filterCoefficient),
-		Yaw:   rotations.Yaw,
-	}
+func (imuDev *imuDevice) calcAllRotations(memsData mems.Mems6DOFData) {
+	imuDev.calcaAccelerometerRotations(memsData.Accelerometer)
+	imuDev.calcGyroscopeRotations(memsData.Gyroscope)
+	imuDev.calcRotations()
 }
 
-func complimentaryFilter(gyro float64, accelerometer float64, complimentaryFilterCoefficient float64) float64 {
-	return (1-complimentaryFilterCoefficient)*gyro + complimentaryFilterCoefficient*accelerometer
-}
-
-func calcaAcelerometerRotations(data mems.XYZ) Rotations {
-	yrot := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
-	xrot := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
-	return Rotations{
-		Roll:  xrot,
-		Pitch: yrot,
+func (imuDev *imuDevice) calcaAccelerometerRotations(data mems.XYZ) {
+	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
+	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
+	imuDev.accRotations = Rotations{
+		Roll:  complimentaryFilter(roll, imuDev.accRotations.Roll, imuDev.accComplimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(pitch, imuDev.accRotations.Pitch, imuDev.accComplimentaryFilterCoefficient),
 		Yaw:   0,
 	}
 }
 
-func calcGyroscopeRotations(gyroData mems.DXYZ, dt time.Duration, prevRotations Rotations, gyroRotations Rotations) (Rotations, Rotations) {
-	if dt > MIN_TIME_BETWEEN_READS {
-		return prevRotations, gyroRotations
+func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
+	dt := imuDev.currReadTime.Sub(imuDev.lastReadTime)
+	if dt < MIN_TIME_BETWEEN_READS {
+		return
 	}
-	roll := prevRotations.Roll + gyroData.DX*dt.Seconds()
-	pitch := prevRotations.Pitch + gyroData.DY*dt.Seconds()
-	yaw := prevRotations.Yaw + gyroData.DZ*dt.Seconds()
-	gyroRoll := gyroRotations.Roll + gyroData.DX*dt.Seconds()
-	gyroPitch := gyroRotations.Pitch + gyroData.DY*dt.Seconds()
-	gyroYaw := gyroRotations.Yaw + gyroData.DZ*dt.Seconds()
 
-	return Rotations{
-			Roll:  math.Mod(roll, 360),
-			Pitch: math.Mod(pitch, 360),
-			Yaw:   math.Mod(yaw, 360),
-		}, Rotations{
-			Roll:  math.Mod(gyroRoll, 360),
-			Pitch: math.Mod(gyroPitch, 360),
-			Yaw:   math.Mod(gyroYaw, 360),
-		}
+	imuDev.dRoll = dxyz.DX*dt.Seconds()
+	imuDev.dPitch = dxyz.DY*dt.Seconds()
+	imuDev.dYaw = dxyz.DZ*dt.Seconds()
+
+	imuDev.gyroRotations.Roll += imuDev.dRoll
+	imuDev.gyroRotations.Pitch += imuDev.dPitch
+	imuDev.gyroRotations.Yaw += imuDev.dYaw
+}
+
+func (imuDev *imuDevice) calcRotations() {
+	roll := imuDev.rotations.Roll + imuDev.dRoll
+	pitch := imuDev.rotations.Pitch + imuDev.dPitch
+	yaw := imuDev.rotations.Yaw + imuDev.dYaw
+
+	imuDev.rotations = Rotations{
+		Roll:  complimentaryFilter(roll, imuDev.accRotations.Roll, imuDev.rotComplimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(pitch, imuDev.accRotations.Pitch, imuDev.rotComplimentaryFilterCoefficient),
+		Yaw:   yaw,
+	}
+}
+
+func complimentaryFilter(value float64, preValue float64, complimentaryFilterCoefficient float64) float64 {
+	v := (1-complimentaryFilterCoefficient)*value + complimentaryFilterCoefficient*preValue
+	return v
 }
