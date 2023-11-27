@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
@@ -52,13 +51,13 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 	imuConfigs := imu.Configs{
-		DataPerSecond: 1200,
+		DataPerSecond: 2500,
+		OutputPerSecond: 5,
 		AccelerometerComplimentaryFilterCoefficient: 0.02,
 		RotationsComplimentaryFilterCoefficient: 0.02,
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
-	lastPrint := time.Now()
 
 	var rot, acc, gyro imu.Rotations
 	running:=true
@@ -71,13 +70,7 @@ func main() {
 			acc = d.Accelerometer
 			rot = d.Rotations
 			gyro = d.Gyroscope
-		default:
-			if err!=nil {
-				fmt.Println(err)
-			} else if time.Since(lastPrint) >= time.Second/2 {
-				lastPrint = time.Now()
-				fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
-			}
+			fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 		}
 	}
 }

@@ -16,6 +16,7 @@ type IMUMems6DOF interface {
 
 type Configs struct {
 	DataPerSecond                               int `yaml:"data-per-second"`
+	OutputPerSecond                             int `yaml:"output-per-second"`
 	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"accelerometer-complimentary_filter_coefficient"`
 	RotationsComplimentaryFilterCoefficient     float64 `yaml:"rotation-complimentary_filter_coefficient"`
 }
@@ -34,6 +35,7 @@ type ImuData struct {
 
 type imuDevice struct {
 	dataPerSecond                     int
+	outputPerSecond                   int
 	configs                           Configs
 	dev                               IMUMems6DOF
 	rotations                         Rotations
@@ -51,6 +53,7 @@ type imuDevice struct {
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	return &imuDevice{
 		dataPerSecond: configs.DataPerSecond,
+		outputPerSecond: configs.OutputPerSecond,
 		configs: configs,
 		dev:     dev,
 		rotations: Rotations{
@@ -80,21 +83,28 @@ func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
 	out := make(chan ImuData, 5)
 	go func() {
 		lastRead:=time.Now()
-		dur := time.Second/time.Duration(imuDev.dataPerSecond)
-		imuDev.Reset()
+		lastOutput:=time.Now()
+		readInterval := time.Second/time.Duration(imuDev.dataPerSecond)
+		outputInterval := time.Second/time.Duration(imuDev.outputPerSecond)
+		imuDev.reset()
+		var rot, acc, gyro Rotations
+		var err error
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if time.Since(lastRead) > dur {
+				if time.Since(lastRead) > readInterval {
 					lastRead = time.Now()
-					r,a,g,e := imuDev.Read()
+					rot, acc, gyro, err = imuDev.read()
+				}
+				if time.Since(lastOutput) > outputInterval {
+					lastOutput = time.Now()
 					out <- ImuData {
-						Accelerometer:a,
-						Gyroscope   :g,
-						Rotations   :r,
-						err         :e,
+						Rotations    :rot,
+						Accelerometer:acc,
+						Gyroscope    :gyro,
+						err          :err,
 					}
 				}
 			}
@@ -103,12 +113,12 @@ func (imuDev *imuDevice) Start(ctx context.Context) chan ImuData {
 	return out
 }
 
-func (imuDev *imuDevice) Reset() {
+func (imuDev *imuDevice) reset() {
 	imuDev.currReadTime = time.Now()
 	imuDev.lastReadTime = imuDev.currReadTime
 }
 
-func (imuDev *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
+func (imuDev *imuDevice) read() (Rotations, Rotations, Rotations, error) {
 	imuDev.currReadTime = time.Now()
 	data, err := imuDev.dev.Read()
 	if err != nil {
