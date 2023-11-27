@@ -118,8 +118,8 @@ func (imuDev *imuDevice) calcRotations() {
 	yaw := imuDev.rotations.Yaw + imuDev.dYaw
 
 	imuDev.rotations = Rotations{
-		Roll:  complimentaryFilter(roll, imuDev.rotations.Roll, imuDev.rotComplimentaryFilterCoefficient),
-		Pitch: complimentaryFilter(pitch, imuDev.rotations.Pitch, imuDev.rotComplimentaryFilterCoefficient),
+		Roll:  complimentaryFilter(roll, imuDev.accRotations.Roll, imuDev.rotComplimentaryFilterCoefficient),
+		Pitch: complimentaryFilter(pitch, imuDev.accRotations.Pitch, imuDev.rotComplimentaryFilterCoefficient),
 		Yaw:   yaw,
 	}
 }
