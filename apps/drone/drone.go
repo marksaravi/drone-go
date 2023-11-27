@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/plotter"
@@ -13,12 +14,14 @@ import (
 const PLOTTER_ADDRESS = "192.168.1.101:8000"
 
 type radioReceiver interface {
-	On()
-	Receive() ([]byte, bool)
+	// On()
+	// Receive() ([]byte, bool)
+	Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte
 }
 
 type Imu interface {
-	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
+	// Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
+	Start(ctx context.Context, wg *sync.WaitGroup) <-chan imu.ImuData
 }
 
 type DroneSettings struct {
@@ -73,62 +76,48 @@ func NewDrone(settings DroneSettings) *droneApp {
 	}
 }
 
-func (d *droneApp) Start(ctx context.Context) {
-	running := true
-	d.receiver.On()
-	lp := time.Now()
-	d.InitUdp()
-	maxCommand := time.Duration(0)
-	maxIMU := time.Duration(0)
-	maxUDP := time.Duration(0)
-	imuPerSecond:=0
-	t := byte(0)
-	for running {
-		select {
-		default:
-			ts := time.Now()
-			imuok := d.ReadIMU()
-			dur := time.Since(ts)
-			if dur > maxIMU {
-				maxIMU = dur
-			}
-			ts = time.Now()
-			command, cmdok := d.ReceiveCommand()
-			if cmdok {
-				t = command[3]
-			}
-			dur = time.Since(ts)
-			if dur > maxCommand {
-				maxCommand = dur
+func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
+	var imuOk, commandOk, running bool = true, true, true
+	var imuData imu.ImuData
+	var command []byte
 
-			}
-			if imuok {
-				imuPerSecond++
-				ts = time.Now()
-				udpOk := d.SendPlotterData()
-				dur = time.Since(ts)
-				if udpOk && dur > maxUDP {
-					maxUDP = dur
+	fmt.Println("Starting Drone...")
+	lp := time.Now()
+	lc := time.Now()
+	d.InitUdp()
+
+	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
+	imuChannel := d.imu.Start(ctx, wg)
+
+	for running || imuOk || commandOk {
+		select {
+		case imuData, imuOk = <-imuChannel:
+			if imuOk && imuData.Error == nil {
+				d.accRotations = imuData.Accelerometer
+				d.gyroRotations = imuData.Gyroscope
+				d.rotations = imuData.Rotations
+				if time.Since(lp) >= time.Second/2 {
+					lp = time.Now()
+					fmt.Println(imuData.Rotations)
 				}
 			}
-			if time.Since(lp) > time.Second {
-				lp = time.Now()
-				fmt.Printf("imu: %10v, cmd: %10v, udp: %10v, roll: %10.1f, throttle: %5d, imuPerSecond: %d\n", maxIMU, maxCommand, maxUDP, d.accRotations.Roll, t, imuPerSecond)
-				maxCommand = time.Duration(0)
-				maxIMU = time.Duration(0)
-				maxUDP = time.Duration(0)
-				imuPerSecond=0
-				// if imuok {
-				// 	fmt.Printf("%6.1f %6.1f %6.1f\n", rotations.Roll, rotations.Pitch, rotations.Yaw)
-				// }
-				// if cmd {
-				// 	// fmt.Printf("%4v\n", command)
-				// }
+
+		case command, commandOk = <-commandsChannel:
+			if commandOk {
+				if time.Since(lc) >= time.Second/2 {
+					lc = time.Now()
+					fmt.Println(command)
+				}
 			}
-		case <-ctx.Done():
+
+		case _, running = <-ctx.Done():
 			running = false
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
 		}
+		// if (running || imuOk || commandOk) {
+		// 	fmt.Println(running , imuOk ,commandOk)
+		// }
 	}
+	fmt.Println("Stopping Drone...")
 }
