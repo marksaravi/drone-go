@@ -78,6 +78,8 @@ func NewDrone(settings DroneSettings) *droneApp {
 
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var imuOk, commandOk, running bool = true, true, true
+	var imuData imu.ImuData
+	var command []byte
 
 	fmt.Println("Starting Drone...")
 	lp := time.Now()
@@ -89,7 +91,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	for running || imuOk || commandOk {
 		select {
-		case imuData, imuOk := <-imuChannel:
+		case imuData, imuOk = <-imuChannel:
 			if imuOk && imuData.Error == nil {
 				d.accRotations = imuData.Accelerometer
 				d.gyroRotations = imuData.Gyroscope
@@ -100,7 +102,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 			}
 
-		case command, commandOk := <-commandsChannel:
+		case command, commandOk = <-commandsChannel:
 			if commandOk {
 				if time.Since(lc) >= time.Second/2 {
 					lc = time.Now()
