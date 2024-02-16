@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
+	"time"
 
+	plotterclient "github.com/marksaravi/drone-go/apps/plotter-client"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
@@ -14,6 +15,10 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
+	plotterClient := plotterclient.NewPlotter(plotterclient.Settings{
+		Active:  true,
+		Address: "192.168.1.101:8000",
+	})
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func(cancel context.CancelFunc) {
@@ -59,20 +64,37 @@ func main() {
 	}
 
 	imudev := imu.NewIMU(mems, imuConfigs)
-
-	var rot, acc, gyro imu.Rotations
 	running := true
-	var wg sync.WaitGroup
-	out := imudev.Start(ctx, &wg)
+	const DATA_PER_SECOND = 1000
+	lastRead := time.Now()
+	plotterClient.SetStartTime(lastRead)
+	readingInterval := time.Second / DATA_PER_SECOND
+	lastPrint := time.Now()
+
 	for running {
 		select {
 		case <-ctx.Done():
 			running = false
-		case d := <-out:
-			acc = d.Accelerometer
-			rot = d.Rotations
-			gyro = d.Gyroscope
-			fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
+		default:
+			if time.Since(lastRead) >= readingInterval {
+				readTime := time.Now()
+				rot, acc, gyro, err := imudev.Read()
+				if err == nil {
+					plotterClient.SendPlotterData(rot, acc, gyro)
+				}
+				dt := readTime.Sub(lastRead)
+				n := dt / readingInterval
+				lastRead = lastRead.Add(readingInterval * n)
+				if time.Since(lastPrint) >= time.Second/4 {
+					fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
+					lastPrint = time.Now()
+				}
+			}
+			// case d := <-out:
+			// 	acc = d.Accelerometer
+			// 	rot = d.Rotations
+			// 	gyro = d.Gyroscope
+			// 	fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 		}
 	}
 }

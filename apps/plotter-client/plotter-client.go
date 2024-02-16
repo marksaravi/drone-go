@@ -53,25 +53,25 @@ func (p *plotterClient) initUdp() {
 	}
 }
 
-func (d *plotterClient) SendPlotterData(rotations, accRotations, gyroRotations imu.Rotations) bool {
-	if !d.active {
+func (p *plotterClient) SendPlotterData(rotations, accRotations, gyroRotations imu.Rotations) bool {
+	if !p.active {
 		return false
 	}
-	if d.dataCounter == 0 {
-		d.dataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_LEN)
-		d.dataPacket = append(d.dataPacket, plotter.SerializeHeader()...)
+	if p.dataCounter == 0 {
+		p.dataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_LEN)
+		p.dataPacket = append(p.dataPacket, plotter.SerializeHeader()...)
 	}
-	d.SerializeRotations(rotations, accRotations, gyroRotations)
-	if d.dataCounter < d.dataPerPacket {
+	p.SerializeRotations(rotations, accRotations, gyroRotations)
+	if p.dataCounter < p.dataPerPacket {
 		return false
 	}
-	if d.udpConn != nil {
-		copy(d.sendBuffer, d.dataPacket)
+	if p.udpConn != nil {
+		copy(p.sendBuffer, p.dataPacket)
 		go func() {
-			d.udpConn.Write(d.sendBuffer)
+			p.udpConn.Write(p.sendBuffer)
 		}()
 	}
-	d.dataCounter = 0
+	p.dataCounter = 0
 	return true
 }
 
