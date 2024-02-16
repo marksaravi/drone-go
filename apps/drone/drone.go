@@ -80,7 +80,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 	}
 }
 
-func (d *droneApp) ReadIMU() {
+func (d *droneApp) readIMU() {
 	if time.Since(d.lastImuRead)>=d.imuReadInterval {
 		d.imuDataCounter++
 		d.lastImuRead=time.Now()
@@ -112,7 +112,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	d.imu.Reset()
 	
 	for running || commandOk {
-		d.ReadIMU()
+		d.readIMU()
 		select {
 		case command, commandOk = <-commandsChannel:
 			if commandOk {
