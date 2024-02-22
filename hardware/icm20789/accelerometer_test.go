@@ -3,7 +3,7 @@ package icm20789_test
 import (
 	"testing"
 
-	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
+	"github.com/marksaravi/drone-go/hardware/icm20789"
 )
 
 func TestOffsetToHighAndLowBits(t *testing.T) {
