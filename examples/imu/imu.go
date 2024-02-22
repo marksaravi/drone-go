@@ -33,9 +33,9 @@ func main() {
 			LowPassFilterFrequency: "44.8hz",
 			NumberOfSamples:        32,
 			Offsets: icm20789.Offsets{
-				X: 0,
-				Y: 0,
-				Z: 0,
+				X: 3379,
+				Y: 3762,
+				Z: 2236,
 			},
 		},
 		Gyroscope: icm20789.GyroscopeConfigs{

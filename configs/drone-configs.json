@@ -4,12 +4,14 @@
         "filter-coefficient": 0.001,
         "icm20789": {
             "accelerometer": {
-                "full-scale": "4g",
+                "full_scale": "4g",
                 "offsets": {
-                    "x": 32696,
-                    "y": 836,
-                    "z": 31979
-                }
+                    "x": 3379,
+                    "y": 3762,
+                    "z": 2236
+                },
+                "lowpass_filter_frequency": 2,
+                "number_of_samples":3
             },
             "gyroscope": {
                 "full-scale": "500dps",
