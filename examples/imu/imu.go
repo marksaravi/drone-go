@@ -10,13 +10,14 @@ import (
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
 	plotterClient := plotterclient.NewPlotter(plotterclient.Settings{
-		Active:  true,
+		Active:  false,
 		Address: "192.168.1.101:8000",
 	})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,33 +69,27 @@ func main() {
 	const DATA_PER_SECOND = 1000
 	lastRead := time.Now()
 	plotterClient.SetStartTime(lastRead)
-	readingInterval := time.Second / DATA_PER_SECOND
-	lastPrint := time.Now()
+	printInterval := utils.NewTimeInterval(4)
+	readInterval := utils.NewTimeInterval(DATA_PER_SECOND)
 
 	for running {
 		select {
 		case <-ctx.Done():
 			running = false
 		default:
-			if time.Since(lastRead) >= readingInterval {
-				readTime := time.Now()
+			if readInterval.IsTime() {
 				rot, acc, gyro, err := imudev.Read()
 				if err == nil {
 					plotterClient.SendPlotterData(rot, acc, gyro)
 				}
-				dt := readTime.Sub(lastRead)
-				n := dt / readingInterval
-				lastRead = lastRead.Add(readingInterval * n)
-				if time.Since(lastPrint) >= time.Second/4 {
-					fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
-					lastPrint = time.Now()
+				if printInterval.IsTime() {
+					printRotations(rot, acc, gyro)
 				}
 			}
-			// case d := <-out:
-			// 	acc = d.Accelerometer
-			// 	rot = d.Rotations
-			// 	gyro = d.Gyroscope
-			// 	fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 		}
 	}
+}
+
+func printRotations(rot, acc, gyro imu.Rotations) {
+	fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 }
