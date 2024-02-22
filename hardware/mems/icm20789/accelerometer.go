@@ -69,7 +69,7 @@ var ACCEL_CONFIG2_DLPF_CFG_3dB_BW = map[string]byte{
 	"420.0hz":  0b00000111, //3-dB BW (Hz) 420.0
 }
 
-func (m *memsIcm20789) setupAccelerometer(accelFullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string) {
+func (m *memsIcm20789) setupAccelerometer(accelFullScale string, numberOfSamples int, fifoSize int, lowPassFilterFrequency string, xOffset, yOffset, zOffset uint16) {
 	config1 := ACCEL_CONFIG_DISABLE_SELF_TESTS | ACCEL_CONFIG_G[accelFullScale]
 	config2 := ACCEL_CONFIG2_FIFO_SIZE[fifoSize] |
 		ACCEL_CONFIG2_DEC2_CFG_N_SAMPLE[numberOfSamples] |
@@ -79,9 +79,33 @@ func (m *memsIcm20789) setupAccelerometer(accelFullScale string, numberOfSamples
 	m.writeRegister(ADDRESS_ACCEL_CONFIG2,
 		config2)
 	delay(100)
+	m.setupAccelerometerOffsets(xOffset, yOffset, zOffset)
 	accelconfig1, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG)
 	accelconfig2, _ := m.readByteFromRegister(ADDRESS_ACCEL_CONFIG2)
 	fmt.Printf("Accelerometer config1: %b, confog2: %b\n", accelconfig1, accelconfig2)
+}
+
+func (m *memsIcm20789) setupAccelerometerOffsets(xOffset, yOffset, zOffset uint16) {
+	m.setupAccelerometerOffset(ADDRESS_XA_OFFSH, ADDRESS_XA_OFFSL, xOffset)
+	m.setupAccelerometerOffset(ADDRESS_YA_OFFSH, ADDRESS_YA_OFFSL, yOffset)
+	m.setupAccelerometerOffset(ADDRESS_ZA_OFFSH, ADDRESS_ZA_OFFSL, zOffset)
+	delay(100)
+}
+func (m *memsIcm20789) setupAccelerometerOffset(addressHigh, addressLow byte, offset uint16) {
+	// shiftedOffset := offset << 1 & 0b1111111111111110
+	// lowerBits := byte(shiftedOffset & 0b0000000011111111)
+	// higherBits := byte(shiftedOffset >> 8 & 0b0000000011111111)
+	lb, _ := m.readRegister(addressLow, 1)
+	hb, _ := m.readRegister(addressHigh, 1)
+	h := uint16(hb[0])
+	l := uint16(lb[0])
+	h = h << 8
+	offset = (h | l) >> 1
+
+	fmt.Printf("Offset: %d\n", offset)
+	// m.writeRegister(addressLow, lowerBits)
+	// m.writeRegister(addressHigh, higherBits)
+
 }
 
 func (m *memsIcm20789) memsDataToAccelerometer(memsData []byte) mems.XYZ {
