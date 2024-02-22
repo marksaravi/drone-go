@@ -10,7 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
-	"github.com/marksaravi/drone-go/utils"
+	"github.com/marksaravi/drone-go/timeinterval"
 )
 
 func main() {
@@ -69,8 +69,8 @@ func main() {
 	const DATA_PER_SECOND = 1000
 	lastRead := time.Now()
 	plotterClient.SetStartTime(lastRead)
-	printInterval := utils.NewTimeInterval(4)
-	readInterval := utils.NewTimeInterval(DATA_PER_SECOND)
+	printInterval := timeinterval.WithDataPerSecond(4)
+	readInterval := timeinterval.WithMinInterval(DATA_PER_SECOND, 25)
 
 	for running {
 		select {
