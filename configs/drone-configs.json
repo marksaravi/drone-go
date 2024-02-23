@@ -1,32 +1,7 @@
 {
     "imu": {
         "data-per-second": 2500,
-        "filter-coefficient": 0.001,
-        "icm20789": {
-            "accelerometer": {
-                "full_scale": "4g",
-                "offsets": {
-                    "x": 3379,
-                    "y": 3762,
-                    "z": 2236
-                },
-                "lowpass_filter_frequency": 2,
-                "number_of_samples":3
-            },
-            "gyroscope": {
-                "full-scale": "500dps",
-                "offsets": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 0
-                }
-            },
-            "spi": {
-                "bus-number": 0,
-                "chip-select": 0,
-                "speed-mhz": 96
-            }
-        }
+        "filter-coefficient": 0.001
     },
     "remote-control": {
         "commands-per-second": 25,

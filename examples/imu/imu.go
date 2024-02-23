@@ -9,7 +9,7 @@ import (
 	plotterclient "github.com/marksaravi/drone-go/apps/plotter-client"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/mems/icm20789"
+	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/timeinterval"
 )
 
@@ -26,32 +26,7 @@ func main() {
 		fmt.Scanln()
 		cancel()
 	}(cancel)
-
-	icm20789Configs := icm20789.Configs{
-		Accelerometer: icm20789.AccelerometerConfigs{
-			FullScale:              "4g",
-			LowPassFilterFrequency: "44.8hz",
-			NumberOfSamples:        32,
-			Offsets: icm20789.Offsets{
-				X: 3379,
-				Y: 3762,
-				Z: 2236,
-			},
-		},
-		Gyroscope: icm20789.GyroscopeConfigs{
-			FullScale: "500dps",
-			Offsets: icm20789.Offsets{
-				X: 0,
-				Y: 0,
-				Z: 0,
-			},
-		},
-		SPI: hardware.SPIConnConfigs{
-			BusNumber:  0,
-			ChipSelect: 0,
-		},
-	}
-
+	icm20789Configs := icm20789.ReadConfigs("./configs/hardware.json")
 	mems := icm20789.NewICM20789(icm20789Configs)
 	whoAmI, err := mems.WhoAmI()
 	if err == nil {

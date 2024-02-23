@@ -44,9 +44,9 @@ type GyroscopeConfigs struct {
 }
 
 type Configs struct {
-	SPI           hardware.SPIConnConfigs `json:"spi"`
 	Accelerometer AccelerometerConfigs    `json:"accelerometer"`
 	Gyroscope     GyroscopeConfigs        `json:"gyroscope"`
+	SPI           hardware.SPIConnConfigs `json:"spi"`
 }
 
 type memsIcm20789 struct {
@@ -63,15 +63,15 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 		gyroFullScale:  GYRO_FULL_SCALE_DPS[configs.Gyroscope.FullScale],
 	}
 	m.setupPower()
-	m.setupAccelerometer(
-		configs.Accelerometer.FullScale,
-		configs.Accelerometer.NumberOfSamples,
-		512,
-		configs.Accelerometer.LowPassFilterFrequency,
-		configs.Accelerometer.Offsets.X,
-		configs.Accelerometer.Offsets.Y,
-		configs.Accelerometer.Offsets.Z,
-	)
+	// m.setupAccelerometer(
+	// 	configs.Accelerometer.FullScale,
+	// 	configs.Accelerometer.NumberOfSamples,
+	// 	512,
+	// 	configs.Accelerometer.LowPassFilterFrequency,
+	// 	configs.Accelerometer.Offsets.X,
+	// 	configs.Accelerometer.Offsets.Y,
+	// 	configs.Accelerometer.Offsets.Z,
+	// )
 	m.setupGyroscope(configs.Gyroscope.FullScale)
 	return &m
 }
