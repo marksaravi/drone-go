@@ -1,7 +1,8 @@
 {
     "imu": {
-        "data-per-second": 2500,
-        "filter-coefficient": 0.001
+        "data-per-second": 1000,
+        "accelerometer-complimentary-filter-coefficient": 0.01,
+        "rotations-complimentary-filter-coefficient": 0.01
     },
     "remote-control": {
         "commands-per-second": 25,

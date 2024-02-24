@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20789"
+	"github.com/marksaravi/drone-go/timeinterval"
 )
 
 func main() {
@@ -28,7 +28,8 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 
-	lastRead := time.Now()
+	readInterval := timeinterval.WithDataPerSecond(2)
+
 	var maxX float64 = math.SmallestNonzeroFloat64
 	maxY := maxX
 	var minX float64 = math.MaxFloat64
@@ -40,8 +41,7 @@ func main() {
 		case <-ctx.Done():
 			running = false
 		default:
-			if time.Since(lastRead) >= time.Second {
-				lastRead = time.Now()
+			if readInterval.IsTime() {
 				data, _ := mems.Read()
 				acc := data.Accelerometer
 				// gyro:=data.Gyroscope
@@ -62,10 +62,6 @@ func main() {
 					}
 				}
 				log.Printf("Accelerometer  X: %6.2f, Y: %6.2f", acc.X, acc.Y)
-				// if time.Since(lastPrint) >= time.Second/2 {
-				// 	log.Printf("Accelerometer  X: %6.2f, Y: %6.2f", acc.X, acc.Y)
-				// 	lastPrint=time.Now()
-				// }
 			}
 		}
 

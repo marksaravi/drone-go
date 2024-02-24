@@ -32,20 +32,14 @@ func main() {
 	if err == nil {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
-	imuConfigs := imu.Configs{
-		DataPerSecond:   2500,
-		OutputPerSecond: 5,
-		AccelerometerComplimentaryFilterCoefficient: 0.02,
-		RotationsComplimentaryFilterCoefficient:     0.02,
-	}
-
+	imuConfigs := imu.ReadConfigs("./configs/drone-configs.json")
+	fmt.Println(imuConfigs)
 	imudev := imu.NewIMU(mems, imuConfigs)
 	running := true
-	const DATA_PER_SECOND = 1000
-	lastRead := time.Now()
-	plotterClient.SetStartTime(lastRead)
+
+	plotterClient.SetStartTime(time.Now())
 	printInterval := timeinterval.WithDataPerSecond(4)
-	readInterval := timeinterval.WithMinInterval(DATA_PER_SECOND, 25)
+	readInterval := timeinterval.WithMinInterval(imuConfigs.DataPerSecond, 25)
 
 	for running {
 		select {
