@@ -1,10 +1,7 @@
 package imu
 
 import (
-	"context"
-	"fmt"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware/mems"
@@ -17,10 +14,9 @@ type IMUMems6DOF interface {
 }
 
 type Configs struct {
-	DataPerSecond                               int     `yaml:"data-per-second"`
-	OutputPerSecond                             int     `yaml:"output-per-second"`
-	AccelerometerComplimentaryFilterCoefficient float64 `yaml:"accelerometer-complimentary_filter_coefficient"`
-	RotationsComplimentaryFilterCoefficient     float64 `yaml:"rotation-complimentary_filter_coefficient"`
+	DataPerSecond                               int     `json:"data-per-second"`
+	AccelerometerComplimentaryFilterCoefficient float64 `json:"accelerometer-complimentary-filter-coefficient"`
+	RotationsComplimentaryFilterCoefficient     float64 `json:"rotations-complimentary-filter-coefficient"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
@@ -36,8 +32,6 @@ type ImuData struct {
 }
 
 type imuDevice struct {
-	dataPerSecond                     int
-	outputPerSecond                   int
 	configs                           Configs
 	dev                               IMUMems6DOF
 	rotations                         Rotations
@@ -54,10 +48,8 @@ type imuDevice struct {
 
 func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	return &imuDevice{
-		dataPerSecond:   configs.DataPerSecond,
-		outputPerSecond: configs.OutputPerSecond,
-		configs:         configs,
-		dev:             dev,
+		configs: configs,
+		dev:     dev,
 		rotations: Rotations{
 			Roll:  0,
 			Pitch: 0,
@@ -79,45 +71,6 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
 		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
 	}
-}
-
-func (imuDev *imuDevice) Start(ctx context.Context, wg *sync.WaitGroup) <-chan ImuData {
-	sendChannel := make(chan ImuData)
-	wg.Add(1)
-	go func() {
-		defer close(sendChannel)
-		defer wg.Done()
-		defer fmt.Println("Closing imu channel...")
-
-		lastRead := time.Now()
-		lastOutput := time.Now()
-		readInterval := time.Second / time.Duration(imuDev.dataPerSecond)
-		outputInterval := time.Second / time.Duration(imuDev.outputPerSecond)
-		imuDev.Reset()
-		var rot, acc, gyro Rotations
-		var err error
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				if time.Since(lastRead) > readInterval {
-					lastRead = time.Now()
-					rot, acc, gyro, err = imuDev.Read()
-				}
-				if time.Since(lastOutput) > outputInterval {
-					lastOutput = time.Now()
-					sendChannel <- ImuData{
-						Rotations:     rot,
-						Accelerometer: acc,
-						Gyroscope:     gyro,
-						Error:         err,
-					}
-				}
-			}
-		}
-	}()
-	return sendChannel
 }
 
 func (imuDev *imuDevice) Reset() {

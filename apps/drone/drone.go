@@ -20,8 +20,8 @@ type radioReceiver interface {
 }
 
 type Imu interface {
-	// Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
-	Start(ctx context.Context, wg *sync.WaitGroup) <-chan imu.ImuData
+	Reset()
+	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
 type DroneSettings struct {
@@ -43,8 +43,10 @@ type droneApp struct {
 
 	commandsPerSecond int
 	receiver          radioReceiver
-	lastImuData       time.Time
-	lastCommand       time.Time
+	lastImuRead       time.Time
+	imuReadInterval   time.Duration
+	lastImuPrint      time.Time
+	imuDataCounter    int
 	plotterActive     bool
 
 	plotterUdpConn      *net.UDPConn
@@ -62,8 +64,10 @@ func NewDrone(settings DroneSettings) *droneApp {
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
 		commandsPerSecond:   settings.CommandsPerSecond,
-		lastCommand:         time.Now(),
-		lastImuData:         time.Now(),
+		lastImuRead:         time.Now(),
+		imuReadInterval:     time.Second / time.Duration(2500),
+		lastImuPrint:        time.Now(),
+		imuDataCounter:      0,
 		plotterActive:       settings.PlotterActive,
 		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
@@ -76,32 +80,40 @@ func NewDrone(settings DroneSettings) *droneApp {
 	}
 }
 
+func (d *droneApp) readIMU() {
+	if time.Since(d.lastImuRead)>=d.imuReadInterval {
+		d.imuDataCounter++
+		d.lastImuRead=time.Now()
+		rot, acc, gyro, err := d.imu.Read()
+		if err != nil {
+			
+			return
+		}
+		d.accRotations = acc
+		d.gyroRotations = gyro
+		d.rotations = rot
+		if time.Since(d.lastImuPrint)>=time.Second {
+			d.lastImuPrint = time.Now()
+			fmt.Println(d.rotations, d.imuDataCounter)
+			d.imuDataCounter=0
+		}
+	}
+}
+
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
-	var imuOk, commandOk, running bool = true, true, true
-	var imuData imu.ImuData
+	var commandOk, running bool = true, true
 	var command []byte
 
 	fmt.Println("Starting Drone...")
-	lp := time.Now()
 	lc := time.Now()
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	imuChannel := d.imu.Start(ctx, wg)
-
-	for running || imuOk || commandOk {
+	d.imu.Reset()
+	
+	for running || commandOk {
+		d.readIMU()
 		select {
-		case imuData, imuOk = <-imuChannel:
-			if imuOk && imuData.Error == nil {
-				d.accRotations = imuData.Accelerometer
-				d.gyroRotations = imuData.Gyroscope
-				d.rotations = imuData.Rotations
-				if time.Since(lp) >= time.Second/2 {
-					lp = time.Now()
-					fmt.Println(imuData.Rotations)
-				}
-			}
-
 		case command, commandOk = <-commandsChannel:
 			if commandOk {
 				if time.Since(lc) >= time.Second/2 {
@@ -114,7 +126,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			running = false
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
+		default:
 		}
+		
 		// if (running || imuOk || commandOk) {
 		// 	fmt.Println(running , imuOk ,commandOk)
 		// }

@@ -46,6 +46,7 @@ func (d *droneApp) InitUdp() {
 		fmt.Println("unable to initialise plotter connection. Plotter deactivated.")
 	}
 }
+
 func (d *droneApp) SendPlotterData() bool {
 	if !d.plotterActive {
 		return false

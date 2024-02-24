@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	ADRESS_GYRO_CONFIG   byte = 0x1B
-	ADDRESS_PWR_MGMT_1   byte = 0x6B
-	ADDRESS_PWR_MGMT_2   byte = 0x6C
-	ADDRESS_WHO_AM_I     byte = 0x75
+	ADDRESS_PWR_MGMT_1 byte = 0x6B
+	ADDRESS_PWR_MGMT_2 byte = 0x6C
+	ADDRESS_WHO_AM_I   byte = 0x75
 )
 
 const (
@@ -32,21 +31,21 @@ type Offsets struct {
 }
 
 type AccelerometerConfigs struct {
-	FullScale                      string  `json:"full_scale"`
-	Offsets                        Offsets `json:"offsets"`
-	LowPassFilterFrequency         string  `json:"lowpass_filter_frequency"`
-	NumberOfSamples                int     `json:"number_of_samples"`
+	FullScale              string  `json:"full_scale"`
+	Offsets                Offsets `json:"offsets"`
+	LowPassFilterFrequency string  `json:"lowpass_filter_frequency"`
+	NumberOfSamples        int     `json:"number_of_samples"`
 }
 
 type GyroscopeConfigs struct {
-	FullScale string              `json:"full_scale"`
-	Offsets   Offsets             `json:"offsets"`
+	FullScale string  `json:"full_scale"`
+	Offsets   Offsets `json:"offsets"`
 }
 
 type Configs struct {
-	SPI           hardware.SPIConnConfigs `json:"spi"`
 	Accelerometer AccelerometerConfigs    `json:"accelerometer"`
 	Gyroscope     GyroscopeConfigs        `json:"gyroscope"`
+	SPI           hardware.SPIConnConfigs `json:"spi"`
 }
 
 type memsIcm20789 struct {
@@ -54,7 +53,6 @@ type memsIcm20789 struct {
 
 	accelFullScale float64
 	gyroFullScale  float64
-	prevAccel      mems.XYZ
 }
 
 func NewICM20789(configs Configs) *memsIcm20789 {
@@ -69,8 +67,16 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 		configs.Accelerometer.NumberOfSamples,
 		512,
 		configs.Accelerometer.LowPassFilterFrequency,
+		configs.Accelerometer.Offsets.X,
+		configs.Accelerometer.Offsets.Y,
+		configs.Accelerometer.Offsets.Z,
 	)
-	m.setupGyroscope(configs.Gyroscope.FullScale)
+	m.setupGyroscope(
+		configs.Gyroscope.FullScale,
+		configs.Gyroscope.Offsets.X,
+		configs.Gyroscope.Offsets.Y,
+		configs.Gyroscope.Offsets.Z,
+	)
 	return &m
 }
 
@@ -80,7 +86,7 @@ func (m *memsIcm20789) WhoAmI() (byte, error) {
 }
 
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
-	memsData, err := m.readRegister(ADDRESS_ACCEL_XOUT_H, RAW_DATA_SIZE)
+	memsData, err := m.readRegister(DATA_READ_SEGMENT, RAW_DATA_SIZE)
 	if err != nil {
 		return mems.Mems6DOFData{}, err
 	}

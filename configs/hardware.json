@@ -1,0 +1,27 @@
+{
+    "icm20789": {
+        "accelerometer": {
+            "full_scale": "4g",
+            "offsets": {
+                "x": 3379,
+                "y": 3762,
+                "z": 2236
+            },
+            "lowpass_filter_frequency": "99.0hz",
+            "number_of_samples": 3
+        },
+        "gyroscope": {
+            "full-scale": "500dps",
+            "offsets": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        },
+        "spi": {
+            "bus-number": 0,
+            "chip-select": 0,
+            "speed-mhz": 96
+        }
+    }
+}

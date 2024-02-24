@@ -6,6 +6,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
 )
 
@@ -19,15 +20,7 @@ type InertialDeviceConfigs struct {
 }
 
 type DroneConfigs struct {
-	IMU struct {
-		DataPerSecond     int     `json:"data-per-second"`
-		FilterCoefficient float64 `json:"filter-coefficient"`
-		MEMS              struct {
-			Accelerometer InertialDeviceConfigs   `json:"accelerometer"`
-			Gyroscope     InertialDeviceConfigs   `json:"gyroscope"`
-			SPI           hardware.SPIConnConfigs `json:"spi"`
-		} `json:"icm20789"`
-	} `json:"imu"`
+	IMU           imu.Configs `json:"imu"`
 	RemoteControl struct {
 		CommandsPerSecond int `json:"commands-per-second"`
 		Radio             struct {
