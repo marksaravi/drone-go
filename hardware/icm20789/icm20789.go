@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	ADRESS_GYRO_CONFIG byte = 0x1B
 	ADDRESS_PWR_MGMT_1 byte = 0x6B
 	ADDRESS_PWR_MGMT_2 byte = 0x6C
 	ADDRESS_WHO_AM_I   byte = 0x75
@@ -63,16 +62,21 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 		gyroFullScale:  GYRO_FULL_SCALE_DPS[configs.Gyroscope.FullScale],
 	}
 	m.setupPower()
-	// m.setupAccelerometer(
-	// 	configs.Accelerometer.FullScale,
-	// 	configs.Accelerometer.NumberOfSamples,
-	// 	512,
-	// 	configs.Accelerometer.LowPassFilterFrequency,
-	// 	configs.Accelerometer.Offsets.X,
-	// 	configs.Accelerometer.Offsets.Y,
-	// 	configs.Accelerometer.Offsets.Z,
-	// )
-	m.setupGyroscope(configs.Gyroscope.FullScale)
+	m.setupAccelerometer(
+		configs.Accelerometer.FullScale,
+		configs.Accelerometer.NumberOfSamples,
+		512,
+		configs.Accelerometer.LowPassFilterFrequency,
+		configs.Accelerometer.Offsets.X,
+		configs.Accelerometer.Offsets.Y,
+		configs.Accelerometer.Offsets.Z,
+	)
+	m.setupGyroscope(
+		configs.Gyroscope.FullScale,
+		configs.Gyroscope.Offsets.X,
+		configs.Gyroscope.Offsets.Y,
+		configs.Gyroscope.Offsets.Z,
+	)
 	return &m
 }
 
@@ -82,7 +86,7 @@ func (m *memsIcm20789) WhoAmI() (byte, error) {
 }
 
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
-	memsData, err := m.readRegister(ADDRESS_ACCEL_XOUT_H, RAW_DATA_SIZE)
+	memsData, err := m.readRegister(DATA_READ_SEGMENT, RAW_DATA_SIZE)
 	if err != nil {
 		return mems.Mems6DOFData{}, err
 	}

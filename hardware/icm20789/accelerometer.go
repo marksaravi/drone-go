@@ -10,12 +10,7 @@ const (
 	ADDRESS_ACCEL_CONFIG  byte = 0x1C
 	ADDRESS_ACCEL_CONFIG2 byte = 0x1D
 
-	ADDRESS_ACCEL_XOUT_H byte = 0x3B
-	ADDRESS_ACCEL_XOUT_L byte = 0x3C
-	ADDRESS_ACCEL_YOUT_H byte = 0x3D
-	ADDRESS_ACCEL_YOUT_L byte = 0x3E
-	ADDRESS_ACCEL_ZOUT_H byte = 0x3F
-	ADDRESS_ACCEL_ZOUT_L byte = 0x40
+	DATA_READ_SEGMENT byte = 0x3B
 
 	ADDRESS_XA_OFFSH byte = 0x77
 	ADDRESS_XA_OFFSL byte = 0x78
@@ -92,14 +87,14 @@ func (m *memsIcm20789) setupAccelerometerOffsets(xOffset, yOffset, zOffset uint1
 	delay(100)
 }
 
-func OffsetToHL(offset uint16) (higherBits, lowerBits byte) {
+func AccOffsetToHL(offset uint16) (higherBits, lowerBits byte) {
 	shiftedOffset := offset << 1 & 0b1111111111111110
 	lowerBits = byte(shiftedOffset & 0b0000000011111111)
 	higherBits = byte(shiftedOffset >> 8 & 0b0000000011111111)
 	return
 }
 
-func HLtoOffset(higherBits, lowerBits byte) uint16 {
+func AccHLtoOffset(higherBits, lowerBits byte) uint16 {
 	h := uint16(higherBits)
 	l := uint16(lowerBits)
 	h = h << 8
@@ -107,7 +102,7 @@ func HLtoOffset(higherBits, lowerBits byte) uint16 {
 }
 
 func (m *memsIcm20789) setupAccelerometerOffset(addressHigh, addressLow byte, offset uint16) {
-	higherBits, lowerBits := OffsetToHL(offset)
+	higherBits, lowerBits := AccOffsetToHL(offset)
 	m.writeRegister(addressLow, lowerBits)
 	m.writeRegister(addressHigh, higherBits)
 
