@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type ImuConfigs struct {
+type imuConfigs struct {
 	Configs Configs `json:"imu"`
 }
 
@@ -15,7 +15,7 @@ func ReadConfigs(configPath string) Configs {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var configs ImuConfigs
+	var configs imuConfigs
 	json.Unmarshal([]byte(content), &configs)
 	return configs.Configs
 }

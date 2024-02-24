@@ -20,7 +20,7 @@ type InertialDeviceConfigs struct {
 }
 
 type DroneConfigs struct {
-	IMU           imu.ImuConfigs `json:"imu"`
+	IMU           imu.Configs `json:"imu"`
 	RemoteControl struct {
 		CommandsPerSecond int `json:"commands-per-second"`
 		Radio             struct {
