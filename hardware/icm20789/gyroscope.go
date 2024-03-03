@@ -34,7 +34,7 @@ func (m *memsIcm20789) setupGyroscope(fullScale string, xOffset, yOffset, zOffse
 	fmt.Println("FULL SCALE: ", fullScale)
 	m.writeRegister(ADRESS_GYRO_CONFIG, GYRO_CONFIG_DPS[fullScale])
 	delay(100)
-	// m.setupGyroscopeOffsets(xOffset, yOffset, zOffset)
+	m.setupGyroscopeOffsets(xOffset, yOffset, zOffset)
 	gyroconfig1, _ := m.readByteFromRegister(ADRESS_GYRO_CONFIG)
 	fmt.Printf("Gyroscope config: %b\n", gyroconfig1)
 }
