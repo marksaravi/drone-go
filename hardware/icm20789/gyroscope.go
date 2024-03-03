@@ -18,9 +18,9 @@ const (
 
 var GYRO_CONFIG_DPS = map[string]byte{
 	"250dps":  0b00000000,
-	"500dps":  0b00001000,
-	"1000dps": 0b00010000,
-	"2000dps": 0b00011000,
+	"500dps":  0b00000100,
+	"1000dps": 0b00001000,
+	"2000dps": 0b00001100,
 }
 
 var GYRO_FULL_SCALE_DPS = map[string]float64{
@@ -34,7 +34,7 @@ func (m *memsIcm20789) setupGyroscope(fullScale string, xOffset, yOffset, zOffse
 	fmt.Println("FULL SCALE: ", fullScale)
 	m.writeRegister(ADRESS_GYRO_CONFIG, GYRO_CONFIG_DPS[fullScale])
 	delay(100)
-	m.setupGyroscopeOffsets(xOffset, yOffset, zOffset)
+	// m.setupGyroscopeOffsets(xOffset, yOffset, zOffset)
 	gyroconfig1, _ := m.readByteFromRegister(ADRESS_GYRO_CONFIG)
 	fmt.Printf("Gyroscope config: %b\n", gyroconfig1)
 }
