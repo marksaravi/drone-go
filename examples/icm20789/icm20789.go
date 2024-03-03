@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20789"
@@ -30,12 +29,7 @@ func main() {
 
 	readInterval := timeinterval.WithDataPerSecond(2)
 
-	var maxX float64 = math.SmallestNonzeroFloat64
-	maxY := maxX
-	var minX float64 = math.MaxFloat64
-	minY := minX
 	running := true
-	counter := 0
 	for running {
 		select {
 		case <-ctx.Done():
@@ -44,28 +38,11 @@ func main() {
 			if readInterval.IsTime() {
 				data, _ := mems.Read()
 				acc := data.Accelerometer
-				// gyro:=data.Gyroscope
+				gyro := data.Gyroscope
 
-				counter++
-				if counter > 1 {
-					if acc.X > maxX {
-						maxX = acc.X
-					}
-					if acc.X < minX {
-						minX = acc.X
-					}
-					if acc.Y > maxY {
-						maxY = acc.Y
-					}
-					if acc.Y < minY {
-						minY = acc.Y
-					}
-				}
-				log.Printf("Accelerometer  X: %6.2f, Y: %6.2f", acc.X, acc.Y)
+				log.Printf("Accelerometer  X: %6.2f, Y: %6.2f, Gyro  X: %6.2f, Y: %6.2f", acc.X, acc.Y, gyro.DX, gyro.DY)
 			}
 		}
 
 	}
-	fmt.Printf("Acc dX:  %0.2f, minX:  %0.2f, maxX:  %0.2f\n\n", maxX-minX, minX, maxX)
-	fmt.Printf("Acc dY:  %0.2f, minY:  %0.2f, maxY:  %0.2f\n\n", maxY-minY, minY, maxY)
 }

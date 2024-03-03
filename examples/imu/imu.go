@@ -40,7 +40,7 @@ func main() {
 	plotterClient.SetStartTime(time.Now())
 	printInterval := timeinterval.WithDataPerSecond(4)
 	readInterval := timeinterval.WithMinInterval(imuConfigs.DataPerSecond, 25)
-
+	log.Println("Starting...")
 	for running {
 		select {
 		case <-ctx.Done():
@@ -61,5 +61,6 @@ func main() {
 
 func printRotations(rot, acc, gyro imu.Rotations) {
 	// fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
-	fmt.Printf("Roll: %6.2f, Pitch: %6.2f\n", acc.Roll, acc.Pitch)
+	// fmt.Printf("Roll: %6.2f, Pitch: %6.2f\n", acc.Roll, acc.Pitch)
+	fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 }
