@@ -32,7 +32,7 @@ var GYRO_FULL_SCALE_DPS = map[string]float64{
 
 func (m *memsIcm20789) setupGyroscope(fullScale string, xOffset, yOffset, zOffset uint16) {
 	fmt.Println("FULL SCALE: ", fullScale)
-	m.writeRegister(ADRESS_GYRO_CONFIG, 0b00000000|GYRO_CONFIG_DPS[fullScale])
+	m.writeRegister(ADRESS_GYRO_CONFIG, GYRO_CONFIG_DPS[fullScale])
 	delay(100)
 	m.setupGyroscopeOffsets(xOffset, yOffset, zOffset)
 	gyroconfig1, _ := m.readByteFromRegister(ADRESS_GYRO_CONFIG)

@@ -27,7 +27,7 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 
-	readInterval := timeinterval.WithDataPerSecond(2)
+	readInterval := timeinterval.WithDataPerSecond(1000)
 
 	running := true
 	for running {

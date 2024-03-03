@@ -40,6 +40,7 @@ type imuDevice struct {
 	dRoll                             float64
 	dPitch                            float64
 	dYaw                              float64
+	firstRead                         bool
 	lastReadTime                      time.Time
 	currReadTime                      time.Time
 	accComplimentaryFilterCoefficient float64
@@ -70,18 +71,18 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 		dYaw:                              0,
 		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
 		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
+		firstRead:                         true,
 	}
 }
 
-func (imuDev *imuDevice) Reset() {
-	imuDev.currReadTime = time.Now()
-	imuDev.lastReadTime = imuDev.currReadTime
-}
-
 func (imuDev *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
+	if imuDev.firstRead {
+		imuDev.firstRead = false
+		imuDev.lastReadTime = time.Now()
+	}
 	imuDev.currReadTime = time.Now()
 	data, err := imuDev.dev.Read()
-	if err != nil {
+	if err != nil || imuDev.firstRead {
 		return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, err
 	}
 	imuDev.calcAllRotations(data)
