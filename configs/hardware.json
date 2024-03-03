@@ -13,9 +13,9 @@
         "gyroscope": {
             "full-scale": "500dps",
             "offsets": {
-                "x": 0,
-                "y": 0,
-                "z": 0
+                "x": 6,
+                "y": 5,
+                "z": 5
             }
         },
         "spi": {

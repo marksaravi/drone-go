@@ -2,7 +2,17 @@
     "imu": {
         "data-per-second": 1000,
         "accelerometer-complimentary-filter-coefficient": 0.01,
-        "rotations-complimentary-filter-coefficient": 0.01
+        "rotations-complimentary-filter-coefficient": 0.01,
+        "acc-directions": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+        },
+        "gyro-directions": {
+            "x": 1,
+            "y": -1,
+            "z": 1
+        }
     },
     "remote-control": {
         "commands-per-second": 25,

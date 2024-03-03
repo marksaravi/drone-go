@@ -1,6 +1,7 @@
 package icm20789
 
 import (
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/hardware"
@@ -38,7 +39,7 @@ type AccelerometerConfigs struct {
 }
 
 type GyroscopeConfigs struct {
-	FullScale string  `json:"full_scale"`
+	FullScale string  `json:"full-scale"`
 	Offsets   Offsets `json:"offsets"`
 }
 
@@ -56,10 +57,19 @@ type memsIcm20789 struct {
 }
 
 func NewICM20789(configs Configs) *memsIcm20789 {
+	var accelFullScale, gyroFullScale float64
+	var ok bool
+	if accelFullScale, ok = ACCEL_FULL_SCALE_G[configs.Accelerometer.FullScale]; !ok {
+		log.Fatalf("Error: Accelerometer Full Scale is not defined.")
+	}
+	if gyroFullScale, ok = GYRO_FULL_SCALE_DPS[configs.Gyroscope.FullScale]; !ok {
+		log.Fatalf("Error: Gyroscope Full Scale is not defined.")
+	}
+	log.Println("GYROSCOPE FULL SCALE: ", gyroFullScale)
 	m := memsIcm20789{
 		spiConn:        hardware.NewSPIConnection(configs.SPI),
-		accelFullScale: ACCEL_FULL_SCALE_G[configs.Accelerometer.FullScale],
-		gyroFullScale:  GYRO_FULL_SCALE_DPS[configs.Gyroscope.FullScale],
+		accelFullScale: accelFullScale,
+		gyroFullScale:  gyroFullScale,
 	}
 	m.setupPower()
 	m.setupAccelerometer(

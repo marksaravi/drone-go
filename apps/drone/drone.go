@@ -20,7 +20,6 @@ type radioReceiver interface {
 }
 
 type Imu interface {
-	Reset()
 	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
@@ -81,21 +80,21 @@ func NewDrone(settings DroneSettings) *droneApp {
 }
 
 func (d *droneApp) readIMU() {
-	if time.Since(d.lastImuRead)>=d.imuReadInterval {
+	if time.Since(d.lastImuRead) >= d.imuReadInterval {
 		d.imuDataCounter++
-		d.lastImuRead=time.Now()
+		d.lastImuRead = time.Now()
 		rot, acc, gyro, err := d.imu.Read()
 		if err != nil {
-			
+
 			return
 		}
 		d.accRotations = acc
 		d.gyroRotations = gyro
 		d.rotations = rot
-		if time.Since(d.lastImuPrint)>=time.Second {
+		if time.Since(d.lastImuPrint) >= time.Second {
 			d.lastImuPrint = time.Now()
 			fmt.Println(d.rotations, d.imuDataCounter)
-			d.imuDataCounter=0
+			d.imuDataCounter = 0
 		}
 	}
 }
@@ -109,8 +108,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	d.imu.Reset()
-	
+
 	for running || commandOk {
 		d.readIMU()
 		select {
@@ -128,7 +126,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterUdpConn.Close()
 		default:
 		}
-		
+
 		// if (running || imuOk || commandOk) {
 		// 	fmt.Println(running , imuOk ,commandOk)
 		// }
