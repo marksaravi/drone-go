@@ -3,8 +3,8 @@
         "accelerometer": {
             "full_scale": "4g",
             "offsets": {
-                "x": 3379,
-                "y": 3762,
+                "x": 3374,
+                "y": 3752,
                 "z": 2236
             },
             "lowpass_filter_frequency": "99.0hz",
