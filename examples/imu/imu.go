@@ -39,7 +39,7 @@ func main() {
 
 	plotterClient.SetStartTime(time.Now())
 	printInterval := timeinterval.WithDataPerSecond(4)
-	readInterval := timeinterval.WithMinInterval(imuConfigs.DataPerSecond, 2000)
+	readInterval := timeinterval.WithMinInterval(imuConfigs.DataPerSecond, 1200)
 	log.Println("Starting...")
 	for running {
 		select {
