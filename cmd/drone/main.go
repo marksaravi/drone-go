@@ -41,7 +41,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:  imuConfigs.DataPerSecond,
-		Imu:               imudev,
+		ImuMems:           imudev,
 		Receiver:          radioReceiver,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,

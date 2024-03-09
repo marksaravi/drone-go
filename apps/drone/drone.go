@@ -14,17 +14,20 @@ import (
 const PLOTTER_ADDRESS = "192.168.1.101:8000"
 
 type radioReceiver interface {
-	// On()
-	// Receive() ([]byte, bool)
 	Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte
 }
 
-type Imu interface {
+type imuMems interface {
 	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
+type escs interface {
+	On()
+	SetThrottles(motors []float64)
+}
+
 type DroneSettings struct {
-	Imu               Imu
+	ImuMems           imuMems
 	Receiver          radioReceiver
 	ImuDataPerSecond  int
 	CommandsPerSecond int
@@ -34,7 +37,7 @@ type DroneSettings struct {
 type droneApp struct {
 	startTime        time.Time
 	imuDataPerSecond int
-	imu              Imu
+	imu              imuMems
 
 	rotations     imu.Rotations
 	accRotations  imu.Rotations
@@ -59,7 +62,7 @@ type droneApp struct {
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
 		startTime:           time.Now(),
-		imu:                 settings.Imu,
+		imu:                 settings.ImuMems,
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
 		commandsPerSecond:   settings.CommandsPerSecond,
@@ -126,10 +129,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterUdpConn.Close()
 		default:
 		}
-
-		// if (running || imuOk || commandOk) {
-		// 	fmt.Println(running , imuOk ,commandOk)
-		// }
 	}
 	fmt.Println("Stopping Drone...")
 }
