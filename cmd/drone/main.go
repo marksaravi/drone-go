@@ -43,21 +43,18 @@ func main() {
 	)
 	radioReceiver := radio.NewRadioReceiver(radioLink)
 
-	powerBreakerGPIO := hardware.NewGPIOOutput("GPIO17")
+	pca9685Configs := pca9685.ReadConfigs("./configs/hardware.json")
+	powerBreakerGPIO := hardware.NewGPIOOutput(pca9685Configs.BreakerGPIO)
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
 	b, _ := i2creg.Open("/dev/i2c-1")
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
 		Connection:  i2cConn,
-		MaxThrottle: 15,
+		MaxThrottle: pca9685Configs.MaxThrottle,
 	})
-	motorsToChannelsMappings := make(map[int]int)
-	motorsToChannelsMappings[3] = 4
-	motorsToChannelsMappings[1] = 6
-	motorsToChannelsMappings[2] = 5
-	motorsToChannelsMappings[0] = 7
-	esc := esc.NewESC(pwmDev, motorsToChannelsMappings, powerBreaker, 50, false)
+
+	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:  imuConfigs.DataPerSecond,

@@ -15,13 +15,12 @@ type powerbreaker interface {
 
 type pwmDevice interface {
 	SetThrottles([]float64) error
-	NumberOfChannels()      int
-
+	NumberOfChannels() int
 }
 
 type escDev struct {
 	pwmDev                   pwmDevice
-	motorsToChannelsMappings map[int]int
+	motorsToChannelsMappings []int
 	throttles                []float64
 	powerbreaker             powerbreaker
 	lastUpdate               time.Time
@@ -30,28 +29,30 @@ type escDev struct {
 }
 
 func NewESC(
-		pwmDev pwmDevice,
-		motorsToChannelsMappings map[int]int,
-		powerbreaker powerbreaker,
-		updatesPerSecond int, 
-		debug bool,
-	) *escDev {
+	pwmDev pwmDevice,
+	motorsToChannelsMappings []int,
+	powerbreaker powerbreaker,
+	updatesPerSecond int,
+	debug bool,
+) *escDev {
 	powerbreaker.Disconnect()
+	mappings := make([]int, 4)
+	copy(mappings, motorsToChannelsMappings)
 	return &escDev{
-		pwmDev:         pwmDev,
-		motorsToChannelsMappings: motorsToChannelsMappings,
-		throttles       : make([]float64, pwmDev.NumberOfChannels()),
-		powerbreaker:   powerbreaker,
-		lastUpdate:     time.Now().Add(-time.Second),
-		updateInterval: time.Second / time.Duration(updatesPerSecond),
-		debug:          debug,
+		pwmDev:                   pwmDev,
+		motorsToChannelsMappings: mappings,
+		throttles:                make([]float64, pwmDev.NumberOfChannels()),
+		powerbreaker:             powerbreaker,
+		lastUpdate:               time.Now().Add(-time.Second),
+		updateInterval:           time.Second / time.Duration(updatesPerSecond),
+		debug:                    debug,
 	}
 }
 
 func (e *escDev) zeroThrottle() {
-	z:=make([]float64, e.pwmDev.NumberOfChannels())
-	for i:=0; i<len(z); i++ {
-		z[i]=0
+	z := make([]float64, e.pwmDev.NumberOfChannels())
+	for i := 0; i < len(z); i++ {
+		z[i] = 0
 	}
 	e.pwmDev.SetThrottles(z)
 }
@@ -69,11 +70,11 @@ func (e *escDev) Off() {
 }
 
 func (e *escDev) mapMotorsToChannels(motors []float64) {
-	for i:=0; i<len(e.throttles); i++ {
-		e.throttles[i]=0
+	for i := 0; i < len(e.throttles); i++ {
+		e.throttles[i] = 0
 	}
-	for i:=0; i<len(motors); i++ {
-		e.throttles[e.motorsToChannelsMappings[i]]=motors[i]
+	for i := 0; i < len(motors); i++ {
+		e.throttles[e.motorsToChannelsMappings[i]] = motors[i]
 	}
 }
 
