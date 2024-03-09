@@ -55,10 +55,11 @@ const (
 )
 
 type pca9685Dev struct {
-	name       string
-	address    uint8
-	connection *i2c.Dev
-	frequency  float64
+	name        string
+	address     uint8
+	connection  *i2c.Dev
+	frequency   float64
+	maxThrottle float64
 }
 
 type PCA9685Settings struct {
@@ -70,9 +71,10 @@ type PCA9685Settings struct {
 func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 	validateSettings(&settings)
 	dev := &pca9685Dev{
-		name:       "pca9685Dev",
-		address:    PCA9685Address,
-		connection: settings.Connection,
+		name:        "pca9685Dev",
+		address:     PCA9685Address,
+		connection:  settings.Connection,
+		maxThrottle: settings.MaxThrottle,
 	}
 	dev.init()
 	return dev, nil
@@ -82,12 +84,15 @@ func throttleToPulseWidth(throttle float64) float64 {
 	return MinPW + throttle/100*(MaxPW-MinPW)
 }
 
-func limitThrottle(throttle float64) float64 {
+func (d *pca9685Dev) limitThrottle(throttle float64) float64 {
 	if throttle < 0 {
 		return 0
 	}
 	if throttle > MaxAllowedThrottle {
 		return MaxAllowedThrottle
+	}
+	if throttle > d.maxThrottle {
+		return d.maxThrottle
 	}
 	return throttle
 }
@@ -101,8 +106,7 @@ func (d *pca9685Dev) SetThrottles(throttles []float64) error {
 		return fmt.Errorf("pca9685 must have %d channel data", NUMBER_OF_CHANNELS)
 	}
 	for channel := 0; channel < len(throttles); channel++ {
-		throttle := limitThrottle(throttles[channel])
-		pulseWidth := throttleToPulseWidth(throttle)
+		pulseWidth := throttleToPulseWidth(d.limitThrottle(throttles[channel]))
 		d.setPWMByThrottle(channel, pulseWidth)
 		fmt.Printf("channel[%d]: %f\n", channel, pulseWidth)
 	}
