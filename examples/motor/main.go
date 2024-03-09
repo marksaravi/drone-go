@@ -23,7 +23,7 @@ func main() {
 	pca9685Configs := pca9685.ReadConfigs("./configs/hardware.json")
 	powerBreakerGPIO := hardware.NewGPIOOutput(pca9685Configs.BreakerGPIO)
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open("/dev/i2c-1")
+	b, _ := i2creg.Open(pca9685Configs.I2CPort)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{

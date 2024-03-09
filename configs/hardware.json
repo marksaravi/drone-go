@@ -25,6 +25,7 @@
         }
     },
     "pca9685": {
+        "i2c": "/dev/i2c-1",
         "breaker-gpio":"GPIO17",
         "max-throttle": 25,
         "motors-mappings":[7, 6, 5, 4]

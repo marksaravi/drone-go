@@ -13,6 +13,7 @@ type powerbreaker interface {
 }
 
 type Configs struct {
+	I2CPort        string  `json:"i2c"`
 	BreakerGPIO    string  `json:"breaker-gpio"`
 	MaxThrottle    float64 `json:"max-throttle"`
 	MotorsMappings []int   `json:"motors-mappings"`
