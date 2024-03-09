@@ -23,5 +23,10 @@
             "chip-select": 0,
             "speed-mhz": 96
         }
+    },
+    "pca9685": {
+        "breaker-gpio":"GPIO17",
+        "max-throttle": 25,
+        "motors-mappings":[7, 6, 5, 4]
     }
 }

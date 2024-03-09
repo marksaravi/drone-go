@@ -12,9 +12,16 @@ type powerbreaker interface {
 	Disconnect()
 }
 
+type Configs struct {
+	BreakerGPIO    string  `json:"breaker-gpio"`
+	MaxThrottle    float64 `json:"max-throttle"`
+	MotorsMappings []int   `json:"motors-mappings"`
+}
+
 // PCA9685Address is i2c address of device
 const PCA9685Address = 0x40
-const NUMBER_OF_CHANNELS=8
+const NUMBER_OF_CHANNELS = 8
+
 // Addresses
 const (
 	PCA9685Mode1      = 0x00
@@ -47,24 +54,24 @@ const (
 )
 
 type pca9685Dev struct {
-	name            string
-	address         uint8
-	connection      *i2c.Dev
-	frequency       float64
+	name       string
+	address    uint8
+	connection *i2c.Dev
+	frequency  float64
 }
 
 type PCA9685Settings struct {
-	Connection      *i2c.Dev
-	MaxThrottle     float64
+	Connection  *i2c.Dev
+	MaxThrottle float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
 func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 	validateSettings(&settings)
 	dev := &pca9685Dev{
-		name:            "pca9685Dev",
-		address:         PCA9685Address,
-		connection:      settings.Connection,
+		name:       "pca9685Dev",
+		address:    PCA9685Address,
+		connection: settings.Connection,
 	}
 	dev.init()
 	return dev, nil
@@ -89,7 +96,7 @@ func (d *pca9685Dev) NumberOfChannels() int {
 }
 
 func (d *pca9685Dev) SetThrottles(throttles []float64) error {
-	if len(throttles)!=NUMBER_OF_CHANNELS {
+	if len(throttles) != NUMBER_OF_CHANNELS {
 		return fmt.Errorf("pca9685 must have %d channel data", NUMBER_OF_CHANNELS)
 	}
 	for channel := 0; channel < len(throttles); channel++ {

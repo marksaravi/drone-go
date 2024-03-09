@@ -29,6 +29,7 @@ type escs interface {
 type DroneSettings struct {
 	ImuMems           imuMems
 	Receiver          radioReceiver
+	Escs              escs
 	ImuDataPerSecond  int
 	CommandsPerSecond int
 	PlotterActive     bool
@@ -38,6 +39,7 @@ type droneApp struct {
 	startTime        time.Time
 	imuDataPerSecond int
 	imu              imuMems
+	escs             escs
 
 	rotations     imu.Rotations
 	accRotations  imu.Rotations
@@ -63,6 +65,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
 		startTime:           time.Now(),
 		imu:                 settings.ImuMems,
+		escs:                settings.Escs,
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
 		commandsPerSecond:   settings.CommandsPerSecond,
