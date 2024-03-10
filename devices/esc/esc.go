@@ -25,7 +25,6 @@ type escDev struct {
 	powerbreaker             powerbreaker
 	lastUpdate               time.Time
 	updateInterval           time.Duration
-	debug                    bool
 }
 
 func NewESC(
@@ -45,7 +44,6 @@ func NewESC(
 		powerbreaker:             powerbreaker,
 		lastUpdate:               time.Now().Add(-time.Second),
 		updateInterval:           time.Second / time.Duration(updatesPerSecond),
-		debug:                    debug,
 	}
 }
 
@@ -59,9 +57,7 @@ func (e *escDev) zeroThrottle() {
 
 func (e *escDev) On() {
 	e.zeroThrottle()
-	if !e.debug {
-		e.powerbreaker.Connect()
-	}
+	e.powerbreaker.Connect()
 }
 
 func (e *escDev) Off() {

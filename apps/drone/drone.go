@@ -23,6 +23,7 @@ type imuMems interface {
 
 type escs interface {
 	On()
+	Off()
 	SetThrottles(motors []float64)
 }
 
@@ -107,23 +108,20 @@ func (d *droneApp) readIMU() {
 
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commandOk, running bool = true, true
-	var command []byte
+	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	lc := time.Now()
 	d.InitUdp()
 
+	commandHandler := NewCommandHandler(d.escs)
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 
 	for running || commandOk {
 		d.readIMU()
 		select {
-		case command, commandOk = <-commandsChannel:
+		case commands, commandOk = <-commandsChannel:
 			if commandOk {
-				if time.Since(lc) >= time.Second/2 {
-					lc = time.Now()
-					fmt.Println(command)
-				}
+				commandHandler.applyCommands(commands)
 			}
 
 		case _, running = <-ctx.Done():

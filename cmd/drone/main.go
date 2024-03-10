@@ -22,7 +22,7 @@ import (
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
-	// log.Println("Starting Drone")
+	log.Println("Starting Drone")
 	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
 	log.Println(configs)
 
@@ -31,15 +31,18 @@ func main() {
 	imuConfigs := configs.IMU
 	mems := icm20789.NewICM20789(icm20789Configs)
 	imudev := imu.NewIMU(mems, imu.Configs{
-		DataPerSecond: 2500,
-		AccelerometerComplimentaryFilterCoefficient: 0.02,
-		RotationsComplimentaryFilterCoefficient:     0.02,
+		DataPerSecond: imuConfigs.DataPerSecond,
+		AccelerometerComplimentaryFilterCoefficient: imuConfigs.AccelerometerComplimentaryFilterCoefficient,
+		RotationsComplimentaryFilterCoefficient:     imuConfigs.RotationsComplimentaryFilterCoefficient,
 	})
 
-	radioConfigs := configs.RemoteControl.Radio
 	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
-		radioConfigs.SPI,
-		radioConfigs.RxTxAddress,
+		hardware.SPIConnConfigs{
+			BusNumber:       configs.RemoteControl.Radio.SPI.BusNumber,
+			ChipSelect:      configs.RemoteControl.Radio.SPI.ChipSelect,
+			ChipEnabledGPIO: configs.RemoteControl.Radio.SPI.ChipEnabledGPIO,
+		},
+		configs.RemoteControl.Radio.RxTxAddress,
 	)
 	radioReceiver := radio.NewRadioReceiver(radioLink)
 

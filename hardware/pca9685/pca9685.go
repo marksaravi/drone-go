@@ -69,7 +69,6 @@ type PCA9685Settings struct {
 
 // NewPCA9685Driver creates new pca9685Dev driver
 func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
-	validateSettings(&settings)
 	dev := &pca9685Dev{
 		name:        "pca9685Dev",
 		address:     PCA9685Address,
@@ -108,7 +107,6 @@ func (d *pca9685Dev) SetThrottles(throttles []float64) error {
 	for channel := 0; channel < len(throttles); channel++ {
 		pulseWidth := throttleToPulseWidth(d.limitThrottle(throttles[channel]))
 		d.setPWMByThrottle(channel, pulseWidth)
-		fmt.Printf("channel[%d]: %f\n", channel, pulseWidth)
 	}
 	return nil
 }
@@ -138,12 +136,6 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
 	powerbreaker.Disconnect()
 	time.Sleep(1 * time.Second)
 	pwmDev.setAllPWM(0)
-}
-
-func validateSettings(settings *PCA9685Settings) {
-	if settings.MaxThrottle > MaxAllowedThrottle {
-		panic(fmt.Errorf("max throttle must be less than hardcoded allowd throttle (this value is hardcoded in pca9685 driver) %6.1f", MaxAllowedThrottle))
-	}
 }
 
 func (d *pca9685Dev) readByte(offset uint8) (uint8, error) {
