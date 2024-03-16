@@ -2,6 +2,8 @@ package drone
 
 import (
 	"fmt"
+
+	"github.com/marksaravi/drone-go/constants"
 )
 
 func (d *droneApp) applyCommands(commands []byte) {
@@ -31,14 +33,29 @@ func (d *droneApp) offMotors(commands []byte) bool {
 }
 
 func (d *droneApp) setCommands(commands []byte) {
-	rawRoll, rawPitch, rawYaw, rawThrottle := RawRollPitchYawThrottle(commands)
-	fmt.Printf("%4d, %4d, %4d, %4d \n", rawRoll, rawPitch, rawYaw, rawThrottle)
+	roll := CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
+	pitch := CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
+	yaw := CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
+	throttle := CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
+	fmt.Printf("%6.2f, %6.2f, %6.2f, %6.2f \n", roll, pitch, yaw, throttle)
 }
 
-func RawRollPitchYawThrottle(commands []byte) (rawRoll, rawPitch, rawYaw, rawThrottle uint16) {
-	rawRoll = uint16(commands[1]) | (uint16(commands[0]) << 8)
-	rawPitch = uint16(commands[3]) | (uint16(commands[2]) << 8)
-	rawYaw = uint16(commands[5]) | (uint16(commands[4]) << 8)
-	rawThrottle = uint16(commands[7]) | (uint16(commands[6]) << 8)
-	return
+func RawJoystickRotation(commands []byte) int {
+	return int(uint16(commands[1]) | (uint16(commands[0]) << 8))
+}
+
+func CalcRotationFromRawJoyStickRaw(commands []byte, midValue int, rotationRange float64) float64 {
+	rawValue := RawJoystickRotation(commands)
+	rawValue -= midValue
+	if rawValue < -midValue {
+		rawValue = -midValue
+	}
+	if rawValue > midValue {
+		rawValue = midValue
+	}
+	return float64(rawValue) / float64(midValue) * rotationRange
+}
+func CalcThrottleFromRawJoyStickRaw(commands []byte, maxThrottle float64) float64 {
+	rawValue := RawJoystickRotation(commands)
+	return float64(rawValue) / float64(constants.JOYSTICK_DIGITAL_MAX_VALUE) * maxThrottle
 }

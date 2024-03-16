@@ -35,6 +35,11 @@ type DroneSettings struct {
 	ImuDataPerSecond  int
 	CommandsPerSecond int
 	PlotterActive     bool
+	RollMidValue      int
+	PitchMidValue     int
+	YawMidValue       int
+	RotationRange     float64
+	MaxThrottle       float64
 }
 
 type droneApp struct {
@@ -56,6 +61,12 @@ type droneApp struct {
 	imuDataCounter        int
 	plotterActive         bool
 	maxApplicableThrottle float64
+
+	rollMidValue   int
+	pitchlMidValue int
+	yawMidValue    int
+	rotationRange  float64
+	maxThrottle    float64
 
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
@@ -88,6 +99,12 @@ func NewDrone(settings DroneSettings) *droneApp {
 		plotterDataCounter:    0,
 		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
 		maxApplicableThrottle: constants.MAX_APPLICABLE_THROTTLE_PERCENT,
+
+		rollMidValue:   settings.RollMidValue,
+		pitchlMidValue: settings.PitchMidValue,
+		yawMidValue:    settings.YawMidValue,
+		rotationRange:  settings.RotationRange,
+		maxThrottle:    settings.MaxThrottle,
 	}
 }
 

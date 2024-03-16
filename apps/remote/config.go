@@ -21,9 +21,6 @@ type RemoteConfigs struct {
 		PitchChannel    int                     `json:"pitch-channel"`
 		YawChannel      int                     `json:"yaw-channel"`
 		ThrottleChannel int                     `json:"throttle-channel"`
-		RollMidValue    uint16                  `json:"roll-mid-value"`
-		PitchMidValue   uint16                  `json:"pitch-mid-value"`
-		YawMidValue     uint16                  `json:"yaw-mid-value"`
 	} `json:"joysticks"`
 	PushButtons []struct {
 		Name      string `json:"name"`

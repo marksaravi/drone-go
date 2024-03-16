@@ -64,6 +64,11 @@ func main() {
 		ImuMems:           imudev,
 		Escs:              esc,
 		Receiver:          radioReceiver,
+		RollMidValue:      configs.Commands.RollMidValue,
+		PitchMidValue:     configs.Commands.PitchMidValue,
+		YawMidValue:       configs.Commands.YawMidValue,
+		RotationRange:     configs.Commands.RotationRange,
+		MaxThrottle:       configs.Commands.MaxThrottle,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,
 	})

@@ -14,9 +14,6 @@
         "pitch-channel": 1,
         "yaw-channel": 2,
         "throttle-channel": 3,
-        "roll-mid-value": 500,
-        "pitch-mid-value": 523,
-        "yaw-mid-value": 515,
         "spi": {
             "bus-number": 1,
             "chip-select": 0,
