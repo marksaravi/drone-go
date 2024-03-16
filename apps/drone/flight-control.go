@@ -2,50 +2,49 @@ package drone
 
 type FlightState interface {
 	SetThrottle(throttle float64)
+	ConnectThrottle()
+	DisconnectThrottle()
+	ResetState()
+	ShowState()
 }
 
 type FlightControl struct {
-	noThrottleState     FlightState
-	lowThrottleState    FlightState
-	flightThrottleState FlightState
-	flightState         FlightState
+	escs                    escs
+	noThrottleState         FlightState
+	lowThrottleState        FlightState
+	flightThrottleState     FlightState
+	flightState             FlightState
+	flightThrottleThreshold float64
+	lowThrottleThreshold    float64
 }
 
-func NewFlightControl() *FlightControl {
-	fc := &FlightControl{}
+func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
+	const HYSTERSYS_GAP = 2.5
+	fc := &FlightControl{
+		flightThrottleThreshold: minFlightThrottle + HYSTERSYS_GAP,
+		lowThrottleThreshold:    minFlightThrottle - HYSTERSYS_GAP,
+		escs:                    escs,
+	}
+
 	fc.noThrottleState = &NoThrottleState{
 		flightControl: fc,
 	}
+
 	fc.lowThrottleState = &LowThrottleState{
+		safeZeroStart: false,
 		flightControl: fc,
 	}
+
 	fc.flightThrottleState = &FlightThrottleState{
 		flightControl: fc,
 	}
-	fc.flightState = fc.noThrottleState
+
+	fc.SetState(fc.noThrottleState)
 	return fc
 }
 
-type NoThrottleState struct {
-	flightControl *FlightControl
-}
-
-func (fs *NoThrottleState) SetThrottle(throttle float64) {
-
-}
-
-type LowThrottleState struct {
-	flightControl *FlightControl
-}
-
-func (fs *LowThrottleState) SetThrottle(throttle float64) {
-
-}
-
-type FlightThrottleState struct {
-	flightControl *FlightControl
-}
-
-func (fs *FlightThrottleState) SetThrottle(throttle float64) {
-
+func (fc *FlightControl) SetState(fs FlightState) {
+	fs.ResetState()
+	fc.flightState = fs
+	fc.flightState.ShowState()
 }

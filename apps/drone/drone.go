@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/plotter"
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
@@ -34,6 +35,12 @@ type DroneSettings struct {
 	ImuDataPerSecond  int
 	CommandsPerSecond int
 	PlotterActive     bool
+	RollMidValue      int
+	PitchMidValue     int
+	YawMidValue       int
+	RotationRange     float64
+	MaxThrottle       float64
+	MinFlightThrottle float64
 }
 
 type droneApp struct {
@@ -41,18 +48,27 @@ type droneApp struct {
 	imuDataPerSecond int
 	imu              imuMems
 	escs             escs
+	flightControl    *FlightControl
 
 	rotations     imu.Rotations
 	accRotations  imu.Rotations
 	gyroRotations imu.Rotations
 
-	commandsPerSecond int
-	receiver          radioReceiver
-	lastImuRead       time.Time
-	imuReadInterval   time.Duration
-	lastImuPrint      time.Time
-	imuDataCounter    int
-	plotterActive     bool
+	commandsPerSecond     int
+	receiver              radioReceiver
+	lastImuRead           time.Time
+	imuReadInterval       time.Duration
+	lastImuPrint          time.Time
+	imuDataCounter        int
+	plotterActive         bool
+	maxApplicableThrottle float64
+
+	rollMidValue      int
+	pitchlMidValue    int
+	yawMidValue       int
+	rotationRange     float64
+	maxThrottle       float64
+	minFlightThrottle float64
 
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
@@ -64,25 +80,34 @@ type droneApp struct {
 
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
-		startTime:           time.Now(),
-		imu:                 settings.ImuMems,
-		escs:                settings.Escs,
-		imuDataPerSecond:    settings.ImuDataPerSecond,
-		receiver:            settings.Receiver,
-		commandsPerSecond:   settings.CommandsPerSecond,
-		lastImuRead:         time.Now(),
-		imuReadInterval:     time.Second / time.Duration(2500),
-		lastImuPrint:        time.Now(),
-		imuDataCounter:      0,
-		plotterActive:       settings.PlotterActive,
-		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		plotterDataPacket:   make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
-		plotterSendBuffer:   make([]byte, plotter.PLOTTER_PACKET_LEN),
-		plotterAddress:      PLOTTER_ADDRESS,
-		plotterDataCounter:  0,
-		ploterDataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
+		startTime:             time.Now(),
+		imu:                   settings.ImuMems,
+		escs:                  settings.Escs,
+		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle),
+		imuDataPerSecond:      settings.ImuDataPerSecond,
+		receiver:              settings.Receiver,
+		commandsPerSecond:     settings.CommandsPerSecond,
+		lastImuRead:           time.Now(),
+		imuReadInterval:       time.Second / time.Duration(2500),
+		lastImuPrint:          time.Now(),
+		imuDataCounter:        0,
+		plotterActive:         settings.PlotterActive,
+		rotations:             imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		accRotations:          imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyroRotations:         imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		plotterDataPacket:     make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
+		plotterSendBuffer:     make([]byte, plotter.PLOTTER_PACKET_LEN),
+		plotterAddress:        PLOTTER_ADDRESS,
+		plotterDataCounter:    0,
+		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
+		maxApplicableThrottle: constants.MAX_APPLICABLE_THROTTLE_PERCENT,
+
+		rollMidValue:      settings.RollMidValue,
+		pitchlMidValue:    settings.PitchMidValue,
+		yawMidValue:       settings.YawMidValue,
+		rotationRange:     settings.RotationRange,
+		maxThrottle:       settings.MaxThrottle,
+		minFlightThrottle: settings.MinFlightThrottle,
 	}
 }
 
@@ -98,11 +123,11 @@ func (d *droneApp) readIMU() {
 		d.accRotations = acc
 		d.gyroRotations = gyro
 		d.rotations = rot
-		if time.Since(d.lastImuPrint) >= time.Second {
-			d.lastImuPrint = time.Now()
-			fmt.Println(d.rotations, d.imuDataCounter)
-			d.imuDataCounter = 0
-		}
+		// if time.Since(d.lastImuPrint) >= time.Second {
+		// 	d.lastImuPrint = time.Now()
+		// 	fmt.Println(d.rotations, d.imuDataCounter)
+		// 	d.imuDataCounter = 0
+		// }
 	}
 }
 
@@ -113,7 +138,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	fmt.Println("Starting Drone...")
 	d.InitUdp()
 
-	commandHandler := NewCommandHandler(d.escs)
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 
 	for running || commandOk {
@@ -121,7 +145,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case commands, commandOk = <-commandsChannel:
 			if commandOk {
-				commandHandler.applyCommands(commands)
+				d.applyCommands(commands)
 			}
 
 		case _, running = <-ctx.Done():

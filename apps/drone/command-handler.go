@@ -1,32 +1,52 @@
 package drone
 
-import "fmt"
+import (
+	"fmt"
+	"time"
 
-type commandHandler struct {
-	escs escs
-}
+	"github.com/marksaravi/drone-go/apps/common"
+)
 
-func NewCommandHandler(escs escs) *commandHandler {
-	return &commandHandler{
-		escs: escs,
+func (d *droneApp) applyCommands(commands []byte) {
+	if d.offMotors(commands) {
+		return
 	}
-}
-
-func (h *commandHandler) applyCommands(commands []byte) {
-	h.offMotors(commands)
-	h.onMotors(commands)
-}
-
-func (h *commandHandler) onMotors(commands []byte) {
-	if commands[5] == 1 {
-		h.escs.On()
-		fmt.Println("ESC CONNECTED")
+	if d.onMotors(commands) {
+		return
 	}
+	d.setCommands(commands)
 }
 
-func (h *commandHandler) offMotors(commands []byte) {
-	if commands[5] == 16 {
-		h.escs.Off()
-		fmt.Println("ESC DISCONNECTED")
+func (d *droneApp) onMotors(commands []byte) bool {
+	if commands[9] == 1 {
+		d.flightControl.flightState.ConnectThrottle()
+		return true
 	}
+	return false
+}
+
+func (d *droneApp) offMotors(commands []byte) bool {
+	if commands[9] == 16 {
+		d.flightControl.flightState.DisconnectThrottle()
+		return true
+	}
+	return false
+}
+
+func (d *droneApp) setCommands(commands []byte) {
+	// roll := common.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
+	// pitch := common.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
+	// yaw := common.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
+	throttle := common.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
+	d.flightControl.flightState.SetThrottle(throttle)
+	if time.Since(d.lastImuPrint) >= time.Second/4 {
+		d.lastImuPrint = time.Now()
+		fmt.Println(throttle)
+	}
+
+	// fmt.Printf("%6.2f, %6.2f, %6.2f, %6.2f \n", roll, pitch, yaw, throttle)
+}
+
+func RawJoystickRotation(commands []byte) int {
+	return int(uint16(commands[1]) | (uint16(commands[0]) << 8))
 }

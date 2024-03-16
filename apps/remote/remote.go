@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
+	"github.com/marksaravi/drone-go/apps/common"
 )
 
 type radioTransmiter interface {
@@ -48,6 +48,11 @@ type remoteControl struct {
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
+	rollMidValue           int
+	pitchMidValue          int
+	yawMidValue            int
+	rotationRange          float64
+	maxThrottle            float64
 }
 
 type RemoteSettings struct {
@@ -57,6 +62,11 @@ type RemoteSettings struct {
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
+	RollMidValue               int
+	PitchMidValue              int
+	YawMidValue                int
+	RotationRange              float64
+	MaxThrottle                float64
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
@@ -73,6 +83,11 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		buttonsPressed:         make([]byte, len(settings.PushButtons)),
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
+		rollMidValue:           settings.RollMidValue,
+		pitchMidValue:          settings.PitchMidValue,
+		yawMidValue:            settings.YawMidValue,
+		rotationRange:          settings.RotationRange,
+		maxThrottle:            settings.MaxThrottle,
 	}
 }
 
@@ -80,26 +95,34 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	prevPayload:=make([]byte, 8)
+	prevPayload := make([]byte, 10)
 	for running {
 		select {
 		default:
 			if r.ReadCommands() {
 				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
+				hRoll, lRoll := Uint16ToBytes(r.commands.roll)
+				hPitch, lPitch := Uint16ToBytes(r.commands.pitch)
+				hYaw, lYaw := Uint16ToBytes(r.commands.yaw)
+				hThrottle, lThrottle := Uint16ToBytes(r.commands.throttle)
 				payload := []byte{
-					byte(r.commands.roll),
-					byte(r.commands.pitch),
-					byte(r.commands.yaw),
-					byte(r.commands.throttle),
+					hRoll,
+					lRoll,
+					hPitch,
+					lPitch,
+					hYaw,
+					lYaw,
+					hThrottle,
+					lThrottle,
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
 				if isChanged(payload, prevPayload) {
-					fmt.Println(payload, r.JoystickToString())
+					fmt.Println(payload)
 				}
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
-				r.UpdateDisplay()
+				r.UpdateDisplay(payload)
 			}
 		case <-ctx.Done():
 			running = false
@@ -121,13 +144,13 @@ func (r *remoteControl) Initisplay() {
 	r.oled.WriteString("Trottle:", 0, 0)
 }
 
-func (r *remoteControl) UpdateDisplay() {
+func (r *remoteControl) UpdateDisplay(payload []byte) {
 	if time.Since(r.lastDisplayUpdate) < time.Second/time.Duration(r.displayUpdatePerSecond) {
 		return
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", r.Throttle()), 9, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", common.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
@@ -172,34 +195,16 @@ func (r *remoteControl) ReadButtons() {
 	}
 }
 
-func (r *remoteControl) Throttle() float32 {
-	return float32(r.commands.throttle) / constants.THROTTLE_MAX * 100
-}
-
-func jsticktofloat(x uint16) float32 {
-	const OUTPUT_RANGE_DEG = float32(90)
-	return OUTPUT_RANGE_DEG/2 - float32(x)*OUTPUT_RANGE_DEG/constants.JOYSTICK_RANGE_DEG
-}
-
-func (r *remoteControl) Roll() float32 {
-	return jsticktofloat(r.commands.roll)
-}
-
-func (r *remoteControl) Pitch() float32 {
-	return jsticktofloat(r.commands.pitch)
-}
-
-func (r *remoteControl) Yaw() float32 {
-	return jsticktofloat(r.commands.yaw)
-}
-
-func (r *remoteControl) JoystickToString() string {
-	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.Roll(), r.Pitch(), r.Yaw(), r.Throttle())
+func Uint16ToBytes(x uint16) (high, low byte) {
+	low = byte(x)
+	high = byte(x >> 8)
+	return
 }
 
 var counter int = 0
+
 func isChanged(payload, prevPayload []byte) bool {
-	if  payload[5] != prevPayload[5] || counter > 20 {
+	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || counter > 20 {
 		counter = 0
 		return true
 	}
