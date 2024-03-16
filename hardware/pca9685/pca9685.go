@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"periph.io/x/conn/v3/i2c"
 )
 
@@ -48,10 +49,9 @@ const (
 )
 
 const (
-	Frequency          float64 = 384
-	MinPW              float64 = 0.000995
-	MaxPW              float64 = 0.00199
-	MaxAllowedThrottle float64 = 30
+	Frequency float64 = 384
+	MinPW     float64 = 0.000995
+	MaxPW     float64 = 0.00199
 )
 
 type pca9685Dev struct {
@@ -87,8 +87,8 @@ func (d *pca9685Dev) limitThrottle(throttle float64) float64 {
 	if throttle < 0 {
 		return 0
 	}
-	if throttle > MaxAllowedThrottle {
-		return MaxAllowedThrottle
+	if throttle > constants.MAX_APPLICABLE_THROTTLE_PERCENT {
+		return constants.MAX_APPLICABLE_THROTTLE_PERCENT
 	}
 	if throttle > d.maxThrottle {
 		return d.maxThrottle

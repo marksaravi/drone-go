@@ -47,13 +47,14 @@ type droneApp struct {
 	accRotations  imu.Rotations
 	gyroRotations imu.Rotations
 
-	commandsPerSecond int
-	receiver          radioReceiver
-	lastImuRead       time.Time
-	imuReadInterval   time.Duration
-	lastImuPrint      time.Time
-	imuDataCounter    int
-	plotterActive     bool
+	commandsPerSecond     int
+	receiver              radioReceiver
+	lastImuRead           time.Time
+	imuReadInterval       time.Duration
+	lastImuPrint          time.Time
+	imuDataCounter        int
+	plotterActive         bool
+	maxApplicableThrottle float64
 
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
@@ -65,26 +66,27 @@ type droneApp struct {
 
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
-		startTime:           time.Now(),
-		imu:                 settings.ImuMems,
-		escs:                settings.Escs,
-		flightControl:       NewFlightControl(settings.Escs),
-		imuDataPerSecond:    settings.ImuDataPerSecond,
-		receiver:            settings.Receiver,
-		commandsPerSecond:   settings.CommandsPerSecond,
-		lastImuRead:         time.Now(),
-		imuReadInterval:     time.Second / time.Duration(2500),
-		lastImuPrint:        time.Now(),
-		imuDataCounter:      0,
-		plotterActive:       settings.PlotterActive,
-		rotations:           imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		accRotations:        imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyroRotations:       imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		plotterDataPacket:   make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
-		plotterSendBuffer:   make([]byte, plotter.PLOTTER_PACKET_LEN),
-		plotterAddress:      PLOTTER_ADDRESS,
-		plotterDataCounter:  0,
-		ploterDataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
+		startTime:             time.Now(),
+		imu:                   settings.ImuMems,
+		escs:                  settings.Escs,
+		flightControl:         NewFlightControl(settings.Escs),
+		imuDataPerSecond:      settings.ImuDataPerSecond,
+		receiver:              settings.Receiver,
+		commandsPerSecond:     settings.CommandsPerSecond,
+		lastImuRead:           time.Now(),
+		imuReadInterval:       time.Second / time.Duration(2500),
+		lastImuPrint:          time.Now(),
+		imuDataCounter:        0,
+		plotterActive:         settings.PlotterActive,
+		rotations:             imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		accRotations:          imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		gyroRotations:         imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
+		plotterDataPacket:     make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
+		plotterSendBuffer:     make([]byte, plotter.PLOTTER_PACKET_LEN),
+		plotterAddress:        PLOTTER_ADDRESS,
+		plotterDataCounter:    0,
+		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
+		maxApplicableThrottle: 0.33,
 	}
 }
 

@@ -56,7 +56,7 @@ func main() {
 		analogToDigitalSPIConn,
 		configs.Joysticks.ThrottleChannel,
 		mcp3008.DIGITAL_MAX_VALUE/2,
-		constants.THROTTLE_MAX,
+		constants.THROTTLE_RAW_READING_MAX,
 	)
 
 	buttons := make([]remote.PushButton, 0, 10)

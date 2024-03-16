@@ -127,7 +127,7 @@ func (r *remoteControl) UpdateDisplay() {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", r.Throttle()), 9, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", r.getThrottle()), 9, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
@@ -172,8 +172,8 @@ func (r *remoteControl) ReadButtons() {
 	}
 }
 
-func (r *remoteControl) Throttle() float32 {
-	return float32(r.commands.throttle) / constants.THROTTLE_MAX * 100
+func (r *remoteControl) getThrottle() float32 {
+	return float32(r.commands.throttle) / constants.THROTTLE_RAW_READING_MAX * 100
 }
 
 func jsticktofloat(x uint16) float32 {
@@ -181,20 +181,20 @@ func jsticktofloat(x uint16) float32 {
 	return OUTPUT_RANGE_DEG/2 - float32(x)*OUTPUT_RANGE_DEG/constants.JOYSTICK_RANGE_DEG
 }
 
-func (r *remoteControl) Roll() float32 {
+func (r *remoteControl) getRoll() float32 {
 	return jsticktofloat(r.commands.roll)
 }
 
-func (r *remoteControl) Pitch() float32 {
+func (r *remoteControl) getPitch() float32 {
 	return jsticktofloat(r.commands.pitch)
 }
 
-func (r *remoteControl) Yaw() float32 {
+func (r *remoteControl) getYaw() float32 {
 	return jsticktofloat(r.commands.yaw)
 }
 
 func (r *remoteControl) JoystickToString() string {
-	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.Roll(), r.Pitch(), r.Yaw(), r.Throttle())
+	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.getRoll(), r.getPitch(), r.getYaw(), r.getThrottle())
 }
 
 var counter int = 0
