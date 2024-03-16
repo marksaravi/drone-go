@@ -41,6 +41,7 @@ type droneApp struct {
 	imuDataPerSecond int
 	imu              imuMems
 	escs             escs
+	flightControl    *FlightControl
 
 	rotations     imu.Rotations
 	accRotations  imu.Rotations
@@ -67,6 +68,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:           time.Now(),
 		imu:                 settings.ImuMems,
 		escs:                settings.Escs,
+		flightControl:       NewFlightControl(settings.Escs),
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
 		commandsPerSecond:   settings.CommandsPerSecond,
@@ -113,7 +115,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	fmt.Println("Starting Drone...")
 	d.InitUdp()
 
-	commandHandler := NewCommandHandler(d.escs)
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 
 	for running || commandOk {
@@ -121,7 +122,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case commands, commandOk = <-commandsChannel:
 			if commandOk {
-				commandHandler.applyCommands(commands)
+				d.applyCommands(commands)
 			}
 
 		case _, running = <-ctx.Done():

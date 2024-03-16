@@ -1,32 +1,18 @@
 package drone
 
-import "fmt"
-
-type commandHandler struct {
-	escs escs
+func (d *droneApp) applyCommands(commands []byte) {
+	d.offMotors(commands)
+	d.onMotors(commands)
 }
 
-func NewCommandHandler(escs escs) *commandHandler {
-	return &commandHandler{
-		escs: escs,
-	}
-}
-
-func (h *commandHandler) applyCommands(commands []byte) {
-	h.offMotors(commands)
-	h.onMotors(commands)
-}
-
-func (h *commandHandler) onMotors(commands []byte) {
+func (d *droneApp) onMotors(commands []byte) {
 	if commands[5] == 1 {
-		h.escs.On()
-		fmt.Println("ESC CONNECTED")
+		d.flightControl.flightState.ConnectThrottle()
 	}
 }
 
-func (h *commandHandler) offMotors(commands []byte) {
+func (d *droneApp) offMotors(commands []byte) {
 	if commands[5] == 16 {
-		h.escs.Off()
-		fmt.Println("ESC DISCONNECTED")
+		d.flightControl.flightState.DisconnectThrottle()
 	}
 }
