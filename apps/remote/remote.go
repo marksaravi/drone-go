@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/marksaravi/drone-go/apps/common"
 )
 
 type radioTransmiter interface {
@@ -46,6 +48,11 @@ type remoteControl struct {
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
+	rollMidValue           int
+	pitchMidValue          int
+	yawMidValue            int
+	rotationRange          float64
+	maxThrottle            float64
 }
 
 type RemoteSettings struct {
@@ -55,6 +62,11 @@ type RemoteSettings struct {
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
+	RollMidValue               int
+	PitchMidValue              int
+	YawMidValue                int
+	RotationRange              float64
+	MaxThrottle                float64
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
@@ -71,6 +83,11 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		buttonsPressed:         make([]byte, len(settings.PushButtons)),
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
+		rollMidValue:           settings.RollMidValue,
+		pitchMidValue:          settings.PitchMidValue,
+		yawMidValue:            settings.YawMidValue,
+		rotationRange:          settings.RotationRange,
+		maxThrottle:            settings.MaxThrottle,
 	}
 }
 
@@ -78,7 +95,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	prevPayload:=make([]byte, 10)
+	prevPayload := make([]byte, 10)
 	for running {
 		select {
 		default:
@@ -105,7 +122,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 				}
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
-				r.UpdateDisplay()
+				r.UpdateDisplay(payload)
 			}
 		case <-ctx.Done():
 			running = false
@@ -127,13 +144,13 @@ func (r *remoteControl) Initisplay() {
 	r.oled.WriteString("Trottle:", 0, 0)
 }
 
-func (r *remoteControl) UpdateDisplay() {
+func (r *remoteControl) UpdateDisplay(payload []byte) {
 	if time.Since(r.lastDisplayUpdate) < time.Second/time.Duration(r.displayUpdatePerSecond) {
 		return
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", float64(33.534)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", common.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
@@ -180,13 +197,14 @@ func (r *remoteControl) ReadButtons() {
 
 func Uint16ToBytes(x uint16) (high, low byte) {
 	low = byte(x)
-	high = byte(x>>8)
+	high = byte(x >> 8)
 	return
 }
 
 var counter int = 0
+
 func isChanged(payload, prevPayload []byte) bool {
-	if  payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || counter > 20 {
+	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || counter > 20 {
 		counter = 0
 		return true
 	}

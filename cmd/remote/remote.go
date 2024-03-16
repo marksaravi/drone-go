@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/marksaravi/drone-go/apps/drone"
 	"github.com/marksaravi/drone-go/apps/remote"
 	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/devices/radio"
@@ -21,6 +22,7 @@ func main() {
 	hardware.HostInitialize()
 	log.Println("Starting RemoteControl")
 	configs := remote.ReadConfigs("./configs/remote-configs.json")
+	droneConfigs := drone.ReadConfigs("./configs/drone-configs.json")
 	log.Println(configs)
 
 	radioConfigs := configs.Radio
@@ -79,6 +81,11 @@ func main() {
 		PushButtons:            buttons,
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
+		RollMidValue:           droneConfigs.Commands.RollMidValue,
+		PitchMidValue:          droneConfigs.Commands.PitchMidValue,
+		YawMidValue:            droneConfigs.Commands.YawMidValue,
+		RotationRange:          droneConfigs.Commands.RotationRange,
+		MaxThrottle:            droneConfigs.Commands.MaxThrottle,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
