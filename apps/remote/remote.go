@@ -197,11 +197,12 @@ func (r *remoteControl) JoystickToString() string {
 	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.Roll(), r.Pitch(), r.Yaw(), r.Throttle())
 }
 
+var counter int = 0
 func isChanged(payload, prevPayload []byte) bool {
-	for i:=0; i<len(payload); i++ {
-		if payload[i]!=prevPayload[i] {
-			return true
-		}
+	if  payload[5] != prevPayload[5] || counter > 20 {
+		counter = 0
+		return true
 	}
+	counter++
 	return false
 }
