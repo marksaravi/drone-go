@@ -32,7 +32,7 @@
         "yaw-mid-value": 515,
         "rotation-range-deg": 30,
         "max-throttle": 25,
-        "min-flight-throttle": 12.5
+        "min-flight-throttle": 10
     },
     "plotter": {
         "active": true
