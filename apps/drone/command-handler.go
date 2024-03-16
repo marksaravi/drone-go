@@ -33,6 +33,6 @@ func (d *droneApp) offMotors(commands []byte) bool {
 }
 
 func (d *droneApp) setCommands(commands []byte) {
-	throttle := float64(commands[3]) / float64(constants.THROTTLE_RAW_READING_MAX) * 100 * d.maxApplicableThrottle
+	throttle := float64(commands[3]) / float64(constants.THROTTLE_RAW_READING_MAX) * d.maxApplicableThrottle
 	fmt.Println(throttle)
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/plotter"
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
@@ -86,7 +87,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		plotterAddress:        PLOTTER_ADDRESS,
 		plotterDataCounter:    0,
 		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
-		maxApplicableThrottle: 0.33,
+		maxApplicableThrottle: constants.MAX_APPLICABLE_THROTTLE_PERCENT,
 	}
 }
 
