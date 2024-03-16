@@ -80,22 +80,30 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	prevPayload:=make([]byte, 8)
+	prevPayload:=make([]byte, 10)
 	for running {
 		select {
 		default:
 			if r.ReadCommands() {
 				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
+				hRoll, lRoll := Uint16ToBytes(r.commands.roll)
+				hPitch, lPitch := Uint16ToBytes(r.commands.pitch)
+				hYaw, lYaw := Uint16ToBytes(r.commands.yaw)
+				hThrottle, lThrottle := Uint16ToBytes(r.commands.throttle)
 				payload := []byte{
-					byte(r.commands.roll),
-					byte(r.commands.pitch),
-					byte(r.commands.yaw),
-					byte(r.commands.throttle),
+					hRoll,
+					lRoll,
+					hPitch,
+					lPitch,
+					hYaw,
+					lYaw,
+					hThrottle,
+					lThrottle,
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
 				if isChanged(payload, prevPayload) {
-					fmt.Println(payload, r.JoystickToString())
+					fmt.Println(payload)
 				}
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
@@ -197,9 +205,16 @@ func (r *remoteControl) JoystickToString() string {
 	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.getRoll(), r.getPitch(), r.getYaw(), r.getThrottle())
 }
 
+
+func Uint16ToBytes(x uint16) (high, low byte) {
+	low = byte(x)
+	high = byte(x>>8)
+	return
+}
+
 var counter int = 0
 func isChanged(payload, prevPayload []byte) bool {
-	if  payload[5] != prevPayload[5] || counter > 20 {
+	if  payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || counter > 20 {
 		counter = 0
 		return true
 	}

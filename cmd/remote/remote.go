@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/marksaravi/drone-go/apps/remote"
-	"github.com/marksaravi/drone-go/constants"
 	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
@@ -37,26 +36,18 @@ func main() {
 	joystickRoll := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		configs.Joysticks.RollChannel,
-		configs.Joysticks.RollMidValue,
-		constants.JOYSTICK_RANGE_DEG,
 	)
 	joystickPitch := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		configs.Joysticks.PitchChannel,
-		configs.Joysticks.PitchMidValue,
-		constants.JOYSTICK_RANGE_DEG,
 	)
 	joystickYaw := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		configs.Joysticks.YawChannel,
-		configs.Joysticks.YawMidValue,
-		constants.JOYSTICK_RANGE_DEG,
 	)
 	joystickThrottle := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
 		configs.Joysticks.ThrottleChannel,
-		mcp3008.DIGITAL_MAX_VALUE/2,
-		constants.THROTTLE_RAW_READING_MAX,
 	)
 
 	buttons := make([]remote.PushButton, 0, 10)
