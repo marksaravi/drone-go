@@ -20,41 +20,31 @@ func main() {
 	hardware.HostInitialize()
 	motor := flag.Int("motor", 0, "motor")
 	flag.Parse()
-
-	powerBreakerGPIO := hardware.NewGPIOOutput("GPIO17")
+	pca9685Configs := pca9685.ReadConfigs("./configs/hardware.json")
+	powerBreakerGPIO := hardware.NewGPIOOutput(pca9685Configs.BreakerGPIO)
 	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
-	b, _ := i2creg.Open("/dev/i2c-1")
+	b, _ := i2creg.Open(pca9685Configs.I2CPort)
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:      i2cConn,
-		MaxThrottle:     15,
+		Connection:  i2cConn,
+		MaxThrottle: pca9685Configs.MaxThrottle,
 	})
 
 	const maxThrottle float64 = 20
 	const minThrottle float64 = 5
 	const steps int = 10
 	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
-	motorsToChannelsMappings:=make(map[int]int)
-	motorsToChannelsMappings[3]=4
-	motorsToChannelsMappings[1]=6
-	motorsToChannelsMappings[2]=5
-	motorsToChannelsMappings[0]=7
-	esc := esc.NewESC(pwmDev, motorsToChannelsMappings, powerBreaker, 50, false)
+	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	var wg sync.WaitGroup
 	esc.On()
 	time.Sleep(5 * time.Second)
-	throttle:=float64(minThrottle)
+	throttle := float64(minThrottle)
 	fmt.Println(*motor)
-	motors:=[]float64{0, 0, 0, 0}
+	motors := []float64{0, 0, 0, 0}
 	for repeat := 0; repeat < 2; repeat++ {
 		for step := 0; step < steps; step++ {
-			// log.Println("motor: ", *motor, ", throttle:  ", throttle, "%")
-			// for i:=0; i<len(throttles); i++ {
-			// 	throttles[i]=throttle
-			// }
-			// esc.SetThrottles(throttles)
-			motors[*motor]=throttle
+			motors[*motor] = throttle
 			esc.SetThrottles(motors)
 			time.Sleep(250 * time.Millisecond)
 			throttle += dThrottle

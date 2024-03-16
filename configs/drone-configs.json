@@ -1,6 +1,6 @@
 {
     "imu": {
-        "data-per-second": 1000,
+        "data-per-second": 1200,
         "accelerometer-complimentary-filter-coefficient": 0.01,
         "rotations-complimentary-filter-coefficient": 0.01,
         "acc-directions": {

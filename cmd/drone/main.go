@@ -7,17 +7,22 @@ import (
 	"sync"
 
 	dronePackage "github.com/marksaravi/drone-go/apps/drone"
+	"github.com/marksaravi/drone-go/devices"
+	"github.com/marksaravi/drone-go/devices/esc"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
+	"github.com/marksaravi/drone-go/hardware/pca9685"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
 )
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
-	// log.Println("Starting Drone")
+	log.Println("Starting Drone")
 	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
 	log.Println(configs)
 
@@ -26,22 +31,38 @@ func main() {
 	imuConfigs := configs.IMU
 	mems := icm20789.NewICM20789(icm20789Configs)
 	imudev := imu.NewIMU(mems, imu.Configs{
-		DataPerSecond: 2500,
-		AccelerometerComplimentaryFilterCoefficient: 0.02,
-		RotationsComplimentaryFilterCoefficient:     0.02,
+		DataPerSecond: imuConfigs.DataPerSecond,
+		AccelerometerComplimentaryFilterCoefficient: imuConfigs.AccelerometerComplimentaryFilterCoefficient,
+		RotationsComplimentaryFilterCoefficient:     imuConfigs.RotationsComplimentaryFilterCoefficient,
 	})
 
-	radioConfigs := configs.RemoteControl.Radio
 	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
-		radioConfigs.SPI,
-		radioConfigs.RxTxAddress,
+		hardware.SPIConnConfigs{
+			BusNumber:       configs.RemoteControl.Radio.SPI.BusNumber,
+			ChipSelect:      configs.RemoteControl.Radio.SPI.ChipSelect,
+			ChipEnabledGPIO: configs.RemoteControl.Radio.SPI.ChipEnabledGPIO,
+		},
+		configs.RemoteControl.Radio.RxTxAddress,
 	)
 	radioReceiver := radio.NewRadioReceiver(radioLink)
 
+	pca9685Configs := pca9685.ReadConfigs("./configs/hardware.json")
+	powerBreakerGPIO := hardware.NewGPIOOutput(pca9685Configs.BreakerGPIO)
+	powerBreaker := devices.NewPowerBreaker(powerBreakerGPIO)
+	b, _ := i2creg.Open(pca9685Configs.I2CPort)
+	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
+
+	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
+		Connection:  i2cConn,
+		MaxThrottle: pca9685Configs.MaxThrottle,
+	})
+
+	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:  imuConfigs.DataPerSecond,
-		Imu:               imudev,
+		ImuMems:           imudev,
+		Escs:              esc,
 		Receiver:          radioReceiver,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,

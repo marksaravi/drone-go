@@ -14,18 +14,23 @@ import (
 const PLOTTER_ADDRESS = "192.168.1.101:8000"
 
 type radioReceiver interface {
-	// On()
-	// Receive() ([]byte, bool)
 	Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte
 }
 
-type Imu interface {
+type imuMems interface {
 	Read() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
+type escs interface {
+	On()
+	Off()
+	SetThrottles(motors []float64)
+}
+
 type DroneSettings struct {
-	Imu               Imu
+	ImuMems           imuMems
 	Receiver          radioReceiver
+	Escs              escs
 	ImuDataPerSecond  int
 	CommandsPerSecond int
 	PlotterActive     bool
@@ -34,7 +39,8 @@ type DroneSettings struct {
 type droneApp struct {
 	startTime        time.Time
 	imuDataPerSecond int
-	imu              Imu
+	imu              imuMems
+	escs             escs
 
 	rotations     imu.Rotations
 	accRotations  imu.Rotations
@@ -59,7 +65,8 @@ type droneApp struct {
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
 		startTime:           time.Now(),
-		imu:                 settings.Imu,
+		imu:                 settings.ImuMems,
+		escs:                settings.Escs,
 		imuDataPerSecond:    settings.ImuDataPerSecond,
 		receiver:            settings.Receiver,
 		commandsPerSecond:   settings.CommandsPerSecond,
@@ -101,23 +108,20 @@ func (d *droneApp) readIMU() {
 
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commandOk, running bool = true, true
-	var command []byte
+	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	lc := time.Now()
 	d.InitUdp()
 
+	commandHandler := NewCommandHandler(d.escs)
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 
 	for running || commandOk {
 		d.readIMU()
 		select {
-		case command, commandOk = <-commandsChannel:
+		case commands, commandOk = <-commandsChannel:
 			if commandOk {
-				if time.Since(lc) >= time.Second/2 {
-					lc = time.Now()
-					fmt.Println(command)
-				}
+				commandHandler.applyCommands(commands)
 			}
 
 		case _, running = <-ctx.Done():
@@ -126,10 +130,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterUdpConn.Close()
 		default:
 		}
-
-		// if (running || imuOk || commandOk) {
-		// 	fmt.Println(running , imuOk ,commandOk)
-		// }
 	}
 	fmt.Println("Stopping Drone...")
 }
