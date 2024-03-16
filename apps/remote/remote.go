@@ -80,6 +80,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
+	prevPayload:=make([]byte, 8)
 	for running {
 		select {
 		default:
@@ -93,7 +94,10 @@ func (r *remoteControl) Start(ctx context.Context) {
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
-				fmt.Println(payload, r.JoystickToString())
+				if isChanged(payload, prevPayload) {
+					fmt.Println(payload, r.JoystickToString())
+				}
+				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
 				r.UpdateDisplay()
 			}
@@ -191,4 +195,14 @@ func (r *remoteControl) Yaw() float32 {
 
 func (r *remoteControl) JoystickToString() string {
 	return fmt.Sprintf("%2.1f, %2.1f, %2.1f, %2.1f%%", r.Roll(), r.Pitch(), r.Yaw(), r.Throttle())
+}
+
+var counter int = 0
+func isChanged(payload, prevPayload []byte) bool {
+	if  payload[5] != prevPayload[5] || counter > 20 {
+		counter = 0
+		return true
+	}
+	counter++
+	return false
 }
