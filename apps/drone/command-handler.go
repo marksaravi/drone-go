@@ -2,6 +2,7 @@ package drone
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/marksaravi/drone-go/apps/common"
 )
@@ -33,11 +34,17 @@ func (d *droneApp) offMotors(commands []byte) bool {
 }
 
 func (d *droneApp) setCommands(commands []byte) {
-	roll := common.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
-	pitch := common.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
-	yaw := common.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
+	// roll := common.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
+	// pitch := common.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
+	// yaw := common.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
 	throttle := common.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
-	fmt.Printf("%6.2f, %6.2f, %6.2f, %6.2f \n", roll, pitch, yaw, throttle)
+	d.flightControl.flightState.SetThrottle(throttle)
+	if time.Since(d.lastImuPrint) >= time.Second/4 {
+		d.lastImuPrint = time.Now()
+		fmt.Println(throttle)
+	}
+
+	// fmt.Printf("%6.2f, %6.2f, %6.2f, %6.2f \n", roll, pitch, yaw, throttle)
 }
 
 func RawJoystickRotation(commands []byte) int {

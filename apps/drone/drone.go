@@ -83,7 +83,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:             time.Now(),
 		imu:                   settings.ImuMems,
 		escs:                  settings.Escs,
-		flightControl:         NewFlightControl(settings.Escs),
+		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle),
 		imuDataPerSecond:      settings.ImuDataPerSecond,
 		receiver:              settings.Receiver,
 		commandsPerSecond:     settings.CommandsPerSecond,
@@ -123,11 +123,11 @@ func (d *droneApp) readIMU() {
 		d.accRotations = acc
 		d.gyroRotations = gyro
 		d.rotations = rot
-		if time.Since(d.lastImuPrint) >= time.Second {
-			d.lastImuPrint = time.Now()
-			fmt.Println(d.rotations, d.imuDataCounter)
-			d.imuDataCounter = 0
-		}
+		// if time.Since(d.lastImuPrint) >= time.Second {
+		// 	d.lastImuPrint = time.Now()
+		// 	fmt.Println(d.rotations, d.imuDataCounter)
+		// 	d.imuDataCounter = 0
+		// }
 	}
 }
 

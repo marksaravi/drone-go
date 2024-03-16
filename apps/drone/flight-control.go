@@ -18,9 +18,12 @@ type FlightControl struct {
 	lowThrottleThreshold    float64
 }
 
-func NewFlightControl(escs escs) *FlightControl {
+func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
+	const HYSTERSYS_GAP = 2.5
 	fc := &FlightControl{
-		escs: escs,
+		flightThrottleThreshold: minFlightThrottle + HYSTERSYS_GAP,
+		lowThrottleThreshold:    minFlightThrottle - HYSTERSYS_GAP,
+		escs:                    escs,
 	}
 
 	fc.noThrottleState = &NoThrottleState{
