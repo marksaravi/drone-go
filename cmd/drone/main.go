@@ -69,6 +69,7 @@ func main() {
 		YawMidValue:       configs.Commands.YawMidValue,
 		RotationRange:     configs.Commands.RotationRange,
 		MaxThrottle:       configs.Commands.MaxThrottle,
+		MinFlightThrottle: configs.Commands.MinFlightThrottle,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,
 	})

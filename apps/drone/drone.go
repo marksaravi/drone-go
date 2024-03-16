@@ -40,6 +40,7 @@ type DroneSettings struct {
 	YawMidValue       int
 	RotationRange     float64
 	MaxThrottle       float64
+	MinFlightThrottle float64
 }
 
 type droneApp struct {
@@ -62,11 +63,12 @@ type droneApp struct {
 	plotterActive         bool
 	maxApplicableThrottle float64
 
-	rollMidValue   int
-	pitchlMidValue int
-	yawMidValue    int
-	rotationRange  float64
-	maxThrottle    float64
+	rollMidValue      int
+	pitchlMidValue    int
+	yawMidValue       int
+	rotationRange     float64
+	maxThrottle       float64
+	minFlightThrottle float64
 
 	plotterUdpConn      *net.UDPConn
 	plotterAddress      string
@@ -100,11 +102,12 @@ func NewDrone(settings DroneSettings) *droneApp {
 		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
 		maxApplicableThrottle: constants.MAX_APPLICABLE_THROTTLE_PERCENT,
 
-		rollMidValue:   settings.RollMidValue,
-		pitchlMidValue: settings.PitchMidValue,
-		yawMidValue:    settings.YawMidValue,
-		rotationRange:  settings.RotationRange,
-		maxThrottle:    settings.MaxThrottle,
+		rollMidValue:      settings.RollMidValue,
+		pitchlMidValue:    settings.PitchMidValue,
+		yawMidValue:       settings.YawMidValue,
+		rotationRange:     settings.RotationRange,
+		maxThrottle:       settings.MaxThrottle,
+		minFlightThrottle: settings.MinFlightThrottle,
 	}
 }
 
