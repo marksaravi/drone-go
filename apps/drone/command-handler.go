@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/apps/common"
+	"github.com/marksaravi/drone-go/apps/commons"
 )
 
 func (d *droneApp) applyCommands(commands []byte) {
@@ -37,7 +37,7 @@ func (d *droneApp) setCommands(commands []byte) {
 	// roll := common.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
 	// pitch := common.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
 	// yaw := common.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
-	throttle := common.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
+	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
 	d.flightControl.flightState.SetThrottle(throttle)
 	if time.Since(d.lastImuPrint) >= time.Second/4 {
 		d.lastImuPrint = time.Now()

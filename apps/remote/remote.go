@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/apps/common"
+	"github.com/marksaravi/drone-go/apps/commons"
 )
 
 type radioTransmiter interface {
@@ -101,25 +101,25 @@ func (r *remoteControl) Start(ctx context.Context) {
 		default:
 			if r.ReadCommands() {
 				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
-				hRoll, lRoll := Uint16ToBytes(r.commands.roll)
-				hPitch, lPitch := Uint16ToBytes(r.commands.pitch)
-				hYaw, lYaw := Uint16ToBytes(r.commands.yaw)
-				hThrottle, lThrottle := Uint16ToBytes(r.commands.throttle)
+				lRoll, hRoll := commons.Uint16ToBytes(r.commands.roll)
+				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
+				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
+				lThrottle, hThrottle := commons.Uint16ToBytes(r.commands.throttle)
 				payload := []byte{
-					hRoll,
 					lRoll,
-					hPitch,
+					hRoll,
 					lPitch,
-					hYaw,
+					hPitch,
 					lYaw,
-					hThrottle,
+					hYaw,
 					lThrottle,
+					hThrottle,
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
-				if isChanged(payload, prevPayload) {
-					fmt.Println(payload)
-				}
+				// if isChanged(payload, prevPayload) {
+				// 	fmt.Print(payload, r.commands.throttle, "\n")
+				// }
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
 				r.UpdateDisplay(payload)
@@ -150,7 +150,7 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", common.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
@@ -195,19 +195,13 @@ func (r *remoteControl) ReadButtons() {
 	}
 }
 
-func Uint16ToBytes(x uint16) (high, low byte) {
-	low = byte(x)
-	high = byte(x >> 8)
-	return
-}
 
-var counter int = 0
 
+var lastDisplay = time.Now()
 func isChanged(payload, prevPayload []byte) bool {
-	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || counter > 20 {
-		counter = 0
+	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || time.Since(lastDisplay)>=time.Second/3 {
+		lastDisplay = time.Now()
 		return true
 	}
-	counter++
 	return false
 }
