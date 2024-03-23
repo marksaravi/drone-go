@@ -33,7 +33,7 @@ func main() {
 
 	radioTransmitter := radio.NewRadioTransmitter(radioLink)
 
-	analogToDigitalSPIConn := hardware.NewSPIConnection(configs.Joysticks.SPI)
+	analogToDigitalSPIConn := hardware.NewMCP3008SPIConnection(configs.Joysticks.SPI)
 
 	joystickRoll := mcp3008.NewMCP3008(
 		analogToDigitalSPIConn,
