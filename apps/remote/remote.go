@@ -117,9 +117,9 @@ func (r *remoteControl) Start(ctx context.Context) {
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
-				// if isChanged(payload, prevPayload) {
-				// 	fmt.Print(payload, r.commands.throttle, "\n")
-				// }
+				if isChanged(payload, prevPayload) {
+					fmt.Print(payload, r.commands.throttle, "\n")
+				}
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
 				r.UpdateDisplay(payload)
