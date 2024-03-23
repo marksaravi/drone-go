@@ -1,5 +1,7 @@
 package drone
 
+import "fmt"
+
 type FlightState interface {
 	SetThrottle(throttle float64)
 	ConnectThrottle()
@@ -19,12 +21,13 @@ type FlightControl struct {
 }
 
 func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
-	const HYSTERSYS_GAP = 2.5
+	const HYSTERSYS_GAP = 0.5
 	fc := &FlightControl{
 		flightThrottleThreshold: minFlightThrottle + HYSTERSYS_GAP,
 		lowThrottleThreshold:    minFlightThrottle - HYSTERSYS_GAP,
 		escs:                    escs,
 	}
+	fmt.Println("Flight Control: ", fc.flightThrottleThreshold, fc.lowThrottleThreshold)
 
 	fc.noThrottleState = &NoThrottleState{
 		flightControl: fc,
