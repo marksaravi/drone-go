@@ -156,5 +156,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		default:
 		}
 	}
+	d.flightControl.SetToZeroThrottleState(MOTORS_OFF)
 	fmt.Println("Stopping Drone...")
 }
