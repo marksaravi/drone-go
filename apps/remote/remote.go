@@ -117,9 +117,9 @@ func (r *remoteControl) Start(ctx context.Context) {
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
-				if isChanged(payload, prevPayload) {
-					fmt.Print(payload, r.commands.throttle, "\n")
-				}
+				// if isChanged(payload, prevPayload) {
+				// 	fmt.Print(payload, r.commands.throttle, "\n")
+				// }
 				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
 				r.UpdateDisplay(payload)
@@ -195,13 +195,11 @@ func (r *remoteControl) ReadButtons() {
 	}
 }
 
-
-
-var lastDisplay = time.Now()
-func isChanged(payload, prevPayload []byte) bool {
-	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || time.Since(lastDisplay)>=time.Second/3 {
-		lastDisplay = time.Now()
-		return true
-	}
-	return false
-}
+// var lastDisplay = time.Now()
+// func isChanged(payload, prevPayload []byte) bool {
+// 	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || time.Since(lastDisplay)>=time.Second/3 {
+// 		lastDisplay = time.Now()
+// 		return true
+// 	}
+// 	return false
+// }

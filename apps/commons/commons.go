@@ -11,7 +11,7 @@ func Uint16ToBytes(x uint16) (low, high byte) {
 }
 
 func RawJoystickRotation(commands []byte) int {
-	return int(uint16(commands[1]) | (uint16(commands[0]) << 8))
+	return int(uint16(commands[0]) | (uint16(commands[1]) << 8))
 }
 
 func CalcRotationFromRawJoyStickRaw(commands []byte, midValue int, rotationRange float64) float64 {

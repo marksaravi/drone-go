@@ -1,30 +1,19 @@
 package drone
 
-import "log"
+import "fmt"
 
 type LowThrottleState struct {
 	flightControl *FlightControl
-	safeZeroStart bool
 }
 
-func (fs *LowThrottleState) ShowState() {
-	log.Println("Low Throttle State")
-}
-
-func (fs *LowThrottleState) ResetState() {
-	fs.safeZeroStart = false
-	fs.flightControl.escs.On()
+func (fs *LowThrottleState) Reset(params map[string]bool) {
+	fmt.Println("LOW THROTTLE STATE")
 }
 
 func (fs *LowThrottleState) SetThrottle(throttle float64) {
-	if throttle > fs.flightControl.flightThrottleThreshold {
-		fs.flightControl.SetState(fs.flightControl.flightThrottleState)
+	if throttle > fs.flightControl.minFlightThrottle {
+		fs.flightControl.SetState(fs.flightControl.flightThrottleState, throttle)
+	} else {
+		fs.flightControl.SetThrottles(throttle)
 	}
-}
-
-func (fs *LowThrottleState) ConnectThrottle() {
-}
-
-func (fs *LowThrottleState) DisconnectThrottle() {
-	fs.flightControl.SetState(fs.flightControl.noThrottleState)
 }

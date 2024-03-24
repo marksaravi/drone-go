@@ -73,5 +73,5 @@
             "pulse-mode": true
         }
     ],
-    "display-update-per-second": 2
+    "display-update-per-second": 5
 }

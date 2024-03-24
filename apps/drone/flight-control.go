@@ -1,37 +1,40 @@
 package drone
 
+import "time"
+
+const (
+	MOTORS_OFF         = false
+	MOTORS_ONN         = true
+	THROTTLE_HYSTERSYS = 0.5
+)
+
 type FlightState interface {
 	SetThrottle(throttle float64)
-	ConnectThrottle()
-	DisconnectThrottle()
-	ResetState()
-	ShowState()
+	Reset(params map[string]bool)
 }
 
 type FlightControl struct {
-	escs                    escs
-	noThrottleState         FlightState
-	lowThrottleState        FlightState
-	flightThrottleState     FlightState
-	flightState             FlightState
-	flightThrottleThreshold float64
-	lowThrottleThreshold    float64
+	escs                escs
+	zeroThrottleState   FlightState
+	lowThrottleState    FlightState
+	flightThrottleState FlightState
+	flightState         FlightState
+	minFlightThrottle   float64
+	motorsOnTime        time.Time
 }
 
 func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
-	const HYSTERSYS_GAP = 2.5
 	fc := &FlightControl{
-		flightThrottleThreshold: minFlightThrottle + HYSTERSYS_GAP,
-		lowThrottleThreshold:    minFlightThrottle - HYSTERSYS_GAP,
-		escs:                    escs,
+		minFlightThrottle: minFlightThrottle,
+		escs:              escs,
 	}
 
-	fc.noThrottleState = &NoThrottleState{
+	fc.zeroThrottleState = &ZeroThrottleState{
+		safeZeroStart: false,
 		flightControl: fc,
 	}
 
 	fc.lowThrottleState = &LowThrottleState{
-		safeZeroStart: false,
 		flightControl: fc,
 	}
 
@@ -39,12 +42,27 @@ func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
 		flightControl: fc,
 	}
 
-	fc.SetState(fc.noThrottleState)
+	fc.SetToZeroThrottleState(MOTORS_OFF)
 	return fc
 }
 
-func (fc *FlightControl) SetState(fs FlightState) {
-	fs.ResetState()
+func (fc *FlightControl) SetState(fs FlightState, throttle float64) {
 	fc.flightState = fs
-	fc.flightState.ShowState()
+	fc.flightState.Reset(nil)
+	fc.flightState.SetThrottle(throttle)
+}
+
+func (fc *FlightControl) SetThrottles(throttle float64) {
+	fc.escs.SetThrottles([]float64{throttle, throttle, throttle, throttle})
+}
+
+func (fc *FlightControl) SetToZeroThrottleState(motorsOn bool) {
+	fc.flightState = fc.zeroThrottleState
+	fc.flightState.Reset(map[string]bool{"motors-on": motorsOn})
+	if motorsOn {
+		fc.escs.On()
+		fc.motorsOnTime = time.Now()
+	} else {
+		fc.escs.Off()
+	}
 }
