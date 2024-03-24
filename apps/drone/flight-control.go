@@ -1,5 +1,7 @@
 package drone
 
+import "time"
+
 const (
 	MOTORS_OFF         = false
 	MOTORS_ONN         = true
@@ -18,6 +20,7 @@ type FlightControl struct {
 	flightThrottleState FlightState
 	flightState         FlightState
 	minFlightThrottle   float64
+	motorsOnTime        time.Time
 }
 
 func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
@@ -58,6 +61,7 @@ func (fc *FlightControl) SetToZeroThrottleState(motorsOn bool) {
 	fc.flightState.Reset(map[string]bool{"motors-on": motorsOn})
 	if motorsOn {
 		fc.escs.On()
+		fc.motorsOnTime = time.Now()
 	} else {
 		fc.escs.Off()
 	}

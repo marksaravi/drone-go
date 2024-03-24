@@ -1,6 +1,9 @@
 package drone
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ZeroThrottleState struct {
 	flightControl *FlightControl
@@ -16,9 +19,16 @@ func (fs *ZeroThrottleState) Reset(params map[string]bool) {
 
 func (fs *ZeroThrottleState) SetThrottle(throttle float64) {
 	if !fs.safeZeroStart && throttle == 0 && fs.motorsOn {
-		fs.safeZeroStart = true
-		fmt.Println("SAFE THROTTLE")
-	} else if fs.safeZeroStart && throttle > 1 {
+		fs.setFlightSafe()
+	} else if fs.safeZeroStart && throttle > 0 && throttle <= 3 {
 		fs.flightControl.SetState(fs.flightControl.lowThrottleState, throttle)
 	}
+}
+
+func (fs *ZeroThrottleState) setFlightSafe() {
+	for time.Since(fs.flightControl.motorsOnTime) < time.Second*3 {
+		time.Sleep(time.Millisecond * 100)
+	}
+	fs.safeZeroStart = true
+	fmt.Println("SAFE THROTTLE")
 }

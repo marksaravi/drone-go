@@ -43,7 +43,3 @@ func (d *droneApp) setCommands(commands []byte) {
 
 	// fmt.Printf("%6.2f, %6.2f, %6.2f, %6.2f \n", roll, pitch, yaw, throttle)
 }
-
-func RawJoystickRotation(commands []byte) int {
-	return int(uint16(commands[1]) | (uint16(commands[0]) << 8))
-}
