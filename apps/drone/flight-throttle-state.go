@@ -1,35 +1,24 @@
 package drone
 
-import "log"
+import "fmt"
 
 type FlightThrottleState struct {
-	prevThrottle  float64
 	flightControl *FlightControl
+	prevThrottle  float64
 }
 
-func (fs *FlightThrottleState) ShowState() {
-	log.Println("Flight Throttle State")
-}
-
-func (fs *FlightThrottleState) ResetState() {
-	fs.prevThrottle = fs.flightControl.flightThrottleThreshold
+func (fs *FlightThrottleState) Reset(params map[string]bool) {
+	fs.prevThrottle = fs.flightControl.minFlightThrottle
+	fmt.Println("FLIGHT THROTTLE STATE")
 }
 
 func (fs *FlightThrottleState) SetThrottle(throttle float64) {
+	if throttle < fs.flightControl.minFlightThrottle-THROTTLE_HYSTERSYS {
+		fs.flightControl.SetState(fs.flightControl.lowThrottleState, throttle)
+		return
+	}
 	const K = float64(0.45)
 	filteredThrottle := throttle*K + fs.prevThrottle*(1-K)
 	fs.prevThrottle = filteredThrottle
-	if filteredThrottle < fs.flightControl.lowThrottleThreshold {
-		fs.flightControl.SetState(fs.flightControl.lowThrottleState)
-		return
-	}
-	fs.flightControl.escs.SetThrottles([]float64{filteredThrottle, filteredThrottle, filteredThrottle, filteredThrottle})
-}
-
-func (fs *FlightThrottleState) ConnectThrottle() {
-}
-
-func (fs *FlightThrottleState) DisconnectThrottle() {
-	log.Println("FLIGHT THROTTLE DISCONNECT")
-	fs.flightControl.SetState(fs.flightControl.noThrottleState)
+	fs.flightControl.SetThrottles(filteredThrottle)
 }

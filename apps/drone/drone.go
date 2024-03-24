@@ -136,7 +136,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	fmt.Println("Min Flight Throttle: ", d.flightControl.flightThrottleThreshold)
+	fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
