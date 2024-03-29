@@ -47,7 +47,7 @@ func main() {
 			running = false
 		default:
 			if readInterval.IsTime() {
-				rot, acc, gyro, err := imudev.Read()
+				rot, acc, gyro, err := imudev.ReadAll()
 				if err == nil {
 					plotterClient.SendPlotterData(rot, acc, gyro)
 				}
