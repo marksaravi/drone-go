@@ -1,4 +1,4 @@
-package timeinterval
+package utils
 
 import (
 	"time"

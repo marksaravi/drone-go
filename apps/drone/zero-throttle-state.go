@@ -3,6 +3,8 @@ package drone
 import (
 	"fmt"
 	"time"
+
+	"github.com/marksaravi/drone-go/devices/imu"
 )
 
 type ZeroThrottleState struct {
@@ -31,4 +33,12 @@ func (fs *ZeroThrottleState) setFlightSafe() {
 	}
 	fs.safeZeroStart = true
 	fmt.Println("SAFE THROTTLE")
+}
+
+func (fs *ZeroThrottleState) SetRotations(rotattions imu.Rotations) {}
+
+func (fs *ZeroThrottleState) SetTargetRotations(rotattions imu.Rotations) {}
+
+func (fs *ZeroThrottleState) ApplyESCThrottles() {
+	fs.flightControl.SetESCThrottles([]float64{0, 0, 0, 0})
 }

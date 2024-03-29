@@ -30,6 +30,7 @@ type Configs struct {
 // Rotations (Roll, Pitch, Yaw)
 type Rotations struct {
 	Roll, Pitch, Yaw float64
+	ReadTime         time.Time
 }
 
 type ImuData struct {

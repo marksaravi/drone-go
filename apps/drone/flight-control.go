@@ -1,6 +1,11 @@
 package drone
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/marksaravi/drone-go/devices/imu"
+)
 
 const (
 	MOTORS_OFF         = false
@@ -9,7 +14,10 @@ const (
 )
 
 type FlightState interface {
+	SetRotations(rotattions imu.Rotations)
+	SetTargetRotations(rotattions imu.Rotations)
 	SetThrottle(throttle float64)
+	ApplyESCThrottles()
 	Reset(params map[string]bool)
 }
 
@@ -40,6 +48,7 @@ func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
 
 	fc.flightThrottleState = &FlightThrottleState{
 		flightControl: fc,
+		pid:           NewPIDControl(1, 0, 0),
 	}
 
 	fc.SetToZeroThrottleState(MOTORS_OFF)
@@ -52,8 +61,25 @@ func (fc *FlightControl) SetState(fs FlightState, throttle float64) {
 	fc.flightState.SetThrottle(throttle)
 }
 
-func (fc *FlightControl) SetThrottles(throttle float64) {
-	fc.escs.SetThrottles([]float64{throttle, throttle, throttle, throttle})
+func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
+	fc.flightState.SetRotations(rotattions)
+}
+
+func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
+	fc.flightState.SetTargetRotations(rotattions)
+}
+
+func (fc *FlightControl) SetThrottle(throttle float64) {
+	fc.flightState.SetThrottle(throttle)
+}
+
+func (fc *FlightControl) ApplyESCThrottles() {
+	fc.flightState.ApplyESCThrottles()
+}
+
+func (fc *FlightControl) SetESCThrottles(throttles []float64) {
+	fmt.Println(throttles)
+	fc.escs.SetThrottles(throttles)
 }
 
 func (fc *FlightControl) SetToZeroThrottleState(motorsOn bool) {
