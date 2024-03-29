@@ -96,6 +96,7 @@ func (m *memsIcm20789) WhoAmI() (byte, error) {
 }
 
 func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
+	t := time.Now()
 	memsData, err := m.readRegister(DATA_READ_SEGMENT, RAW_DATA_SIZE)
 	if err != nil {
 		return mems.Mems6DOFData{}, err
@@ -103,6 +104,7 @@ func (m *memsIcm20789) Read() (mems.Mems6DOFData, error) {
 	return mems.Mems6DOFData{
 		Accelerometer: m.memsDataToAccelerometer(memsData[:6]),
 		Gyroscope:     m.memsDataToGyroscope(memsData[8:]), // 6 and 7 are Temperature data
+		Time:          t,
 	}, nil
 }
 
