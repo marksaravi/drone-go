@@ -1,7 +1,6 @@
 package drone
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
@@ -78,7 +77,6 @@ func (fc *FlightControl) ApplyESCThrottles() {
 }
 
 func (fc *FlightControl) SetESCThrottles(throttles []float64) {
-	fmt.Println(throttles)
 	fc.escs.SetThrottles(throttles)
 }
 

@@ -1,5 +1,7 @@
 package mems
 
+import "time"
+
 // XYZ: x, y, z data
 type XYZ struct {
 	X, Y, Z float64
@@ -14,4 +16,5 @@ type DXYZ struct {
 type Mems6DOFData struct {
 	Accelerometer XYZ
 	Gyroscope     DXYZ
+	Time          time.Time
 }
