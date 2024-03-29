@@ -1,10 +1,15 @@
 package drone
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/marksaravi/drone-go/devices/imu"
+)
 
 type FlightThrottleState struct {
 	flightControl *FlightControl
 	prevThrottle  float64
+	pid           *PIDControl
 }
 
 func (fs *FlightThrottleState) Reset(params map[string]bool) {
@@ -17,8 +22,15 @@ func (fs *FlightThrottleState) SetThrottle(throttle float64) {
 		fs.flightControl.SetState(fs.flightControl.lowThrottleState, throttle)
 		return
 	}
-	const K = float64(0.45)
-	filteredThrottle := throttle*K + fs.prevThrottle*(1-K)
-	fs.prevThrottle = filteredThrottle
-	fs.flightControl.SetThrottles(filteredThrottle)
+	fs.pid.SetThrottle(throttle)
+}
+
+func (fs *FlightThrottleState) SetRotations(rotattions imu.Rotations) {
+	fs.pid.SetRotations(rotattions)
+}
+func (fs *FlightThrottleState) SetTargetRotations(rotattions imu.Rotations) {
+	fs.pid.SetTargetRotations(rotattions)
+}
+func (fs *FlightThrottleState) ApplyESCThrottles() {
+	fs.flightControl.SetESCThrottles(fs.pid.CalcThrottles())
 }

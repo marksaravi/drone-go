@@ -15,6 +15,7 @@ type PIDControl struct {
 	prevRotations   imu.Rotations
 	targetRotations imu.Rotations
 	throttle        float64
+	prevThrottle    float64
 
 	pThrottles []float64
 	iThrottles []float64
@@ -24,13 +25,15 @@ type PIDControl struct {
 
 func NewPIDControl(pGain, iGain, dGain float64) *PIDControl {
 	return &PIDControl{
-		pGain:      pGain,
-		iGain:      iGain,
-		dGain:      dGain,
-		pThrottles: make([]float64, 4),
-		iThrottles: make([]float64, 4),
-		dThrottles: make([]float64, 4),
-		throttles:  make([]float64, 4),
+		pGain:        pGain,
+		iGain:        iGain,
+		dGain:        dGain,
+		throttle:     0,
+		prevThrottle: 0,
+		pThrottles:   make([]float64, 4),
+		iThrottles:   make([]float64, 4),
+		dThrottles:   make([]float64, 4),
+		throttles:    make([]float64, 4),
 		rotations: imu.Rotations{
 			Roll:     0,
 			Pitch:    0,
@@ -76,7 +79,10 @@ func (pid *PIDControl) CalcThrottles() []float64 {
 }
 
 func (pid *PIDControl) SetThrottle(throttle float64) {
-	pid.throttle = throttle
+	const K = float64(0.45)
+	filteredThrottle := throttle*K + pid.prevThrottle*(1-K)
+	pid.throttle = filteredThrottle
+	pid.prevThrottle = filteredThrottle
 }
 
 func (pid *PIDControl) applyP() []float64 {

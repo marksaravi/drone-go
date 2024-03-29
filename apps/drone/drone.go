@@ -10,6 +10,7 @@ import (
 	"github.com/marksaravi/drone-go/apps/plotter"
 	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const PLOTTER_ADDRESS = "192.168.1.101:8000"
@@ -92,9 +93,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 		lastImuPrint:          time.Now(),
 		imuDataCounter:        0,
 		plotterActive:         settings.PlotterActive,
-		rotations:             imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		accRotations:          imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
-		gyroRotations:         imu.Rotations{Roll: 0, Pitch: 0, Yaw: 0},
 		plotterDataPacket:     make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
 		plotterSendBuffer:     make([]byte, plotter.PLOTTER_PACKET_LEN),
 		plotterAddress:        PLOTTER_ADDRESS,
@@ -115,19 +113,17 @@ func (d *droneApp) readIMU() {
 	if time.Since(d.lastImuRead) >= d.imuReadInterval {
 		d.imuDataCounter++
 		d.lastImuRead = time.Now()
-		rot, acc, gyro, err := d.imu.Read()
+		rot, _, _, err := d.imu.Read()
 		if err != nil {
 
 			return
 		}
-		d.accRotations = acc
-		d.gyroRotations = gyro
-		d.rotations = rot
-		// if time.Since(d.lastImuPrint) >= time.Second {
-		// 	d.lastImuPrint = time.Now()
-		// 	fmt.Println(d.rotations, d.imuDataCounter)
-		// 	d.imuDataCounter = 0
-		// }
+		d.flightControl.SetRotations(imu.Rotations{
+			Roll:     rot.Roll,
+			Pitch:    rot.Pitch,
+			Yaw:      rot.Yaw,
+			ReadTime: time.Now(),
+		})
 	}
 }
 
@@ -140,7 +136,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-
+	escUpdates := utils.WithDataPerSecond(5)
 	for running || commandOk {
 		d.readIMU()
 		select {
@@ -154,6 +150,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
 		default:
+			if escUpdates.IsTime() {
+				d.flightControl.ApplyESCThrottles()
+			}
 		}
 	}
 	d.flightControl.SetToZeroThrottleState(MOTORS_OFF)
