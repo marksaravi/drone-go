@@ -7,7 +7,7 @@ import (
 
 	"github.com/marksaravi/drone-go/hardware"
 	"github.com/marksaravi/drone-go/hardware/icm20789"
-	"github.com/marksaravi/drone-go/timeinterval"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		fmt.Printf("WHO AM I: %x\n", whoAmI)
 	}
 
-	readInterval := timeinterval.WithDataPerSecond(1000)
+	readInterval := utils.WithDataPerSecond(1000)
 
 	running := true
 	for running {
