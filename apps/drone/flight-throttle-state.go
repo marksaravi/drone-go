@@ -8,12 +8,11 @@ import (
 
 type FlightThrottleState struct {
 	flightControl *FlightControl
-	prevThrottle  float64
 	pid           *PIDControl
 }
 
 func (fs *FlightThrottleState) Reset(params map[string]bool) {
-	fs.prevThrottle = fs.flightControl.minFlightThrottle
+	fs.pid.prevThrottle = fs.flightControl.minFlightThrottle
 	fmt.Println("FLIGHT THROTTLE STATE")
 }
 
