@@ -144,6 +144,9 @@ func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	imuDev.gyroRotations.Roll += imuDev.dRoll * imuDev.gyroDirX
 	imuDev.gyroRotations.Pitch += imuDev.dPitch * imuDev.gyroDirY
 	imuDev.gyroRotations.Yaw += imuDev.dYaw * imuDev.gyroDirZ
+	// fmt.Printf("%6.2f  %6.2f %6.2f\n", imuDev.gyroRotations.Roll, imuDev.gyroRotations.Pitch, imuDev.gyroRotations.Yaw)
+	// fmt.Println(imuDev.gyroDirX, imuDev.gyroDirY, imuDev.gyroDirZ)
+	// fmt.Println(1 / dt.Seconds())
 }
 
 func (imuDev *imuDevice) calcRotations() {
