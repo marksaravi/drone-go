@@ -67,7 +67,7 @@ func NewICM20789(configs Configs) *memsIcm20789 {
 	}
 	log.Println("GYROSCOPE FULL SCALE: ", gyroFullScale)
 	m := memsIcm20789{
-		spiConn:        hardware.NewSPIConnection(configs.SPI),
+		spiConn:        hardware.NewSPIICM20789Connection(configs.SPI),
 		accelFullScale: accelFullScale,
 		gyroFullScale:  gyroFullScale,
 	}

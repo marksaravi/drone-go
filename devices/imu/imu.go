@@ -7,7 +7,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware/mems"
 )
 
-const MIN_TIME_BETWEEN_READS = time.Nanosecond
+const MIN_TIME_BETWEEN_READS = time.Second / 10000
 
 type IMUMems6DOF interface {
 	Read() (mems.Mems6DOFData, error)
@@ -30,7 +30,7 @@ type Configs struct {
 // Rotations (Roll, Pitch, Yaw)
 type Rotations struct {
 	Roll, Pitch, Yaw float64
-	ReadTime         time.Time
+	Time             time.Time
 }
 
 type ImuData struct {
@@ -96,18 +96,21 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 	}
 }
 
-func (imuDev *imuDevice) Read() (Rotations, Rotations, Rotations, error) {
-	if imuDev.firstRead {
-		imuDev.firstRead = false
-		imuDev.lastReadTime = time.Now()
-	}
-	imuDev.currReadTime = time.Now()
+func (imuDev *imuDevice) Read() (Rotations, error) {
+	r, _, _, err := imuDev.ReadAll()
+	// fmt.Println(r)
+	return r, err
+}
+
+func (imuDev *imuDevice) ReadAll() (Rotations, Rotations, Rotations, error) {
 	data, err := imuDev.dev.Read()
-	if err != nil || imuDev.firstRead {
+	imuDev.currReadTime = data.Time
+	if err != nil {
 		return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, err
 	}
 	imuDev.calcAllRotations(data)
 	imuDev.lastReadTime = imuDev.currReadTime
+	// fmt.Println(data.Accelerometer)
 	return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, nil
 }
 
@@ -129,7 +132,8 @@ func (imuDev *imuDevice) calcaAccelerometerRotations(data mems.XYZ) {
 
 func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	dt := imuDev.currReadTime.Sub(imuDev.lastReadTime)
-	if dt < MIN_TIME_BETWEEN_READS {
+	if dt < MIN_TIME_BETWEEN_READS || imuDev.firstRead {
+		imuDev.firstRead = false
 		return
 	}
 

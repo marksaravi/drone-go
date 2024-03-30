@@ -1,9 +1,11 @@
 package drone
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDControl struct {
@@ -54,13 +56,13 @@ func NewPIDControl(pGain, iGain, dGain float64) *PIDControl {
 	}
 }
 
-// var rotDisplay = utils.WithDataPerSecond(5)
+var rotDisplay = utils.WithDataPerSecond(5)
 
 func (pid *PIDControl) SetRotations(rotattions imu.Rotations) {
 	pid.rotations = rotattions
-	// if rotDisplay.IsTime() {
-	// 	fmt.Printf("%6.1f,%6.1f,%6.1f,%v\n", pid.rotations.Roll, pid.rotations.Pitch, pid.rotations.Yaw, pid.rotations.Time)
-	// }
+	if rotDisplay.IsTime() {
+		fmt.Printf("%6.1f,%6.1f,%6.1f,%v\n", pid.rotations.Roll, pid.rotations.Pitch, pid.rotations.Yaw, pid.rotations.Time)
+	}
 }
 
 func (pid *PIDControl) SetTargetRotations(rotattions imu.Rotations) {

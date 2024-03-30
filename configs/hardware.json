@@ -21,7 +21,7 @@
         "spi": {
             "bus-number": 0,
             "chip-select": 0,
-            "speed-mhz": 96
+            "speed-mhz": 64
         }
     },
     "pca9685": {
