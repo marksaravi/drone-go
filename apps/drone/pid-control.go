@@ -1,9 +1,11 @@
 package drone
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDControl struct {
@@ -35,10 +37,10 @@ func NewPIDControl(pGain, iGain, dGain float64) *PIDControl {
 		dThrottles:   make([]float64, 4),
 		throttles:    make([]float64, 4),
 		rotations: imu.Rotations{
-			Roll:     0,
-			Pitch:    0,
-			Yaw:      0,
-			ReadTime: time.Now(),
+			Roll:  0,
+			Pitch: 0,
+			Yaw:   0,
+			Time:  time.Now(),
 		},
 		targetRotations: imu.Rotations{
 			Roll:  0,
@@ -46,16 +48,21 @@ func NewPIDControl(pGain, iGain, dGain float64) *PIDControl {
 			Yaw:   0,
 		},
 		prevRotations: imu.Rotations{
-			Roll:     0,
-			Pitch:    0,
-			Yaw:      0,
-			ReadTime: time.Now(),
+			Roll:  0,
+			Pitch: 0,
+			Yaw:   0,
+			Time:  time.Now(),
 		},
 	}
 }
 
+var rotDisplay = utils.WithDataPerSecond(5)
+
 func (pid *PIDControl) SetRotations(rotattions imu.Rotations) {
 	pid.rotations = rotattions
+	if rotDisplay.IsTime() {
+		fmt.Printf("%6.1f,%6.1f,%6.1f,%v\n", pid.rotations.Roll, pid.rotations.Pitch, pid.rotations.Yaw, pid.rotations.Time)
+	}
 }
 
 func (pid *PIDControl) SetTargetRotations(rotattions imu.Rotations) {
@@ -63,10 +70,6 @@ func (pid *PIDControl) SetTargetRotations(rotattions imu.Rotations) {
 }
 
 func (pid *PIDControl) CalcThrottles() []float64 {
-	dt := pid.rotations.ReadTime.Sub(pid.prevRotations.ReadTime)
-	if dt < time.Second/5000 {
-		return pid.throttles
-	}
 	pid.calcRotationsDiff()
 	pid.applyP()
 	pid.applyI()
@@ -80,9 +83,8 @@ func (pid *PIDControl) CalcThrottles() []float64 {
 
 func (pid *PIDControl) SetThrottle(throttle float64) {
 	const K = float64(0.45)
-	filteredThrottle := throttle*K + pid.prevThrottle*(1-K)
-	pid.throttle = filteredThrottle
-	pid.prevThrottle = filteredThrottle
+	pid.throttle = throttle*K + pid.prevThrottle*(1-K)
+	pid.prevThrottle = pid.throttle
 }
 
 func (pid *PIDControl) applyP() []float64 {
