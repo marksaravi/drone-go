@@ -98,7 +98,6 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 
 func (imuDev *imuDevice) Read() (Rotations, error) {
 	r, _, _, err := imuDev.ReadAll()
-	// fmt.Println(r)
 	return r, err
 }
 

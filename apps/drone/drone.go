@@ -89,7 +89,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		receiver:              settings.Receiver,
 		commandsPerSecond:     settings.CommandsPerSecond,
 		lastImuRead:           time.Now(),
-		imuReadInterval:       time.Second / time.Duration(2500),
+		imuReadInterval:       time.Second / time.Duration(1200),
 		lastImuPrint:          time.Now(),
 		imuDataCounter:        0,
 		plotterActive:         settings.PlotterActive,
@@ -114,6 +114,7 @@ func (d *droneApp) readIMU() {
 		d.imuDataCounter++
 		d.lastImuRead = time.Now()
 		rot, err := d.imu.Read()
+		// fmt.Println(rot.Roll)
 		if err != nil {
 
 			return

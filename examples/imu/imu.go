@@ -47,23 +47,29 @@ func main() {
 			running = false
 		default:
 			if readInterval.IsTime() {
-				rot, acc, gyro, err := imudev.ReadAll()
-				if err == nil {
-					plotterClient.SendPlotterData(rot, acc, gyro)
-				}
+				// rot, acc, gyro, err := imudev.ReadAll()
+				rot, _ := imudev.Read()
+				// if err == nil {
+				// 	plotterClient.SendPlotterData(rot)
+				// }
 				if printInterval.IsTime() {
-					printRotations(rot, acc, gyro)
+					printRotations(rot)
 				}
 			}
 		}
 	}
 }
 
-func printRotations(rot, acc, gyro imu.Rotations) {
+func printAllRotations(rot, acc, gyro imu.Rotations) {
 	// fmt.Printf("Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f,  Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw, acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 	// fmt.Printf("Roll: %6.2f, Pitch: %6.2f\n", acc.Roll, acc.Pitch)
 	// fmt.Printf("Acc Roll: %6.2f, Pitch: %6.2f,  Gyro Roll: %6.2f, Pitch: %6.2f, Yaw: %6.2f\n", acc.Roll, acc.Pitch, gyro.Roll, gyro.Pitch, gyro.Yaw)
 	// fmt.Printf("Roll(%6.2f %6.2f %6.2f),    Pitch(%6.2f  %6.2f %6.2f), Yaw(%6.2f)\n", acc.Roll, gyro.Roll, rot.Roll, acc.Pitch, gyro.Pitch, rot.Pitch, gyro.Yaw)
 	fmt.Printf("GYRO: %6.2f  %6.2f %6.2f\n", gyro.Roll, gyro.Pitch, gyro.Yaw)
 	fmt.Printf(" ACC: %6.2f  %6.2f %6.2f\n", acc.Roll, acc.Pitch, acc.Yaw)
+	fmt.Printf(" ROT: %6.2f  %6.2f %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw)
+}
+
+func printRotations(rot imu.Rotations) {
+	fmt.Printf(" ROT: %6.2f  %6.2f %6.2f\n", rot.Roll, rot.Pitch, rot.Yaw)
 }

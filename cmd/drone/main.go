@@ -30,11 +30,7 @@ func main() {
 
 	imuConfigs := configs.IMU
 	mems := icm20789.NewICM20789(icm20789Configs)
-	imudev := imu.NewIMU(mems, imu.Configs{
-		DataPerSecond: imuConfigs.DataPerSecond,
-		AccelerometerComplimentaryFilterCoefficient: imuConfigs.AccelerometerComplimentaryFilterCoefficient,
-		RotationsComplimentaryFilterCoefficient:     imuConfigs.RotationsComplimentaryFilterCoefficient,
-	})
+	imudev := imu.NewIMU(mems, imuConfigs)
 
 	radioLink := nrf24l01.NewNRF24L01EnhancedBurst(
 		hardware.SPIConnConfigs{
