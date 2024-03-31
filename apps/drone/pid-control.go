@@ -15,11 +15,15 @@ type PIDControl struct {
 	maxRotError         float64
 	maxIntegrationValue float64
 
-	rotations       imu.Rotations
-	prevRotations   imu.Rotations
-	targetRotations imu.Rotations
-	throttle        float64
-	prevThrottle    float64
+	rotations          imu.Rotations
+	prevRotations      imu.Rotations
+	targetRotations    imu.Rotations
+	rotationsError     imu.Rotations
+	prevRotationsError imu.Rotations
+	arm_0_2_rotError   float64
+	arm_1_3_rotError   float64
+	throttle           float64
+	prevThrottle       float64
 
 	pThrottles []float64
 	iThrottles []float64
@@ -58,6 +62,16 @@ func NewPIDControl(pidCongigs PIDConfigs) *PIDControl {
 			Yaw:   0,
 			Time:  time.Now(),
 		},
+		rotationsError: imu.Rotations{
+			Roll:  0,
+			Pitch: 0,
+			Yaw:   0,
+		},
+		prevRotationsError: imu.Rotations{
+			Roll:  0,
+			Pitch: 0,
+			Yaw:   0,
+		},
 	}
 }
 
@@ -65,25 +79,10 @@ var rotDisplay = utils.WithDataPerSecond(5)
 
 func (pid *PIDControl) SetRotations(rotattions imu.Rotations) {
 	pid.rotations = rotattions
-	if rotDisplay.IsTime() {
-		fmt.Printf("%6.1f,%6.1f,%6.1f,%v\n", pid.rotations.Roll, pid.rotations.Pitch, pid.rotations.Yaw, pid.rotations.Time)
-	}
 }
 
 func (pid *PIDControl) SetTargetRotations(rotattions imu.Rotations) {
 	pid.targetRotations = rotattions
-}
-
-func (pid *PIDControl) CalcThrottles() []float64 {
-	pid.calcRotationsDiff()
-	pid.applyP()
-	pid.applyI()
-	pid.applyD()
-	for i := 0; i < 4; i++ {
-		pid.throttles[i] = pid.pThrottles[i] + pid.iThrottles[i] + pid.dThrottles[i] + pid.throttle
-	}
-	pid.prevRotations = pid.rotations
-	return pid.throttles
 }
 
 func (pid *PIDControl) SetThrottle(throttle float64) {
@@ -104,6 +103,40 @@ func (pid *PIDControl) applyD() []float64 {
 	return pid.dThrottles
 }
 
-func (pid *PIDControl) calcRotationsDiff() {
+func (pid *PIDControl) calcRotationsErrors() {
+	pid.rotationsError.Roll = pid.calcRotationsError(pid.targetRotations.Roll, pid.rotations.Roll)
+	pid.rotationsError.Pitch = pid.calcRotationsError(pid.targetRotations.Pitch, pid.rotations.Pitch)
+	pid.arm_0_2_rotError = (pid.rotationsError.Pitch + pid.rotationsError.Roll) / 2
+	pid.arm_1_3_rotError = (pid.rotationsError.Pitch - pid.rotationsError.Roll) / 2
+	if rotDisplay.IsTime() {
+		fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
+			pid.rotations.Roll, pid.rotations.Pitch,
+			pid.targetRotations.Roll, pid.targetRotations.Pitch,
+			pid.rotationsError.Roll, pid.rotationsError.Pitch,
+			pid.arm_0_2_rotError, pid.arm_1_3_rotError)
+	}
+}
 
+func (pid *PIDControl) calcRotationsError(value, prevValue float64) float64 {
+	v := value - prevValue
+	if v < -pid.maxRotError {
+		return -pid.maxRotError
+	}
+	if v > pid.maxRotError {
+		return pid.maxRotError
+	}
+	return v
+}
+
+func (pid *PIDControl) CalcThrottles() []float64 {
+	pid.calcRotationsErrors()
+	pid.applyP()
+	pid.applyI()
+	pid.applyD()
+	for i := 0; i < 4; i++ {
+		pid.throttles[i] = pid.pThrottles[i] + pid.iThrottles[i] + pid.dThrottles[i] + pid.throttle
+	}
+	pid.prevRotations = pid.rotations
+	pid.prevRotationsError = pid.rotationsError
+	return pid.throttles
 }

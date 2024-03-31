@@ -90,7 +90,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		receiver:              settings.Receiver,
 		commandsPerSecond:     settings.CommandsPerSecond,
 		lastImuRead:           time.Now(),
-		imuReadInterval:       time.Second / time.Duration(1200),
+		imuReadInterval:       time.Second / time.Duration(settings.ImuDataPerSecond),
 		lastImuPrint:          time.Now(),
 		imuDataCounter:        0,
 		plotterActive:         settings.PlotterActive,
