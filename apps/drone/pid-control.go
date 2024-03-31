@@ -22,13 +22,15 @@ type PIDControl struct {
 	prevRotationsError imu.Rotations
 	arm_0_2_rotError   float64
 	arm_1_3_rotError   float64
-	throttle           float64
-	prevThrottle       float64
+	arm_0_2_i_value    float64
+	arm_1_3_i_value    float64
 
-	pThrottles []float64
-	iThrottles []float64
-	dThrottles []float64
-	throttles  []float64
+	throttle     float64
+	prevThrottle float64
+	pThrottles   []float64
+	iThrottles   []float64
+	dThrottles   []float64
+	throttles    []float64
 }
 
 func NewPIDControl(pidCongigs PIDConfigs) *PIDControl {
@@ -76,6 +78,14 @@ func NewPIDControl(pidCongigs PIDConfigs) *PIDControl {
 }
 
 var rotDisplay = utils.WithDataPerSecond(5)
+
+func (pid *PIDControl) Reset(prevThrottle float64) {
+	pid.arm_0_2_i_value = 0
+	pid.arm_1_3_i_value = 0
+	pid.prevThrottle = prevThrottle
+	fmt.Println("FLIGHT THROTTLE STATE", pid.prevThrottle)
+
+}
 
 func (pid *PIDControl) SetRotations(rotattions imu.Rotations) {
 	pid.rotations = rotattions
