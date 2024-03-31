@@ -1,10 +1,10 @@
 {
     "pid":{
         "p": 0.25,
-        "i":0.01,
+        "i":0.0001,
         "d": 0.25,
         "max-rot-error": 15,
-        "max-i-value": 10
+        "max-i-value": 5
     },
     "imu": {
         "data-per-second": 1200,

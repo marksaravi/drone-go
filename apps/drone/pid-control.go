@@ -120,7 +120,26 @@ func (pid *PIDControl) applyP() {
 	pid.pThrottles[3] = gain_1_3
 }
 
+func (pid *PIDControl) addI(i, v float64) float64 {
+	iv := i + v
+	if iv > pid.maxIntegrationValue {
+		iv = pid.maxIntegrationValue
+	} else if iv < -pid.maxIntegrationValue {
+		iv = -pid.maxIntegrationValue
+	}
+	return iv
+}
+
 func (pid *PIDControl) applyI() {
+	dt := pid.rotationsError.Time.Sub(pid.prevRotationsError.Time)
+	gain_0_2_p := pid.pGain * pid.arm_0_2_rotError * dt.Seconds()
+	gain_1_3_p := pid.pGain * pid.arm_1_3_rotError * dt.Seconds()
+	pid.arm_0_2_i_value = pid.addI(pid.arm_0_2_i_value, gain_0_2_p)
+	pid.arm_1_3_i_value = pid.addI(pid.arm_1_3_i_value, gain_1_3_p)
+	pid.pThrottles[0] = pid.arm_0_2_i_value
+	pid.pThrottles[1] = -pid.arm_1_3_i_value
+	pid.pThrottles[2] = -pid.arm_0_2_i_value
+	pid.pThrottles[3] = pid.arm_1_3_i_value
 }
 
 func (pid *PIDControl) applyD() {
@@ -147,11 +166,12 @@ func (pid *PIDControl) calcRotationsErrors() {
 	pid.arm_0_2_rotError = arm_0_2_rotError
 	pid.arm_1_3_rotError = arm_1_3_rotError
 	if rotDisplay.IsTime() {
-		fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
+		fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
 			pid.rotations.Roll, pid.rotations.Pitch,
 			pid.targetRotations.Roll, pid.targetRotations.Pitch,
 			pid.rotationsError.Roll, pid.rotationsError.Pitch,
-			pid.arm_0_2_rotError, pid.arm_1_3_rotError)
+			pid.arm_0_2_rotError, pid.arm_1_3_rotError,
+			pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3])
 	}
 }
 
