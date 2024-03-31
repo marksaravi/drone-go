@@ -92,10 +92,12 @@ func (pid *PIDControl) SetThrottle(throttle float64) {
 }
 
 func (pid *PIDControl) applyP() {
-	pid.pThrottles[0] = pid.pGain * pid.arm_0_2_rotError
-	pid.pThrottles[1] = -pid.pGain * pid.arm_1_3_rotError
-	pid.pThrottles[2] = -pid.pGain * pid.arm_0_2_rotError
-	pid.pThrottles[3] = pid.pGain * pid.arm_1_3_rotError
+	gain_0_2 := pid.pGain * pid.arm_0_2_rotError
+	gain_1_3 := pid.pGain * pid.arm_1_3_rotError
+	pid.pThrottles[0] = gain_0_2
+	pid.pThrottles[1] = -gain_1_3
+	pid.pThrottles[2] = -gain_0_2
+	pid.pThrottles[3] = gain_1_3
 }
 
 func (pid *PIDControl) applyI() {
