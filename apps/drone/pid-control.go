@@ -91,16 +91,17 @@ func (pid *PIDControl) SetThrottle(throttle float64) {
 	pid.prevThrottle = pid.throttle
 }
 
-func (pid *PIDControl) applyP() []float64 {
-	return pid.pThrottles
+func (pid *PIDControl) applyP() {
+	pid.pThrottles[0] = pid.pGain * pid.arm_0_2_rotError
+	pid.pThrottles[1] = -pid.pGain * pid.arm_1_3_rotError
+	pid.pThrottles[2] = -pid.pGain * pid.arm_0_2_rotError
+	pid.pThrottles[3] = pid.pGain * pid.arm_1_3_rotError
 }
 
-func (pid *PIDControl) applyI() []float64 {
-	return pid.iThrottles
+func (pid *PIDControl) applyI() {
 }
 
-func (pid *PIDControl) applyD() []float64 {
-	return pid.dThrottles
+func (pid *PIDControl) applyD() {
 }
 
 func (pid *PIDControl) calcRotationsErrors() {
