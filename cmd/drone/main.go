@@ -68,6 +68,7 @@ func main() {
 		MinFlightThrottle: configs.Commands.MinFlightThrottle,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,
+		PID:               configs.PID,
 	})
 
 	go func() {

@@ -9,9 +9,11 @@ import (
 )
 
 type PIDControl struct {
-	pGain float64
-	iGain float64
-	dGain float64
+	pGain               float64
+	iGain               float64
+	dGain               float64
+	maxRotError         float64
+	maxIntegrationValue float64
 
 	rotations       imu.Rotations
 	prevRotations   imu.Rotations
@@ -25,17 +27,20 @@ type PIDControl struct {
 	throttles  []float64
 }
 
-func NewPIDControl(pGain, iGain, dGain float64) *PIDControl {
+func NewPIDControl(pidCongigs PIDConfigs) *PIDControl {
+	fmt.Println("PID: ", pidCongigs)
 	return &PIDControl{
-		pGain:        pGain,
-		iGain:        iGain,
-		dGain:        dGain,
-		throttle:     0,
-		prevThrottle: 0,
-		pThrottles:   make([]float64, 4),
-		iThrottles:   make([]float64, 4),
-		dThrottles:   make([]float64, 4),
-		throttles:    make([]float64, 4),
+		pGain:               pidCongigs.P,
+		iGain:               pidCongigs.I,
+		dGain:               pidCongigs.D,
+		maxRotError:         pidCongigs.MaxRotationError,
+		maxIntegrationValue: pidCongigs.MaxIntegrationValue,
+		throttle:            0,
+		prevThrottle:        0,
+		pThrottles:          make([]float64, 4),
+		iThrottles:          make([]float64, 4),
+		dThrottles:          make([]float64, 4),
+		throttles:           make([]float64, 4),
 		rotations: imu.Rotations{
 			Roll:  0,
 			Pitch: 0,

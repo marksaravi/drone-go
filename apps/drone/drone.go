@@ -42,6 +42,7 @@ type DroneSettings struct {
 	RotationRange     float64
 	MaxThrottle       float64
 	MinFlightThrottle float64
+	PID               PIDConfigs
 }
 
 type droneApp struct {
@@ -84,7 +85,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:             time.Now(),
 		imu:                   settings.ImuMems,
 		escs:                  settings.Escs,
-		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle),
+		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.PID),
 		imuDataPerSecond:      settings.ImuDataPerSecond,
 		receiver:              settings.Receiver,
 		commandsPerSecond:     settings.CommandsPerSecond,
