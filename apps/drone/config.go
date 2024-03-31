@@ -19,7 +19,16 @@ type InertialDeviceConfigs struct {
 	} `json:"offsets"`
 }
 
+type PIDConfigs struct {
+	P                   float64 `json:"p"`
+	I                   float64 `json:"i"`
+	D                   float64 `json:"d"`
+	MaxRotationError    float64 `json:"max-rot-error"`
+	MaxIntegrationValue float64 `json:"max-i-value"`
+}
+
 type DroneConfigs struct {
+	PID      PIDConfigs  `json:"pid"`
 	IMU      imu.Configs `json:"imu"`
 	Commands struct {
 		RollMidValue      int     `json:"roll-mid-value"`

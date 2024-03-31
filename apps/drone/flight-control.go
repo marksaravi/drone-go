@@ -30,7 +30,7 @@ type FlightControl struct {
 	motorsOnTime        time.Time
 }
 
-func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
+func NewFlightControl(escs escs, minFlightThrottle float64, pidConfigs PIDConfigs) *FlightControl {
 	fc := &FlightControl{
 		minFlightThrottle: minFlightThrottle,
 		escs:              escs,
@@ -47,7 +47,7 @@ func NewFlightControl(escs escs, minFlightThrottle float64) *FlightControl {
 
 	fc.flightThrottleState = &FlightThrottleState{
 		flightControl: fc,
-		pid:           NewPIDControl(1, 0, 0),
+		pid:           NewPIDControl(pidConfigs),
 	}
 
 	fc.SetToZeroThrottleState(MOTORS_OFF)
