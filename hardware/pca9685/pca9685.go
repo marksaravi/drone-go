@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marksaravi/drone-go/constants"
 	"periph.io/x/conn/v3/i2c"
 )
 
@@ -86,9 +85,6 @@ func throttleToPulseWidth(throttle float64) float64 {
 func (d *pca9685Dev) limitThrottle(throttle float64) float64 {
 	if throttle < 0 {
 		return 0
-	}
-	if throttle > constants.MAX_APPLICABLE_THROTTLE_PERCENT {
-		return constants.MAX_APPLICABLE_THROTTLE_PERCENT
 	}
 	if throttle > d.maxThrottle {
 		return d.maxThrottle

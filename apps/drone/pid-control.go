@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDControl struct {
@@ -211,6 +212,11 @@ func (pid *PIDControl) CalcESCThrottles() {
 	pid.memoRotations()
 }
 
+var throttleDisplay = utils.WithDataPerSecond(5)
+
 func (pid *PIDControl) GetThrottles() []float64 {
+	if throttleDisplay.IsTime() {
+		fmt.Printf("%6.1f %6.1f %6.1f %6.1f\n", pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3])
+	}
 	return pid.throttles
 }
