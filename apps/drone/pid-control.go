@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDControl struct {
@@ -87,14 +86,9 @@ func NewPIDControl(pidCongigs PIDConfigs) *PIDControl {
 	}
 }
 
-var rotDisplay = utils.WithDataPerSecond(5)
-
-func (pid *PIDControl) Reset(prevThrottle float64) {
+func (pid *PIDControl) ResetI() {
 	pid.arm_0_2_i_value = 0
 	pid.arm_1_3_i_value = 0
-	pid.prevThrottle = prevThrottle
-	fmt.Println("FLIGHT THROTTLE STATE", pid.prevThrottle)
-
 }
 
 func (pid *PIDControl) SetRotations(rotattions imu.Rotations) {
@@ -154,6 +148,7 @@ func (pid *PIDControl) applyD() {
 	pid.dThrottles[3] = gain_1_3_d
 }
 
+// var rotDisplay = utils.WithDataPerSecond(5)
 func (pid *PIDControl) calcRotationsErrors() {
 	pid.rotationsError.Roll = pid.calcRotationsError(pid.targetRotations.Roll, pid.rotations.Roll)
 	pid.rotationsError.Pitch = pid.calcRotationsError(pid.targetRotations.Pitch, pid.rotations.Pitch)
@@ -164,14 +159,14 @@ func (pid *PIDControl) calcRotationsErrors() {
 	pid.arm_1_3_d_rotError = arm_1_3_rotError - pid.arm_1_3_rotError
 	pid.arm_0_2_rotError = arm_0_2_rotError
 	pid.arm_1_3_rotError = arm_1_3_rotError
-	if rotDisplay.IsTime() {
-		fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
-			pid.rotations.Roll, pid.rotations.Pitch,
-			pid.targetRotations.Roll, pid.targetRotations.Pitch,
-			pid.rotationsError.Roll, pid.rotationsError.Pitch,
-			pid.arm_0_2_rotError, pid.arm_1_3_rotError,
-			pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3])
-	}
+	// if rotDisplay.IsTime() {
+	// 	fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
+	// 		pid.rotations.Roll, pid.rotations.Pitch,
+	// 		pid.targetRotations.Roll, pid.targetRotations.Pitch,
+	// 		pid.rotationsError.Roll, pid.rotationsError.Pitch,
+	// 		pid.arm_0_2_rotError, pid.arm_1_3_rotError,
+	// 		pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3])
+	// }
 }
 
 func (pid *PIDControl) calcRotationsError(value, prevValue float64) float64 {
