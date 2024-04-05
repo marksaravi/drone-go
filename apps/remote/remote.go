@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/commons"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type radioTransmiter interface {
@@ -95,7 +96,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	prevPayload := make([]byte, 10)
+	displayUpdate := utils.WithDataPerSecond(3)
 	for running {
 		select {
 		default:
@@ -117,12 +118,10 @@ func (r *remoteControl) Start(ctx context.Context) {
 					continuesOutputButtons,
 					pulseOutputButtons,
 				}
-				// if isChanged(payload, prevPayload) {
-				// 	fmt.Print(payload, r.commands.throttle, "\n")
-				// }
-				copy(prevPayload, payload)
 				r.transmitter.Transmit(payload)
-				r.UpdateDisplay(payload)
+				if displayUpdate.IsTime() {
+					r.UpdateDisplay(payload)
+				}
 			}
 		case <-ctx.Done():
 			running = false
@@ -150,7 +149,7 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
@@ -195,11 +194,3 @@ func (r *remoteControl) ReadButtons() {
 	}
 }
 
-// var lastDisplay = time.Now()
-// func isChanged(payload, prevPayload []byte) bool {
-// 	if payload[9] != prevPayload[9] || payload[8] != prevPayload[8] || time.Since(lastDisplay)>=time.Second/3 {
-// 		lastDisplay = time.Now()
-// 		return true
-// 	}
-// 	return false
-// }
