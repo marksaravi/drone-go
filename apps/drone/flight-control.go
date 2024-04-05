@@ -13,19 +13,15 @@ const (
 )
 
 type FlightControl struct {
-	pid               *PIDControl
-	escs              escs
-	throttle          float64
-	minFlightThrottle float64
-	motorsArmingTime  time.Time
+	pid              *PIDControl
+	escs             escs
+	motorsArmingTime time.Time
 }
 
-func NewFlightControl(escs escs, minFlightThrottle float64, pidConfigs PIDConfigs) *FlightControl {
+func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidConfigs PIDConfigs) *FlightControl {
 	fc := &FlightControl{
-		pid:               NewPIDControl(pidConfigs),
-		minFlightThrottle: minFlightThrottle,
-		escs:              escs,
-		throttle:          0,
+		pid:  NewPIDControl(pidConfigs, minFlightThrottle, maxThrottle),
+		escs: escs,
 	}
 
 	fc.turnOnMotors(false)
@@ -34,6 +30,7 @@ func NewFlightControl(escs escs, minFlightThrottle float64, pidConfigs PIDConfig
 
 func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
 	fc.pid.SetRotations(rotattions)
+	fc.pid.CalcESCThrottles()
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
@@ -41,23 +38,19 @@ func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
 }
 
 func (fc *FlightControl) SetThrottle(throttle float64) {
-	fc.throttle = throttle
 	fc.pid.SetThrottle(throttle)
-	if time.Since(fc.motorsArmingTime) < 0 {
-		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
-		return
-	}
+}
 
-	if fc.throttle < fc.minFlightThrottle {
-		fc.pid.ResetI()
-		fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+func (fc *FlightControl) ApplyThrottlesToESCs() {
+	if time.Since(fc.motorsArmingTime) >= 0 {
+		fc.escs.SetThrottles(fc.pid.GetThrottles())
 	} else {
-		fc.escs.SetThrottles(fc.pid.CalcThrottles())
+		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
 	}
 }
 
 func (fc *FlightControl) turnOnMotors(motorsOn bool) {
-	if motorsOn && fc.throttle < 2 {
+	if motorsOn && fc.pid.throttle < 2 {
 		fc.setArmingTime(true)
 		fc.escs.On()
 	} else if !motorsOn {

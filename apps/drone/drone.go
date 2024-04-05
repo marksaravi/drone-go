@@ -83,7 +83,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:             time.Now(),
 		imu:                   settings.ImuMems,
 		escs:                  settings.Escs,
-		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.PID),
+		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.MaxThrottle, settings.PID),
 		imuDataPerSecond:      settings.ImuDataPerSecond,
 		receiver:              settings.Receiver,
 		commandsPerSecond:     settings.CommandsPerSecond,
@@ -116,7 +116,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
-	// escUpdates := utils.WithDataPerSecond(5)
+	escUpdates := utils.WithDataPerSecond(5)
 	for running || commandOk {
 		select {
 		case commands, commandOk = <-commandsChannel:
@@ -135,9 +135,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 					d.flightControl.SetRotations(rot)
 				}
 			}
-			// if escUpdates.IsTime() {
-			// 	d.flightControl.ApplyESCThrottles()
-			// }
+			if escUpdates.IsTime() {
+				d.flightControl.ApplyThrottlesToESCs()
+			}
 		}
 	}
 
