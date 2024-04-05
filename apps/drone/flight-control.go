@@ -12,81 +12,57 @@ const (
 	THROTTLE_HYSTERSYS = 0.5
 )
 
-type FlightState interface {
-	SetRotations(rotattions imu.Rotations)
-	SetTargetRotations(rotattions imu.Rotations)
-	SetThrottle(throttle float64)
-	ApplyESCThrottles()
-	Reset(params map[string]bool)
-}
-
 type FlightControl struct {
-	escs                escs
-	zeroThrottleState   FlightState
-	lowThrottleState    FlightState
-	flightThrottleState FlightState
-	flightState         FlightState
-	minFlightThrottle   float64
-	motorsOnTime        time.Time
+	pid              *PIDControl
+	escs             escs
+	motorsArmingTime time.Time
 }
 
-func NewFlightControl(escs escs, minFlightThrottle float64, pidConfigs PIDConfigs) *FlightControl {
+func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidConfigs PIDConfigs) *FlightControl {
 	fc := &FlightControl{
-		minFlightThrottle: minFlightThrottle,
-		escs:              escs,
+		pid:  NewPIDControl(pidConfigs, minFlightThrottle, maxThrottle),
+		escs: escs,
 	}
 
-	fc.zeroThrottleState = &ZeroThrottleState{
-		safeZeroStart: false,
-		flightControl: fc,
-	}
-
-	fc.lowThrottleState = &LowThrottleState{
-		flightControl: fc,
-	}
-
-	fc.flightThrottleState = &FlightThrottleState{
-		flightControl: fc,
-		pid:           NewPIDControl(pidConfigs),
-	}
-
-	fc.SetToZeroThrottleState(MOTORS_OFF)
+	fc.turnOnMotors(false)
 	return fc
 }
 
-func (fc *FlightControl) SetState(fs FlightState, throttle float64) {
-	fc.flightState = fs
-	fc.flightState.Reset(nil)
-	fc.flightState.SetThrottle(throttle)
-}
-
 func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
-	fc.flightState.SetRotations(rotattions)
+	fc.pid.SetRotations(rotattions)
+	fc.pid.CalcESCThrottles()
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
-	fc.flightState.SetTargetRotations(rotattions)
+	fc.pid.SetTargetRotations(rotattions)
 }
 
 func (fc *FlightControl) SetThrottle(throttle float64) {
-	fc.flightState.SetThrottle(throttle)
+	fc.pid.SetThrottle(throttle)
 }
 
-func (fc *FlightControl) ApplyESCThrottles() {
-	fc.flightState.ApplyESCThrottles()
-}
-
-func (fc *FlightControl) SetESCThrottles(throttles []float64) {
-	fc.escs.SetThrottles(throttles)
-}
-
-func (fc *FlightControl) SetToZeroThrottleState(motorsOn bool) {
-	fc.flightState = fc.zeroThrottleState
-	fc.flightState.Reset(map[string]bool{"motors-on": motorsOn})
-	if motorsOn {
-		fc.escs.On()
-		fc.motorsOnTime = time.Now()
+func (fc *FlightControl) ApplyThrottlesToESCs() {
+	if time.Since(fc.motorsArmingTime) >= 0 {
+		fc.escs.SetThrottles(fc.pid.GetThrottles())
 	} else {
+		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
+	}
+}
+
+func (fc *FlightControl) turnOnMotors(motorsOn bool) {
+	if motorsOn && fc.pid.throttle < 2 {
+		fc.setArmingTime(true)
+		fc.escs.On()
+	} else if !motorsOn {
+		fc.setArmingTime(false)
 		fc.escs.Off()
+	}
+}
+
+func (fc *FlightControl) setArmingTime(on bool) {
+	if on {
+		fc.motorsArmingTime = time.Now().Add(time.Second * 3)
+	} else {
+		fc.motorsArmingTime = time.Now().Add(time.Second * 32000000)
 	}
 }

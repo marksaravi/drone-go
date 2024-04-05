@@ -6,35 +6,22 @@ import (
 )
 
 func (d *droneApp) applyCommands(commands []byte) {
-	if d.offMotors(commands) {
-		return
-	}
-	if d.onMotors(commands) {
-		return
-	}
+	d.onMotors(commands)
 	d.getThrottleCommands(commands)
 	d.getRotationCommands(commands)
 }
 
-func (d *droneApp) onMotors(commands []byte) bool {
+func (d *droneApp) onMotors(commands []byte) {
 	if commands[9] == 1 {
-		d.flightControl.SetToZeroThrottleState(true)
-		return true
+		d.flightControl.turnOnMotors(true)
+	} else if commands[9] == 16 {
+		d.flightControl.turnOnMotors(false)
 	}
-	return false
-}
-
-func (d *droneApp) offMotors(commands []byte) bool {
-	if commands[9] == 16 {
-		d.flightControl.SetToZeroThrottleState(false)
-		return true
-	}
-	return false
 }
 
 func (d *droneApp) getThrottleCommands(commands []byte) {
 	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
-	d.flightControl.flightState.SetThrottle(throttle)
+	d.flightControl.SetThrottle(throttle)
 }
 
 func (d *droneApp) getRotationCommands(commands []byte) {

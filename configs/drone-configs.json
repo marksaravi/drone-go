@@ -1,8 +1,8 @@
 {
     "pid":{
-        "p": 0.25,
-        "i":0.0001,
-        "d": 0.25,
+        "p": 0,
+        "i":0,
+        "d": 0,
         "max-rot-error": 15,
         "max-i-value": 5
     },
@@ -38,7 +38,7 @@
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 12.5,
+        "max-throttle": 20,
         "min-flight-throttle": 5
     },
     "plotter": {

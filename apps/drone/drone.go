@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/plotter"
-	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -56,14 +55,11 @@ type droneApp struct {
 	accRotations  imu.Rotations
 	gyroRotations imu.Rotations
 
-	commandsPerSecond     int
-	receiver              radioReceiver
-	lastImuRead           time.Time
-	imuReadInterval       time.Duration
-	lastImuPrint          time.Time
-	imuDataCounter        int
-	plotterActive         bool
-	maxApplicableThrottle float64
+	commandsPerSecond int
+	receiver          radioReceiver
+	lastImuRead       time.Time
+	imuReadInterval   time.Duration
+	plotterActive     bool
 
 	rollMidValue      int
 	pitchlMidValue    int
@@ -82,24 +78,21 @@ type droneApp struct {
 
 func NewDrone(settings DroneSettings) *droneApp {
 	return &droneApp{
-		startTime:             time.Now(),
-		imu:                   settings.ImuMems,
-		escs:                  settings.Escs,
-		flightControl:         NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.PID),
-		imuDataPerSecond:      settings.ImuDataPerSecond,
-		receiver:              settings.Receiver,
-		commandsPerSecond:     settings.CommandsPerSecond,
-		lastImuRead:           time.Now(),
-		imuReadInterval:       time.Second / time.Duration(settings.ImuDataPerSecond),
-		lastImuPrint:          time.Now(),
-		imuDataCounter:        0,
-		plotterActive:         settings.PlotterActive,
-		plotterDataPacket:     make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
-		plotterSendBuffer:     make([]byte, plotter.PLOTTER_PACKET_LEN),
-		plotterAddress:        PLOTTER_ADDRESS,
-		plotterDataCounter:    0,
-		ploterDataPerPacket:   plotter.PLOTTER_DATA_PER_PACKET,
-		maxApplicableThrottle: constants.MAX_APPLICABLE_THROTTLE_PERCENT,
+		startTime:           time.Now(),
+		imu:                 settings.ImuMems,
+		escs:                settings.Escs,
+		flightControl:       NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.MaxThrottle, settings.PID),
+		imuDataPerSecond:    settings.ImuDataPerSecond,
+		receiver:            settings.Receiver,
+		commandsPerSecond:   settings.CommandsPerSecond,
+		lastImuRead:         time.Now(),
+		imuReadInterval:     time.Second / time.Duration(settings.ImuDataPerSecond),
+		plotterActive:       settings.PlotterActive,
+		plotterDataPacket:   make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
+		plotterSendBuffer:   make([]byte, plotter.PLOTTER_PACKET_LEN),
+		plotterAddress:      PLOTTER_ADDRESS,
+		plotterDataCounter:  0,
+		ploterDataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
 
 		rollMidValue:      settings.RollMidValue,
 		pitchlMidValue:    settings.PitchMidValue,
@@ -110,32 +103,18 @@ func NewDrone(settings DroneSettings) *droneApp {
 	}
 }
 
-func (d *droneApp) readIMU() {
-	if time.Since(d.lastImuRead) >= d.imuReadInterval {
-		d.imuDataCounter++
-		d.lastImuRead = time.Now()
-		rot, err := d.imu.Read()
-		// fmt.Println(rot.Roll)
-		if err != nil {
-
-			return
-		}
-		d.flightControl.SetRotations(rot)
-	}
-}
-
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commandOk, running bool = true, true
 	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
+	// fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	escUpdates := utils.WithDataPerSecond(5)
+	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
+	escUpdates := utils.WithDataPerSecond(40)
 	for running || commandOk {
-		d.readIMU()
 		select {
 		case commands, commandOk = <-commandsChannel:
 			if commandOk {
@@ -147,11 +126,17 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
 		default:
+			if imuReadTick.IsTime() {
+				rot, err := d.imu.Read()
+				if err == nil {
+					d.flightControl.SetRotations(rot)
+				}
+			}
 			if escUpdates.IsTime() {
-				d.flightControl.ApplyESCThrottles()
+				d.flightControl.ApplyThrottlesToESCs()
 			}
 		}
 	}
-	d.flightControl.SetToZeroThrottleState(MOTORS_OFF)
+
 	fmt.Println("Stopping Drone...")
 }
