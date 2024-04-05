@@ -106,8 +106,7 @@ func (pid *PIDControl) SetTargetRotations(rotattions imu.Rotations) {
 }
 
 func (pid *PIDControl) SetThrottle(throttle float64) {
-	const K = float64(0.45)
-	pid.throttle = throttle*K + pid.prevThrottle*(1-K)
+	pid.throttle = throttle
 	pid.prevThrottle = pid.throttle
 }
 

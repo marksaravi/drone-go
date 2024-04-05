@@ -60,8 +60,6 @@ type droneApp struct {
 	receiver              radioReceiver
 	lastImuRead           time.Time
 	imuReadInterval       time.Duration
-	lastImuPrint          time.Time
-	imuDataCounter        int
 	plotterActive         bool
 	maxApplicableThrottle float64
 
@@ -91,8 +89,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 		commandsPerSecond:     settings.CommandsPerSecond,
 		lastImuRead:           time.Now(),
 		imuReadInterval:       time.Second / time.Duration(settings.ImuDataPerSecond),
-		lastImuPrint:          time.Now(),
-		imuDataCounter:        0,
 		plotterActive:         settings.PlotterActive,
 		plotterDataPacket:     make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
 		plotterSendBuffer:     make([]byte, plotter.PLOTTER_PACKET_LEN),
@@ -110,32 +106,18 @@ func NewDrone(settings DroneSettings) *droneApp {
 	}
 }
 
-func (d *droneApp) readIMU() {
-	if time.Since(d.lastImuRead) >= d.imuReadInterval {
-		d.imuDataCounter++
-		d.lastImuRead = time.Now()
-		rot, err := d.imu.Read()
-		// fmt.Println(rot.Roll)
-		if err != nil {
-
-			return
-		}
-		d.flightControl.SetRotations(rot)
-	}
-}
-
 func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commandOk, running bool = true, true
 	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
+	// fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
 	d.InitUdp()
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	escUpdates := utils.WithDataPerSecond(5)
+	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
+	// escUpdates := utils.WithDataPerSecond(5)
 	for running || commandOk {
-		d.readIMU()
 		select {
 		case commands, commandOk = <-commandsChannel:
 			if commandOk {
@@ -147,11 +129,17 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			d.plotterActive = false
 			d.plotterUdpConn.Close()
 		default:
-			if escUpdates.IsTime() {
-				d.flightControl.ApplyESCThrottles()
+			if imuReadTick.IsTime() {
+				rot, err := d.imu.Read()
+				if err == nil {
+					d.flightControl.SetRotations(rot)
+				}
 			}
+			// if escUpdates.IsTime() {
+			// 	d.flightControl.ApplyESCThrottles()
+			// }
 		}
 	}
-	d.flightControl.SetToZeroThrottleState(MOTORS_OFF)
+
 	fmt.Println("Stopping Drone...")
 }

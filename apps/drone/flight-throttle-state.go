@@ -10,23 +10,23 @@ type FlightThrottleState struct {
 }
 
 func (fs *FlightThrottleState) Reset(params map[string]bool) {
-	fs.pid.Reset(fs.flightControl.minFlightThrottle)
+	// fs.pid.Reset(fs.flightControl.minFlightThrottle)
 }
 
 func (fs *FlightThrottleState) SetThrottle(throttle float64) {
-	if throttle < fs.flightControl.minFlightThrottle-THROTTLE_HYSTERSYS {
-		fs.flightControl.SetState(fs.flightControl.lowThrottleState, throttle)
-		return
-	}
-	fs.pid.SetThrottle(throttle)
+	// if throttle < fs.flightControl.minFlightThrottle-THROTTLE_HYSTERSYS {
+	// 	fs.flightControl.SetState(fs.flightControl.lowThrottleState, throttle)
+	// 	return
+	// }
+	// fs.pid.SetThrottle(throttle)
 }
 
 func (fs *FlightThrottleState) SetRotations(rotattions imu.Rotations) {
-	fs.pid.SetRotations(rotattions)
+	// fs.pid.SetRotations(rotattions)
 }
 func (fs *FlightThrottleState) SetTargetRotations(rotattions imu.Rotations) {
-	fs.pid.SetTargetRotations(rotattions)
+	// fs.pid.SetTargetRotations(rotattions)
 }
 func (fs *FlightThrottleState) ApplyESCThrottles() {
-	fs.flightControl.SetESCThrottles(fs.pid.CalcThrottles())
+	// fs.flightControl.SetESCThrottles(fs.pid.CalcThrottles())
 }

@@ -38,7 +38,7 @@
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 12.5,
+        "max-throttle": 15,
         "min-flight-throttle": 5
     },
     "plotter": {
