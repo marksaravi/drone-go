@@ -149,7 +149,7 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], r.maxThrottle)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
 }
 
 func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
