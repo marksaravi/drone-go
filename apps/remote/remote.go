@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/commons"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type radioTransmiter interface {
@@ -95,7 +96,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-
+	displayUpdate := utils.WithDataPerSecond(3)
 	for running {
 		select {
 		default:
@@ -118,7 +119,9 @@ func (r *remoteControl) Start(ctx context.Context) {
 					pulseOutputButtons,
 				}
 				r.transmitter.Transmit(payload)
-				r.UpdateDisplay(payload)
+				if displayUpdate.IsTime() {
+					r.UpdateDisplay(payload)
+				}
 			}
 		case <-ctx.Done():
 			running = false
