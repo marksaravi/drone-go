@@ -13,7 +13,7 @@ const (
 )
 
 type FlightControl struct {
-	pid              *PIDControl
+	pid              *PidController
 	escs             escs
 	motorsArmingTime time.Time
 }
