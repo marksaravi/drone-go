@@ -1,11 +1,8 @@
 package pid
 
 import (
-	"fmt"
 	"math"
 	"time"
-
-	"github.com/marksaravi/drone-go/utils"
 )
 
 const MAX_SAMPLING_RATE = 10000
@@ -29,7 +26,6 @@ type PIDControl struct {
 	maxIntegrationValue float64
 	minProcessVariable  float64
 	maxWeightedSum      float64
-	maxOutput           float64
 	setPoint            float64
 	feedbackTime        time.Time
 	dt                  time.Duration
@@ -63,14 +59,22 @@ func NewPIDControl(settings PIDSettings) *PIDControl {
 	return pid
 }
 
-func (pid *PIDControl) CalculateControlVariable(processVariable float64, t time.Time) {
+func (pid *PIDControl) CalculateControlVariable(processVariable float64, t time.Time) float64 {
 	if t.Sub(pid.feedbackTime) < 0 {
 		pid.feedbackTime = t
 	}
 	pid.dt = t.Sub(pid.feedbackTime)
 	pid.feedbackTime = t
+	pid.calcError(processVariable)
+	pid.calcP()
+	pid.calcI()
+	pid.calcD()
+	return max(pid.pControlVariable+pid.iControlVariable+pid.dControlVariable, pid.maxWeightedSum)
+}
+
+func (pid *PIDControl) calcError(processVariable float64) {
 	pid.prevErrorValue = pid.errorValue
-	pid.errorValue = pid.setPoint - processVariable
+	pid.errorValue = max(pid.setPoint-processVariable, pid.maxError)
 }
 
 func (pid *PIDControl) SetSetPoint(setPoint float64) {
@@ -83,13 +87,7 @@ func (pid *PIDControl) calcP() {
 
 func (pid *PIDControl) calcI() {
 	pid.iControlVariable += pid.iGain * pid.errorValue * pid.dt.Seconds()
-	if math.Abs(pid.iControlVariable) > pid.maxIntegrationValue {
-		if pid.iControlVariable > 0 {
-			pid.iControlVariable = pid.maxIntegrationValue
-		} else {
-			pid.iControlVariable = -pid.maxIntegrationValue
-		}
-	}
+	pid.iControlVariable = max(pid.iControlVariable, pid.maxIntegrationValue)
 }
 
 func (pid *PIDControl) calcD() {
@@ -100,66 +98,18 @@ func (pid *PIDControl) calcD() {
 	}
 }
 
-func (pid *PIDControl) applyMaxRotationError(value, prevValue float64) float64 {
-	v := value - prevValue
-	if v < -pid.maxRotError {
-		return -pid.maxRotError
+func (pid *PIDControl) Initiate() {
+	pid.iControlVariable = 0
+	pid.pControlVariable = 0
+	pid.dControlVariable = 0
+}
+
+func max(v, maxValue float64) float64 {
+	if math.Abs(v) < maxValue {
+		return v
 	}
-	if v > pid.maxRotError {
-		return pid.maxRotError
+	if v < 0 {
+		return -maxValue
 	}
-	return v
+	return maxValue
 }
-
-func (pid *PIDControl) resetIValues() {
-	pid.arm_0_2_i_value = 0
-	pid.arm_1_3_i_value = 0
-}
-
-func (pid *PIDControl) memoFeedback() {
-	pid.prevFeedback = pid.feedback
-	pid.prevErrorValue = pid.errorValue
-}
-func (pid *PIDControl) calcThrottlesFlightMode() {
-	pid.applyP()
-	pid.applyI()
-	pid.applyD()
-	for i := 0; i < 4; i++ {
-		pid.throttles[i] = pid.pThrottles[i] + pid.iThrottles[i] + pid.dThrottles[i] + pid.throttle
-	}
-}
-
-func (pid *PIDControl) calcThrottlesLowPowerMode() {
-	pid.resetIValues()
-	for i := 0; i < 4; i++ {
-		pid.throttles[i] = pid.throttle
-	}
-}
-
-func (pid *PIDControl) CalcESCThrottles() {
-	pid.calcErrorValues()
-	if pid.throttle >= pid.minFlightThrottle {
-		pid.calcThrottlesFlightMode()
-	} else {
-		pid.calcThrottlesLowPowerMode()
-	}
-	pid.memoFeedback()
-}
-
-var throttleDisplay = utils.WithDataPerSecond(5)
-
-func (pid *PIDControl) GetThrottles() []float64 {
-	if throttleDisplay.IsTime() {
-		fmt.Printf("%6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f %6.1f\n", pid.throttle, pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3], pid.arm_0_2_d_rotError, pid.arm_1_3_d_rotError, pid.iThrottles[0], pid.iThrottles[1], pid.iThrottles[2], pid.iThrottles[3])
-	}
-	return pid.throttles
-}
-
-// if rotDisplay.IsTime() {
-// 	fmt.Printf("%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f,%6.1f\n",
-// 		pid.feedback.Roll, pid.feedback.Pitch,
-// 		pid.setPoint.Roll, pid.setPoint.Pitch,
-// 		pid.errorValue.Roll, pid.errorValue.Pitch,
-// 		pid.arm_0_2_rotError, pid.arm_1_3_rotError,
-// 		pid.throttles[0], pid.throttles[1], pid.throttles[2], pid.throttles[3])
-// }
