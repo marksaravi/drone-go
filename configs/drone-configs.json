@@ -4,7 +4,8 @@
         "i":0,
         "d": 0,
         "max-rot-error": 15,
-        "max-i-value": 5
+        "max-i-value": 5,
+        "max-output": 10
     },
     "imu": {
         "data-per-second": 1200,

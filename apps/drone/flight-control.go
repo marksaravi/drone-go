@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/pid"
 )
 
 const (
@@ -13,44 +14,62 @@ const (
 )
 
 type FlightControl struct {
-	pid              *PidController
-	escs             escs
-	motorsArmingTime time.Time
+	arm_0_2_PID *pid.PIDControl
+	arm_1_3_PID *pid.PIDControl
+
+	throttle              float64
+	escs                  escs
+	motorsArmingTime      time.Time
+	throttleLowPassFilter float64
 }
 
-func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidConfigs PIDConfigs) *FlightControl {
+func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidSettings pid.PIDSettings) *FlightControl {
 	fc := &FlightControl{
-		pid:  NewPIDControl(pidConfigs, minFlightThrottle, maxThrottle),
-		escs: escs,
+		arm_0_2_PID:           pid.NewPIDControl(pidSettings),
+		arm_1_3_PID:           pid.NewPIDControl(pidSettings),
+		throttleLowPassFilter: 0.45,
+		throttle:              0,
+		escs:                  escs,
 	}
+	fc.arm_0_2_PID.Initiate()
+	fc.arm_1_3_PID.Initiate()
 
 	fc.turnOnMotors(false)
 	return fc
 }
 
+func transformRollPitch(roll, pitch float64) (float64, float64) {
+	return (pitch + roll) / 2, (pitch - roll) / 2
+}
+
 func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
-	fc.pid.SetRotations(rotattions)
-	fc.pid.CalcESCThrottles()
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+
+	fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
+	fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
-	fc.pid.SetTargetRotations(rotattions)
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+
+	fc.arm_0_2_PID.SetSetPoint(arm_0_2_rotation)
+	fc.arm_1_3_PID.SetSetPoint(arm_1_3_rotation)
 }
 
 func (fc *FlightControl) SetThrottle(throttle float64) {
-	fc.pid.SetThrottle(throttle)
+	fc.throttle = fc.throttle*(1-fc.throttleLowPassFilter) + fc.throttleLowPassFilter*throttle
 }
 
 func (fc *FlightControl) ApplyThrottlesToESCs() {
-	if time.Since(fc.motorsArmingTime) >= 0 {
-		fc.escs.SetThrottles(fc.pid.GetThrottles())
-	} else {
-		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
-	}
+	// if time.Since(fc.motorsArmingTime) >= 0 {
+	// 	fc.escs.SetThrottles(fc.xpid.GetThrottles())
+	// } else {
+	// 	fc.escs.SetThrottles([]float64{0, 0, 0, 0})
+	// }
 }
 
 func (fc *FlightControl) turnOnMotors(motorsOn bool) {
-	if motorsOn && fc.pid.throttle < 2 {
+	if motorsOn && fc.throttle < 2 {
 		fc.setArmingTime(true)
 		fc.escs.On()
 	} else if !motorsOn {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/marksaravi/drone-go/apps/plotter"
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/pid"
 	"github.com/marksaravi/drone-go/utils"
 )
 
@@ -41,7 +42,7 @@ type DroneSettings struct {
 	RotationRange     float64
 	MaxThrottle       float64
 	MinFlightThrottle float64
-	PID               PIDConfigs
+	PID               pid.PIDSettings
 }
 
 type droneApp struct {
@@ -137,6 +138,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}
-
+	fmt.Println("Stopping Motors...")
+	d.flightControl.turnOnMotors(false)
 	fmt.Println("Stopping Drone...")
 }
