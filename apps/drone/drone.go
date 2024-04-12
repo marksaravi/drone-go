@@ -123,8 +123,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		case _, running = <-ctx.Done():
 			running = false
-			// d.plotterActive = false
-			// d.plotterUdpConn.Close()
 		default:
 			if imuReadTick.IsTime() {
 				rot, err := d.imu.Read()
@@ -133,7 +131,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 				}
 			}
 			if escUpdates.IsTime() {
-				d.flightControl.ApplyThrottlesToESCs()
+				go func() {
+					d.flightControl.ApplyThrottlesToESCs()
+				}()
 			}
 		}
 	}
