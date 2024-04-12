@@ -61,11 +61,11 @@ func (fc *FlightControl) SetThrottle(throttle float64) {
 }
 
 func (fc *FlightControl) ApplyThrottlesToESCs() {
-	// if time.Since(fc.motorsArmingTime) >= 0 {
-	// 	fc.escs.SetThrottles(fc.xpid.GetThrottles())
-	// } else {
-	// 	fc.escs.SetThrottles([]float64{0, 0, 0, 0})
-	// }
+	if time.Since(fc.motorsArmingTime) >= 0 {
+		fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+	} else {
+		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
+	}
 }
 
 func (fc *FlightControl) turnOnMotors(motorsOn bool) {
