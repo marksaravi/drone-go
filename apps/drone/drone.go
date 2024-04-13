@@ -11,8 +11,6 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
-const PLOTTER_ADDRESS = "192.168.1.101:8000"
-
 type radioReceiver interface {
 	Start(ctx context.Context, wg *sync.WaitGroup, commandsPerSecond int) <-chan []byte
 }
@@ -50,10 +48,6 @@ type droneApp struct {
 	escs             escs
 	flightControl    *FlightControl
 
-	rotations     imu.Rotations
-	accRotations  imu.Rotations
-	gyroRotations imu.Rotations
-
 	commandsPerSecond int
 	receiver          radioReceiver
 	lastImuRead       time.Time
@@ -66,13 +60,6 @@ type droneApp struct {
 	rotationRange     float64
 	maxThrottle       float64
 	minFlightThrottle float64
-
-	// plotterUdpConn      *net.UDPConn
-	// plotterAddress      string
-	// plotterDataPacket   []byte
-	// plotterSendBuffer   []byte
-	// plotterDataCounter  int
-	// ploterDataPerPacket int
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
@@ -87,12 +74,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 		lastImuRead:       time.Now(),
 		imuReadInterval:   time.Second / time.Duration(settings.ImuDataPerSecond),
 		plotterActive:     settings.PlotterActive,
-		// plotterDataPacket:   make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
-		// plotterSendBuffer:   make([]byte, plotter.PLOTTER_PACKET_LEN),
-		// plotterAddress:      PLOTTER_ADDRESS,
-		// plotterDataCounter:  0,
-		// ploterDataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
-
 		rollMidValue:      settings.RollMidValue,
 		pitchlMidValue:    settings.PitchMidValue,
 		yawMidValue:       settings.YawMidValue,
