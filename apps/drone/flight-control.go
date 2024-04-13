@@ -5,6 +5,7 @@ import (
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/pid"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const (
@@ -59,11 +60,11 @@ func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
 	arm_0_2_controlVariable := fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
 	arm_1_3_controlVariable := fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
 
-	fc.pidThrottles[0] = fc.throttle + arm_0_2_controlVariable
-	fc.pidThrottles[2] = fc.throttle - arm_0_2_controlVariable
+	fc.pidThrottles[0] = utils.Max(fc.throttle+arm_0_2_controlVariable, fc.maxThrottle)
+	fc.pidThrottles[2] = utils.Max(fc.throttle-arm_0_2_controlVariable, fc.maxThrottle)
 
-	fc.pidThrottles[1] = fc.throttle - arm_1_3_controlVariable
-	fc.pidThrottles[3] = fc.throttle + arm_1_3_controlVariable
+	fc.pidThrottles[1] = utils.Max(fc.throttle-arm_1_3_controlVariable, fc.maxThrottle)
+	fc.pidThrottles[3] = utils.Max(fc.throttle+arm_1_3_controlVariable, fc.maxThrottle)
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
