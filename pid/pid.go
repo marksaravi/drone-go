@@ -17,6 +17,7 @@ type PIDSettings struct {
 	MaxIntegrationValue float64
 	MinProcessVariable  float64
 	MaxWeightedSum      float64
+	CalibrationMode     bool
 }
 
 type PIDControl struct {
