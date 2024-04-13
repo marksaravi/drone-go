@@ -12,7 +12,7 @@ func NewPushButtonInput(gpioPin string) gpio.PinIn {
 	if pin == nil {
 		log.Fatal("Failed to find ", gpioPin)
 	}
-	if err := pin.In(gpio.Float, gpio.FallingEdge); err != nil {
+	if err := pin.In(gpio.PullUp, gpio.FallingEdge); err != nil {
 		log.Fatal(err)
 	}
 	return pin
