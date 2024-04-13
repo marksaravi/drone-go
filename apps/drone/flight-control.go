@@ -52,12 +52,18 @@ func (fc *FlightControl) resetPIDs() {
 	fc.arm_1_3_PID.Reset()
 
 }
+
 func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
-	// arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
 
-	// arm_0_2_controlVariable := fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
-	// arm_1_3_controlVariable := fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
+	arm_0_2_controlVariable := fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
+	arm_1_3_controlVariable := fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
 
+	fc.pidThrottles[0] = fc.throttle + arm_0_2_controlVariable
+	fc.pidThrottles[2] = fc.throttle - arm_0_2_controlVariable
+
+	fc.pidThrottles[1] = fc.throttle - arm_1_3_controlVariable
+	fc.pidThrottles[3] = fc.throttle + arm_1_3_controlVariable
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
@@ -72,7 +78,7 @@ func (fc *FlightControl) SetThrottle(throttle float64) {
 }
 
 func (fc *FlightControl) pidMotorsPowers() {
-	fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+	fc.escs.SetThrottles([]float64{fc.pidThrottles[0], fc.pidThrottles[1], fc.pidThrottles[2], fc.pidThrottles[3]})
 }
 
 func (fc *FlightControl) rawMotorsPowers() {
