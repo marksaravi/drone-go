@@ -1,8 +1,9 @@
 package pid
 
 import (
-	"math"
 	"time"
+
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const MAX_SAMPLING_RATE = 10000
@@ -69,12 +70,12 @@ func (pid *PIDControl) CalculateControlVariable(processVariable float64, t time.
 	pid.calcP()
 	pid.calcI()
 	pid.calcD()
-	return max(pid.pControlVariable+pid.iControlVariable+pid.dControlVariable, pid.maxWeightedSum)
+	return utils.Max(pid.pControlVariable+pid.iControlVariable+pid.dControlVariable, pid.maxWeightedSum)
 }
 
 func (pid *PIDControl) calcError(processVariable float64) {
 	pid.prevErrorValue = pid.errorValue
-	pid.errorValue = max(pid.setPoint-processVariable, pid.maxError)
+	pid.errorValue = utils.Max(pid.setPoint-processVariable, pid.maxError)
 }
 
 func (pid *PIDControl) SetSetPoint(setPoint float64) {
@@ -87,7 +88,7 @@ func (pid *PIDControl) calcP() {
 
 func (pid *PIDControl) calcI() {
 	pid.iControlVariable += pid.iGain * pid.errorValue * pid.dt.Seconds()
-	pid.iControlVariable = max(pid.iControlVariable, pid.maxIntegrationValue)
+	pid.iControlVariable = utils.Max(pid.iControlVariable, pid.maxIntegrationValue)
 }
 
 func (pid *PIDControl) calcD() {
@@ -98,18 +99,6 @@ func (pid *PIDControl) calcD() {
 	}
 }
 
-func (pid *PIDControl) Initiate() {
+func (pid *PIDControl) Reset() {
 	pid.iControlVariable = 0
-	pid.pControlVariable = 0
-	pid.dControlVariable = 0
-}
-
-func max(v, maxValue float64) float64 {
-	if math.Abs(v) < maxValue {
-		return v
-	}
-	if v < 0 {
-		return -maxValue
-	}
-	return maxValue
 }

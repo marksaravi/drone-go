@@ -107,8 +107,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	var commands []byte
 
 	fmt.Println("Starting Drone...")
-	// fmt.Println("Min Flight Throttle: ", d.flightControl.minFlightThrottle)
-	d.InitUdp()
+	d.flightControl.turnOnMotors(false)
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
@@ -132,7 +131,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 			if escUpdates.IsTime() {
 				go func() {
-					d.flightControl.ApplyThrottlesToESCs()
+					d.flightControl.SetMotorsPowers()
 				}()
 			}
 		}

@@ -17,7 +17,11 @@ type FlightControl struct {
 	arm_0_2_PID *pid.PIDControl
 	arm_1_3_PID *pid.PIDControl
 
-	throttle              float64
+	throttle          float64
+	pidThrottles      []float64
+	maxThrottle       float64
+	minFlightThrottle float64
+
 	escs                  escs
 	motorsArmingTime      time.Time
 	throttleLowPassFilter float64
@@ -29,12 +33,13 @@ func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidSett
 		arm_1_3_PID:           pid.NewPIDControl(pidSettings),
 		throttleLowPassFilter: 0.45,
 		throttle:              0,
-		escs:                  escs,
-	}
-	fc.arm_0_2_PID.Initiate()
-	fc.arm_1_3_PID.Initiate()
+		maxThrottle:           maxThrottle,
+		minFlightThrottle:     minFlightThrottle,
 
-	fc.turnOnMotors(false)
+		pidThrottles: make([]float64, 4),
+		escs:         escs,
+	}
+	fc.resetPIDs()
 	return fc
 }
 
@@ -42,11 +47,17 @@ func transformRollPitch(roll, pitch float64) (float64, float64) {
 	return (pitch + roll) / 2, (pitch - roll) / 2
 }
 
-func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
-	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+func (fc *FlightControl) resetPIDs() {
+	fc.arm_0_2_PID.Reset()
+	fc.arm_1_3_PID.Reset()
 
-	fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
-	fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
+}
+func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
+	// arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+
+	// arm_0_2_controlVariable := fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
+	// arm_1_3_controlVariable := fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
+
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
@@ -60,11 +71,20 @@ func (fc *FlightControl) SetThrottle(throttle float64) {
 	fc.throttle = fc.throttle*(1-fc.throttleLowPassFilter) + fc.throttleLowPassFilter*throttle
 }
 
-func (fc *FlightControl) ApplyThrottlesToESCs() {
-	if time.Since(fc.motorsArmingTime) >= 0 {
-		fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+func (fc *FlightControl) pidMotorsPowers() {
+	fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+}
+
+func (fc *FlightControl) rawMotorsPowers() {
+	fc.resetPIDs()
+	fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
+}
+
+func (fc *FlightControl) SetMotorsPowers() {
+	if time.Since(fc.motorsArmingTime) >= 0 && fc.throttle > fc.minFlightThrottle {
+		fc.pidMotorsPowers()
 	} else {
-		fc.escs.SetThrottles([]float64{0, 0, 0, 0})
+		fc.rawMotorsPowers()
 	}
 }
 
