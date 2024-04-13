@@ -24,42 +24,42 @@
     "push-buttons-gpio": [
         {
             "name": "right-0",
-            "gpio": "GPIO4",
+            "gpio": "GPIO23",
             "pulse-mode": false
         },
         {
             "name": "right-1",
-            "gpio": "GPIO14",
+            "gpio": "GPIO22",
             "pulse-mode": true
         },
         {
             "name": "right-2",
-            "gpio": "GPIO15",
-            "pulse-mode": true
-        },
-        {
-            "name": "right-3",
-            "gpio": "GPIO18",
-            "pulse-mode": true
-        },
-        {
-            "name": "right-4",
-            "gpio": "GPIO23",
-            "pulse-mode": true
-        },
-        {
-            "name": "left-0",
-            "gpio": "GPIO17",
-            "pulse-mode": false
-        },
-        {
-            "name": "left-1",
             "gpio": "GPIO27",
             "pulse-mode": true
         },
         {
+            "name": "right-3",
+            "gpio": "GPIO17",
+            "pulse-mode": true
+        },
+        {
+            "name": "right-4",
+            "gpio": "GPIO4",
+            "pulse-mode": true
+        },
+        {
+            "name": "left-0",
+            "gpio": "GPIO18",
+            "pulse-mode": false
+        },
+        {
+            "name": "left-1",
+            "gpio": "GPIO15",
+            "pulse-mode": true
+        },
+        {
             "name": "left-2",
-            "gpio": "GPIO22",
+            "gpio": "GPIO14",
             "pulse-mode": true
         },
         {
