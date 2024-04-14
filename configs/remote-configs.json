@@ -29,47 +29,37 @@
         },
         {
             "name": "right-1",
-            "gpio": "GPIO22",
+            "gpio": "GPIO18",
             "pulse-mode": true
         },
         {
             "name": "right-2",
-            "gpio": "GPIO27",
-            "pulse-mode": true
-        },
-        {
-            "name": "right-3",
-            "gpio": "GPIO17",
-            "pulse-mode": true
-        },
-        {
-            "name": "right-4",
-            "gpio": "GPIO4",
-            "pulse-mode": true
-        },
-        {
-            "name": "left-0",
-            "gpio": "GPIO18",
-            "pulse-mode": false
-        },
-        {
-            "name": "left-1",
-            "gpio": "GPIO15",
-            "pulse-mode": true
-        },
-        {
-            "name": "left-2",
             "gpio": "GPIO14",
             "pulse-mode": true
         },
         {
-            "name": "left-3",
-            "gpio": "GPIO5",
+            "name": "right-3",
+            "gpio": "GPIO1",
             "pulse-mode": true
         },
         {
-            "name": "left-4",
-            "gpio": "GPIO6",
+            "name": "left-0",
+            "gpio": "GPIO22",
+            "pulse-mode": false
+        },
+        {
+            "name": "left-1",
+            "gpio": "GPIO17",
+            "pulse-mode": true
+        },
+        {
+            "name": "left-2",
+            "gpio": "GPIO4",
+            "pulse-mode": true
+        },
+        {
+            "name": "left-3",
+            "gpio": "GPIO0",
             "pulse-mode": true
         }
     ],
