@@ -18,6 +18,9 @@ type PIDSettings struct {
 	MinProcessVariable  float64
 	MaxWeightedSum      float64
 	CalibrationMode     bool
+	CalibrationIncP     float64
+	CalibrationIncI     float64
+	CalibrationIncD     float64
 }
 
 type PIDControl struct {
@@ -102,4 +105,28 @@ func (pid *PIDControl) calcD() {
 
 func (pid *PIDControl) Reset() {
 	pid.iControlVariable = 0
+}
+
+func (pid *PIDControl) UpdateGainP(v float64) {
+	pid.pGain += v
+}
+
+func (pid *PIDControl) UpdateGainI(v float64) {
+	pid.iGain += v
+}
+
+func (pid *PIDControl) UpdateGainD(v float64) {
+	pid.dGain += v
+}
+
+func (pid *PIDControl) GainP() float64 {
+	return pid.pGain
+}
+
+func (pid *PIDControl) GainI() float64 {
+	return pid.iGain
+}
+
+func (pid *PIDControl) GainD() float64 {
+	return pid.dGain
 }

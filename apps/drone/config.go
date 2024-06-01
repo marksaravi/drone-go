@@ -27,6 +27,9 @@ type PIDConfigs struct {
 	MaxIntegrationValue float64 `json:"max-i-value"`
 	MaxOutput           float64 `json:"max-output"`
 	CalibrationMode     bool    `json:"calibration-mode"`
+	CalibrationIncP     float64 `json:"calibration-p-inc"`
+	CalibrationIncI     float64 `json:"calibration-i-inc"`
+	CalibrationIncD     float64 `json:"calibration-d-inc"`
 }
 
 type DroneConfigs struct {

@@ -77,6 +77,9 @@ func main() {
 			DGain:               configs.PID.D,
 			MaxWeightedSum:      configs.PID.MaxOutput,
 			CalibrationMode:     configs.PID.CalibrationMode,
+			CalibrationIncP:     configs.PID.CalibrationIncP,
+			CalibrationIncI:     configs.PID.CalibrationIncI,
+			CalibrationIncD:     configs.PID.CalibrationIncD,
 		},
 	})
 

@@ -18,6 +18,9 @@ type FlightControl struct {
 	arm_0_2_PID     *pid.PIDControl
 	arm_1_3_PID     *pid.PIDControl
 	calibrationMode bool
+	calibrationIncP float64
+	calibrationIncI float64
+	calibrationIncD float64
 
 	throttle          float64
 	pidThrottles      []float64
@@ -34,6 +37,9 @@ func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidSett
 		arm_0_2_PID:           pid.NewPIDControl(pidSettings),
 		arm_1_3_PID:           pid.NewPIDControl(pidSettings),
 		calibrationMode:       pidSettings.CalibrationMode,
+		calibrationIncP:       pidSettings.CalibrationIncP,
+		calibrationIncI:       pidSettings.CalibrationIncI,
+		calibrationIncD:       pidSettings.CalibrationIncD,
 		throttleLowPassFilter: 0.45,
 		throttle:              0,
 		maxThrottle:           maxThrottle,
