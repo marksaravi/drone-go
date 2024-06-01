@@ -15,6 +15,7 @@ import (
 	"github.com/marksaravi/drone-go/hardware/icm20789"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/hardware/pca9685"
+	"github.com/marksaravi/drone-go/pid"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
 )
@@ -68,7 +69,18 @@ func main() {
 		MinFlightThrottle: configs.Commands.MinFlightThrottle,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,
-		PID:               configs.PID,
+		PID: pid.PIDSettings{
+			MaxError:            configs.PID.MaxRotationError,
+			MaxIntegrationValue: configs.PID.MaxIntegrationValue,
+			PGain:               configs.PID.P,
+			IGain:               configs.PID.I,
+			DGain:               configs.PID.D,
+			MaxWeightedSum:      configs.PID.MaxOutput,
+			CalibrationMode:     configs.PID.CalibrationMode,
+			CalibrationIncP:     configs.PID.CalibrationIncP,
+			CalibrationIncI:     configs.PID.CalibrationIncI,
+			CalibrationIncD:     configs.PID.CalibrationIncD,
+		},
 	})
 
 	go func() {

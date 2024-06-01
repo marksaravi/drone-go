@@ -109,7 +109,7 @@ func (imuDev *imuDevice) ReadAll() (Rotations, Rotations, Rotations, error) {
 	}
 	imuDev.calcAllRotations(data)
 	imuDev.lastReadTime = imuDev.currReadTime
-	// fmt.Println(data.Accelerometer)
+	imuDev.rotations.Time = imuDev.currReadTime
 	return imuDev.rotations, imuDev.accRotations, imuDev.gyroRotations, nil
 }
 
