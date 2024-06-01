@@ -3,6 +3,7 @@ package remote
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/commons"
@@ -188,9 +189,9 @@ func (r *remoteControl) ReadButtons() {
 		pressed := button.IsPressed()
 		if pressed {
 			r.buttonsPressed[i] = byte(1)
+			log.Println(button.Name())
 		} else {
 			r.buttonsPressed[i] = byte(0)
 		}
 	}
 }
-
