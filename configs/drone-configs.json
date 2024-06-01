@@ -5,11 +5,11 @@
         "d": 0,
         "max-rot-error": 15,
         "max-i-value": 5,
-        "max-output": 10,
+        "max-output": 20,
         "calibration-mode": true,
-        "calibration-p-inc": 11.11,
-        "calibration-i-inc": 12.12,
-        "calibration-d-inc": 13.13
+        "calibration-p-inc": 0.1,
+        "calibration-i-inc": 0,
+        "calibration-d-inc": 0
     },
     "imu": {
         "data-per-second": 1200,
@@ -44,9 +44,9 @@
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
         "max-throttle": 20,
-        "min-flight-throttle": 5
+        "min-flight-throttle": 15
     },
     "plotter": {
-        "active": true
+        "active": false
     }
 }
