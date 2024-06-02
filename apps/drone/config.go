@@ -25,7 +25,7 @@ type PIDConfigs struct {
 	D                   float64 `json:"d"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxOutput           float64 `json:"max-output"`
+	MaxWeightedSum      float64 `json:"max-weighted-sum"`
 	CalibrationMode     bool    `json:"calibration-mode"`
 	CalibrationIncP     float64 `json:"calibration-p-inc"`
 	CalibrationIncI     float64 `json:"calibration-i-inc"`
