@@ -50,8 +50,8 @@ func main() {
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:  i2cConn,
-		MaxThrottle: pca9685Configs.MaxThrottle,
+		Connection:      i2cConn,
+		MaxSafeThrottle: pca9685Configs.MaxSafeThrottle,
 	})
 
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)

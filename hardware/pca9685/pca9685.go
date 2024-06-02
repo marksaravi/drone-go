@@ -13,10 +13,10 @@ type powerbreaker interface {
 }
 
 type Configs struct {
-	I2CPort        string  `json:"i2c"`
-	BreakerGPIO    string  `json:"breaker-gpio"`
-	MaxThrottle    float64 `json:"max-throttle"`
-	MotorsMappings []int   `json:"motors-mappings"`
+	I2CPort         string  `json:"i2c"`
+	BreakerGPIO     string  `json:"breaker-gpio"`
+	MaxSafeThrottle float64 `json:"max-safe-throttle"`
+	MotorsMappings  []int   `json:"motors-mappings"`
 }
 
 // PCA9685Address is i2c address of device
@@ -62,8 +62,8 @@ type pca9685Dev struct {
 }
 
 type PCA9685Settings struct {
-	Connection  *i2c.Dev
-	MaxThrottle float64
+	Connection      *i2c.Dev
+	MaxSafeThrottle float64
 }
 
 // NewPCA9685Driver creates new pca9685Dev driver
@@ -72,7 +72,7 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 		name:        "pca9685Dev",
 		address:     PCA9685Address,
 		connection:  settings.Connection,
-		maxThrottle: settings.MaxThrottle,
+		maxThrottle: settings.MaxSafeThrottle,
 	}
 	dev.init()
 	return dev, nil
@@ -109,7 +109,7 @@ func (d *pca9685Dev) SetThrottles(throttles []float64) error {
 
 // Calibrate
 func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
-	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxThrottle: 0})
+	pwmDev, err := NewPCA9685(PCA9685Settings{Connection: i2cConn, MaxSafeThrottle: 0})
 	if err != nil {
 		fmt.Println(err)
 		return
