@@ -7,9 +7,9 @@
         "max-i-value": 5,
         "max-weighted-sum": 20,
         "calibration-mode": true,
-        "calibration-p-inc": 0.1,
+        "calibration-p-inc": 0.01,
         "calibration-i-inc": 0,
-        "calibration-d-inc": 0
+        "calibration-d-inc": 0.01
     },
     "imu": {
         "data-per-second": 1200,
@@ -43,8 +43,7 @@
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 55,
-        "min-flight-throttle": 20
+        "max-throttle": 55
     },
     "plotter": {
         "active": false

@@ -22,17 +22,16 @@ type FlightControl struct {
 	calibrationIncI float64
 	calibrationIncD float64
 
-	throttle          float64
-	pidThrottles      []float64
-	maxThrottle       float64
-	minFlightThrottle float64
+	throttle     float64
+	pidThrottles []float64
+	maxThrottle  float64
 
 	escs                  escs
 	motorsArmingTime      time.Time
 	throttleLowPassFilter float64
 }
 
-func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidSettings pid.PIDSettings) *FlightControl {
+func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings) *FlightControl {
 	fc := &FlightControl{
 		arm_0_2_PID:           pid.NewPIDControl(pidSettings),
 		arm_1_3_PID:           pid.NewPIDControl(pidSettings),
@@ -43,7 +42,6 @@ func NewFlightControl(escs escs, minFlightThrottle, maxThrottle float64, pidSett
 		throttleLowPassFilter: 0.45,
 		throttle:              0,
 		maxThrottle:           maxThrottle,
-		minFlightThrottle:     minFlightThrottle,
 
 		pidThrottles: make([]float64, 4),
 		escs:         escs,
@@ -90,16 +88,9 @@ func (fc *FlightControl) pidMotorsPowers() {
 	fc.escs.SetThrottles([]float64{fc.pidThrottles[0], fc.pidThrottles[1], fc.pidThrottles[2], fc.pidThrottles[3]})
 }
 
-func (fc *FlightControl) rawMotorsPowers() {
-	fc.resetPIDs()
-	fc.escs.SetThrottles([]float64{fc.throttle, fc.throttle, fc.throttle, fc.throttle})
-}
-
 func (fc *FlightControl) SetMotorsPowers() {
-	if time.Since(fc.motorsArmingTime) >= 0 && fc.throttle > fc.minFlightThrottle {
+	if time.Since(fc.motorsArmingTime) >= 0 {
 		fc.pidMotorsPowers()
-	} else {
-		fc.rawMotorsPowers()
 	}
 }
 

@@ -37,7 +37,6 @@ type DroneSettings struct {
 	YawMidValue       int
 	RotationRange     float64
 	MaxThrottle       float64
-	MinFlightThrottle float64
 	PID               pid.PIDSettings
 }
 
@@ -54,12 +53,11 @@ type droneApp struct {
 	imuReadInterval   time.Duration
 	plotterActive     bool
 
-	rollMidValue      int
-	pitchlMidValue    int
-	yawMidValue       int
-	rotationRange     float64
-	maxThrottle       float64
-	minFlightThrottle float64
+	rollMidValue   int
+	pitchlMidValue int
+	yawMidValue    int
+	rotationRange  float64
+	maxThrottle    float64
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
@@ -67,7 +65,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:         time.Now(),
 		imu:               settings.ImuMems,
 		escs:              settings.Escs,
-		flightControl:     NewFlightControl(settings.Escs, settings.MinFlightThrottle, settings.MaxThrottle, settings.PID),
+		flightControl:     NewFlightControl(settings.Escs, settings.MaxThrottle, settings.PID),
 		imuDataPerSecond:  settings.ImuDataPerSecond,
 		receiver:          settings.Receiver,
 		commandsPerSecond: settings.CommandsPerSecond,
@@ -79,7 +77,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 		yawMidValue:       settings.YawMidValue,
 		rotationRange:     settings.RotationRange,
 		maxThrottle:       settings.MaxThrottle,
-		minFlightThrottle: settings.MinFlightThrottle,
 	}
 }
 
