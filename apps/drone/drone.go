@@ -30,6 +30,7 @@ type DroneSettings struct {
 	Receiver          radioReceiver
 	Escs              escs
 	ImuDataPerSecond  int
+	ESCsDataPerSecond int
 	CommandsPerSecond int
 	PlotterActive     bool
 	RollMidValue      int
@@ -41,11 +42,12 @@ type DroneSettings struct {
 }
 
 type droneApp struct {
-	startTime        time.Time
-	imuDataPerSecond int
-	imu              imuMems
-	escs             escs
-	flightControl    *FlightControl
+	startTime         time.Time
+	imuDataPerSecond  int
+	imu               imuMems
+	escs              escs
+	escsDataPerSecond int
+	flightControl     *FlightControl
 
 	commandsPerSecond int
 	receiver          radioReceiver
@@ -65,6 +67,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		startTime:         time.Now(),
 		imu:               settings.ImuMems,
 		escs:              settings.Escs,
+		escsDataPerSecond: settings.ESCsDataPerSecond,
 		flightControl:     NewFlightControl(settings.Escs, settings.MaxThrottle, settings.PID),
 		imuDataPerSecond:  settings.ImuDataPerSecond,
 		receiver:          settings.Receiver,

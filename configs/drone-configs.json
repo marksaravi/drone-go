@@ -26,6 +26,9 @@
             "z": 1
         }
     },
+    "esc": {
+        "data-per-second": 40
+    },
     "remote-control": {
         "commands-per-second": 25,
         "radio": {

@@ -33,8 +33,11 @@ type PIDConfigs struct {
 }
 
 type DroneConfigs struct {
-	PID      PIDConfigs  `json:"pid"`
-	IMU      imu.Configs `json:"imu"`
+	PID PIDConfigs  `json:"pid"`
+	IMU imu.Configs `json:"imu"`
+	ESC struct {
+		DataPerSecond int `json:"data-per-second"`
+	} `json:"esc"`
 	Commands struct {
 		RollMidValue  int     `json:"roll-mid-value"`
 		PitchMidValue int     `json:"pitch-mid-value"`

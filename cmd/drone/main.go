@@ -30,6 +30,7 @@ func main() {
 	icm20789Configs := icm20789.ReadConfigs("./configs/hardware.json")
 
 	imuConfigs := configs.IMU
+	escsConfigs := configs.ESC
 	mems := icm20789.NewICM20789(icm20789Configs)
 	imudev := imu.NewIMU(mems, imuConfigs)
 
@@ -58,6 +59,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:  imuConfigs.DataPerSecond,
+		ESCsDataPerSecond: escsConfigs.DataPerSecond,
 		ImuMems:           imudev,
 		Escs:              esc,
 		Receiver:          radioReceiver,
