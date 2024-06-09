@@ -42,12 +42,12 @@ type DroneSettings struct {
 }
 
 type droneApp struct {
-	startTime         time.Time
-	imuDataPerSecond  int
-	imu               imuMems
-	escs              escs
-	escsDataPerSecond int
-	flightControl     *FlightControl
+	startTime          time.Time
+	imuDataPerSecond   int
+	imu                imuMems
+	escs               escs
+	escsDataPerImuData int
+	flightControl      *FlightControl
 
 	commandsPerSecond int
 	receiver          radioReceiver
@@ -63,23 +63,24 @@ type droneApp struct {
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
+	escsDataPerImuData := settings.ImuDataPerSecond / settings.ESCsDataPerSecond
 	return &droneApp{
-		startTime:         time.Now(),
-		imu:               settings.ImuMems,
-		escs:              settings.Escs,
-		escsDataPerSecond: settings.ESCsDataPerSecond,
-		flightControl:     NewFlightControl(settings.Escs, settings.MaxThrottle, settings.PID),
-		imuDataPerSecond:  settings.ImuDataPerSecond,
-		receiver:          settings.Receiver,
-		commandsPerSecond: settings.CommandsPerSecond,
-		lastImuRead:       time.Now(),
-		imuReadInterval:   time.Second / time.Duration(settings.ImuDataPerSecond),
-		plotterActive:     settings.PlotterActive,
-		rollMidValue:      settings.RollMidValue,
-		pitchlMidValue:    settings.PitchMidValue,
-		yawMidValue:       settings.YawMidValue,
-		rotationRange:     settings.RotationRange,
-		maxThrottle:       settings.MaxThrottle,
+		startTime:          time.Now(),
+		imu:                settings.ImuMems,
+		escs:               settings.Escs,
+		escsDataPerImuData: escsDataPerImuData,
+		flightControl:      NewFlightControl(settings.Escs, settings.MaxThrottle, settings.PID, escsDataPerImuData),
+		imuDataPerSecond:   settings.ImuDataPerSecond,
+		receiver:           settings.Receiver,
+		commandsPerSecond:  settings.CommandsPerSecond,
+		lastImuRead:        time.Now(),
+		imuReadInterval:    time.Second / time.Duration(settings.ImuDataPerSecond),
+		plotterActive:      settings.PlotterActive,
+		rollMidValue:       settings.RollMidValue,
+		pitchlMidValue:     settings.PitchMidValue,
+		yawMidValue:        settings.YawMidValue,
+		rotationRange:      settings.RotationRange,
+		maxThrottle:        settings.MaxThrottle,
 	}
 }
 
@@ -92,7 +93,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
-	escUpdates := utils.WithDataPerSecond(40)
+	escCounter := utils.NewCounter(d.escsDataPerImuData)
 	for running || commandOk {
 		select {
 		case commands, commandOk = <-commandsChannel:
@@ -110,7 +111,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 					d.flightControl.SetRotations(rot)
 				}
 			}
-			if escUpdates.IsTime() {
+			if escCounter.Inc() {
 				go func() {
 					d.flightControl.SetMotorsPowers()
 				}()

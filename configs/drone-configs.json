@@ -1,5 +1,5 @@
 {
-    "pid":{
+    "pid": {
         "p": 0,
         "i": 0,
         "d": 0,
@@ -41,12 +41,12 @@
             }
         }
     },
-    "commands":{
+    "commands": {
         "roll-mid-value": 500,
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 55
+        "max-throttle": 50
     },
     "plotter": {
         "active": false

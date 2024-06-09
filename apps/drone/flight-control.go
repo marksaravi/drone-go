@@ -31,10 +31,10 @@ type FlightControl struct {
 	throttleLowPassFilter float64
 }
 
-func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings) *FlightControl {
+func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings, escsDataPerImuData int) *FlightControl {
 	fc := &FlightControl{
-		arm_0_2_PID:           pid.NewPIDControl(pidSettings),
-		arm_1_3_PID:           pid.NewPIDControl(pidSettings),
+		arm_0_2_PID:           pid.NewPIDControl(pidSettings, escsDataPerImuData),
+		arm_1_3_PID:           pid.NewPIDControl(pidSettings, escsDataPerImuData),
 		calibrationMode:       pidSettings.CalibrationMode,
 		calibrationIncP:       pidSettings.CalibrationIncP,
 		calibrationIncI:       pidSettings.CalibrationIncI,
