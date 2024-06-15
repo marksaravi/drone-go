@@ -31,6 +31,7 @@ type average interface {
 }
 
 type PIDControl struct {
+	id                  string
 	pGain               float64
 	iGain               float64
 	dGain               float64
@@ -50,8 +51,9 @@ type PIDControl struct {
 	weightedSum         float64
 }
 
-func NewPIDControl(settings PIDSettings, outDataPerInputData int) *PIDControl {
+func NewPIDControl(id string, settings PIDSettings, outDataPerInputData int) *PIDControl {
 	pid := &PIDControl{
+		id:                  id,
 		pGain:               settings.PGain,
 		iGain:               settings.IGain,
 		dGain:               settings.DGain,
@@ -83,12 +85,13 @@ func (pid *PIDControl) CalculateControlVariable(processVariable float64, t time.
 	pid.calcP()
 	pid.calcI()
 	pid.calcD()
-	return max(pid.pControlVariable.Average()+pid.iControlVariable+pid.dControlVariable.Average(), pid.maxWeightedSum)
+	pidSum := max(pid.pControlVariable.Average()+pid.iControlVariable+pid.dControlVariable.Average(), pid.maxWeightedSum)
+	return pidSum
 }
 
 func (pid *PIDControl) calcError(processVariable float64) {
 	pid.prevErrorValue = pid.errorValue
-	pid.errorValue = utils.Max(pid.setPoint-processVariable, pid.maxError)
+	pid.errorValue = max(pid.setPoint-processVariable, pid.maxError)
 }
 
 func (pid *PIDControl) SetSetPoint(setPoint float64) {
@@ -145,7 +148,6 @@ func max(v, maxValue float64) float64 {
 	if math.Abs(v) < maxValue {
 		return v
 	}
-	fmt.Println(v)
 	if v < 0 {
 		return -maxValue
 	}

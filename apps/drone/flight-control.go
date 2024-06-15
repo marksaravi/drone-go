@@ -5,7 +5,6 @@ import (
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/pid"
-	"github.com/marksaravi/drone-go/utils"
 )
 
 const (
@@ -33,8 +32,8 @@ type FlightControl struct {
 
 func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings, escsDataPerImuData int) *FlightControl {
 	fc := &FlightControl{
-		arm_0_2_PID:           pid.NewPIDControl(pidSettings, escsDataPerImuData),
-		arm_1_3_PID:           pid.NewPIDControl(pidSettings, escsDataPerImuData),
+		arm_0_2_PID:           pid.NewPIDControl("0_2", pidSettings, escsDataPerImuData),
+		arm_1_3_PID:           pid.NewPIDControl("1_3", pidSettings, escsDataPerImuData),
 		calibrationMode:       pidSettings.CalibrationMode,
 		calibrationIncP:       pidSettings.CalibrationIncP,
 		calibrationIncI:       pidSettings.CalibrationIncI,
@@ -62,15 +61,14 @@ func (fc *FlightControl) resetPIDs() {
 
 func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
 	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
-
 	arm_0_2_controlVariable := fc.arm_0_2_PID.CalculateControlVariable(arm_0_2_rotation, rotattions.Time)
 	arm_1_3_controlVariable := fc.arm_1_3_PID.CalculateControlVariable(arm_1_3_rotation, rotattions.Time)
 
-	fc.pidThrottles[0] = utils.Max(fc.throttle+arm_0_2_controlVariable, fc.maxThrottle)
-	fc.pidThrottles[2] = utils.Max(fc.throttle-arm_0_2_controlVariable, fc.maxThrottle)
+	fc.pidThrottles[0] = fc.throttle + arm_0_2_controlVariable
+	fc.pidThrottles[2] = fc.throttle - arm_0_2_controlVariable
 
-	fc.pidThrottles[1] = utils.Max(fc.throttle-arm_1_3_controlVariable, fc.maxThrottle)
-	fc.pidThrottles[3] = utils.Max(fc.throttle+arm_1_3_controlVariable, fc.maxThrottle)
+	fc.pidThrottles[1] = fc.throttle - arm_1_3_controlVariable
+	fc.pidThrottles[3] = fc.throttle + arm_1_3_controlVariable
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {
