@@ -38,7 +38,7 @@ func main() {
 		cancel()
 	}()
 
-	const maxThrottle float64 = 80
+	const maxThrottle float64 = 20
 	const minThrottle float64 = 5
 	const steps int = 40
 	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
@@ -74,6 +74,9 @@ func main() {
 				motors[*motor] = throttle
 				esc.SetThrottles(motors)
 				time.Sleep(time.Duration(runninTimeDur) * time.Millisecond)
+				if i*runninTimeDur%10000 == 0 {
+					fmt.Printf("%d seconds of %d minutes\n", i*runninTimeDur/1000, runninTimeMilliSecond/60000)
+				}
 			}
 		}
 		dThrottle = -dThrottle
