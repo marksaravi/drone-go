@@ -28,6 +28,6 @@
         "i2c": "/dev/i2c-1",
         "breaker-gpio":"GPIO17",
         "max-safe-throttle": 75,
-        "motors-mappings":[7, 6, 5, 4]
+        "motors-mappings":[0, 1, 2, 3]
     }
 }
