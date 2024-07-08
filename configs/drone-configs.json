@@ -7,9 +7,9 @@
         "max-i-value": 5,
         "max-weighted-sum": 20,
         "calibration-mode": true,
-        "calibration-p-inc": 0.01,
+        "calibration-p-inc": 0,
         "calibration-i-inc": 0,
-        "calibration-d-inc": 0.01
+        "calibration-d-inc": 0
     },
     "imu": {
         "data-per-second": 1200,

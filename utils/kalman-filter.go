@@ -12,7 +12,7 @@ func NewKalmanFilter(gain float64) *kalmanFilter {
 	}
 }
 
-func (k *kalmanFilter) SmoothValue(value float64) float64 {
+func (k *kalmanFilter) Value(value float64) float64 {
 	smoothValue := k.prevValue*(1-k.gain) + value*k.gain
 	k.prevValue = smoothValue
 	return smoothValue

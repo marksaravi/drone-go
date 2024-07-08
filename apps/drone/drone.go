@@ -25,6 +25,10 @@ type escs interface {
 	SetThrottles(motors []float64)
 }
 
+type KalmanFilter interface {
+	Value(value float64) float64
+}
+
 type DroneSettings struct {
 	ImuMems           imuMems
 	Receiver          radioReceiver
@@ -60,6 +64,7 @@ type droneApp struct {
 	yawMidValue    int
 	rotationRange  float64
 	maxThrottle    float64
+	throttle       KalmanFilter
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
@@ -81,6 +86,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		yawMidValue:        settings.YawMidValue,
 		rotationRange:      settings.RotationRange,
 		maxThrottle:        settings.MaxThrottle,
+		throttle:           utils.NewKalmanFilter(0.15),
 	}
 }
 
