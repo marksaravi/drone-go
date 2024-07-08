@@ -30,6 +30,7 @@ func main() {
 	icm20789Configs := icm20789.ReadConfigs("./configs/hardware.json")
 
 	imuConfigs := configs.IMU
+	escsConfigs := configs.ESC
 	mems := icm20789.NewICM20789(icm20789Configs)
 	imudev := imu.NewIMU(mems, imuConfigs)
 
@@ -50,14 +51,15 @@ func main() {
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:  i2cConn,
-		MaxThrottle: pca9685Configs.MaxThrottle,
+		Connection:      i2cConn,
+		MaxSafeThrottle: pca9685Configs.MaxSafeThrottle,
 	})
 
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:  imuConfigs.DataPerSecond,
+		ESCsDataPerSecond: escsConfigs.DataPerSecond,
 		ImuMems:           imudev,
 		Escs:              esc,
 		Receiver:          radioReceiver,
@@ -66,7 +68,6 @@ func main() {
 		YawMidValue:       configs.Commands.YawMidValue,
 		RotationRange:     configs.Commands.RotationRange,
 		MaxThrottle:       configs.Commands.MaxThrottle,
-		MinFlightThrottle: configs.Commands.MinFlightThrottle,
 		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:     configs.Plotter.Active,
 		PID: pid.PIDSettings{
@@ -75,7 +76,7 @@ func main() {
 			PGain:               configs.PID.P,
 			IGain:               configs.PID.I,
 			DGain:               configs.PID.D,
-			MaxWeightedSum:      configs.PID.MaxOutput,
+			MaxWeightedSum:      configs.PID.MaxWeightedSum,
 			CalibrationMode:     configs.PID.CalibrationMode,
 			CalibrationIncP:     configs.PID.CalibrationIncP,
 			CalibrationIncI:     configs.PID.CalibrationIncI,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -27,13 +28,19 @@ func main() {
 	i2cConn := &i2c.Dev{Addr: pca9685.PCA9685Address, Bus: b}
 
 	pwmDev, _ := pca9685.NewPCA9685(pca9685.PCA9685Settings{
-		Connection:  i2cConn,
-		MaxThrottle: pca9685Configs.MaxThrottle,
+		Connection:      i2cConn,
+		MaxSafeThrottle: pca9685Configs.MaxSafeThrottle,
 	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		fmt.Scanln()
+		cancel()
+	}()
 
 	const maxThrottle float64 = 20
 	const minThrottle float64 = 5
-	const steps int = 10
+	const steps int = 40
 	var dThrottle float64 = (maxThrottle - minThrottle) / float64(steps)
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	var wg sync.WaitGroup
@@ -42,14 +49,39 @@ func main() {
 	throttle := float64(minThrottle)
 	fmt.Println(*motor)
 	motors := []float64{0, 0, 0, 0}
-	for repeat := 0; repeat < 2; repeat++ {
-		for step := 0; step < steps; step++ {
+	running := true
+	const runninTimeMilliSecond int = 600 * 1000
+	const runninTimeDur int = 250
+	const numOfInnerLoop int = runninTimeMilliSecond / runninTimeDur
+	for repeat := 0; repeat < 2 && running; repeat++ {
+
+		for step := 0; step < steps && running; step++ {
+			select {
+			case _, running = <-ctx.Done():
+			default:
+			}
 			motors[*motor] = throttle
 			esc.SetThrottles(motors)
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			throttle += dThrottle
+			fmt.Println(motors)
 		}
+		// if throttle == maxThrottle {
+		// 	for i := 0; i < numOfInnerLoop && running; i++ {
+		// 		select {
+		// 		case _, running = <-ctx.Done():
+		// 		default:
+		// 		}
+		// 		motors[*motor] = throttle
+		// 		esc.SetThrottles(motors)
+		// 		time.Sleep(time.Duration(runninTimeDur) * time.Millisecond)
+		// 		if i*runninTimeDur%10000 == 0 {
+		// 			fmt.Printf("%d seconds of %d minutes\n", i*runninTimeDur/1000, runninTimeMilliSecond/60000)
+		// 		}
+		// 	}
+		// }
 		dThrottle = -dThrottle
+
 	}
 	esc.Off()
 	wg.Wait()

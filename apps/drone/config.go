@@ -25,7 +25,7 @@ type PIDConfigs struct {
 	D                   float64 `json:"d"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxOutput           float64 `json:"max-output"`
+	MaxWeightedSum      float64 `json:"max-weighted-sum"`
 	CalibrationMode     bool    `json:"calibration-mode"`
 	CalibrationIncP     float64 `json:"calibration-p-inc"`
 	CalibrationIncI     float64 `json:"calibration-i-inc"`
@@ -33,15 +33,17 @@ type PIDConfigs struct {
 }
 
 type DroneConfigs struct {
-	PID      PIDConfigs  `json:"pid"`
-	IMU      imu.Configs `json:"imu"`
+	PID PIDConfigs  `json:"pid"`
+	IMU imu.Configs `json:"imu"`
+	ESC struct {
+		DataPerSecond int `json:"data-per-second"`
+	} `json:"esc"`
 	Commands struct {
-		RollMidValue      int     `json:"roll-mid-value"`
-		PitchMidValue     int     `json:"pitch-mid-value"`
-		YawMidValue       int     `json:"yaw-mid-value"`
-		RotationRange     float64 `json:"rotation-range-deg"`
-		MaxThrottle       float64 `json:"max-throttle"`
-		MinFlightThrottle float64 `json:"min-flight-throttle"`
+		RollMidValue  int     `json:"roll-mid-value"`
+		PitchMidValue int     `json:"pitch-mid-value"`
+		YawMidValue   int     `json:"yaw-mid-value"`
+		RotationRange float64 `json:"rotation-range-deg"`
+		MaxThrottle   float64 `json:"max-throttle"`
 	} `json:"commands"`
 	RemoteControl struct {
 		CommandsPerSecond int `json:"commands-per-second"`

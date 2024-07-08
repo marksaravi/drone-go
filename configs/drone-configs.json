@@ -1,15 +1,15 @@
 {
-    "pid":{
+    "pid": {
         "p": 0,
         "i": 0,
         "d": 0,
         "max-rot-error": 15,
         "max-i-value": 5,
-        "max-output": 20,
+        "max-weighted-sum": 20,
         "calibration-mode": true,
-        "calibration-p-inc": 0.1,
+        "calibration-p-inc": 0.01,
         "calibration-i-inc": 0,
-        "calibration-d-inc": 0
+        "calibration-d-inc": 0.01
     },
     "imu": {
         "data-per-second": 1200,
@@ -26,6 +26,9 @@
             "z": 1
         }
     },
+    "esc": {
+        "data-per-second": 40
+    },
     "remote-control": {
         "commands-per-second": 25,
         "radio": {
@@ -38,13 +41,12 @@
             }
         }
     },
-    "commands":{
+    "commands": {
         "roll-mid-value": 500,
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 20,
-        "min-flight-throttle": 15
+        "max-throttle": 50
     },
     "plotter": {
         "active": false
