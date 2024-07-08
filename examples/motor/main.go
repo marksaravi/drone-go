@@ -64,21 +64,22 @@ func main() {
 			esc.SetThrottles(motors)
 			time.Sleep(100 * time.Millisecond)
 			throttle += dThrottle
+			fmt.Println(motors)
 		}
-		if throttle == maxThrottle {
-			for i := 0; i < numOfInnerLoop && running; i++ {
-				select {
-				case _, running = <-ctx.Done():
-				default:
-				}
-				motors[*motor] = throttle
-				esc.SetThrottles(motors)
-				time.Sleep(time.Duration(runninTimeDur) * time.Millisecond)
-				if i*runninTimeDur%10000 == 0 {
-					fmt.Printf("%d seconds of %d minutes\n", i*runninTimeDur/1000, runninTimeMilliSecond/60000)
-				}
-			}
-		}
+		// if throttle == maxThrottle {
+		// 	for i := 0; i < numOfInnerLoop && running; i++ {
+		// 		select {
+		// 		case _, running = <-ctx.Done():
+		// 		default:
+		// 		}
+		// 		motors[*motor] = throttle
+		// 		esc.SetThrottles(motors)
+		// 		time.Sleep(time.Duration(runninTimeDur) * time.Millisecond)
+		// 		if i*runninTimeDur%10000 == 0 {
+		// 			fmt.Printf("%d seconds of %d minutes\n", i*runninTimeDur/1000, runninTimeMilliSecond/60000)
+		// 		}
+		// 	}
+		// }
 		dThrottle = -dThrottle
 
 	}
