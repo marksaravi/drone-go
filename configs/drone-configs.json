@@ -1,15 +1,15 @@
 {
     "pid": {
-        "p": 0,
+        "p": 0.4,
         "i": 0,
         "d": 0,
         "max-rot-error": 15,
         "max-i-value": 5,
         "max-weighted-sum": 20,
         "calibration-mode": true,
-        "calibration-p-inc": 0,
+        "calibration-p-inc": 0.1,
         "calibration-i-inc": 0,
-        "calibration-d-inc": 0
+        "calibration-d-inc": 0.01
     },
     "imu": {
         "data-per-second": 1200,
