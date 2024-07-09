@@ -16,6 +16,7 @@ const (
 type FlightControl struct {
 	arm_0_2_PID     *pid.PIDControl
 	arm_1_3_PID     *pid.PIDControl
+	yawPID          *pid.PIDControl
 	calibrationMode bool
 	calibrationIncP float64
 	calibrationIncI float64
@@ -32,12 +33,12 @@ type FlightControl struct {
 
 func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings, escsDataPerImuData int) *FlightControl {
 	fc := &FlightControl{
-		arm_0_2_PID:           pid.NewPIDControl("0_2", pidSettings, escsDataPerImuData),
-		arm_1_3_PID:           pid.NewPIDControl("1_3", pidSettings, escsDataPerImuData),
-		calibrationMode:       pidSettings.CalibrationMode,
-		calibrationIncP:       pidSettings.CalibrationIncP,
-		calibrationIncI:       pidSettings.CalibrationIncI,
-		calibrationIncD:       pidSettings.CalibrationIncD,
+		arm_0_2_PID: pid.NewPIDControl("0_2", pidSettings, escsDataPerImuData),
+		arm_1_3_PID: pid.NewPIDControl("1_3", pidSettings, escsDataPerImuData),
+		// calibrationMode:       pidSettings.CalibrationMode,
+		// calibrationIncP:       pidSettings.CalibrationIncP,
+		// calibrationIncI:       pidSettings.CalibrationIncI,
+		// calibrationIncD:       pidSettings.CalibrationIncD,
 		throttleLowPassFilter: 0.45,
 		throttle:              0,
 		maxThrottle:           maxThrottle,
@@ -67,8 +68,8 @@ func (fc *FlightControl) SetRotations(rotattions imu.Rotations) {
 	fc.pidThrottles[0] = fc.throttle + arm_0_2_controlVariable
 	fc.pidThrottles[2] = fc.throttle - arm_0_2_controlVariable
 
-	fc.pidThrottles[1] = fc.throttle - arm_1_3_controlVariable
-	fc.pidThrottles[3] = fc.throttle + arm_1_3_controlVariable
+	fc.pidThrottles[1] = fc.throttle*0.1 - arm_1_3_controlVariable*0
+	fc.pidThrottles[3] = fc.throttle*0.1 + arm_1_3_controlVariable*0
 }
 
 func (fc *FlightControl) SetTargetRotations(rotattions imu.Rotations) {

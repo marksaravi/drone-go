@@ -1,96 +1,66 @@
 package pid
 
 import (
-	"math"
 	"time"
-
-	"github.com/marksaravi/drone-go/utils"
 )
 
-const MAX_SAMPLING_RATE = 10000
-const MIN_DT = time.Second / MAX_SAMPLING_RATE
-
 type PIDSettings struct {
-	PGain               float64
-	IGain               float64
-	DGain               float64
-	MaxError            float64
-	MaxIntegrationValue float64
-	MinProcessVariable  float64
-	MaxWeightedSum      float64
-	CalibrationMode     bool
-	CalibrationIncP     float64
-	CalibrationIncI     float64
-	CalibrationIncD     float64
-}
-
-type average interface {
-	AddValue(v float64) float64
-	Average() float64
+	PGain   float64
+	IGain   float64
+	DGain   float64
+	Enabled bool
 }
 
 type PIDControl struct {
-	id                  string
-	pGain               float64
-	iGain               float64
-	dGain               float64
-	outDataPerInputData int
-	pControlVariable    average
-	dControlVariable    average
-	maxError            float64
-	maxIntegrationValue float64
-	minProcessVariable  float64
-	maxWeightedSum      float64
-	setPoint            float64
-	feedbackTime        time.Time
-	dt                  time.Duration
-	errorValue          float64
-	prevErrorValue      float64
-	iControlVariable    float64
-	weightedSum         float64
+	id               string
+	pGain            float64
+	iGain            float64
+	dGain            float64
+	pControlVariable float64
+	iControlVariable float64
+	dControlVariable float64
+	setPoint         float64
+	prevFeedbackTime time.Time
+	dt               time.Duration
+	errorValue       float64
+	prevErrorValue   float64
+	enabled          bool
 }
 
 func NewPIDControl(id string, settings PIDSettings, outDataPerInputData int) *PIDControl {
 	pid := &PIDControl{
-		id:                  id,
-		pGain:               settings.PGain,
-		iGain:               settings.IGain,
-		dGain:               settings.DGain,
-		outDataPerInputData: outDataPerInputData,
-		pControlVariable:    utils.NewAverage[float64](outDataPerInputData),
-		dControlVariable:    utils.NewAverage[float64](outDataPerInputData),
-		maxError:            settings.MaxError,
-		maxIntegrationValue: settings.MaxIntegrationValue,
-		minProcessVariable:  settings.MinProcessVariable,
-		maxWeightedSum:      settings.MaxWeightedSum,
-		setPoint:            0,
-		feedbackTime:        time.Now().Add(time.Second * 32000000),
-		dt:                  0,
-		errorValue:          0,
-		prevErrorValue:      0,
-		iControlVariable:    0,
-		weightedSum:         0,
+		id:               id,
+		pGain:            settings.PGain,
+		iGain:            settings.IGain,
+		dGain:            settings.DGain,
+		pControlVariable: 0,
+		iControlVariable: 0,
+		dControlVariable: 0,
+		setPoint:         0,
+		prevFeedbackTime: time.Now().Add(time.Second * 32000000),
+		errorValue:       0,
+		prevErrorValue:   0,
+		enabled:          settings.Enabled,
 	}
 	return pid
 }
 
 func (pid *PIDControl) CalculateControlVariable(processVariable float64, t time.Time) float64 {
-	if t.Sub(pid.feedbackTime) < 0 {
-		pid.feedbackTime = t
+	if !pid.enabled {
+		return 0
 	}
-	pid.dt = t.Sub(pid.feedbackTime)
-	pid.feedbackTime = t
+	pid.dt = t.Sub(pid.prevFeedbackTime)
+	pid.prevFeedbackTime = t
 	pid.calcError(processVariable)
 	pid.calcP()
 	pid.calcI()
 	pid.calcD()
-	pidSum := max(pid.pControlVariable.Average()+pid.iControlVariable+pid.dControlVariable.Average(), pid.maxWeightedSum)
-	return pidSum
+	return pid.pControlVariable + pid.iControlVariable + pid.dControlVariable
 }
 
 func (pid *PIDControl) calcError(processVariable float64) {
 	pid.prevErrorValue = pid.errorValue
-	pid.errorValue = max(pid.setPoint-processVariable, pid.maxError)
+	pid.errorValue = pid.setPoint - processVariable
 }
 
 func (pid *PIDControl) SetSetPoint(setPoint float64) {
@@ -98,21 +68,15 @@ func (pid *PIDControl) SetSetPoint(setPoint float64) {
 }
 
 func (pid *PIDControl) calcP() {
-	pControlVariable := pid.pGain * pid.errorValue
-	pid.pControlVariable.AddValue(pControlVariable)
+	pid.pControlVariable = pid.pGain * pid.errorValue
 }
 
 func (pid *PIDControl) calcI() {
 	pid.iControlVariable += pid.iGain * pid.errorValue * pid.dt.Seconds()
-	pid.iControlVariable = max(pid.iControlVariable, pid.maxIntegrationValue)
 }
 
 func (pid *PIDControl) calcD() {
-	dControlVariable := float64(0)
-	if pid.dt >= MIN_DT {
-		dControlVariable = pid.dGain * (pid.errorValue - pid.prevErrorValue) / pid.dt.Seconds()
-	}
-	pid.dControlVariable.AddValue(dControlVariable)
+	pid.dControlVariable = pid.dGain * (pid.errorValue - pid.prevErrorValue) / pid.dt.Seconds()
 }
 
 func (pid *PIDControl) Reset() {
@@ -141,14 +105,4 @@ func (pid *PIDControl) GainI() float64 {
 
 func (pid *PIDControl) GainD() float64 {
 	return pid.dGain
-}
-
-func max(v, maxValue float64) float64 {
-	if math.Abs(v) < maxValue {
-		return v
-	}
-	if v < 0 {
-		return -maxValue
-	}
-	return maxValue
 }
