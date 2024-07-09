@@ -86,7 +86,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 		yawMidValue:        settings.YawMidValue,
 		rotationRange:      settings.RotationRange,
 		maxThrottle:        settings.MaxThrottle,
-		throttle:           utils.NewKalmanFilter(0.15),
+		throttle:           utils.NewKalmanFilter(0.15, 1),
 	}
 }
 
