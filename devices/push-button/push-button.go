@@ -13,18 +13,18 @@ type gpioPin interface {
 }
 
 type pushButton struct {
-	name      string
-	pin       gpioPin
-	pulseMode bool
-	pressed   bool
+	name       string
+	pin        gpioPin
+	wasPressed bool
+	pressLock  bool
 }
 
-func NewPushButton(name string, pin gpioPin, pulseMode bool) *pushButton {
+func NewPushButton(name string, pin gpioPin) *pushButton {
 	return &pushButton{
 		name: name,
 		pin:  pin,
-		pressed: false,
-		pulseMode: pulseMode,
+		wasPressed: false,
+		pressLock: false,
 	}
 }
 
@@ -32,20 +32,24 @@ func (b *pushButton) Name() string {
 	return b.name
 }
 
-func (b *pushButton) PulseMode() bool {
-	return b.pulseMode
+func (b *pushButton) IsPressed() bool {
+	return b.pin.Read() == gpio.Low
 }
 
-func (b *pushButton) IsPressed() bool {
-	pressed:= b.pin.Read() == gpio.Low
-	if b.pulseMode {
-		ispressed:=false
-		if pressed && !b.pressed {
-			ispressed=true
-		}
-		b.pressed=pressed
-		return ispressed
-	} else {
-		return pressed
+func (b *pushButton) Update() {
+	if !b.wasPressed && !b.pressLock && b.IsPressed() {
+		b.wasPressed = true
+		b.pressLock = true
 	}
+}
+
+func (b *pushButton) IsPushed() bool {
+	if !b.IsPressed() && b.pressLock {
+		b.pressLock = false
+	}	
+	if b.wasPressed {
+		b.wasPressed = false
+		return true
+	}
+	return false
 }

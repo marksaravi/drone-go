@@ -25,7 +25,6 @@ type RemoteConfigs struct {
 	PushButtons []struct {
 		Name      string `json:"name"`
 		GPIO      string `json:"gpio"`
-		PulseMode bool   `json:"pulse-mode"`
 	} `json:"push-buttons-gpio"`
 	DisplayUpdatePerSecond int `json:"display-update-per-second"`
 }
