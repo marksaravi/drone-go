@@ -66,12 +66,11 @@ func main() {
 				if button.IsPushed() {
 					log.Printf("%s pushed\n", button.Name())
 				}
-			} 
-			// else {
-			// 	if button.IsPressed() {
-			// 		log.Printf("%s pressed\n", button.Name())
-			// 	}
-			// }
+			} else {
+				if button.IsPressed() {
+					log.Printf("%s pressed\n", button.Name())
+				}
+			}
 		}
 	}
 }

@@ -96,12 +96,15 @@ func (r *remoteControl) Start(ctx context.Context) {
 	r.transmitter.On()
 	r.Initisplay()
 	displayUpdate := utils.WithDataPerSecond(3)
+	commandsUpdate := utils.WithDataPerSecond(r.commandPerSecond)
+	fmt.Println("Commands per second: ", r.commandPerSecond)
 	for running {
 		select {
 		default:
 			r.updateButtons()
-			if r.readCommands() {
-				pressedButtons, pushButtons := r.PushButtonsPayloads()
+			if commandsUpdate.IsTime() {
+				pressedButtons, pushButtons := r.readButtons()
+				r.readJoysticks()
 				lRoll, hRoll := commons.Uint16ToBytes(r.commands.roll)
 				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
 				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
@@ -129,16 +132,6 @@ func (r *remoteControl) Start(ctx context.Context) {
 	}
 }
 
-func (r *remoteControl) readCommands() bool {
-	if time.Since(r.lastCommandRead) < time.Second/time.Duration(r.commandPerSecond) {
-		return false
-	}
-	r.lastCommandRead = time.Now()
-	r.readJoysticks()
-	r.readButtons()
-	return true
-}
-
 func (r *remoteControl) Initisplay() {
 	r.oled.WriteString("Trottle:", 0, 0)
 }
@@ -152,7 +145,7 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
 }
 
-func (r *remoteControl) PushButtonsPayloads() (pressedButtons byte, pushButtons byte) {
+func (r *remoteControl) readButtons() (pressedButtons byte, pushButtons byte) {
 	pressedButtons = byte(0)
 	pushButtons = byte(0)
 	for i, button := range r.buttons {
@@ -178,10 +171,6 @@ func (r *remoteControl) readJoysticks() {
 		yaw:      yaw,
 		throttle: throttle,
 	}
-}
-
-func (r *remoteControl) readButtons() {
-
 }
 
 func (r *remoteControl) updateButtons() {
