@@ -13,9 +13,10 @@ type gpioPin interface {
 }
 
 type pushButton struct {
-	name      string
-	pin       gpioPin
-	wasPressed   bool
+	name       string
+	pin        gpioPin
+	wasPressed bool
+	pressLock  bool
 }
 
 func NewPushButton(name string, pin gpioPin) *pushButton {
@@ -23,6 +24,7 @@ func NewPushButton(name string, pin gpioPin) *pushButton {
 		name: name,
 		pin:  pin,
 		wasPressed: false,
+		pressLock: false,
 	}
 }
 
@@ -35,12 +37,16 @@ func (b *pushButton) IsPressed() bool {
 }
 
 func (b *pushButton) Update() {
-	if !b.wasPressed && b.IsPressed() {
+	if !b.wasPressed && !b.pressLock && b.IsPressed() {
 		b.wasPressed = true
+		b.pressLock = true
 	}
 }
 
 func (b *pushButton) IsPushed() bool {
+	if !b.IsPressed() && b.pressLock {
+		b.pressLock = false
+	}	
 	if b.wasPressed {
 		b.wasPressed = false
 		return true
