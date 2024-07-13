@@ -56,7 +56,7 @@ func main() {
 	buttonsCount := make([]int, 0, 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
 		pin := hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
-		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin, configs.PushButtons[i].PulseMode))
+		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin))
 		buttonsCount = append(buttonsCount, 0)
 	}
 

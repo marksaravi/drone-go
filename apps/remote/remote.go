@@ -3,7 +3,6 @@ package remote
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/commons"
@@ -21,8 +20,9 @@ type joystick interface {
 
 type PushButton interface {
 	Name() string
-	PulseMode() bool
+	Update()
 	IsPressed() bool
+	IsPushed() bool
 }
 
 type commands struct {
@@ -46,7 +46,6 @@ type remoteControl struct {
 	oled                   oled
 	commandPerSecond       int
 	lastCommandRead        time.Time
-	buttonsPressed         []byte
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
@@ -82,7 +81,6 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		buttons:                settings.PushButtons,
 		oled:                   settings.OLED,
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
-		buttonsPressed:         make([]byte, len(settings.PushButtons)),
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
 		rollMidValue:           settings.RollMidValue,
@@ -101,8 +99,9 @@ func (r *remoteControl) Start(ctx context.Context) {
 	for running {
 		select {
 		default:
-			if r.ReadCommands() {
-				continuesOutputButtons, pulseOutputButtons := r.PushButtonsPayloads()
+			r.updateButtons()
+			if r.readCommands() {
+				pressedButtons, pushButtons := r.PushButtonsPayloads()
 				lRoll, hRoll := commons.Uint16ToBytes(r.commands.roll)
 				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
 				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
@@ -116,8 +115,8 @@ func (r *remoteControl) Start(ctx context.Context) {
 					hYaw,
 					lThrottle,
 					hThrottle,
-					continuesOutputButtons,
-					pulseOutputButtons,
+					pressedButtons,
+					pushButtons,
 				}
 				r.transmitter.Transmit(payload)
 				if displayUpdate.IsTime() {
@@ -130,13 +129,13 @@ func (r *remoteControl) Start(ctx context.Context) {
 	}
 }
 
-func (r *remoteControl) ReadCommands() bool {
+func (r *remoteControl) readCommands() bool {
 	if time.Since(r.lastCommandRead) < time.Second/time.Duration(r.commandPerSecond) {
 		return false
 	}
 	r.lastCommandRead = time.Now()
-	r.ReadJoysticks()
-	r.ReadButtons()
+	r.readJoysticks()
+	r.readButtons()
 	return true
 }
 
@@ -153,24 +152,21 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
 }
 
-func (r *remoteControl) PushButtonsPayloads() (byte, byte) {
-	continuesOutputs := byte(0)
-	coshift := 0
-	pulseOutputs := byte(0)
-	pshift := 0
-	for i, bp := range r.buttonsPressed {
-		if r.buttons[i].PulseMode() {
-			pulseOutputs |= bp << pshift
-			pshift++
-		} else {
-			continuesOutputs |= bp << coshift
-			coshift++
+func (r *remoteControl) PushButtonsPayloads() (pressedButtons byte, pushButtons byte) {
+	pressedButtons = byte(0)
+	pushButtons = byte(0)
+	for i, button := range r.buttons {
+		if button.IsPushed() {
+			pushButtons = pushButtons | (byte(1)<<i)  
+		}			
+		if button.IsPressed() {
+			pressedButtons = pressedButtons | (byte(1)<<i)  
 		}
 	}
-	return continuesOutputs, pulseOutputs
+	return
 }
 
-func (r *remoteControl) ReadJoysticks() {
+func (r *remoteControl) readJoysticks() {
 	roll := r.roll.Read()
 	pitch := r.pitch.Read()
 	yaw := r.yaw.Read()
@@ -184,14 +180,12 @@ func (r *remoteControl) ReadJoysticks() {
 	}
 }
 
-func (r *remoteControl) ReadButtons() {
-	for i, button := range r.buttons {
-		pressed := button.IsPressed()
-		if pressed {
-			r.buttonsPressed[i] = byte(1)
-			log.Println(button.Name())
-		} else {
-			r.buttonsPressed[i] = byte(0)
-		}
+func (r *remoteControl) readButtons() {
+
+}
+
+func (r *remoteControl) updateButtons() {
+	for _, button := range r.buttons {
+		button.Update()
 	}
 }
