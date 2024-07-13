@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/marksaravi/drone-go/apps/remote"
@@ -14,10 +15,17 @@ import (
 type pushButton interface {
 	Name() string
 	IsPressed() bool
+	IsPushed() bool
+	Update()
 }
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
+	pushTest := true
+	if len(os.Args)>1 {
+		pushTest = os.Args[1] != "press"
+	}
+
 	log.Println("Starting the test...")
 	hardware.HostInitialize()
 	configs := remote.ReadConfigs("./configs/remote-configs.json")
@@ -51,11 +59,16 @@ func main() {
 			continue
 		}
 		lastRead=time.Now()
-		for i, button := range buttons {
-			pressed:=button.IsPressed()
-			if pressed {
-				buttonsCount[i]++
-				log.Printf("%s pressed  (%3d)\n", button.Name(), buttonsCount[i])
+		for _, button := range buttons {
+			button.Update()
+			if pushTest {
+				if button.IsPushed() {
+					log.Printf("%s pushed\n", button.Name())
+				}
+			} else {
+				if button.IsPressed() {
+					log.Printf("%s pressed\n", button.Name())
+				}
 			}
 		}
 	}
