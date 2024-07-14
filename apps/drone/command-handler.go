@@ -36,16 +36,15 @@ func (d *droneApp) onMotors(commands []byte) {
 }
 
 func (d *droneApp) getThrottleCommands(commands []byte) {
-	noisyThrottle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
-	smoothedThrottle := d.throttle.Value(noisyThrottle)
-	d.flightControl.SetThrottle(smoothedThrottle)
+	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
+	d.flightControl.setThrottle(throttle)
 }
 
 func (d *droneApp) getRotationCommands(commands []byte) {
 	roll := commons.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
 	pitch := commons.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
 	// yaw := commons.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
-	d.flightControl.SetTargetRotations(imu.Rotations{
+	d.flightControl.setTargetRotations(imu.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
 		Yaw:   0,
