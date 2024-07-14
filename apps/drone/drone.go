@@ -114,12 +114,12 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			if imuReadTick.IsTime() {
 				rot, err := d.imu.Read()
 				if err == nil {
-					d.flightControl.SetRotations(rot)
+					d.flightControl.calcThrottles(rot)
 				}
 			}
 			if escCounter.Inc() {
 				go func() {
-					d.flightControl.SetMotorsPowers()
+					d.flightControl.applyThrottles()
 				}()
 			}
 		}
