@@ -36,7 +36,7 @@ func (d *droneApp) onMotors(commands []byte) {
 }
 
 func (d *droneApp) getThrottleCommands(commands []byte) {
-	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle)
+	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle, d.throttleZeroOffset)
 	d.flightControl.setThrottle(throttle)
 }
 
