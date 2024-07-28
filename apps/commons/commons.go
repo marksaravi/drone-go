@@ -25,7 +25,7 @@ func CalcRotationFromRawJoyStickRaw(commands []byte, midValue int, rotationRange
 	}
 	return float64(rawValue) / float64(midValue) * rotationRange
 }
-func CalcThrottleFromRawJoyStickRaw(commands []byte, maxThrottle float64) float64 {
-	rawValue := RawJoystickRotation(commands)
+func CalcThrottleFromRawJoyStickRaw(commands []byte, maxThrottle float64, zeroOffset int) float64 {
+	rawValue := RawJoystickRotation(commands) - zeroOffset
 	return float64(rawValue) / float64(constants.JOYSTICK_DIGITAL_MAX_VALUE) * maxThrottle
 }
