@@ -23,7 +23,7 @@ func main() {
 	setData(data, 0)
 	r := nrf24l01.NewNRF24L01EnhancedBurst(
 		hardware.SPIConnConfigs{
-			BusNumber:       1,
+			BusNumber:       0,
 			ChipSelect:      0,
 			ChipEnabledGPIO: "GPIO25",
 		},
