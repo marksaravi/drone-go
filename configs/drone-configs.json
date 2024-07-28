@@ -46,7 +46,8 @@
         "pitch-mid-value": 523,
         "yaw-mid-value": 515,
         "rotation-range-deg": 15,
-        "max-throttle": 50
+        "max-throttle": 50,
+        "throttle-zero-offset": 53
     },
     "plotter": {
         "active": false
