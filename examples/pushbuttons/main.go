@@ -13,9 +13,11 @@ import (
 )
 
 type pushButton interface {
-	Name() string
-	IsPressed() bool
-	IsPushed() bool
+	Name()         string
+	Index()        int
+	IsPressed()    bool
+	IsPushed()     bool
+	IsPushButton() bool
 	Update()
 }
 
@@ -35,7 +37,7 @@ func main() {
 	buttonsCount:=make([]int,0 , 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
 		pin:=hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
-		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin))
+		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, configs.PushButtons[i].Index, configs.PushButtons[i].IsPushButton, pin))
 		buttonsCount=append(buttonsCount, 0)
 	}
 	fmt.Println()
@@ -63,12 +65,12 @@ func main() {
 		for _, button := range buttons {
 			button.Update()
 			if pushTest {
-				if button.IsPushed() {
-					log.Printf("%s pushed\n", button.Name())
+				if button.IsPushed() && button.IsPushButton() {
+					log.Printf("%s %d pushed\n", button.Name(), button.Index())
 				}
 			} else {
-				if button.IsPressed() {
-					log.Printf("%s pressed\n", button.Name())
+				if button.IsPressed() && !button.IsPushButton() {
+					log.Printf("%s %d pressed\n", button.Name(), button.Index())
 				}
 			}
 		}

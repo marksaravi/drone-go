@@ -23,8 +23,10 @@ type RemoteConfigs struct {
 		ThrottleChannel int                     `json:"throttle-channel"`
 	} `json:"joysticks"`
 	PushButtons []struct {
-		Name      string `json:"name"`
-		GPIO      string `json:"gpio"`
+		Name         string `json:"name"`
+		Index        int    `json:"index"`
+		IsPushButton bool `json:"is-push-button"`
+		GPIO         string `json:"gpio"`
 	} `json:"push-buttons-gpio"`
 	DisplayUpdatePerSecond int `json:"display-update-per-second"`
 }

@@ -19,10 +19,12 @@ type joystick interface {
 }
 
 type PushButton interface {
-	Name() string
+	Name()         string
+	Index()        int
 	Update()
-	IsPressed() bool
-	IsPushed() bool
+	IsPressed()    bool
+	IsPushed()     bool
+	IsPushButton() bool
 }
 
 type commands struct {
@@ -142,18 +144,19 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 53)
 }
 
 func (r *remoteControl) readButtons() (pressedButtons byte, pushButtons byte) {
 	pressedButtons = byte(0)
 	pushButtons = byte(0)
-	for i, button := range r.buttons {
-		if button.IsPushed() {
-			pushButtons = pushButtons | (byte(1)<<i)  
+	for _, button := range r.buttons {
+		if button.IsPushed() && button.IsPushButton() {
+			pushButtons = pushButtons | (byte(1)<<button.Index())  
+			fmt.Println(button.Name())
 		}			
-		if button.IsPressed() {
-			pressedButtons = pressedButtons | (byte(1)<<i)  
+		if button.IsPressed() && !button.IsPushButton() {
+			pressedButtons = pressedButtons | (byte(1)<<button.Index())  
 		}
 	}
 	return
