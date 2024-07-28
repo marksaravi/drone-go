@@ -43,7 +43,8 @@
     },
     "commands": {
         "rotation-range-deg": 15,
-        "max-throttle": 50
+        "max-throttle": 50,
+        "throttle-zero-offset": 53
     },
     "plotter": {
         "active": false
