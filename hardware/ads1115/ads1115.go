@@ -127,7 +127,7 @@ func (d *ads1115AtoD) ReadThreshold() ([]byte, error) {
 // 	return getLastConversionResults();
 //   }
 
-func (d *ads1115AtoD) ReadADC_SingleEnded(channel byte) uint16 {
+func (d *ads1115AtoD) ReadADC_SingleEnded(channel byte) int16 {
 	if (channel > 3) {
 	  return 0;
 	}
@@ -174,7 +174,8 @@ func (d *ads1115AtoD) startADCReading(mux uint16) {
   }
 
   func (d *ads1115AtoD) writeRegister(reg byte, value uint16) {
-
+	w := []byte{reg, byte(value >> 8), byte(value & 0xFF)}
+	d.i2cDev.Tx(w, nil)
   }
 
 //   void Adafruit_ADS1X15::writeRegister(uint8_t reg, uint16_t value) {
@@ -193,14 +194,29 @@ func (d *ads1115AtoD) readRegister(reg byte) uint16 {
 	// m_i2c_dev->write(buffer, 1);
 	// m_i2c_dev->read(buffer, 2);
 	// return ((buffer[0] << 8) | buffer[1]);
-	return 0;
+	r := make([]byte, 2)
+	w := []byte{reg}
+	d.i2cDev.Tx(w, r)
+	return uint16(r[0]) <<8 | uint16(r[1])
 }
 
-func (d *ads1115AtoD) getLastConversionResults() uint16 {
-	return 0
+func (d *ads1115AtoD) getLastConversionResults() int16 {
+	const m_bitShift = 0
+	res := d.readRegister(ADS1X15_REG_POINTER_CONVERT) >> m_bitShift
+	if m_bitShift == 0 {
+	  return int16(res);
+	} else {
+	  // Shift 12-bit results right 4 bits for the ADS1015,
+	  // making sure we keep the sign bit intact
+	  if res > 0x07FF {
+		// negative number - extend the sign to 16th bit
+		res |= 0xF000;
+	  }
+	  return int16(res);
+	}
 }
 // int16_t Adafruit_ADS1X15::getLastConversionResults()  {
-// 	// Read the conversion results
+
 // 	uint16_t res = readRegister(ADS1X15_REG_POINTER_CONVERT) >> m_bitShift;
 // 	if (m_bitShift == 0) {
 // 	  return (int16_t)res;
