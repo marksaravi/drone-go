@@ -22,9 +22,10 @@ func main() {
 
 	atod := ads1115.NewADS1115(i2cdev);
 
-	for channel:=0; channel<4; channel++ {
+	for channel:=byte(0); channel<4; channel++ {
 		// atod.WriteConfigs(0)
-		atod.Read(0)
+		value:=atod.ReadADC_SingleEnded(channel)
+		fmt.Println(value)
 		time.Sleep(time.Second/5)
 	}
 	
