@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -20,12 +21,24 @@ func main() {
 	defer b.Close()
 	i2cdev := &i2c.Dev{Addr: 0x48, Bus: b}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		fmt.Scanln()
+		cancel()
+	}()
 	atod := ads1115.NewADS1115(i2cdev);
 
-	for channel:=byte(0); channel<4; channel++ {
-		// atod.WriteConfigs(0)
-		value:=atod.ReadADC_SingleEnded(channel)
-		fmt.Println(value)
+	channel := byte(0)
+	running := true
+	for running {
+		select {
+		case <-ctx.Done():
+			running = false
+		default:
+			value:=atod.ReadADC_SingleEnded(channel)
+			fmt.Println(value)
+		}
 		time.Sleep(time.Second/5)
 	}
 	
