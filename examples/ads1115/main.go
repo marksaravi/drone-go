@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"periph.io/x/conn/v3/i2c"
@@ -29,17 +30,36 @@ func main() {
 	}()
 	atod := ads1115.NewADS1115(i2cdev);
 
-	channel := byte(0)
+	channel := byte(2)
 	running := true
+	prevValue := float64(0)
+	sum:=float64(0)
+	average:=float64(0)
+	counter:=int(0)
+	const SPS = 40
 	for running {
 		select {
 		case <-ctx.Done():
 			running = false
 		default:
-			value:=atod.ReadADC_SingleEnded(channel)
-			fmt.Println(value)
+			value:=float64(atod.ReadADC_SingleEnded(channel))
+			sum += value
+			counter++
+			average=sum/float64(counter)
+
+			if math.Abs(prevValue-value)>average/100 {
+				fmt.Println()
+				fmt.Println(prevValue, value)
+			}
+			if counter % SPS == 0 {
+				fmt.Print(".")
+			}
+			if counter % SPS*80 == 0 {
+				fmt.Print(".")
+			}			
+			prevValue = value
 		}
-		time.Sleep(time.Second/5)
+		time.Sleep(time.Second/SPS)
 	}
 	
 }

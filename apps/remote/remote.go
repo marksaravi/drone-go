@@ -111,6 +111,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
 				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
 				lThrottle, hThrottle := commons.Uint16ToBytes(r.commands.throttle)
+				fmt.Println(toInt(lRoll, hRoll))
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -180,4 +181,8 @@ func (r *remoteControl) updateButtons() {
 	for _, button := range r.buttons {
 		button.Update()
 	}
+}
+
+func toInt(l, h byte) int {
+	return int(uint16(l) | (uint16(h) << 8))
 }
