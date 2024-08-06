@@ -38,19 +38,19 @@
             "name": "right-2",
             "index": 1,
             "is-push-button": true,
-            "gpio": "GPIO23"
+            "gpio": "GPIO1"
         },
         {
             "name": "right-3",
             "index": 2,
             "is-push-button": true,
-            "gpio": "GPIO1"
+            "gpio": "GPIO5"
         },
         {
             "name": "right-4",
             "index": 3,
             "is-push-button": true,
-            "gpio": "GPIO5"
+            "gpio": "GPIO23"
         },            
         {
             "name": "left-0",
@@ -68,7 +68,7 @@
             "name": "left-2",
             "index": 5,
             "is-push-button": true,
-            "gpio": "GPIO22"
+            "gpio": "GPIO6"
         },
         {
             "name": "left-3",
@@ -80,7 +80,7 @@
             "name": "left-4",
             "index": 7,
             "is-push-button": true,
-            "gpio": "GPIO6"
+            "gpio": "GPIO22"
         }    
     ],
     "display-update-per-second": 5
