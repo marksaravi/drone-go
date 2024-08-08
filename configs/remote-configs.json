@@ -26,61 +26,61 @@
             "name": "right-0",
             "index": 0,
             "is-push-button": false,
-            "gpio": "GPIO14"
+            "gpio": "GPIO6"
         },
         {
             "name": "right-1",
             "index": 0,
             "is-push-button": true,
-            "gpio": "GPIO18"
+            "gpio": "GPIO22"
         },
         {
             "name": "right-2",
             "index": 1,
             "is-push-button": true,
-            "gpio": "GPIO1"
+            "gpio": "GPIO4"
         },
         {
             "name": "right-3",
             "index": 2,
             "is-push-button": true,
-            "gpio": "GPIO5"
+            "gpio": "GPIO0"
         },
         {
             "name": "right-4",
             "index": 3,
             "is-push-button": true,
-            "gpio": "GPIO23"
+            "gpio": "GPIO17"
         },            
         {
             "name": "left-0",
             "index": 1,
             "is-push-button": false,
-            "gpio": "GPIO4"
+            "gpio": "GPIO14"
         },
         {
             "name": "left-1",
             "index": 4,
             "is-push-button": true,
-            "gpio": "GPIO17"
+            "gpio": "GPIO23"
         },
         {
             "name": "left-2",
             "index": 5,
             "is-push-button": true,
-            "gpio": "GPIO6"
+            "gpio": "GPIO18"
         },
         {
             "name": "left-3",
             "index": 6,
             "is-push-button": true,
-            "gpio": "GPIO0"
+            "gpio": "GPIO5"
         },
         {
             "name": "left-4",
             "index": 7,
             "is-push-button": true,
-            "gpio": "GPIO22"
+            "gpio": "GPIO1"
         }    
     ],
     "display-update-per-second": 5
