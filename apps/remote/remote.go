@@ -15,7 +15,7 @@ type radioTransmiter interface {
 }
 
 type joystick interface {
-	Read() uint16
+	Read(channel byte) (l, h byte)
 }
 
 type PushButton interface {
@@ -40,10 +40,11 @@ type oled interface {
 
 type remoteControl struct {
 	transmitter            radioTransmiter
-	roll                   joystick
-	pitch                  joystick
-	yaw                    joystick
-	throttle               joystick
+	joyStick               joystick
+	rollChan               byte
+	pitchChan              byte
+	yawChan                byte
+	throttleChan           byte
 	buttons                []PushButton
 	oled                   oled
 	commandPerSecond       int
@@ -61,7 +62,8 @@ type remoteControl struct {
 type RemoteSettings struct {
 	Transmitter                radioTransmiter
 	CommandPerSecond           int
-	Roll, Pitch, Yaw, Throttle joystick
+	JoyStick                   joystick
+	Roll, Pitch, Yaw, Throttle byte
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
@@ -76,10 +78,11 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 	return &remoteControl{
 		transmitter:            settings.Transmitter,
 		commandPerSecond:       settings.CommandPerSecond,
-		roll:                   settings.Roll,
-		pitch:                  settings.Pitch,
-		yaw:                    settings.Yaw,
-		throttle:               settings.Throttle,
+		joyStick:               settings.JoyStick,
+		rollChan:               settings.Roll,
+		pitchChan:              settings.Pitch,
+		yawChan:                settings.Yaw,
+		throttleChan:               settings.Throttle,
 		buttons:                settings.PushButtons,
 		oled:                   settings.OLED,
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
@@ -106,12 +109,11 @@ func (r *remoteControl) Start(ctx context.Context) {
 			r.updateButtons()
 			if commandsUpdate.IsTime() {
 				pressedButtons, pushButtons := r.readButtons()
-				r.readJoysticks()
-				lRoll, hRoll := commons.Uint16ToBytes(r.commands.roll)
-				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
-				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
-				lThrottle, hThrottle := commons.Uint16ToBytes(r.commands.throttle)
-				fmt.Println(toInt(lRoll, hRoll))
+				lRoll, hRoll := r.joyStick.Read(r.rollChan)
+				lPitch, hPitch := r.joyStick.Read(r.pitchChan)
+				lYaw, hYaw := byte(0), byte(0) //r.joyStick.Read(r.Chan)
+				lThrottle, hThrottle := r.joyStick.Read(r.throttleChan)
+
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -154,27 +156,12 @@ func (r *remoteControl) readButtons() (pressedButtons byte, pushButtons byte) {
 	for _, button := range r.buttons {
 		if button.IsPushed() && button.IsPushButton() {
 			pushButtons = pushButtons | (byte(1)<<button.Index())  
-			fmt.Println(button.Name())
 		}			
 		if button.IsPressed() && !button.IsPushButton() {
 			pressedButtons = pressedButtons | (byte(1)<<button.Index())  
 		}
 	}
 	return
-}
-
-func (r *remoteControl) readJoysticks() {
-	roll := r.roll.Read()
-	pitch := r.pitch.Read()
-	yaw := r.yaw.Read()
-	throttle := r.throttle.Read()
-
-	r.commands = commands{
-		roll:     roll,
-		pitch:    pitch,
-		yaw:      yaw,
-		throttle: throttle,
-	}
 }
 
 func (r *remoteControl) updateButtons() {
