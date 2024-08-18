@@ -10,16 +10,26 @@
         }
     },
     "joysticks": {
-        "roll-channel": 1,
-        "pitch-channel": 2,
+        "roll-channel": 0,
+        "rolll-mid": 8636,
+        "roll-min": 16,
+        "roll-max":17633,
+
+        "pitch-channel": 1,
+        "pitch-mid": 9039,
+        "pitch-min": 19,
+        "pitch-max":17627,
+
         "yaw-channel": 3,
-        "throttle-channel": 3,
-        "spi": {
-            "bus-number": 1,
-            "chip-select": 0,
-            "speed-mhz": 11,
-            "chip-enabled-gpio": "GPIO26"
-        }
+        "yaw-mid": 0,
+        "yaw-min": 0,
+        "yaw-max":0,
+
+        "throttle-channel": 2,
+        "throttle-mid": 9244.5,
+        "throttle-min": 856,
+        "throttle-max":17633,
+        "i2c-address": 72
     },
     "push-buttons-gpio": [
         {
