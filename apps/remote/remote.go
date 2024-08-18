@@ -113,7 +113,6 @@ func (r *remoteControl) Start(ctx context.Context) {
 				lPitch, hPitch := r.joyStick.Read(r.pitchChan)
 				lYaw, hYaw := byte(0), byte(0) //r.joyStick.Read(r.Chan)
 				lThrottle, hThrottle := r.joyStick.Read(r.throttleChan)
-
 				payload := []byte{
 					lRoll,
 					hRoll,
