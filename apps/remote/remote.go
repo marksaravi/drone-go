@@ -15,7 +15,7 @@ type radioTransmiter interface {
 }
 
 type joystick interface {
-	Read(channel byte) (l, h byte)
+	Read(channel int) (l, h byte)
 }
 
 type PushButton interface {
@@ -41,10 +41,10 @@ type oled interface {
 type remoteControl struct {
 	transmitter            radioTransmiter
 	joyStick               joystick
-	rollChan               byte
-	pitchChan              byte
-	yawChan                byte
-	throttleChan           byte
+	rollChan               int
+	pitchChan              int
+	yawChan                int
+	throttleChan           int
 	buttons                []PushButton
 	oled                   oled
 	commandPerSecond       int
@@ -63,7 +63,7 @@ type RemoteSettings struct {
 	Transmitter                radioTransmiter
 	CommandPerSecond           int
 	JoyStick                   joystick
-	Roll, Pitch, Yaw, Throttle byte
+	Roll, Pitch, Yaw, Throttle int
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int

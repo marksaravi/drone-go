@@ -10,17 +10,12 @@ import (
 	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/hardware/ads1115"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
 )
-
-type atod struct{
-}
-func (a *atod)	Read(channel byte) (l, h byte) {
-	return byte(10), byte(14)
-}
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
@@ -46,25 +41,27 @@ func main() {
 		buttonsCount = append(buttonsCount, 0)
 	}
 
-	b, err := i2creg.Open("")
+	i2cbus, err := i2creg.Open("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer b.Close()
-	d := &i2c.Dev{Addr: 0x3D, Bus: b}
-	oled := ssd1306.NewSSD1306(d, ssd1306.DefaultOptions)
+	defer i2cbus.Close()
+	displayi2c := &i2c.Dev{Addr: 0x3D, Bus: i2cbus}
+	atodi2c := &i2c.Dev{Addr: 0x48, Bus: i2cbus}
+	oled := ssd1306.NewSSD1306(displayi2c, ssd1306.DefaultOptions)
 	err = oled.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
+	atod := ads1115.NewADS1115(atodi2c);
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:            radioTransmitter,
 		CommandPerSecond:       configs.CommandsPerSecond,
-		JoyStick:               &atod{},
-		Roll:                   byte(0),
-		Pitch:                  byte(1),
-		Yaw:                    byte(2),
-		Throttle:               byte(3),
+		JoyStick:               atod,
+		Roll:                   0,
+		Pitch:                  1,
+		Yaw:                    2,
+		Throttle:               3,
 		PushButtons:            buttons,
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
