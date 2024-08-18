@@ -52,11 +52,19 @@ type remoteControl struct {
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
-	rollMidValue           int
-	pitchMidValue          int
-	yawMidValue            int
+	rollMin                    float64
+	pitchMin                   float64
+	yawMin                     float64
+	throttleMin                float64
+	rollMid                    float64
+	pitchMid                   float64
+	yawMid                     float64
+	throttleMid                float64
+	rollMax                    float64
+	pitchMax                   float64
+	yawMax                     float64
+	throttleMax                float64
 	rotationRange          float64
-	maxThrottle            float64
 }
 
 type RemoteSettings struct {
@@ -67,11 +75,19 @@ type RemoteSettings struct {
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
-	RollMidValue               int
-	PitchMidValue              int
-	YawMidValue                int
+	RollMin                    float64
+	PitchMin                   float64
+	YawMin                     float64
+	ThrottleMin                float64
+	RollMid                    float64
+	PitchMid                   float64
+	YawMid                     float64
+	ThrottleMid                float64
+	RollMax                    float64
+	PitchMax                   float64
+	YawMax                     float64
+	ThrottleMax                float64
 	RotationRange              float64
-	MaxThrottle                float64
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
@@ -88,11 +104,22 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
-		rollMidValue:           settings.RollMidValue,
-		pitchMidValue:          settings.PitchMidValue,
-		yawMidValue:            settings.YawMidValue,
+
+		rollMin:                settings.RollMin,
+		pitchMin:               settings.PitchMin,
+		yawMin:                 settings.YawMin,
+		throttleMin:            settings.ThrottleMin,
+		rollMid:                settings.RollMid,
+		pitchMid:               settings.PitchMid,
+		yawMid:                 settings.YawMid,
+		throttleMid:            settings.ThrottleMid,
+		rollMax:                settings.RollMax,
+		pitchMax:               settings.PitchMax,
+		yawMax:                 settings.YawMax,
+		throttleMax:            settings.ThrottleMax,
+
 		rotationRange:          settings.RotationRange,
-		maxThrottle:            settings.MaxThrottle,
+		
 	}
 }
 

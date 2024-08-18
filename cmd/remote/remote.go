@@ -65,11 +65,19 @@ func main() {
 		PushButtons:            buttons,
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
-		RollMidValue:           droneConfigs.Commands.RollMidValue,
-		PitchMidValue:          droneConfigs.Commands.PitchMidValue,
-		YawMidValue:            droneConfigs.Commands.YawMidValue,
+		RollMin:                configs.Joysticks.RollMin,
+		PitchMin:               configs.Joysticks.PitchMin,
+		YawMin:                 configs.Joysticks.YawMin,
+		ThrottleMin:            configs.Joysticks.ThrottleMin,
+		RollMid:                configs.Joysticks.RollMid,
+		PitchMid:               configs.Joysticks.PitchMid,
+		YawMid:                 configs.Joysticks.YawMid,
+		ThrottleMid:            configs.Joysticks.ThrottleMid,		
+		RollMax:                configs.Joysticks.RollMax,
+		PitchMax:               configs.Joysticks.PitchMax,
+		YawMax:                 configs.Joysticks.YawMax,
+		ThrottleMax:            configs.Joysticks.ThrottleMax,
 		RotationRange:          droneConfigs.Commands.RotationRange,
-		MaxThrottle:            droneConfigs.Commands.MaxThrottle,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
