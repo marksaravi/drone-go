@@ -54,6 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 	atod := ads1115.NewADS1115(atodi2c);
+	fmt.Println(configs.Joysticks.RollMin, configs.Joysticks.RollMid, configs.Joysticks.RollMax)
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:            radioTransmitter,
 		CommandPerSecond:       configs.CommandsPerSecond,
@@ -66,16 +67,16 @@ func main() {
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
 		RollMin:                configs.Joysticks.RollMin,
-		PitchMin:               configs.Joysticks.PitchMin,
-		YawMin:                 configs.Joysticks.YawMin,
-		ThrottleMin:            configs.Joysticks.ThrottleMin,
 		RollMid:                configs.Joysticks.RollMid,
-		PitchMid:               configs.Joysticks.PitchMid,
-		YawMid:                 configs.Joysticks.YawMid,
-		ThrottleMid:            configs.Joysticks.ThrottleMid,		
 		RollMax:                configs.Joysticks.RollMax,
+		PitchMin:               configs.Joysticks.PitchMin,
+		PitchMid:               configs.Joysticks.PitchMid,
 		PitchMax:               configs.Joysticks.PitchMax,
+		YawMin:                 configs.Joysticks.YawMin,
+		YawMid:                 configs.Joysticks.YawMid,
 		YawMax:                 configs.Joysticks.YawMax,
+		ThrottleMin:            configs.Joysticks.ThrottleMin,
+		ThrottleMid:            configs.Joysticks.ThrottleMid,		
 		ThrottleMax:            configs.Joysticks.ThrottleMax,
 		RotationRange:          droneConfigs.Commands.RotationRange,
 	})

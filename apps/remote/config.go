@@ -16,25 +16,25 @@ type RemoteConfigs struct {
 		SPI         hardware.SPIConnConfigs `json:"spi"`
 	} `json:"radio"`
 	Joysticks struct {
-		RollChannel     int                     `json:"roll-channel"`
-		RollMin         float64                  `json:"roll-min"`
-		RollMid         float64                  `json:"roll-mid"`
-		RollMax         float64                  `json:"roll-max"`
+		RollChannel     int                    `json:"roll-channel"`
+		RollMin         uint16                 `json:"roll-min"`
+		RollMid         uint16                 `json:"roll-mid"`
+		RollMax         uint16                 `json:"roll-max"`
 
-		PitchChannel    int                     `json:"pitch-channel"`
-		PitchMin        float64                 `json:"pitch-min"`
-		PitchMid        float64                 `json:"pitch-mid"`
-		PitchMax        float64                 `json:"pitch-max"`		
+		PitchChannel    int                    `json:"pitch-channel"`
+		PitchMin        uint16                 `json:"pitch-min"`
+		PitchMid        uint16                 `json:"pitch-mid"`
+		PitchMax        uint16                 `json:"pitch-max"`		
 		
-		YawChannel      int                     `json:"yaw-channel"`
-		YawMin          float64                 `json:"yaw-min"`
-		YawMid          float64                 `json:"yaw-mid"`
-		YawMax          float64                 `json:"yaw-max"`		
+		YawChannel      int                    `json:"yaw-channel"`
+		YawMin          uint16                 `json:"yaw-min"`
+		YawMid          uint16                 `json:"yaw-mid"`
+		YawMax          uint16                 `json:"yaw-max"`		
 
-		ThrottleChannel int                     `json:"throttle-channel"`
-		ThrottleMin     float64                 `json:"throttle-min"`
-		ThrottleMid     float64                 `json:"throttle-mid"`
-		ThrottleMax     float64                 `json:"throttle-max"`
+		ThrottleChannel int                    `json:"throttle-channel"`
+		ThrottleMin     uint16                 `json:"throttle-min"`
+		ThrottleMid     uint16                 `json:"throttle-mid"`
+		ThrottleMax     uint16                 `json:"throttle-max"`
 		
 		I2CAddress             hardware.SPIConnConfigs `json:"i2c-address"`
 	} `json:"joysticks"`

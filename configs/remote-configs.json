@@ -12,18 +12,18 @@
     "joysticks": {
         "roll-channel": 0,
         "roll-min": 16,
-        "rolll-mid": 8636,
-        "roll-max":17633,
+        "roll-mid": 8636,
+        "roll-max": 17633,
 
         "pitch-channel": 1,
         "pitch-min": 19,
         "pitch-mid": 9039,
-        "pitch-max":17627,
+        "pitch-max": 17627,
 
         "yaw-channel": 3,
-        "yaw-min": 0,
-        "yaw-mid": 0,
-        "yaw-max":0,
+        "yaw-min": 16,
+        "yaw-mid": 8636,
+        "yaw-max": 17627,
 
         "throttle-channel": 2,
         "throttle-min": 856,

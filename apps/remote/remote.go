@@ -9,6 +9,8 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+const INPUT_RANGE = uint16(32768)
+
 type radioTransmiter interface {
 	On()
 	Transmit(payload []byte) error
@@ -52,18 +54,18 @@ type remoteControl struct {
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
-	rollMin                    float64
-	pitchMin                   float64
-	yawMin                     float64
-	throttleMin                float64
-	rollMid                    float64
-	pitchMid                   float64
-	yawMid                     float64
-	throttleMid                float64
-	rollMax                    float64
-	pitchMax                   float64
-	yawMax                     float64
-	throttleMax                float64
+	rollMin                    uint16
+	pitchMin                   uint16
+	yawMin                     uint16
+	throttleMin                uint16
+	rollMid                    uint16
+	pitchMid                   uint16
+	yawMid                     uint16
+	throttleMid                uint16
+	rollMax                    uint16
+	pitchMax                   uint16
+	yawMax                     uint16
+	throttleMax                uint16
 	rotationRange          float64
 }
 
@@ -75,22 +77,28 @@ type RemoteSettings struct {
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
-	RollMin                    float64
-	PitchMin                   float64
-	YawMin                     float64
-	ThrottleMin                float64
-	RollMid                    float64
-	PitchMid                   float64
-	YawMid                     float64
-	ThrottleMid                float64
-	RollMax                    float64
-	PitchMax                   float64
-	YawMax                     float64
-	ThrottleMax                float64
+	RollMin                    uint16
+	PitchMin                   uint16
+	YawMin                     uint16
+	ThrottleMin                uint16
+	RollMid                    uint16
+	PitchMid                   uint16
+	YawMid                     uint16
+	ThrottleMid                uint16
+	RollMax                    uint16
+	PitchMax                   uint16
+	YawMax                     uint16
+	ThrottleMax                uint16
 	RotationRange              float64
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
+	rmin,rmid,rmax:=fixMax(settings.RollMin,settings.RollMid,settings.RollMax)
+	pmin,pmid,pmax:=fixMax(settings.PitchMin,settings.PitchMid,settings.PitchMax)
+	ymin,ymid,ymax:=fixMax(settings.YawMin,settings.YawMid,settings.YawMax)
+	tmin,tmid,tmax:=fixMax(settings.ThrottleMin,settings.ThrottleMid,settings.ThrottleMax)
+
+
 	return &remoteControl{
 		transmitter:            settings.Transmitter,
 		commandPerSecond:       settings.CommandPerSecond,
@@ -98,25 +106,28 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		rollChan:               settings.Roll,
 		pitchChan:              settings.Pitch,
 		yawChan:                settings.Yaw,
-		throttleChan:               settings.Throttle,
+		throttleChan:           settings.Throttle,
 		buttons:                settings.PushButtons,
 		oled:                   settings.OLED,
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
 
-		rollMin:                settings.RollMin,
-		pitchMin:               settings.PitchMin,
-		yawMin:                 settings.YawMin,
-		throttleMin:            settings.ThrottleMin,
-		rollMid:                settings.RollMid,
-		pitchMid:               settings.PitchMid,
-		yawMid:                 settings.YawMid,
-		throttleMid:            settings.ThrottleMid,
-		rollMax:                settings.RollMax,
-		pitchMax:               settings.PitchMax,
-		yawMax:                 settings.YawMax,
-		throttleMax:            settings.ThrottleMax,
+		rollMin:                rmin,
+		rollMid:                rmid,
+		rollMax:                rmax,
+		
+		pitchMin:               pmin,
+		pitchMid:               pmid,
+		pitchMax:               pmax,
+
+		yawMin:                 ymin,
+		yawMid:                 ymid,
+		yawMax:                 ymax,
+
+		throttleMin:            tmin,
+		throttleMid:            tmid,
+		throttleMax:            tmax,
 
 		rotationRange:          settings.RotationRange,
 		
@@ -136,10 +147,15 @@ func (r *remoteControl) Start(ctx context.Context) {
 			r.updateButtons()
 			if commandsUpdate.IsTime() {
 				pressedButtons, pushButtons := r.readButtons()
-				lRoll, hRoll := r.joyStick.Read(r.rollChan)
-				lPitch, hPitch := r.joyStick.Read(r.pitchChan)
+				l, h := r.joyStick.Read(r.rollChan)
+				lRoll, hRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, INPUT_RANGE)
+				l, h = r.joyStick.Read(r.pitchChan)
+				lPitch, hPitch := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, INPUT_RANGE)
+				// fmt.Print(ui(l,h),"  ")
 				lYaw, hYaw := byte(0), byte(0) //r.joyStick.Read(r.Chan)
-				lThrottle, hThrottle := r.joyStick.Read(r.throttleChan)
+				l, h = r.joyStick.Read(r.throttleChan)
+				lThrottle, hThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, INPUT_RANGE)
+				// fmt.Println(ui(lPitch,hPitch))
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -196,6 +212,27 @@ func (r *remoteControl) updateButtons() {
 	}
 }
 
-func toInt(l, h byte) int {
-	return int(uint16(l) | (uint16(h) << 8))
+func fixMax(min, mid, max uint16) (uint16, uint16, uint16) {
+	fmt.Print(min,mid, max, " -> ")
+	r:=mid-min
+	max=r+mid
+	return min, mid, max
+}
+
+func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
+	v:=uint16(l) + uint16(h)<<8
+	if v<min {
+		v=min
+	}
+	if v>max {
+		v=max
+	}
+	r:=mid-min
+	f:=float64(inputRange/2)/float64(r)
+	n:=uint16(float64(v-min)*f)
+	return byte(n & 0b0000000011111111), byte(n>>8)
+}
+
+func ui(l, h byte) uint16 {
+	return uint16(l)+uint16(h)<<8
 }

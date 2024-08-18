@@ -39,9 +39,6 @@ type DroneConfigs struct {
 		DataPerSecond int `json:"data-per-second"`
 	} `json:"esc"`
 	Commands struct {
-		RollMidValue  int     `json:"roll-mid-value"`
-		PitchMidValue int     `json:"pitch-mid-value"`
-		YawMidValue   int     `json:"yaw-mid-value"`
 		RotationRange float64 `json:"rotation-range-deg"`
 		MaxThrottle   float64 `json:"max-throttle"`
 	} `json:"commands"`
