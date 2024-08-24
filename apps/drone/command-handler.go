@@ -1,8 +1,6 @@
 package drone
 
 import (
-	"fmt"
-
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -55,8 +53,6 @@ func (d *droneApp) getThrottleCommands(hThrottle, lThrottle byte) {
 func (d *droneApp) getRotationCommands(hRoll, lRoll, hPitch, lPitch byte) {
 	roll := utils.CommandToRotation(hRoll, lRoll, d.rotationRange)
 	pitch := utils.CommandToRotation(hPitch, lPitch, d.rotationRange)
-	fmt.Println(roll, pitch)
-	// yaw := commons.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
 	d.flightControl.setTargetRotations(imu.Rotations{
 		Roll:  roll,
 		Pitch: pitch,
