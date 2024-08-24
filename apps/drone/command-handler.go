@@ -38,11 +38,11 @@ func (d *droneApp) applyCommands(commands []byte) {
 }
 
 func (d *droneApp) onMotors(pushButtons byte) {
-	// if commands[9] == COMMAND_TURN_ON {
-	// 	d.flightControl.turnOnMotors(true)
-	// } else if commands[9] == COMMAND_TURN_OFF {
-	// 	d.flightControl.turnOnMotors(false)
-	// }
+	if pushButtons&COMMAND_TURN_ON > 0 && d.flightControl.getThrottle() < 3 {
+		d.flightControl.turnOnMotors(true)
+	} else if pushButtons&COMMAND_TURN_OFF > 0 {
+		d.flightControl.turnOnMotors(false)
+	}
 }
 
 func (d *droneApp) getThrottleCommands(hThrottle, lThrottle byte) {

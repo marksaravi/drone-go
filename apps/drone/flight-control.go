@@ -1,8 +1,6 @@
 package drone
 
 import (
-	"time"
-
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/pid"
 )
@@ -27,7 +25,6 @@ type FlightControl struct {
 	maxThrottle  float64
 
 	escs                  escs
-	motorsArmingTime      time.Time
 	throttleLowPassFilter float64
 }
 
@@ -70,6 +67,10 @@ func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {
 
 func (fc *FlightControl) setThrottle(throttle float64) {
 	fc.throttle = throttle
+}
+
+func (fc *FlightControl) getThrottle() float64 {
+	return fc.throttle
 }
 
 func (fc *FlightControl) applyThrottles() {
