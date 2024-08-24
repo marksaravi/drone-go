@@ -16,15 +16,33 @@ type RemoteConfigs struct {
 		SPI         hardware.SPIConnConfigs `json:"spi"`
 	} `json:"radio"`
 	Joysticks struct {
-		SPI             hardware.SPIConnConfigs `json:"spi"`
-		RollChannel     int                     `json:"roll-channel"`
-		PitchChannel    int                     `json:"pitch-channel"`
-		YawChannel      int                     `json:"yaw-channel"`
-		ThrottleChannel int                     `json:"throttle-channel"`
+		RollChannel     int                    `json:"roll-channel"`
+		RollMin         uint16                 `json:"roll-min"`
+		RollMid         uint16                 `json:"roll-mid"`
+		RollMax         uint16                 `json:"roll-max"`
+
+		PitchChannel    int                    `json:"pitch-channel"`
+		PitchMin        uint16                 `json:"pitch-min"`
+		PitchMid        uint16                 `json:"pitch-mid"`
+		PitchMax        uint16                 `json:"pitch-max"`		
+		
+		YawChannel      int                    `json:"yaw-channel"`
+		YawMin          uint16                 `json:"yaw-min"`
+		YawMid          uint16                 `json:"yaw-mid"`
+		YawMax          uint16                 `json:"yaw-max"`		
+
+		ThrottleChannel int                    `json:"throttle-channel"`
+		ThrottleMin     uint16                 `json:"throttle-min"`
+		ThrottleMid     uint16                 `json:"throttle-mid"`
+		ThrottleMax     uint16                 `json:"throttle-max"`
+		
+		I2CAddress             hardware.SPIConnConfigs `json:"i2c-address"`
 	} `json:"joysticks"`
 	PushButtons []struct {
-		Name      string `json:"name"`
-		GPIO      string `json:"gpio"`
+		Name         string `json:"name"`
+		Index        int    `json:"index"`
+		IsPushButton bool `json:"is-push-button"`
+		GPIO         string `json:"gpio"`
 	} `json:"push-buttons-gpio"`
 	DisplayUpdatePerSecond int `json:"display-update-per-second"`
 }

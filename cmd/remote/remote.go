@@ -10,7 +10,7 @@ import (
 	pushbutton "github.com/marksaravi/drone-go/devices/push-button"
 	"github.com/marksaravi/drone-go/devices/radio"
 	"github.com/marksaravi/drone-go/hardware"
-	"github.com/marksaravi/drone-go/hardware/mcp3008"
+	"github.com/marksaravi/drone-go/hardware/ads1115"
 	"github.com/marksaravi/drone-go/hardware/nrf24l01"
 	"github.com/marksaravi/drone-go/hardware/ssd1306"
 	"periph.io/x/conn/v3/i2c"
@@ -33,59 +33,52 @@ func main() {
 
 	radioTransmitter := radio.NewRadioTransmitter(radioLink)
 
-	analogToDigitalSPIConn := hardware.NewMCP3008SPIConnection(configs.Joysticks.SPI)
-
-	joystickRoll := mcp3008.NewMCP3008(
-		analogToDigitalSPIConn,
-		configs.Joysticks.RollChannel,
-	)
-	joystickPitch := mcp3008.NewMCP3008(
-		analogToDigitalSPIConn,
-		configs.Joysticks.PitchChannel,
-	)
-	joystickYaw := mcp3008.NewMCP3008(
-		analogToDigitalSPIConn,
-		configs.Joysticks.YawChannel,
-	)
-	joystickThrottle := mcp3008.NewMCP3008(
-		analogToDigitalSPIConn,
-		configs.Joysticks.ThrottleChannel,
-	)
-
 	buttons := make([]remote.PushButton, 0, 10)
 	buttonsCount := make([]int, 0, 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
 		pin := hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
-		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, pin))
+		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, configs.PushButtons[i].Index, configs.PushButtons[i].IsPushButton,pin))
 		buttonsCount = append(buttonsCount, 0)
 	}
 
-	b, err := i2creg.Open("")
+	i2cbus, err := i2creg.Open("")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer b.Close()
-	d := &i2c.Dev{Addr: 0x3D, Bus: b}
-	oled := ssd1306.NewSSD1306(d, ssd1306.DefaultOptions)
+	defer i2cbus.Close()
+	displayi2c := &i2c.Dev{Addr: 0x3D, Bus: i2cbus}
+	atodi2c := &i2c.Dev{Addr: 0x48, Bus: i2cbus}
+	oled := ssd1306.NewSSD1306(displayi2c, ssd1306.DefaultOptions)
 	err = oled.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
+	atod := ads1115.NewADS1115(atodi2c);
+	fmt.Println(configs.Joysticks.RollMin, configs.Joysticks.RollMid, configs.Joysticks.RollMax)
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:            radioTransmitter,
 		CommandPerSecond:       configs.CommandsPerSecond,
-		Roll:                   joystickRoll,
-		Pitch:                  joystickPitch,
-		Yaw:                    joystickYaw,
-		Throttle:               joystickThrottle,
+		JoyStick:               atod,
+		Roll:                   0,
+		Pitch:                  1,
+		Yaw:                    3,
+		Throttle:               2,
 		PushButtons:            buttons,
 		OLED:                   oled,
 		DisplayUpdatePerSecond: configs.DisplayUpdatePerSecond,
-		RollMidValue:           droneConfigs.Commands.RollMidValue,
-		PitchMidValue:          droneConfigs.Commands.PitchMidValue,
-		YawMidValue:            droneConfigs.Commands.YawMidValue,
+		RollMin:                configs.Joysticks.RollMin,
+		RollMid:                configs.Joysticks.RollMid,
+		RollMax:                configs.Joysticks.RollMax,
+		PitchMin:               configs.Joysticks.PitchMin,
+		PitchMid:               configs.Joysticks.PitchMid,
+		PitchMax:               configs.Joysticks.PitchMax,
+		YawMin:                 configs.Joysticks.YawMin,
+		YawMid:                 configs.Joysticks.YawMid,
+		YawMax:                 configs.Joysticks.YawMax,
+		ThrottleMin:            configs.Joysticks.ThrottleMin,
+		ThrottleMid:            configs.Joysticks.ThrottleMid,		
+		ThrottleMax:            configs.Joysticks.ThrottleMax,
 		RotationRange:          droneConfigs.Commands.RotationRange,
-		MaxThrottle:            droneConfigs.Commands.MaxThrottle,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

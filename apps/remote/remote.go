@@ -9,20 +9,24 @@ import (
 	"github.com/marksaravi/drone-go/utils"
 )
 
+const INPUT_RANGE = uint16(32768)
+
 type radioTransmiter interface {
 	On()
 	Transmit(payload []byte) error
 }
 
 type joystick interface {
-	Read() uint16
+	Read(channel int) (l, h byte)
 }
 
 type PushButton interface {
-	Name() string
+	Name()         string
+	Index()        int
 	Update()
-	IsPressed() bool
-	IsPushed() bool
+	IsPressed()    bool
+	IsPushed()     bool
+	IsPushButton() bool
 }
 
 type commands struct {
@@ -38,10 +42,11 @@ type oled interface {
 
 type remoteControl struct {
 	transmitter            radioTransmiter
-	roll                   joystick
-	pitch                  joystick
-	yaw                    joystick
-	throttle               joystick
+	joyStick               joystick
+	rollChan               int
+	pitchChan              int
+	yawChan                int
+	throttleChan           int
 	buttons                []PushButton
 	oled                   oled
 	commandPerSecond       int
@@ -49,45 +54,83 @@ type remoteControl struct {
 	commands               commands
 	displayUpdatePerSecond int
 	lastDisplayUpdate      time.Time
-	rollMidValue           int
-	pitchMidValue          int
-	yawMidValue            int
+	rollMin                    uint16
+	pitchMin                   uint16
+	yawMin                     uint16
+	throttleMin                uint16
+	rollMid                    uint16
+	pitchMid                   uint16
+	yawMid                     uint16
+	throttleMid                uint16
+	rollMax                    uint16
+	pitchMax                   uint16
+	yawMax                     uint16
+	throttleMax                uint16
 	rotationRange          float64
-	maxThrottle            float64
 }
 
 type RemoteSettings struct {
 	Transmitter                radioTransmiter
 	CommandPerSecond           int
-	Roll, Pitch, Yaw, Throttle joystick
+	JoyStick                   joystick
+	Roll, Pitch, Yaw, Throttle int
 	PushButtons                []PushButton
 	OLED                       oled
 	DisplayUpdatePerSecond     int
-	RollMidValue               int
-	PitchMidValue              int
-	YawMidValue                int
+	RollMin                    uint16
+	PitchMin                   uint16
+	YawMin                     uint16
+	ThrottleMin                uint16
+	RollMid                    uint16
+	PitchMid                   uint16
+	YawMid                     uint16
+	ThrottleMid                uint16
+	RollMax                    uint16
+	PitchMax                   uint16
+	YawMax                     uint16
+	ThrottleMax                uint16
 	RotationRange              float64
-	MaxThrottle                float64
 }
 
 func NewRemoteControl(settings RemoteSettings) *remoteControl {
+	rmin,rmid,rmax:=fixMax(settings.RollMin,settings.RollMid,settings.RollMax)
+	pmin,pmid,pmax:=fixMax(settings.PitchMin,settings.PitchMid,settings.PitchMax)
+	ymin,ymid,ymax:=fixMax(settings.YawMin,settings.YawMid,settings.YawMax)
+	tmin,tmid,tmax:=fixMax(settings.ThrottleMin,settings.ThrottleMid,settings.ThrottleMax)
+
+
 	return &remoteControl{
 		transmitter:            settings.Transmitter,
 		commandPerSecond:       settings.CommandPerSecond,
-		roll:                   settings.Roll,
-		pitch:                  settings.Pitch,
-		yaw:                    settings.Yaw,
-		throttle:               settings.Throttle,
+		joyStick:               settings.JoyStick,
+		rollChan:               settings.Roll,
+		pitchChan:              settings.Pitch,
+		yawChan:                settings.Yaw,
+		throttleChan:           settings.Throttle,
 		buttons:                settings.PushButtons,
 		oled:                   settings.OLED,
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
 		lastCommandRead:        time.Now(),
 		lastDisplayUpdate:      time.Now(),
-		rollMidValue:           settings.RollMidValue,
-		pitchMidValue:          settings.PitchMidValue,
-		yawMidValue:            settings.YawMidValue,
+
+		rollMin:                rmin,
+		rollMid:                rmid,
+		rollMax:                rmax,
+		
+		pitchMin:               pmin,
+		pitchMid:               pmid,
+		pitchMax:               pmax,
+
+		yawMin:                 ymin,
+		yawMid:                 ymid,
+		yawMax:                 ymax,
+
+		throttleMin:            tmin,
+		throttleMid:            tmid,
+		throttleMax:            tmax,
+
 		rotationRange:          settings.RotationRange,
-		maxThrottle:            settings.MaxThrottle,
+		
 	}
 }
 
@@ -95,20 +138,26 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	displayUpdate := utils.WithDataPerSecond(3)
+	// displayUpdate := utils.WithDataPerSecond(3)
 	commandsUpdate := utils.WithDataPerSecond(r.commandPerSecond)
 	fmt.Println("Commands per second: ", r.commandPerSecond)
+	// counter:=0
+	// ts:=time.Now()
 	for running {
 		select {
 		default:
 			r.updateButtons()
 			if commandsUpdate.IsTime() {
 				pressedButtons, pushButtons := r.readButtons()
-				r.readJoysticks()
-				lRoll, hRoll := commons.Uint16ToBytes(r.commands.roll)
-				lPitch, hPitch := commons.Uint16ToBytes(r.commands.pitch)
-				lYaw, hYaw := commons.Uint16ToBytes(r.commands.yaw)
-				lThrottle, hThrottle := commons.Uint16ToBytes(r.commands.throttle)
+				l, h := r.joyStick.Read(r.rollChan)
+				lRoll, hRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, INPUT_RANGE)
+				l, h = r.joyStick.Read(r.pitchChan)
+				lPitch, hPitch := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, INPUT_RANGE)
+				// fmt.Print(ui(l,h),"  ")
+				lYaw, hYaw := byte(0), byte(0) //r.joyStick.Read(r.Chan)
+				l, h = r.joyStick.Read(r.throttleChan)
+				lThrottle, hThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, INPUT_RANGE)
+				// fmt.Println(ui(lPitch,hPitch))
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -121,10 +170,14 @@ func (r *remoteControl) Start(ctx context.Context) {
 					pressedButtons,
 					pushButtons,
 				}
+				// counter++
+				// fmt.Println(counter, payload, time.Since(ts).Seconds())
 				r.transmitter.Transmit(payload)
-				if displayUpdate.IsTime() {
-					r.UpdateDisplay(payload)
-				}
+				// if displayUpdate.IsTime() {
+				// 	go func() {
+				// 		r.UpdateDisplay(payload)
+				// 	}()
+				// }
 			}
 		case <-ctx.Done():
 			running = false
@@ -142,39 +195,50 @@ func (r *remoteControl) UpdateDisplay(payload []byte) {
 	}
 	r.lastDisplayUpdate = time.Now()
 	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 0)
+	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 53)
 }
 
 func (r *remoteControl) readButtons() (pressedButtons byte, pushButtons byte) {
 	pressedButtons = byte(0)
 	pushButtons = byte(0)
-	for i, button := range r.buttons {
-		if button.IsPushed() {
-			pushButtons = pushButtons | (byte(1)<<i)  
+	for _, button := range r.buttons {
+		if button.IsPushed() && button.IsPushButton() {
+			pushButtons = pushButtons | (byte(1)<<button.Index())  
 		}			
-		if button.IsPressed() {
-			pressedButtons = pressedButtons | (byte(1)<<i)  
+		if button.IsPressed() && !button.IsPushButton() {
+			pressedButtons = pressedButtons | (byte(1)<<button.Index())  
 		}
 	}
 	return
-}
-
-func (r *remoteControl) readJoysticks() {
-	roll := r.roll.Read()
-	pitch := r.pitch.Read()
-	yaw := r.yaw.Read()
-	throttle := r.throttle.Read()
-
-	r.commands = commands{
-		roll:     roll,
-		pitch:    pitch,
-		yaw:      yaw,
-		throttle: throttle,
-	}
 }
 
 func (r *remoteControl) updateButtons() {
 	for _, button := range r.buttons {
 		button.Update()
 	}
+}
+
+func fixMax(min, mid, max uint16) (uint16, uint16, uint16) {
+	fmt.Print(min,mid, max, " -> ")
+	r:=mid-min
+	max=r+mid
+	return min, mid, max
+}
+
+func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
+	v:=uint16(l) + uint16(h)<<8
+	if v<min {
+		v=min
+	}
+	if v>max {
+		v=max
+	}
+	r:=mid-min
+	f:=float64(inputRange/2)/float64(r)
+	n:=uint16(float64(v-min)*f)
+	return byte(n & 0b0000000011111111), byte(n>>8)
+}
+
+func ui(l, h byte) uint16 {
+	return uint16(l)+uint16(h)<<8
 }
