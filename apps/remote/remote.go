@@ -138,9 +138,11 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	displayUpdate := utils.WithDataPerSecond(3)
+	// displayUpdate := utils.WithDataPerSecond(3)
 	commandsUpdate := utils.WithDataPerSecond(r.commandPerSecond)
 	fmt.Println("Commands per second: ", r.commandPerSecond)
+	// counter:=0
+	// ts:=time.Now()
 	for running {
 		select {
 		default:
@@ -168,10 +170,14 @@ func (r *remoteControl) Start(ctx context.Context) {
 					pressedButtons,
 					pushButtons,
 				}
+				// counter++
+				// fmt.Println(counter, payload, time.Since(ts).Seconds())
 				r.transmitter.Transmit(payload)
-				if displayUpdate.IsTime() {
-					r.UpdateDisplay(payload)
-				}
+				// if displayUpdate.IsTime() {
+				// 	go func() {
+				// 		r.UpdateDisplay(payload)
+				// 	}()
+				// }
 			}
 		case <-ctx.Done():
 			running = false
