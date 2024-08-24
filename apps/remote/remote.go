@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"github.com/marksaravi/drone-go/apps/commons"
 	"github.com/marksaravi/drone-go/utils"
 )
-
-const INPUT_RANGE = uint16(32768)
 
 type radioTransmiter interface {
 	On()
@@ -141,8 +140,6 @@ func (r *remoteControl) Start(ctx context.Context) {
 	// displayUpdate := utils.WithDataPerSecond(3)
 	commandsUpdate := utils.WithDataPerSecond(r.commandPerSecond)
 	fmt.Println("Commands per second: ", r.commandPerSecond)
-	// counter:=0
-	// ts:=time.Now()
 	for running {
 		select {
 		default:
@@ -150,14 +147,13 @@ func (r *remoteControl) Start(ctx context.Context) {
 			if commandsUpdate.IsTime() {
 				pressedButtons, pushButtons := r.readButtons()
 				l, h := r.joyStick.Read(r.rollChan)
-				lRoll, hRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, INPUT_RANGE)
+				lRoll, hRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, constants.JOY_STICK_INPUT_RANGE)
 				l, h = r.joyStick.Read(r.pitchChan)
-				lPitch, hPitch := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, INPUT_RANGE)
-				// fmt.Print(ui(l,h),"  ")
-				lYaw, hYaw := byte(0), byte(0) //r.joyStick.Read(r.Chan)
+				lPitch, hPitch := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, constants.JOY_STICK_INPUT_RANGE)
+				lYaw, hYaw := byte(0), byte(0)
 				l, h = r.joyStick.Read(r.throttleChan)
-				lThrottle, hThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, INPUT_RANGE)
-				// fmt.Println(ui(lPitch,hPitch))
+				lThrottle, hThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, constants.JOY_STICK_INPUT_RANGE)
+
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -170,14 +166,7 @@ func (r *remoteControl) Start(ctx context.Context) {
 					pressedButtons,
 					pushButtons,
 				}
-				// counter++
-				// fmt.Println(counter, payload, time.Since(ts).Seconds())
 				r.transmitter.Transmit(payload)
-				// if displayUpdate.IsTime() {
-				// 	go func() {
-				// 		r.UpdateDisplay(payload)
-				// 	}()
-				// }
 			}
 		case <-ctx.Done():
 			running = false
@@ -237,8 +226,4 @@ func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
 	f:=float64(inputRange/2)/float64(r)
 	n:=uint16(float64(v-min)*f)
 	return byte(n & 0b0000000011111111), byte(n>>8)
-}
-
-func ui(l, h byte) uint16 {
-	return uint16(l)+uint16(h)<<8
 }
