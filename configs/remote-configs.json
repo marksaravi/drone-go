@@ -1,5 +1,5 @@
 {
-    "commands-per-second": 15,
+    "commands-per-second": 20,
     "radio": {
         "rx-tx-address": "03896",
         "spi": {
