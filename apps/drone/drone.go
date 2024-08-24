@@ -103,13 +103,12 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
 	escCounter := utils.NewCounter(d.escsDataPerImuData)
+
 	for running || commandOk {
 		select {
 		case commands, commandOk = <-commandsChannel:
 			if commandOk {
-				go func() {
-					d.applyCommands(commands)
-				}()
+				d.applyCommands(commands)
 			}
 		case _, running = <-ctx.Done():
 			running = false

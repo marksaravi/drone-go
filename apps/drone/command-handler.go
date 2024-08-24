@@ -3,8 +3,8 @@ package drone
 import (
 	"fmt"
 
-	"github.com/marksaravi/drone-go/apps/commons"
 	"github.com/marksaravi/drone-go/devices/imu"
+	"github.com/marksaravi/drone-go/utils"
 )
 
 const (
@@ -19,30 +19,43 @@ const (
 )
 
 func (d *droneApp) applyCommands(commands []byte) {
-	d.onMotors(commands)
-	d.getThrottleCommands(commands)
-	d.getRotationCommands(commands)
+
+	lRoll := commands[0]
+	hRoll := commands[1]
+	lPitch := commands[2]
+	hPitch := commands[3]
+	// lYaw := commands[4]
+	// hYaw := commands[5]
+	lThrottle := commands[6]
+	hThrottle := commands[7]
+	pressedButtons := commands[8]
+	pushButtons := commands[9]
+
+	d.onMotors(pushButtons)
+	d.getThrottleCommands(hThrottle, lThrottle)
+	d.getRotationCommands(hRoll, lRoll, hPitch, lPitch)
 	if d.flightControl.calibrationMode {
-		d.calibratePID(commands[9])
+		d.calibratePID(pressedButtons)
 	}
 }
 
-func (d *droneApp) onMotors(commands []byte) {
-	if commands[9] == COMMAND_TURN_ON {
-		d.flightControl.turnOnMotors(true)
-	} else if commands[9] == COMMAND_TURN_OFF {
-		d.flightControl.turnOnMotors(false)
-	}
+func (d *droneApp) onMotors(pushButtons byte) {
+	// if commands[9] == COMMAND_TURN_ON {
+	// 	d.flightControl.turnOnMotors(true)
+	// } else if commands[9] == COMMAND_TURN_OFF {
+	// 	d.flightControl.turnOnMotors(false)
+	// }
 }
 
-func (d *droneApp) getThrottleCommands(commands []byte) {
-	throttle := commons.CalcThrottleFromRawJoyStickRaw(commands[6:8], d.maxThrottle, d.throttleZeroOffset)
+func (d *droneApp) getThrottleCommands(hThrottle, lThrottle byte) {
+	throttle := utils.CommandToThrottle(hThrottle, lThrottle, d.maxThrottle)
 	d.flightControl.setThrottle(throttle)
 }
 
-func (d *droneApp) getRotationCommands(commands []byte) {
-	roll := commons.CalcRotationFromRawJoyStickRaw(commands[0:2], d.rollMidValue, d.rotationRange)
-	pitch := commons.CalcRotationFromRawJoyStickRaw(commands[2:4], d.pitchlMidValue, d.rotationRange)
+func (d *droneApp) getRotationCommands(hRoll, lRoll, hPitch, lPitch byte) {
+	roll := utils.CommandToRotation(hRoll, lRoll, d.rotationRange)
+	pitch := utils.CommandToRotation(hPitch, lPitch, d.rotationRange)
+	fmt.Println(roll, pitch)
 	// yaw := commons.CalcRotationFromRawJoyStickRaw(commands[4:6], d.yawMidValue, d.rotationRange)
 	d.flightControl.setTargetRotations(imu.Rotations{
 		Roll:  roll,
@@ -50,37 +63,37 @@ func (d *droneApp) getRotationCommands(commands []byte) {
 		Yaw:   0,
 	})
 }
-func (d *droneApp) calibratePID(command byte) {
-	if command == 0 {
-		return
-	}
-	d.changePIDGain(command, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P, "P")
-	d.changePIDGain(command, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I, "I")
-	d.changePIDGain(command, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D, "D")
+func (d *droneApp) calibratePID(pushButtonsmmand byte) {
+	// if command == 0 {
+	// 	return
+	// }
+	// d.changePIDGain(command, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P, "P")
+	// d.changePIDGain(command, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I, "I")
+	// d.changePIDGain(command, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D, "D")
 }
 
-func (d *droneApp) changePIDGain(command, incCommand, decCommand byte, gain string) {
-	inc := float64(0)
-	if command == incCommand {
-		inc = 1
-	} else if command == decCommand {
-		inc = -1
-	}
-	if inc == 0 {
-		return
-	}
-	switch gain {
-	case "P":
-		d.flightControl.arm_0_2_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-		d.flightControl.arm_1_3_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-		fmt.Println("P: ", d.flightControl.arm_0_2_PID.GainP(), d.flightControl.arm_1_3_PID.GainP())
-	case "I":
-		d.flightControl.arm_0_2_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-		d.flightControl.arm_1_3_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-		fmt.Println("I: ", d.flightControl.arm_0_2_PID.GainI(), d.flightControl.arm_1_3_PID.GainI())
-	case "D":
-		d.flightControl.arm_0_2_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-		d.flightControl.arm_1_3_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-		fmt.Println("D: ", d.flightControl.arm_0_2_PID.GainD(), d.flightControl.arm_1_3_PID.GainD())
-	}
-}
+// func (d *droneApp) changePIDGain(command, incCommand, decCommand byte, gain string) {
+// 	inc := float64(0)
+// 	if command == incCommand {
+// 		inc = 1
+// 	} else if command == decCommand {
+// 		inc = -1
+// 	}
+// 	if inc == 0 {
+// 		return
+// 	}
+// 	switch gain {
+// 	case "P":
+// 		d.flightControl.arm_0_2_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
+// 		d.flightControl.arm_1_3_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
+// 		fmt.Println("P: ", d.flightControl.arm_0_2_PID.GainP(), d.flightControl.arm_1_3_PID.GainP())
+// 	case "I":
+// 		d.flightControl.arm_0_2_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
+// 		d.flightControl.arm_1_3_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
+// 		fmt.Println("I: ", d.flightControl.arm_0_2_PID.GainI(), d.flightControl.arm_1_3_PID.GainI())
+// 	case "D":
+// 		d.flightControl.arm_0_2_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
+// 		d.flightControl.arm_1_3_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
+// 		fmt.Println("D: ", d.flightControl.arm_0_2_PID.GainD(), d.flightControl.arm_1_3_PID.GainD())
+// 	}
+// }
