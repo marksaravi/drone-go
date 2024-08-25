@@ -69,22 +69,22 @@ func main() {
 	}
 
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
-		ImuDataPerSecond:   imuConfigs.DataPerSecond,
-		ESCsDataPerSecond:  escsConfigs.DataPerSecond,
-		ImuMems:            imudev,
-		Escs:               esc,
-		Receiver:           radioReceiver,
-		RollMidValue:       configs.Commands.RollMidValue,
-		PitchMidValue:      configs.Commands.PitchMidValue,
-		YawMidValue:        configs.Commands.YawMidValue,
-		RotationRange:      configs.Commands.RotationRange,
-		MaxThrottle:        configs.Commands.MaxThrottle,
-		ThrottleZeroOffset: configs.Commands.ThrottleZeroOffset,
-		CommandsPerSecond:  configs.RemoteControl.CommandsPerSecond,
-		PlotterActive:      configs.Plotter.Active,
-		Arm_0_2_Pid:        arm_0_2_pidControl,
-		Arm_1_3_Pid:        arm_1_3_pidControl,
-		Yaw_Pid:            yaw_pidControl,
+		ImuDataPerSecond:  imuConfigs.DataPerSecond,
+		ESCsDataPerSecond: escsConfigs.DataPerSecond,
+		ImuMems:           imudev,
+		Escs:              esc,
+		Receiver:          radioReceiver,
+		RollMidValue:      configs.Commands.RollMidValue,
+		PitchMidValue:     configs.Commands.PitchMidValue,
+		YawMidValue:       configs.Commands.YawMidValue,
+		RotationRange:     configs.Commands.RotationRange,
+		MaxThrottle:       configs.Commands.MaxThrottle,
+		MaxOutputThrottle: escsConfigs.MaxOutputThrottle,
+		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
+		PlotterActive:     configs.Plotter.Active,
+		Arm_0_2_Pid:       arm_0_2_pidControl,
+		Arm_1_3_Pid:       arm_1_3_pidControl,
+		Yaw_Pid:           yaw_pidControl,
 	})
 
 	go func() {

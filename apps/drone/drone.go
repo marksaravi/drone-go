@@ -30,22 +30,22 @@ type KalmanFilter interface {
 }
 
 type DroneSettings struct {
-	ImuMems            imuMems
-	Receiver           radioReceiver
-	Escs               escs
-	ImuDataPerSecond   int
-	ESCsDataPerSecond  int
-	CommandsPerSecond  int
-	PlotterActive      bool
-	RollMidValue       int
-	PitchMidValue      int
-	YawMidValue        int
-	RotationRange      float64
-	MaxThrottle        float64
-	ThrottleZeroOffset int
-	Arm_0_2_Pid        *pid.PIDControl
-	Arm_1_3_Pid        *pid.PIDControl
-	Yaw_Pid            *pid.PIDControl
+	ImuMems           imuMems
+	Receiver          radioReceiver
+	Escs              escs
+	ImuDataPerSecond  int
+	ESCsDataPerSecond int
+	CommandsPerSecond int
+	PlotterActive     bool
+	RollMidValue      int
+	PitchMidValue     int
+	YawMidValue       int
+	RotationRange     float64
+	MaxThrottle       float64
+	MaxOutputThrottle float64
+	Arm_0_2_Pid       *pid.PIDControl
+	Arm_1_3_Pid       *pid.PIDControl
+	Yaw_Pid           *pid.PIDControl
 }
 
 type droneApp struct {
@@ -62,13 +62,12 @@ type droneApp struct {
 	imuReadInterval   time.Duration
 	plotterActive     bool
 
-	rollMidValue       int
-	pitchlMidValue     int
-	yawMidValue        int
-	rotationRange      float64
-	maxThrottle        float64
-	throttleZeroOffset int
-	throttle           KalmanFilter
+	rollMidValue   int
+	pitchlMidValue int
+	yawMidValue    int
+	rotationRange  float64
+	maxThrottle    float64
+	throttle       KalmanFilter
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
@@ -81,24 +80,24 @@ func NewDrone(settings DroneSettings) *droneApp {
 		flightControl: NewFlightControl(
 			settings.Escs,
 			settings.MaxThrottle,
+			settings.MaxOutputThrottle,
 			settings.Arm_0_2_Pid,
 			settings.Arm_1_3_Pid,
 			settings.Yaw_Pid,
 			escsDataPerImuData,
 		),
-		imuDataPerSecond:   settings.ImuDataPerSecond,
-		receiver:           settings.Receiver,
-		commandsPerSecond:  settings.CommandsPerSecond,
-		lastImuRead:        time.Now(),
-		imuReadInterval:    time.Second / time.Duration(settings.ImuDataPerSecond),
-		plotterActive:      settings.PlotterActive,
-		rollMidValue:       settings.RollMidValue,
-		pitchlMidValue:     settings.PitchMidValue,
-		yawMidValue:        settings.YawMidValue,
-		rotationRange:      settings.RotationRange,
-		maxThrottle:        settings.MaxThrottle,
-		throttleZeroOffset: settings.ThrottleZeroOffset,
-		throttle:           utils.NewKalmanFilter(0.15, 1),
+		imuDataPerSecond:  settings.ImuDataPerSecond,
+		receiver:          settings.Receiver,
+		commandsPerSecond: settings.CommandsPerSecond,
+		lastImuRead:       time.Now(),
+		imuReadInterval:   time.Second / time.Duration(settings.ImuDataPerSecond),
+		plotterActive:     settings.PlotterActive,
+		rollMidValue:      settings.RollMidValue,
+		pitchlMidValue:    settings.PitchMidValue,
+		yawMidValue:       settings.YawMidValue,
+		rotationRange:     settings.RotationRange,
+		maxThrottle:       settings.MaxThrottle,
+		throttle:          utils.NewKalmanFilter(0.15, 1),
 	}
 }
 

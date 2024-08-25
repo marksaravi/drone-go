@@ -13,7 +13,6 @@ type PIDConfigs struct {
 	Direction           float64 `json:"direction"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxWeightedSum      float64 `json:"max-weighted-sum"`
 	CalibrationMode     bool    `json:"calibration-mode"`
 	CalibrationIncP     float64 `json:"calibration-p-inc"`
 	CalibrationIncI     float64 `json:"calibration-i-inc"`
@@ -80,7 +79,7 @@ func (pid *PIDControl) Calibrate(t rune, inc bool) {
 	case 'd':
 		pid.settings.DGain = updateGain(pid.settings.DGain, pid.settings.CalibrationIncD, inc)
 	}
-	fmt.Printf("%s -> %c:%8.2f, %8.2f, %8.2f\n ", pid.id, t, pid.settings.PGain, pid.settings.IGain, pid.settings.DGain)
+	fmt.Printf("%s -> %c:%8.4f, %8.4f, %8.4f\n ", pid.id, t, pid.settings.PGain, pid.settings.IGain, pid.settings.DGain)
 }
 
 func updateGain(v, c float64, inc bool) float64 {
