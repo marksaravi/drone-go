@@ -57,6 +57,9 @@ func main() {
 
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
+	fmt.Println(configs.PID.ARM_0_2)
+	fmt.Println(configs.PID.ARM_1_3)
+	fmt.Println(configs.PID.Yaw)
 	arm_0_2_pidControl := pid.NewPIDControl(configs.PID.ARM_0_2.Id, configs.PID.ARM_0_2)
 	arm_1_3_pidControl := pid.NewPIDControl(configs.PID.ARM_1_3.Id, configs.PID.ARM_1_3)
 	yaw_pidControl := pid.NewPIDControl(configs.PID.Yaw.Id, configs.PID.Yaw)

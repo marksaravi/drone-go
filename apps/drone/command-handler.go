@@ -8,14 +8,16 @@ import (
 )
 
 const (
-	COMMAND_TURN_ON     byte = 8
-	COMMAND_TURN_OFF    byte = 128
-	COMMAND_CALIB_INC_P byte = 1
-	COMMAND_CALIB_DEC_P byte = 16
-	COMMAND_CALIB_INC_I byte = 2
-	COMMAND_CALIB_DEC_I byte = 32
-	COMMAND_CALIB_INC_D byte = 4
-	COMMAND_CALIB_DEC_D byte = 64
+	COMMAND_TURN_ON  byte = 1
+	COMMAND_TURN_OFF byte = 16
+
+	COMMAND_CALIB_INC_P byte = 2
+	COMMAND_CALIB_INC_I byte = 4
+	COMMAND_CALIB_INC_D byte = 8
+
+	COMMAND_CALIB_DEC_P byte = 32
+	COMMAND_CALIB_DEC_I byte = 64
+	COMMAND_CALIB_DEC_D byte = 128
 )
 
 func (d *droneApp) applyCommands(commands []byte) {

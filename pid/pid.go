@@ -10,6 +10,7 @@ type PIDConfigs struct {
 	PGain               float64 `json:"p-gain"`
 	IGain               float64 `json:"i-gain"`
 	DGain               float64 `json:"d-gain"`
+	Direction           float64 `json:"direction"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
 	MaxWeightedSum      float64 `json:"max-weighted-sum"`
@@ -39,9 +40,9 @@ func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	return pid
 }
 
-func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOffset float64, sign int) (float64, float64) {
+func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOffset float64) (float64, float64) {
 	u := pid.calcProcessValue(measuredValue, t)
-	return processOffset + float64(sign)*u, processOffset - float64(sign)*u
+	return processOffset + float64(pid.settings.Direction)*u, processOffset - float64(pid.settings.Direction)*u
 }
 
 func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
