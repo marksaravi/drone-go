@@ -25,6 +25,7 @@ type escDev struct {
 	powerbreaker             powerbreaker
 	lastUpdate               time.Time
 	updateInterval           time.Duration
+	onTime                   time.Time
 }
 
 func NewESC(
@@ -44,6 +45,7 @@ func NewESC(
 		powerbreaker:             powerbreaker,
 		lastUpdate:               time.Now().Add(-time.Second),
 		updateInterval:           time.Second / time.Duration(updatesPerSecond),
+		onTime:                   time.Now().Add(-10 * time.Second),
 	}
 }
 
@@ -57,6 +59,7 @@ func (e *escDev) zeroThrottle() {
 
 func (e *escDev) On() {
 	e.zeroThrottle()
+	e.onTime = time.Now()
 	e.powerbreaker.Connect()
 }
 
@@ -75,6 +78,9 @@ func (e *escDev) mapMotorsToChannels(motors []float64) {
 }
 
 func (e *escDev) SetThrottles(motors []float64) {
+	if time.Since(e.onTime) < 4*time.Second {
+		return
+	}
 	e.mapMotorsToChannels(motors)
 	if time.Since(e.lastUpdate) >= e.updateInterval {
 		e.lastUpdate = time.Now()
