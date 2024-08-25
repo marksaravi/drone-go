@@ -57,6 +57,9 @@ func main() {
 
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
+	arm_0_2_pidControl := pid.NewPIDControl(configs.PID.ARM_0_2.Id, configs.PID.ARM_0_2)
+	arm_1_3_pidControl := pid.NewPIDControl(configs.PID.ARM_1_3.Id, configs.PID.ARM_1_3)
+	yaw_pidControl := pid.NewPIDControl(configs.PID.Yaw.Id, configs.PID.Yaw)
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:   imuConfigs.DataPerSecond,
 		ESCsDataPerSecond:  escsConfigs.DataPerSecond,
@@ -71,18 +74,9 @@ func main() {
 		ThrottleZeroOffset: configs.Commands.ThrottleZeroOffset,
 		CommandsPerSecond:  configs.RemoteControl.CommandsPerSecond,
 		PlotterActive:      configs.Plotter.Active,
-		PID: pid.PIDSettings{
-			// MaxError:            configs.PID.MaxRotationError,
-			// MaxIntegrationValue: configs.PID.MaxIntegrationValue,
-			PGain: configs.PID.P,
-			IGain: configs.PID.I,
-			DGain: configs.PID.D,
-			// MaxWeightedSum:      configs.PID.MaxWeightedSum,
-			// CalibrationMode:     configs.PID.CalibrationMode,
-			// CalibrationIncP:     configs.PID.CalibrationIncP,
-			// CalibrationIncI:     configs.PID.CalibrationIncI,
-			// CalibrationIncD:     configs.PID.CalibrationIncD,
-		},
+		Arm_0_2_Pid:        arm_0_2_pidControl,
+		Arm_1_3_Pid:        arm_1_3_pidControl,
+		Yaw_Pid:            yaw_pidControl,
 	})
 
 	go func() {

@@ -43,7 +43,9 @@ type DroneSettings struct {
 	RotationRange      float64
 	MaxThrottle        float64
 	ThrottleZeroOffset int
-	PID                pid.PIDSettings
+	Arm_0_2_Pid        *pid.PIDControl
+	Arm_1_3_Pid        *pid.PIDControl
+	Yaw_Pid            *pid.PIDControl
 }
 
 type droneApp struct {
@@ -76,7 +78,14 @@ func NewDrone(settings DroneSettings) *droneApp {
 		imu:                settings.ImuMems,
 		escs:               settings.Escs,
 		escsDataPerImuData: escsDataPerImuData,
-		flightControl:      NewFlightControl(settings.Escs, settings.MaxThrottle, settings.PID, escsDataPerImuData),
+		flightControl: NewFlightControl(
+			settings.Escs,
+			settings.MaxThrottle,
+			settings.Arm_0_2_Pid,
+			settings.Arm_1_3_Pid,
+			settings.Yaw_Pid,
+			escsDataPerImuData,
+		),
 		imuDataPerSecond:   settings.ImuDataPerSecond,
 		receiver:           settings.Receiver,
 		commandsPerSecond:  settings.CommandsPerSecond,

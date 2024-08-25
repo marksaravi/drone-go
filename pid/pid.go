@@ -1,33 +1,36 @@
 package pid
 
 import (
-	"fmt"
 	"time"
 )
 
-type PIDSettings struct {
-	PGain float64
-	IGain float64
-	DGain float64
+type PIDConfigs struct {
+	Id                  string  `json:"id"`
+	PGain               float64 `json:"p"`
+	IGain               float64 `json:"i"`
+	DGain               float64 `json:"d"`
+	MaxRotationError    float64 `json:"max-rot-error"`
+	MaxIntegrationValue float64 `json:"max-i-value"`
+	MaxWeightedSum      float64 `json:"max-weighted-sum"`
+	CalibrationMode     bool    `json:"calibration-mode"`
+	CalibrationIncP     float64 `json:"calibration-p-inc"`
+	CalibrationIncI     float64 `json:"calibration-i-inc"`
+	CalibrationIncD     float64 `json:"calibration-d-inc"`
 }
 
 type PIDControl struct {
 	id             string
-	kP             float64
-	kI             float64
-	kD             float64
+	settings       PIDConfigs
 	integralValue  float64
 	setPoint       float64
 	prevTime       time.Time
 	prevErrorValue float64
 }
 
-func NewPIDControl(id string, settings PIDSettings, outDataPerInputData int) *PIDControl {
+func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	pid := &PIDControl{
-		id:             id,
-		kP:             settings.PGain,
-		kI:             settings.IGain,
-		kD:             settings.DGain,
+		id:             settings.Id,
+		settings:       settings,
 		setPoint:       0,
 		prevTime:       time.Now().Add(time.Second * 32000000),
 		prevErrorValue: 0,
@@ -41,20 +44,19 @@ func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOff
 }
 
 func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
-	fmt.Println(pid.kP, pid.kI, pid, pid.kD)
 	errorValue := measuredValue - pid.setPoint
 	dErrorValue := errorValue - pid.prevErrorValue
 	pid.prevErrorValue = errorValue
 	dt := t.Sub(pid.prevTime)
 	pid.prevTime = t
 
-	p := pid.kP * errorValue
+	p := pid.settings.PGain * errorValue
 
 	pid.integralValue = errorValue * dt.Seconds()
-	i := pid.kI * pid.integralValue
+	i := pid.settings.IGain * pid.integralValue
 
 	deDt := dErrorValue / dt.Seconds()
-	d := pid.kD * deDt
+	d := pid.settings.DGain * deDt
 
 	u := p + i + d
 	return u
@@ -69,25 +71,13 @@ func (pid *PIDControl) SetTargetRotation(setPoint float64) {
 }
 
 func (pid *PIDControl) UpdateGainP(v float64) {
-	pid.kP += v
+	pid.settings.PGain += v
 }
 
 func (pid *PIDControl) UpdateGainI(v float64) {
-	pid.kI += v
+	pid.settings.IGain += v
 }
 
 func (pid *PIDControl) UpdateGainD(v float64) {
-	pid.kD += v
-}
-
-func (pid *PIDControl) GainP() float64 {
-	return pid.kP
-}
-
-func (pid *PIDControl) GainI() float64 {
-	return pid.kI
-}
-
-func (pid *PIDControl) GainD() float64 {
-	return pid.kD
+	pid.settings.DGain += v
 }

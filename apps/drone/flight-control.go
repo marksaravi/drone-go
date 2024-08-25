@@ -15,11 +15,6 @@ type FlightControl struct {
 	arm_0_2_PID     *pid.PIDControl
 	arm_1_3_PID     *pid.PIDControl
 	yawPID          *pid.PIDControl
-	calibrationMode bool
-	calibrationIncP float64
-	calibrationIncI float64
-	calibrationIncD float64
-
 	throttle        float64
 	outputThrottles []float64
 	maxThrottle     float64
@@ -28,16 +23,23 @@ type FlightControl struct {
 	throttleLowPassFilter float64
 }
 
-func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSettings, escsDataPerImuData int) *FlightControl {
+func NewFlightControl(
+	escs escs,
+	maxThrottle float64,
+	arm_0_2_pid *pid.PIDControl,
+	arm_1_3_pid *pid.PIDControl,
+	yaw_pid *pid.PIDControl,
+	escsDataPerImuData int,
+) *FlightControl {
 	fc := &FlightControl{
-		arm_0_2_PID:           pid.NewPIDControl("0_2", pidSettings, escsDataPerImuData),
-		arm_1_3_PID:           pid.NewPIDControl("1_3", pidSettings, escsDataPerImuData),
+		arm_0_2_PID:           arm_0_2_pid,
+		arm_1_3_PID:           arm_1_3_pid,
+		yawPID:                yaw_pid,
 		throttleLowPassFilter: 0.45,
 		throttle:              0,
 		maxThrottle:           maxThrottle,
-
-		outputThrottles: make([]float64, 4),
-		escs:            escs,
+		outputThrottles:       make([]float64, 4),
+		escs:                  escs,
 	}
 	return fc
 }
@@ -47,16 +49,16 @@ func transformRollPitch(roll, pitch float64) (float64, float64) {
 }
 
 func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations) {
-	arm_0_2_rotation, _ := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
 
 	motor_0_output_throttle, motor_2_output_throttle := fc.arm_0_2_PID.CalcOutput(arm_0_2_rotation, rotattions.Time, fc.throttle, 1)
-	// motor_1_output_throttle, motor_3_output_throttle := fc.arm_1_3_PID.CalcOutput(arm_1_3_rotation, rotattions.Time, fc.throttle, 1)
+	motor_1_output_throttle, motor_3_output_throttle := fc.arm_1_3_PID.CalcOutput(arm_1_3_rotation, rotattions.Time, fc.throttle, 1)
 
 	fc.outputThrottles[0] = motor_0_output_throttle
 	fc.outputThrottles[2] = motor_2_output_throttle
 
-	fc.outputThrottles[1] = 0 //motor_1_output_throttle
-	fc.outputThrottles[3] = 0 //motor_3_output_throttle
+	fc.outputThrottles[1] = motor_1_output_throttle
+	fc.outputThrottles[3] = motor_3_output_throttle
 }
 
 func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {

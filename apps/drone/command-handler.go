@@ -26,15 +26,16 @@ func (d *droneApp) applyCommands(commands []byte) {
 	// hYaw := commands[5]
 	lThrottle := commands[6]
 	hThrottle := commands[7]
-	pressedButtons := commands[8]
+	// pressedButtons := commands[8]
 	pushButtons := commands[9]
 
 	d.onMotors(pushButtons)
 	d.getThrottleCommands(hThrottle, lThrottle)
 	d.getRotationCommands(hRoll, lRoll, hPitch, lPitch)
-	if d.flightControl.calibrationMode {
-		d.calibratePID(pressedButtons)
-	}
+
+	// if d.flightControl.calibrationMode {
+	// 	d.calibratePID(pressedButtons)
+	// }
 }
 
 func (d *droneApp) onMotors(pushButtons byte) {
@@ -60,36 +61,29 @@ func (d *droneApp) getRotationCommands(hRoll, lRoll, hPitch, lPitch byte) {
 	})
 }
 func (d *droneApp) calibratePID(pushButtonsmmand byte) {
-	// if command == 0 {
-	// 	return
-	// }
-	// d.changePIDGain(command, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P, "P")
-	// d.changePIDGain(command, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I, "I")
-	// d.changePIDGain(command, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D, "D")
+	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P, "P")
+	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I, "I")
+	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D, "D")
 }
 
-// func (d *droneApp) changePIDGain(command, incCommand, decCommand byte, gain string) {
-// 	inc := float64(0)
-// 	if command == incCommand {
-// 		inc = 1
-// 	} else if command == decCommand {
-// 		inc = -1
-// 	}
-// 	if inc == 0 {
-// 		return
-// 	}
-// 	switch gain {
-// 	case "P":
-// 		d.flightControl.arm_0_2_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-// 		d.flightControl.arm_1_3_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-// 		fmt.Println("P: ", d.flightControl.arm_0_2_PID.GainP(), d.flightControl.arm_1_3_PID.GainP())
-// 	case "I":
-// 		d.flightControl.arm_0_2_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-// 		d.flightControl.arm_1_3_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-// 		fmt.Println("I: ", d.flightControl.arm_0_2_PID.GainI(), d.flightControl.arm_1_3_PID.GainI())
-// 	case "D":
-// 		d.flightControl.arm_0_2_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-// 		d.flightControl.arm_1_3_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-// 		fmt.Println("D: ", d.flightControl.arm_0_2_PID.GainD(), d.flightControl.arm_1_3_PID.GainD())
-// 	}
-// }
+func (d *droneApp) changePIDGain(pushButtonsmmand, incCommand, decCommand byte, gain string) {
+	// inc := float64(0)
+	// if pushButtonsmmand == incCommand {
+	// 	inc = 1
+	// } else if pushButtonsmmand == decCommand {
+	// 	inc = -1
+	// } else {
+	// 	return
+	// }
+	// switch gain {
+	// case "P":
+	// 	d.flightControl.arm_0_2_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
+	// 	d.flightControl.arm_1_3_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
+	// case "I":
+	// 	d.flightControl.arm_0_2_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
+	// 	d.flightControl.arm_1_3_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
+	// case "D":
+	// 	d.flightControl.arm_0_2_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
+	// 	d.flightControl.arm_1_3_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
+	// }
+}
