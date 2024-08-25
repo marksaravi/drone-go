@@ -2,9 +2,9 @@
     "pid": {
         "arm_0_2": {
             "id": "arm_0_2",
-            "p": 0,
-            "i": 0,
-            "d": 0,
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
             "max-rot-error": 15,
             "max-i-value": 0,
             "max-weighted-sum": 0,
@@ -15,9 +15,9 @@
         },
         "arm_1_3": {
             "id": "arm_1_3",
-            "p": 0,
-            "i": 0,
-            "d": 0,
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
             "max-rot-error": 15,
             "max-i-value": 0,
             "max-weighted-sum": 0,
@@ -28,9 +28,9 @@
         },
         "yaw": {
             "id": "yaw",
-            "p": 0,
-            "i": 0,
-            "d": 0,
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
             "max-rot-error": 15,
             "max-i-value": 0,
             "max-weighted-sum": 0,

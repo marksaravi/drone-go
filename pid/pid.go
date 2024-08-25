@@ -6,9 +6,9 @@ import (
 
 type PIDConfigs struct {
 	Id                  string  `json:"id"`
-	PGain               float64 `json:"p"`
-	IGain               float64 `json:"i"`
-	DGain               float64 `json:"d"`
+	PGain               float64 `json:"p-gain"`
+	IGain               float64 `json:"i-gain"`
+	DGain               float64 `json:"d-gain"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
 	MaxWeightedSum      float64 `json:"max-weighted-sum"`
