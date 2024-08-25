@@ -1,11 +1,13 @@
 package esc
 
 import (
+	"fmt"
 	"time"
 )
 
 const (
-	NUM_OF_ESC uint8 = 4
+	NUM_OF_ESC          uint8 = 4
+	ARMING_TIME_SECONDS       = time.Second * 4
 )
 
 type powerbreaker interface {
@@ -26,6 +28,7 @@ type escDev struct {
 	lastUpdate               time.Time
 	updateInterval           time.Duration
 	onTime                   time.Time
+	isOn                     bool
 }
 
 func NewESC(
@@ -46,6 +49,7 @@ func NewESC(
 		lastUpdate:               time.Now().Add(-time.Second),
 		updateInterval:           time.Second / time.Duration(updatesPerSecond),
 		onTime:                   time.Now().Add(-10 * time.Second),
+		isOn:                     false,
 	}
 }
 
@@ -58,14 +62,22 @@ func (e *escDev) zeroThrottle() {
 }
 
 func (e *escDev) On() {
+	if e.isOn {
+		fmt.Println("ESCs are already on")
+		return
+	}
+	e.isOn = true
 	e.zeroThrottle()
 	e.onTime = time.Now()
 	e.powerbreaker.Connect()
+	fmt.Println("ESCs on")
 }
 
 func (e *escDev) Off() {
+	e.isOn = false
 	e.zeroThrottle()
 	e.powerbreaker.Disconnect()
+	fmt.Println("ESCs off")
 }
 
 func (e *escDev) mapMotorsToChannels(motors []float64) {
@@ -78,7 +90,7 @@ func (e *escDev) mapMotorsToChannels(motors []float64) {
 }
 
 func (e *escDev) SetThrottles(motors []float64) {
-	if time.Since(e.onTime) < 4*time.Second {
+	if e.isArming() {
 		return
 	}
 	e.mapMotorsToChannels(motors)
@@ -88,4 +100,8 @@ func (e *escDev) SetThrottles(motors []float64) {
 			e.pwmDev.SetThrottles(e.throttles)
 		}()
 	}
+}
+
+func (e *escDev) isArming() bool {
+	return time.Since(e.onTime) < ARMING_TIME_SECONDS
 }
