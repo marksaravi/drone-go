@@ -1,15 +1,44 @@
 {
     "pid": {
-        "p": 0,
-        "i": 0,
-        "d": 0,
-        "max-rot-error": 15,
-        "max-i-value": 5,
-        "max-weighted-sum": 20,
-        "calibration-mode": true,
-        "calibration-p-inc": 0.01,
-        "calibration-i-inc": 0,
-        "calibration-d-inc": 0.01
+        "arm_0_2": {
+            "id": "arm_0_2",
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
+            "max-rot-error": 15,
+            "max-i-value": 0,
+            "max-weighted-sum": 0,
+            "calibration-mode": false,
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
+        },
+        "arm_1_3": {
+            "id": "arm_1_3",
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
+            "max-rot-error": 15,
+            "max-i-value": 0,
+            "max-weighted-sum": 0,
+            "calibration-mode": false,
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
+        },
+        "yaw": {
+            "id": "yaw",
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
+            "max-rot-error": 15,
+            "max-i-value": 0,
+            "max-weighted-sum": 0,
+            "calibration-mode": false,
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
+        }    
     },
     "imu": {
         "data-per-second": 1200,
@@ -43,7 +72,8 @@
     },
     "commands": {
         "rotation-range-deg": 15,
-        "max-throttle": 50
+        "max-throttle": 50,
+        "throttle-zero-offset": 53
     },
     "plotter": {
         "active": false

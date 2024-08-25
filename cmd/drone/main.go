@@ -57,31 +57,31 @@ func main() {
 
 	esc := esc.NewESC(pwmDev, pca9685Configs.MotorsMappings, powerBreaker, 50, false)
 	ctx, cancel := context.WithCancel(context.Background())
+	arm_0_2_pidControl := pid.NewPIDControl(configs.PID.ARM_0_2.Id, configs.PID.ARM_0_2)
+	arm_1_3_pidControl := pid.NewPIDControl(configs.PID.ARM_1_3.Id, configs.PID.ARM_1_3)
+	yaw_pidControl := pid.NewPIDControl(configs.PID.Yaw.Id, configs.PID.Yaw)
+
+	if yaw_pidControl.IsCalibrationEnabled() && (arm_0_2_pidControl.IsCalibrationEnabled() || arm_1_3_pidControl.IsCalibrationEnabled()) {
+		log.Fatal("Error: Yaw PID can't be calibrated with arms.")
+	}
+
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
-		ImuDataPerSecond:  imuConfigs.DataPerSecond,
-		ESCsDataPerSecond: escsConfigs.DataPerSecond,
-		ImuMems:           imudev,
-		Escs:              esc,
-		Receiver:          radioReceiver,
-		RollMidValue:      configs.Commands.RollMidValue,
-		PitchMidValue:     configs.Commands.PitchMidValue,
-		YawMidValue:       configs.Commands.YawMidValue,
-		RotationRange:     configs.Commands.RotationRange,
-		MaxThrottle:       configs.Commands.MaxThrottle,
-		CommandsPerSecond: configs.RemoteControl.CommandsPerSecond,
-		PlotterActive:     configs.Plotter.Active,
-		PID: pid.PIDSettings{
-			MaxError:            configs.PID.MaxRotationError,
-			MaxIntegrationValue: configs.PID.MaxIntegrationValue,
-			PGain:               configs.PID.P,
-			IGain:               configs.PID.I,
-			DGain:               configs.PID.D,
-			MaxWeightedSum:      configs.PID.MaxWeightedSum,
-			CalibrationMode:     configs.PID.CalibrationMode,
-			CalibrationIncP:     configs.PID.CalibrationIncP,
-			CalibrationIncI:     configs.PID.CalibrationIncI,
-			CalibrationIncD:     configs.PID.CalibrationIncD,
-		},
+		ImuDataPerSecond:   imuConfigs.DataPerSecond,
+		ESCsDataPerSecond:  escsConfigs.DataPerSecond,
+		ImuMems:            imudev,
+		Escs:               esc,
+		Receiver:           radioReceiver,
+		RollMidValue:       configs.Commands.RollMidValue,
+		PitchMidValue:      configs.Commands.PitchMidValue,
+		YawMidValue:        configs.Commands.YawMidValue,
+		RotationRange:      configs.Commands.RotationRange,
+		MaxThrottle:        configs.Commands.MaxThrottle,
+		ThrottleZeroOffset: configs.Commands.ThrottleZeroOffset,
+		CommandsPerSecond:  configs.RemoteControl.CommandsPerSecond,
+		PlotterActive:      configs.Plotter.Active,
+		Arm_0_2_Pid:        arm_0_2_pidControl,
+		Arm_1_3_Pid:        arm_1_3_pidControl,
+		Yaw_Pid:            yaw_pidControl,
 	})
 
 	go func() {

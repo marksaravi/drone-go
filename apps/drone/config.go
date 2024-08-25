@@ -8,6 +8,7 @@ import (
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/hardware"
+	"github.com/marksaravi/drone-go/pid"
 )
 
 type InertialDeviceConfigs struct {
@@ -19,28 +20,23 @@ type InertialDeviceConfigs struct {
 	} `json:"offsets"`
 }
 
-type PIDConfigs struct {
-	P                   float64 `json:"p"`
-	I                   float64 `json:"i"`
-	D                   float64 `json:"d"`
-	MaxRotationError    float64 `json:"max-rot-error"`
-	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxWeightedSum      float64 `json:"max-weighted-sum"`
-	CalibrationMode     bool    `json:"calibration-mode"`
-	CalibrationIncP     float64 `json:"calibration-p-inc"`
-	CalibrationIncI     float64 `json:"calibration-i-inc"`
-	CalibrationIncD     float64 `json:"calibration-d-inc"`
-}
-
 type DroneConfigs struct {
-	PID PIDConfigs  `json:"pid"`
+	PID struct {
+		ARM_0_2 pid.PIDConfigs `json:"arm_0_2"`
+		ARM_1_3 pid.PIDConfigs `json:"arm_1_3"`
+		Yaw     pid.PIDConfigs `json:"yaw"`
+	} `json:"pid"`
 	IMU imu.Configs `json:"imu"`
 	ESC struct {
 		DataPerSecond int `json:"data-per-second"`
 	} `json:"esc"`
 	Commands struct {
-		RotationRange float64 `json:"rotation-range-deg"`
-		MaxThrottle   float64 `json:"max-throttle"`
+		RollMidValue       int     `json:"roll-mid-value"`
+		PitchMidValue      int     `json:"pitch-mid-value"`
+		YawMidValue        int     `json:"yaw-mid-value"`
+		RotationRange      float64 `json:"rotation-range-deg"`
+		MaxThrottle        float64 `json:"max-throttle"`
+		ThrottleZeroOffset int     `json:"throttle-zero-offset"`
 	} `json:"commands"`
 	RemoteControl struct {
 		CommandsPerSecond int `json:"commands-per-second"`
