@@ -1,14 +1,14 @@
 package pid
 
 import (
+	"fmt"
 	"time"
 )
 
 type PIDSettings struct {
-	PGain   float64
-	IGain   float64
-	DGain   float64
-	Enabled bool
+	PGain float64
+	IGain float64
+	DGain float64
 }
 
 type PIDControl struct {
@@ -20,7 +20,6 @@ type PIDControl struct {
 	setPoint       float64
 	prevTime       time.Time
 	prevErrorValue float64
-	enabled        bool
 }
 
 func NewPIDControl(id string, settings PIDSettings, outDataPerInputData int) *PIDControl {
@@ -32,20 +31,17 @@ func NewPIDControl(id string, settings PIDSettings, outDataPerInputData int) *PI
 		setPoint:       0,
 		prevTime:       time.Now().Add(time.Second * 32000000),
 		prevErrorValue: 0,
-		enabled:        settings.Enabled,
 	}
 	return pid
 }
 
-func (pid *PIDControl) CalcProcessValue(measuredValue float64, t time.Time, processOffset float64, sign int) (float64, float64) {
+func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOffset float64, sign int) (float64, float64) {
 	u := pid.calcProcessValue(measuredValue, t)
-	return processOffset + float64(sign)*u, processOffset + float64(-sign)*u
+	return processOffset + float64(sign)*u, processOffset - float64(sign)*u
 }
 
 func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
-	if !pid.enabled {
-		return 0
-	}
+	fmt.Println(pid.kP, pid.kI, pid, pid.kD)
 	errorValue := measuredValue - pid.setPoint
 	dErrorValue := errorValue - pid.prevErrorValue
 	pid.prevErrorValue = errorValue
@@ -53,10 +49,13 @@ func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) floa
 	pid.prevTime = t
 
 	p := pid.kP * errorValue
+
 	pid.integralValue = errorValue * dt.Seconds()
 	i := pid.kI * pid.integralValue
+
 	deDt := dErrorValue / dt.Seconds()
 	d := pid.kD * deDt
+
 	u := p + i + d
 	return u
 }
