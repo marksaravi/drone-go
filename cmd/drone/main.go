@@ -60,6 +60,11 @@ func main() {
 	arm_0_2_pidControl := pid.NewPIDControl(configs.PID.ARM_0_2.Id, configs.PID.ARM_0_2)
 	arm_1_3_pidControl := pid.NewPIDControl(configs.PID.ARM_1_3.Id, configs.PID.ARM_1_3)
 	yaw_pidControl := pid.NewPIDControl(configs.PID.Yaw.Id, configs.PID.Yaw)
+
+	if yaw_pidControl.IsCalibrationEnabled() && (arm_0_2_pidControl.IsCalibrationEnabled() || arm_1_3_pidControl.IsCalibrationEnabled()) {
+		log.Fatal("Error: Yaw PID can't be calibrated with arms.")
+	}
+
 	drone := dronePackage.NewDrone(dronePackage.DroneSettings{
 		ImuDataPerSecond:   imuConfigs.DataPerSecond,
 		ESCsDataPerSecond:  escsConfigs.DataPerSecond,

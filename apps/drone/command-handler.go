@@ -1,6 +1,8 @@
 package drone
 
 import (
+	"fmt"
+
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/utils"
 )
@@ -33,9 +35,7 @@ func (d *droneApp) applyCommands(commands []byte) {
 	d.getThrottleCommands(hThrottle, lThrottle)
 	d.getRotationCommands(hRoll, lRoll, hPitch, lPitch)
 
-	// if d.flightControl.calibrationMode {
-	// 	d.calibratePID(pressedButtons)
-	// }
+	d.calibratePID(pushButtons)
 }
 
 func (d *droneApp) onMotors(pushButtons byte) {
@@ -60,30 +60,48 @@ func (d *droneApp) getRotationCommands(hRoll, lRoll, hPitch, lPitch byte) {
 		Yaw:   0,
 	})
 }
+
 func (d *droneApp) calibratePID(pushButtonsmmand byte) {
-	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P, "P")
-	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I, "I")
-	// d.changePIDGain(pushButtonsmmand, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D, "D")
+	if !d.flightControl.arm_0_2_pid.IsCalibrationEnabled() &&
+		!d.flightControl.arm_1_3_pid.IsCalibrationEnabled() &&
+		!d.flightControl.yaw_pid.IsCalibrationEnabled() {
+		return
+	}
+
+	t := rune('p')
+	inc := true
+	call := false
+	if isP, incP := parsPidCalibrationCommand(pushButtonsmmand, COMMAND_CALIB_INC_P, COMMAND_CALIB_DEC_P); isP {
+		t = 'p'
+		inc = incP
+		call = true
+	} else if isI, incI := parsPidCalibrationCommand(pushButtonsmmand, COMMAND_CALIB_INC_I, COMMAND_CALIB_DEC_I); isI {
+		t = 'i'
+		inc = incI
+		call = true
+	} else if isD, incD := parsPidCalibrationCommand(pushButtonsmmand, COMMAND_CALIB_INC_D, COMMAND_CALIB_DEC_D); isD {
+		t = 'd'
+		inc = incD
+		call = true
+	}
+	if call {
+		if d.flightControl.arm_0_2_pid.IsCalibrationEnabled() {
+			d.flightControl.arm_0_2_pid.Calibrate(t, inc)
+		}
+		if d.flightControl.arm_1_3_pid.IsCalibrationEnabled() {
+			d.flightControl.arm_1_3_pid.Calibrate(t, inc)
+		}
+		if d.flightControl.yaw_pid.IsCalibrationEnabled() {
+			d.flightControl.yaw_pid.Calibrate(t, inc)
+		}
+	}
 }
 
-func (d *droneApp) changePIDGain(pushButtonsmmand, incCommand, decCommand byte, gain string) {
-	// inc := float64(0)
-	// if pushButtonsmmand == incCommand {
-	// 	inc = 1
-	// } else if pushButtonsmmand == decCommand {
-	// 	inc = -1
-	// } else {
-	// 	return
-	// }
-	// switch gain {
-	// case "P":
-	// 	d.flightControl.arm_0_2_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-	// 	d.flightControl.arm_1_3_PID.UpdateGainP(inc * d.flightControl.calibrationIncP)
-	// case "I":
-	// 	d.flightControl.arm_0_2_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-	// 	d.flightControl.arm_1_3_PID.UpdateGainI(inc * d.flightControl.calibrationIncI)
-	// case "D":
-	// 	d.flightControl.arm_0_2_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-	// 	d.flightControl.arm_1_3_PID.UpdateGainD(inc * d.flightControl.calibrationIncD)
-	// }
+func parsPidCalibrationCommand(pushButtonsmmand, incCommand, decCommand byte) (is, inc bool) {
+	is = pushButtonsmmand&incCommand != 0 || pushButtonsmmand&decCommand != 0
+	inc = pushButtonsmmand&incCommand != 0
+	if is {
+		fmt.Println(is, inc)
+	}
+	return
 }

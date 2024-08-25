@@ -1,6 +1,7 @@
 package pid
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -60,6 +61,35 @@ func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) floa
 
 	u := p + i + d
 	return u
+}
+
+func (pid *PIDControl) IsCalibrationEnabled() bool {
+	return pid.settings.CalibrationMode
+}
+
+func (pid *PIDControl) Calibrate(t rune, inc bool) {
+	if !pid.settings.CalibrationMode {
+		return
+	}
+	switch t {
+	case 'p':
+		pid.settings.PGain = updateGain(pid.settings.PGain, pid.settings.CalibrationIncP, inc)
+	case 'i':
+		pid.settings.IGain = updateGain(pid.settings.IGain, pid.settings.CalibrationIncI, inc)
+	case 'd':
+		pid.settings.DGain = updateGain(pid.settings.DGain, pid.settings.CalibrationIncD, inc)
+	}
+	fmt.Printf("%s -> %c:%8.2f, %8.2f, %8.2f\n ", pid.id, t, pid.settings.PGain, pid.settings.IGain, pid.settings.DGain)
+}
+
+func updateGain(v, c float64, inc bool) float64 {
+	if inc {
+		return v + c
+	}
+	if v-c > 0 {
+		return v - c
+	}
+	return 0
 }
 
 func (pid *PIDControl) ResetI() {
