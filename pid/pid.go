@@ -65,7 +65,7 @@ func (pid *PIDControl) ResetI() {
 	pid.integralValue = 0
 }
 
-func (pid *PIDControl) SetSetPoint(setPoint float64) {
+func (pid *PIDControl) SetTargetRotation(setPoint float64) {
 	pid.setPoint = setPoint
 }
 

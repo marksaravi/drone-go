@@ -20,9 +20,9 @@ type FlightControl struct {
 	calibrationIncI float64
 	calibrationIncD float64
 
-	throttle     float64
-	pidThrottles []float64
-	maxThrottle  float64
+	throttle        float64
+	outputThrottles []float64
+	maxThrottle     float64
 
 	escs                  escs
 	throttleLowPassFilter float64
@@ -36,8 +36,8 @@ func NewFlightControl(escs escs, maxThrottle float64, pidSettings pid.PIDSetting
 		throttle:              0,
 		maxThrottle:           maxThrottle,
 
-		pidThrottles: make([]float64, 4),
-		escs:         escs,
+		outputThrottles: make([]float64, 4),
+		escs:            escs,
 	}
 	return fc
 }
@@ -46,23 +46,23 @@ func transformRollPitch(roll, pitch float64) (float64, float64) {
 	return (pitch + roll) / 2, (pitch - roll) / 2
 }
 
-func (fc *FlightControl) calcThrottles(rotattions imu.Rotations) {
+func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations) {
 	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
 	motor_0_Throttle, motor_2_Throttle := fc.arm_0_2_PID.CalcProcessValue(arm_0_2_rotation, rotattions.Time, fc.throttle, 1)
 	motor_1_Throttle, motor_3_Throttle := fc.arm_1_3_PID.CalcProcessValue(arm_1_3_rotation, rotattions.Time, fc.throttle, 1)
 
-	fc.pidThrottles[0] = motor_0_Throttle
-	fc.pidThrottles[2] = motor_2_Throttle
+	fc.outputThrottles[0] = motor_0_Throttle
+	fc.outputThrottles[2] = motor_2_Throttle
 
-	fc.pidThrottles[1] = motor_1_Throttle
-	fc.pidThrottles[3] = motor_3_Throttle
+	fc.outputThrottles[1] = motor_1_Throttle
+	fc.outputThrottles[3] = motor_3_Throttle
 }
 
 func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {
 	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
 
-	fc.arm_0_2_PID.SetSetPoint(arm_0_2_rotation)
-	fc.arm_1_3_PID.SetSetPoint(arm_1_3_rotation)
+	fc.arm_0_2_PID.SetTargetRotation(arm_0_2_rotation)
+	fc.arm_1_3_PID.SetTargetRotation(arm_1_3_rotation)
 }
 
 func (fc *FlightControl) setThrottle(throttle float64) {
@@ -74,7 +74,7 @@ func (fc *FlightControl) getThrottle() float64 {
 }
 
 func (fc *FlightControl) applyThrottles() {
-	fc.escs.SetThrottles(fc.pidThrottles)
+	fc.escs.SetThrottles(fc.outputThrottles)
 }
 
 func (fc *FlightControl) turnOnMotors(motorsOn bool) {

@@ -116,7 +116,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			if imuReadTick.IsTime() {
 				rot, err := d.imu.Read()
 				if err == nil {
-					d.flightControl.calcThrottles(rot)
+					d.flightControl.calcOutputThrottles(rot)
 				}
 			}
 			if escCounter.Inc() {
