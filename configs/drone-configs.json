@@ -8,8 +8,8 @@
             "max-rot-error": 15,
             "max-i-value": 0,
             "max-weighted-sum": 0,
-            "calibration-mode": true,
-            "calibration-p-inc": 0.01,
+            "calibration-mode": false,
+            "calibration-p-inc": 0,
             "calibration-i-inc": 0,
             "calibration-d-inc": 0
         },
@@ -22,9 +22,9 @@
             "max-i-value": 0,
             "max-weighted-sum": 0,
             "calibration-mode": false,
-            "calibration-p-inc": 0.01,
-            "calibration-i-inc": 0.01,
-            "calibration-d-inc": 0.01
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
         },
         "yaw": {
             "id": "yaw",
@@ -35,9 +35,9 @@
             "max-i-value": 0,
             "max-weighted-sum": 0,
             "calibration-mode": false,
-            "calibration-p-inc": 0.01,
-            "calibration-i-inc": 0.01,
-            "calibration-d-inc": 0.01
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
         }    
     },
     "imu": {
