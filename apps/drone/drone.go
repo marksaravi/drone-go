@@ -107,7 +107,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	fmt.Println("Starting Drone...")
 	d.flightControl.turnOnMotors(false)
-
+	// ******** IMU DUR:  1.966206139s 19.662µs
+	// ******** ESCs DUR:  52.049043ms 520ns
+	// ******** COMMAND DUR:  2.511909837s 25.119µs
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
 	escCounter := utils.NewCounter(d.escsDataPerImuData)
@@ -125,12 +127,10 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 				rot, err := d.imu.Read()
 				if err == nil {
 					d.flightControl.calcOutputThrottles(rot)
+					if escCounter.Inc() {
+						d.flightControl.applyThrottles()
+					}
 				}
-			}
-			if escCounter.Inc() {
-				go func() {
-					d.flightControl.applyThrottles()
-				}()
 			}
 		}
 	}
