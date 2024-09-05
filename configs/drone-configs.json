@@ -41,7 +41,7 @@
         }    
     },
     "imu": {
-        "data-per-second": 1200,
+        "data-per-second": 480,
         "rotations-complimentary-filter-coefficient": 0.01,
         "acc-directions": {
             "x": 1,
