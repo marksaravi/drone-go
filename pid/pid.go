@@ -53,13 +53,11 @@ func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) floa
 
 	p := pid.settings.PGain * errorValue
 
-	pid.integralValue = errorValue * dt.Seconds()
-	i := pid.settings.IGain * pid.integralValue
+	pid.integralValue += errorValue * dt.Seconds() * pid.settings.IGain
 
-	deDt := dErrorValue / dt.Seconds()
-	d := pid.settings.DGain * deDt
+	d := pid.settings.DGain * dErrorValue / dt.Seconds()
 
-	u := p + i + d
+	u := p + pid.integralValue + d
 	return u
 }
 

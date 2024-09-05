@@ -2,16 +2,16 @@
     "pid": {
         "arm_0_2": {
             "id": "arm_0_2",
-            "p-gain": 0.0,
+            "p-gain": 0,
             "i-gain": 0,
-            "d-gain": 0.024,
+            "d-gain": 0.0,
             "direction": -1,
             "max-rot-error": 15,
             "max-i-value": 0,
             "calibration-mode": true,
-            "calibration-p-inc": 0.01,
-            "calibration-i-inc": 0.01,
-            "calibration-d-inc": 0.001
+            "calibration-p-inc": 0,
+            "calibration-i-inc": 0,
+            "calibration-d-inc": 0
         },
         "arm_1_3": {
             "id": "arm_1_3",
