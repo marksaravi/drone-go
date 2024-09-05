@@ -56,7 +56,7 @@ func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float
 
 	p := pid.settings.PGain * errorValue
 
-	pid.integralValue += errorValue * dt.Seconds() * pid.settings.IGain
+	pid.integralValue = utils.SignedMax(pid.integralValue+errorValue*dt.Seconds()*pid.settings.IGain, pid.settings.MaxIntegrationValue)
 
 	d := pid.settings.DGain * dRot / dt.Seconds()
 

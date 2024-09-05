@@ -2,12 +2,12 @@
     "pid": {
         "arm_0_2": {
             "id": "arm_0_2",
-            "p-gain": 0,
-            "i-gain": 0,
-            "d-gain": 0,
+            "p-gain": 0.0,
+            "i-gain": 0.0,
+            "d-gain": 0.0,
             "direction": -1,
             "max-rot-error": 5,
-            "max-i-value": 5,
+            "max-i-value": 3,
             "max-d-value": 5,
             "calibration-mode": true,
             "calibration-p-inc": 0.001,
@@ -30,9 +30,9 @@
         },
         "yaw": {
             "id": "yaw",
-            "p-gain": 0,
-            "i-gain": 0,
-            "d-gain": 0,
+            "p-gain": 0.062,
+            "i-gain": 5.8,
+            "d-gain": 0.215,
             "direction": 1,
             "max-rot-error": 15,
             "max-i-value": 0,
@@ -44,7 +44,7 @@
         }    
     },
     "imu": {
-        "data-per-second": 480,
+        "data-per-second": 1600,
         "rotations-complimentary-filter-coefficient": 0.1,
         "acc-directions": {
             "x": 1,
@@ -58,7 +58,7 @@
         }
     },
     "esc": {
-        "data-per-second": 40,
+        "data-per-second": 100,
         "max-output-throttle": 60
     },
     "remote-control": {

@@ -49,16 +49,17 @@ type DroneSettings struct {
 }
 
 type droneApp struct {
-	startTime         time.Time
-	imuDataPerSecond  int
-	imu               imuMems
-	escs              escs
-	flightControl     *FlightControl
-	commandsPerSecond int
-	receiver          radioReceiver
-	lastImuRead       time.Time
-	imuReadInterval   time.Duration
-	plotterActive     bool
+	startTime          time.Time
+	imuDataPerSecond   int
+	escUpdatePerSecond int
+	imu                imuMems
+	escs               escs
+	flightControl      *FlightControl
+	commandsPerSecond  int
+	receiver           radioReceiver
+	lastImuRead        time.Time
+	imuReadInterval    time.Duration
+	plotterActive      bool
 
 	rollMidValue   int
 	pitchlMidValue int
@@ -81,18 +82,19 @@ func NewDrone(settings DroneSettings) *droneApp {
 			settings.Arm_1_3_Pid,
 			settings.Yaw_Pid,
 		),
-		imuDataPerSecond:  settings.ImuDataPerSecond,
-		receiver:          settings.Receiver,
-		commandsPerSecond: settings.CommandsPerSecond,
-		lastImuRead:       time.Now(),
-		imuReadInterval:   time.Second / time.Duration(settings.ImuDataPerSecond),
-		plotterActive:     settings.PlotterActive,
-		rollMidValue:      settings.RollMidValue,
-		pitchlMidValue:    settings.PitchMidValue,
-		yawMidValue:       settings.YawMidValue,
-		rotationRange:     settings.RotationRange,
-		maxThrottle:       settings.MaxThrottle,
-		throttle:          utils.NewKalmanFilter(0.15, 1),
+		imuDataPerSecond:   settings.ImuDataPerSecond,
+		escUpdatePerSecond: settings.ESCsDataPerSecond,
+		receiver:           settings.Receiver,
+		commandsPerSecond:  settings.CommandsPerSecond,
+		lastImuRead:        time.Now(),
+		imuReadInterval:    time.Second / time.Duration(settings.ImuDataPerSecond),
+		plotterActive:      settings.PlotterActive,
+		rollMidValue:       settings.RollMidValue,
+		pitchlMidValue:     settings.PitchMidValue,
+		yawMidValue:        settings.YawMidValue,
+		rotationRange:      settings.RotationRange,
+		maxThrottle:        settings.MaxThrottle,
+		throttle:           utils.NewKalmanFilter(0.15, 1),
 	}
 }
 
@@ -107,6 +109,8 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// ******** COMMAND DUR:  2.511909837s 25.119µs
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	d.lastImuRead = time.Now()
+	imuReadCycles := d.imuDataPerSecond / d.escUpdatePerSecond
+	escUpdateCounter := 0
 
 	for running || commandOk {
 		select {
@@ -119,10 +123,13 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		default:
 			if time.Since(d.lastImuRead) >= d.imuReadInterval {
 				d.lastImuRead = time.Now()
-
 				rot, _, grot, _ := d.imu.ReadAll()
 				d.flightControl.calcOutputThrottles(rot, grot)
-				d.flightControl.applyThrottles()
+				escUpdateCounter++
+				if escUpdateCounter >= imuReadCycles {
+					d.flightControl.applyThrottles()
+					escUpdateCounter = 0
+				}
 			}
 		}
 	}
