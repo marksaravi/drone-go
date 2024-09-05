@@ -50,11 +50,12 @@ func transformRollPitch(roll, pitch float64) (float64, float64) {
 	return (pitch + roll) / 2, (pitch - roll) / 2
 }
 
-func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations) {
+func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations, gyroRotattions imu.Rotations) {
 	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+	arm_0_2_grotation, arm_1_3_grotation := transformRollPitch(gyroRotattions.Roll, gyroRotattions.Pitch)
 
-	motor_0_output_throttle, motor_2_output_throttle := fc.arm_0_2_pid.CalcOutput(arm_0_2_rotation, rotattions.Time, fc.throttle)
-	motor_1_output_throttle, motor_3_output_throttle := fc.arm_1_3_pid.CalcOutput(arm_1_3_rotation, rotattions.Time, fc.throttle)
+	motor_0_output_throttle, motor_2_output_throttle := fc.arm_0_2_pid.CalcOutput(arm_0_2_rotation, arm_0_2_grotation, rotattions.Time, fc.throttle)
+	motor_1_output_throttle, motor_3_output_throttle := fc.arm_1_3_pid.CalcOutput(arm_1_3_rotation, arm_1_3_grotation, rotattions.Time, fc.throttle)
 
 	fc.outputThrottles[0] = motor_0_output_throttle
 	fc.outputThrottles[2] = motor_2_output_throttle

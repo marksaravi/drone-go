@@ -16,7 +16,7 @@ type radioReceiver interface {
 }
 
 type imuMems interface {
-	Read() (imu.Rotations, error)
+	ReadAll() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
 type escs interface {
@@ -120,11 +120,9 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 			if time.Since(d.lastImuRead) >= d.imuReadInterval {
 				d.lastImuRead = time.Now()
 
-				rot, err := d.imu.Read()
-				if err == nil {
-					d.flightControl.calcOutputThrottles(rot)
-					d.flightControl.applyThrottles()
-				}
+				rot, _, grot, _ := d.imu.ReadAll()
+				d.flightControl.calcOutputThrottles(rot, grot)
+				d.flightControl.applyThrottles()
 			}
 		}
 	}

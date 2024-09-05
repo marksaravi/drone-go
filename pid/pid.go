@@ -23,34 +23,34 @@ type PIDConfigs struct {
 }
 
 type PIDControl struct {
-	id             string
-	settings       PIDConfigs
-	integralValue  float64
-	setPoint       float64
-	prevTime       time.Time
-	prevErrorValue float64
+	id            string
+	settings      PIDConfigs
+	integralValue float64
+	setPoint      float64
+	prevTime      time.Time
+	prevGyroRot   float64
 }
 
 func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	pid := &PIDControl{
-		id:             settings.Id,
-		settings:       settings,
-		setPoint:       0,
-		prevTime:       time.Now().Add(time.Second * 32000000),
-		prevErrorValue: 0,
+		id:          settings.Id,
+		settings:    settings,
+		setPoint:    0,
+		prevTime:    time.Now().Add(time.Second * 32000000),
+		prevGyroRot: 0,
 	}
 	return pid
 }
 
-func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOffset float64) (float64, float64) {
-	u := pid.calcProcessValue(measuredValue, t)
+func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, processOffset float64) (float64, float64) {
+	u := pid.calcProcessValue(rot, gyroRot, t)
 	return processOffset + float64(pid.settings.Direction)*u, processOffset - float64(pid.settings.Direction)*u
 }
 
-func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
-	errorValue := utils.SignedMax(measuredValue-pid.setPoint, pid.settings.MaxRotationError)
-	dErrorValue := errorValue - pid.prevErrorValue
-	pid.prevErrorValue = errorValue
+func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float64 {
+	errorValue := utils.SignedMax(rot-pid.setPoint, pid.settings.MaxRotationError)
+	dRot := gyroRot - pid.prevGyroRot
+	pid.prevGyroRot = gyroRot
 	dt := t.Sub(pid.prevTime)
 	pid.prevTime = t
 
@@ -58,7 +58,7 @@ func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) floa
 
 	pid.integralValue += errorValue * dt.Seconds() * pid.settings.IGain
 
-	d := pid.settings.DGain * dErrorValue / dt.Seconds()
+	d := pid.settings.DGain * dRot / dt.Seconds()
 
 	u := p + pid.integralValue + d
 	return u

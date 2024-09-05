@@ -126,6 +126,16 @@ func (imuDev *imuDevice) calcaAccelerometerRotations(data mems.XYZ) {
 	}
 }
 
+func truncate(x, max float64) float64 {
+	if math.Abs(x) < max {
+		return x
+	}
+	if x < 0 {
+		return x + max
+	}
+	return x - max
+}
+
 func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	dt := imuDev.currReadTime.Sub(imuDev.lastReadTime)
 	if dt < MIN_TIME_BETWEEN_READS || imuDev.firstRead {
@@ -137,12 +147,9 @@ func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	imuDev.dPitch = dxyz.DY * dt.Seconds()
 	imuDev.dYaw = dxyz.DZ * dt.Seconds()
 
-	imuDev.gyroRotations.Roll += imuDev.dRoll * imuDev.gyroDirX
-	imuDev.gyroRotations.Pitch += imuDev.dPitch * imuDev.gyroDirY
-	imuDev.gyroRotations.Yaw += imuDev.dYaw * imuDev.gyroDirZ
-	// fmt.Printf("%6.2f  %6.2f %6.2f\n", imuDev.gyroRotations.Roll, imuDev.gyroRotations.Pitch, imuDev.gyroRotations.Yaw)
-	// fmt.Println(imuDev.gyroDirX, imuDev.gyroDirY, imuDev.gyroDirZ)
-	// fmt.Println(1 / dt.Seconds())
+	imuDev.gyroRotations.Roll = truncate(imuDev.gyroRotations.Roll+imuDev.dRoll*imuDev.gyroDirX, 360)
+	imuDev.gyroRotations.Pitch = truncate(imuDev.gyroRotations.Pitch+imuDev.dPitch*imuDev.gyroDirY, 360)
+	imuDev.gyroRotations.Yaw = truncate(imuDev.gyroRotations.Yaw+imuDev.dYaw*imuDev.gyroDirZ, 360)
 }
 
 func (imuDev *imuDevice) calcRotations() {
