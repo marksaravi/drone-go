@@ -49,13 +49,11 @@ type DroneSettings struct {
 }
 
 type droneApp struct {
-	startTime          time.Time
-	imuDataPerSecond   int
-	imu                imuMems
-	escs               escs
-	escsDataPerImuData int
-	flightControl      *FlightControl
-
+	startTime         time.Time
+	imuDataPerSecond  int
+	imu               imuMems
+	escs              escs
+	flightControl     *FlightControl
 	commandsPerSecond int
 	receiver          radioReceiver
 	lastImuRead       time.Time
@@ -71,12 +69,10 @@ type droneApp struct {
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
-	escsDataPerImuData := settings.ImuDataPerSecond / settings.ESCsDataPerSecond
 	return &droneApp{
-		startTime:          time.Now(),
-		imu:                settings.ImuMems,
-		escs:               settings.Escs,
-		escsDataPerImuData: escsDataPerImuData,
+		startTime: time.Now(),
+		imu:       settings.ImuMems,
+		escs:      settings.Escs,
 		flightControl: NewFlightControl(
 			settings.Escs,
 			settings.MaxThrottle,
@@ -84,7 +80,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 			settings.Arm_0_2_Pid,
 			settings.Arm_1_3_Pid,
 			settings.Yaw_Pid,
-			escsDataPerImuData,
 		),
 		imuDataPerSecond:  settings.ImuDataPerSecond,
 		receiver:          settings.Receiver,
@@ -112,7 +107,6 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// ******** COMMAND DUR:  2.511909837s 25.119µs
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
 	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
-	escCounter := utils.NewCounter(d.escsDataPerImuData)
 
 	for running || commandOk {
 		select {
@@ -128,9 +122,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 				if err == nil {
 					d.flightControl.calcOutputThrottles(rot)
-					if escCounter.Inc() {
-						d.flightControl.applyThrottles()
-					}
+					d.flightControl.applyThrottles()
 				}
 			}
 		}

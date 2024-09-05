@@ -31,7 +31,6 @@ func NewFlightControl(
 	arm_0_2_pid *pid.PIDControl,
 	arm_1_3_pid *pid.PIDControl,
 	yaw_pid *pid.PIDControl,
-	escsDataPerImuData int,
 ) *FlightControl {
 	fc := &FlightControl{
 		arm_0_2_pid:           arm_0_2_pid,
