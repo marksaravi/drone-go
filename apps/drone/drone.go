@@ -106,7 +106,7 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	// ******** ESCs DUR:  52.049043ms 520ns
 	// ******** COMMAND DUR:  2.511909837s 25.119µs
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
+	d.lastImuRead = time.Now()
 
 	for running || commandOk {
 		select {
@@ -117,9 +117,10 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		case _, running = <-ctx.Done():
 			running = false
 		default:
-			if imuReadTick.IsTime() {
-				rot, err := d.imu.Read()
+			if time.Since(d.lastImuRead) >= d.imuReadInterval {
+				d.lastImuRead = time.Now()
 
+				rot, err := d.imu.Read()
 				if err == nil {
 					d.flightControl.calcOutputThrottles(rot)
 					d.flightControl.applyThrottles()

@@ -3,6 +3,8 @@ package pid
 import (
 	"fmt"
 	"time"
+
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDConfigs struct {
@@ -13,6 +15,7 @@ type PIDConfigs struct {
 	Direction           float64 `json:"direction"`
 	MaxRotationError    float64 `json:"max-rot-error"`
 	MaxIntegrationValue float64 `json:"max-i-value"`
+	MaxDiffValue        float64 `json:"max-d-value"`
 	CalibrationMode     bool    `json:"calibration-mode"`
 	CalibrationIncP     float64 `json:"calibration-p-inc"`
 	CalibrationIncI     float64 `json:"calibration-i-inc"`
@@ -45,7 +48,7 @@ func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOff
 }
 
 func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
-	errorValue := measuredValue - pid.setPoint
+	errorValue := utils.SignedMax(measuredValue-pid.setPoint, pid.settings.MaxRotationError)
 	dErrorValue := errorValue - pid.prevErrorValue
 	pid.prevErrorValue = errorValue
 	dt := t.Sub(pid.prevTime)
