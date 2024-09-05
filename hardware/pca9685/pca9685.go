@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marksaravi/drone-go/constants"
 	"periph.io/x/conn/v3/i2c"
 )
 
@@ -47,12 +48,6 @@ const (
 	PCA9685OutDrv  = 0x04
 )
 
-const (
-	Frequency float64 = 384
-	MinPW     float64 = 0.000995
-	MaxPW     float64 = 0.00199
-)
-
 type pca9685Dev struct {
 	name        string
 	address     uint8
@@ -79,7 +74,7 @@ func NewPCA9685(settings PCA9685Settings) (*pca9685Dev, error) {
 }
 
 func throttleToPulseWidth(throttle float64) float64 {
-	return MinPW + throttle/100*(MaxPW-MinPW)
+	return constants.ESC_MIN_PW + throttle/100*(constants.ESC_MAX_PW-constants.ESC_MIN_PW)
 }
 
 func (d *pca9685Dev) limitThrottle(throttle float64) float64 {
@@ -119,14 +114,14 @@ func Calibrate(i2cConn *i2c.Dev, powerbreaker powerbreaker) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("setting max pulse width: ", MaxPW)
+	fmt.Println("setting max pulse width: ", constants.ESC_MAX_PW)
 	fmt.Println("turn on ESCs")
-	pwmDev.setAllPWM(MaxPW)
+	pwmDev.setAllPWM(constants.ESC_MAX_PW)
 	time.Sleep(1 * time.Second)
 	powerbreaker.Connect()
 	time.Sleep(12 * time.Second)
-	fmt.Println("setting min pulse width: ", MinPW)
-	pwmDev.setAllPWM(MinPW)
+	fmt.Println("setting min pulse width: ", constants.ESC_MIN_PW)
+	pwmDev.setAllPWM(constants.ESC_MIN_PW)
 	time.Sleep(12 * time.Second)
 	fmt.Println("turn off ESCs")
 	powerbreaker.Disconnect()
@@ -269,6 +264,6 @@ func (d *pca9685Dev) init() error {
 	}
 
 	time.Sleep(5 * time.Millisecond)
-	d.setFrequency(Frequency)
+	d.setFrequency(constants.ESC_FREQUENCY)
 	return err
 }
