@@ -46,6 +46,8 @@ func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time) float64 {
 	return pid.calcProcessValue(rot, gyroRot, t) * float64(pid.settings.Direction)
 }
 
+// var ts time.Time = time.Now()
+
 func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float64 {
 	eRot := rot - pid.setPoint
 	dRot := gyroRot - pid.prevGyroRot
@@ -60,6 +62,10 @@ func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float
 
 	d := pid.settings.DGain * dRot / dt.Seconds()
 
+	// if time.Since(ts) >= time.Second/4 {
+	// 	fmt.Printf("%6.2f  %6.2f  %6.2f\n", p, pid.integralValue, d)
+	// 	ts = time.Now()
+	// }
 	return p + pid.integralValue + d
 }
 
