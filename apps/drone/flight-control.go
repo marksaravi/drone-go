@@ -54,11 +54,11 @@ func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations, gyroRotat
 	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
 	arm_0_2_grotation, arm_1_3_grotation := transformRollPitch(gyroRotattions.Roll, gyroRotattions.Pitch)
 
-	arm_o_2_pid := fc.arm_0_2_pid.CalcOutput(arm_0_2_rotation, arm_0_2_grotation, rotattions.Time)
-	motor_0_output_throttle := fc.throttle + arm_o_2_pid
-	motor_2_output_throttle := fc.throttle - arm_o_2_pid
+	arm_0_2_pid := fc.arm_0_2_pid.CalcOutput(arm_0_2_rotation, arm_0_2_grotation, rotattions.Time, fc.throttle)
+	motor_0_output_throttle := fc.throttle + arm_0_2_pid
+	motor_2_output_throttle := fc.throttle - arm_0_2_pid
 
-	arm_1_3_pid := fc.arm_1_3_pid.CalcOutput(arm_1_3_rotation, arm_1_3_grotation, rotattions.Time)
+	arm_1_3_pid := fc.arm_1_3_pid.CalcOutput(arm_1_3_rotation, arm_1_3_grotation, rotattions.Time, fc.throttle)
 	motor_1_output_throttle := fc.throttle + arm_1_3_pid
 	motor_3_output_throttle := fc.throttle - arm_1_3_pid
 

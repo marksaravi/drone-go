@@ -8,18 +8,19 @@ import (
 )
 
 type PIDConfigs struct {
-	Id                  string  `json:"id"`
-	PGain               float64 `json:"p-gain"`
-	IGain               float64 `json:"i-gain"`
-	DGain               float64 `json:"d-gain"`
-	Direction           float64 `json:"direction"`
-	MaxRotationError    float64 `json:"max-rot-error"`
-	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxDiffValue        float64 `json:"max-d-value"`
-	CalibrationMode     bool    `json:"calibration-mode"`
-	CalibrationIncP     float64 `json:"calibration-p-inc"`
-	CalibrationIncI     float64 `json:"calibration-i-inc"`
-	CalibrationIncD     float64 `json:"calibration-d-inc"`
+	Id                        string  `json:"id"`
+	PGain                     float64 `json:"p-gain"`
+	IGain                     float64 `json:"i-gain"`
+	DGain                     float64 `json:"d-gain"`
+	Direction                 float64 `json:"direction"`
+	MaxRotationError          float64 `json:"max-rot-error"`
+	MaxIntegrationValue       float64 `json:"max-i-value"`
+	MinApplicableThrottleForI float64 `json:"min-applicable-throttle-for-i"`
+	MaxDiffValue              float64 `json:"max-d-value"`
+	CalibrationMode           bool    `json:"calibration-mode"`
+	CalibrationIncP           float64 `json:"calibration-p-inc"`
+	CalibrationIncI           float64 `json:"calibration-i-inc"`
+	CalibrationIncD           float64 `json:"calibration-d-inc"`
 }
 
 type PIDControl struct {
@@ -46,9 +47,7 @@ func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time) float64 {
 	return pid.calcProcessValue(rot, gyroRot, t) * float64(pid.settings.Direction)
 }
 
-// var ts time.Time = time.Now()
-
-func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float64 {
+func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, throttle float64) float64 {
 	eRot := rot - pid.setPoint
 	dRot := gyroRot - pid.prevGyroRot
 	pid.prevGyroRot = gyroRot
@@ -59,6 +58,9 @@ func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float
 
 	iRaw := pid.integralValue + eRot*dt.Seconds()*pid.settings.IGain
 	pid.integralValue = utils.SignedMax(iRaw, pid.settings.MaxIntegrationValue)
+	if throttle < pid.settings.MinApplicableThrottleForI {
+		pid.integralValue = 0
+	}
 
 	d := pid.settings.DGain * dRot / dt.Seconds()
 
