@@ -42,9 +42,8 @@ func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	return pid
 }
 
-func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, processOffset float64) (float64, float64) {
-	u := pid.calcProcessValue(rot, gyroRot, t)
-	return processOffset + float64(pid.settings.Direction)*u, processOffset - float64(pid.settings.Direction)*u
+func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time) float64 {
+	return pid.calcProcessValue(rot, gyroRot, t) * float64(pid.settings.Direction)
 }
 
 func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float64 {
