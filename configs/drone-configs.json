@@ -7,11 +7,11 @@
             "d-gain": 0.0,
             "direction": -1,
             "max-rot-error": 5,
-            "max-i-value": 3,
+            "max-i-value": 2.5,
             "max-d-value": 5,
             "calibration-mode": true,
             "calibration-p-inc": 0.001,
-            "calibration-i-inc": 0.1,
+            "calibration-i-inc": 0.01,
             "calibration-d-inc": 0.001
         },
         "arm_1_3": {

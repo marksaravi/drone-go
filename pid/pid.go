@@ -47,20 +47,20 @@ func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time) float64 {
 }
 
 func (pid *PIDControl) calcProcessValue(rot, gyroRot float64, t time.Time) float64 {
-	errorValue := utils.SignedMax(rot-pid.setPoint, pid.settings.MaxRotationError)
+	eRot := rot - pid.setPoint
 	dRot := gyroRot - pid.prevGyroRot
 	pid.prevGyroRot = gyroRot
 	dt := t.Sub(pid.prevTime)
 	pid.prevTime = t
 
-	p := pid.settings.PGain * errorValue
+	p := pid.settings.PGain * utils.SignedMax(eRot, pid.settings.MaxRotationError)
 
-	pid.integralValue = utils.SignedMax(pid.integralValue+errorValue*dt.Seconds()*pid.settings.IGain, pid.settings.MaxIntegrationValue)
+	iRaw := pid.integralValue + eRot*dt.Seconds()*pid.settings.IGain
+	pid.integralValue = utils.SignedMax(iRaw, pid.settings.MaxIntegrationValue)
 
 	d := pid.settings.DGain * dRot / dt.Seconds()
 
-	u := p + pid.integralValue + d
-	return u
+	return p + pid.integralValue + d
 }
 
 func (pid *PIDControl) IsCalibrationEnabled() bool {
