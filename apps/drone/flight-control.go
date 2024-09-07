@@ -1,6 +1,8 @@
 package drone
 
 import (
+	"fmt"
+
 	"github.com/marksaravi/drone-go/devices/imu"
 	"github.com/marksaravi/drone-go/pid"
 	"github.com/marksaravi/drone-go/utils"
@@ -17,6 +19,7 @@ type FlightControl struct {
 	arm_1_3_pid       *pid.PIDControl
 	yaw_pid           *pid.PIDControl
 	throttle          float64
+	heading           float64
 	rollDirection     float64
 	pitchDirection    float64
 	outputThrottles   []float64
@@ -24,6 +27,7 @@ type FlightControl struct {
 	maxThrottle       float64
 	maxOutputThrottle float64
 	escs              escs
+	headingInc        float64
 }
 
 func NewFlightControl(
@@ -35,6 +39,7 @@ func NewFlightControl(
 	yaw_pid *pid.PIDControl,
 	rollDirection float64,
 	pitchDirection float64,
+	headingInc float64,
 ) *FlightControl {
 	fc := &FlightControl{
 		arm_0_2_pid:       arm_0_2_pid,
@@ -48,6 +53,7 @@ func NewFlightControl(
 		outputThrottles:   make([]float64, 4),
 		outputCounter:     1000000,
 		escs:              escs,
+		headingInc:        headingInc,
 	}
 	return fc
 }
@@ -108,4 +114,19 @@ func (fc *FlightControl) turnOnMotors(motorsOn bool) {
 	} else {
 		fc.escs.Off()
 	}
+}
+
+func (fc *FlightControl) changeHeading(left bool) {
+	if left {
+		fc.heading -= fc.headingInc
+	} else {
+		fc.heading += fc.headingInc
+	}
+	fc.yaw_pid.SetTargetRotation(fc.heading)
+	fmt.Println(fc.heading)
+}
+
+func (fc *FlightControl) initHeading(heading float64) {
+	fc.heading = heading
+	fmt.Println(fc.heading)
 }

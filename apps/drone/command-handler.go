@@ -11,6 +11,9 @@ const (
 	COMMAND_TURN_ON  byte = 1
 	COMMAND_TURN_OFF byte = 16
 
+	COMMAND_TURN_LEFT  byte = 1
+	COMMAND_TURN_RIGHT byte = 2
+
 	COMMAND_CALIB_INC_P byte = 2
 	COMMAND_CALIB_INC_I byte = 4
 	COMMAND_CALIB_INC_D byte = 8
@@ -30,14 +33,23 @@ func (d *droneApp) applyCommands(commands []byte) {
 	// hYaw := commands[5]
 	lThrottle := commands[6]
 	hThrottle := commands[7]
-	// pressedButtons := commands[8]
+	pressedButtons := commands[8]
 	pushButtons := commands[9]
 
 	d.onMotors(pushButtons)
 	d.getThrottleCommands(hThrottle, lThrottle)
 	d.getRotationCommands(hRoll, lRoll, hPitch, lPitch)
+	d.setHeading(pressedButtons)
 
 	d.calibratePID(pushButtons)
+}
+
+func (d *droneApp) setHeading(pressedButtons byte) {
+	if pressedButtons&COMMAND_TURN_LEFT != 0 {
+		d.flightControl.changeHeading(true)
+	} else if pressedButtons&COMMAND_TURN_RIGHT != 0 {
+		d.flightControl.changeHeading(false)
+	}
 }
 
 func (d *droneApp) onMotors(pushButtons byte) {
