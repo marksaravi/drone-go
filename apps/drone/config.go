@@ -38,7 +38,7 @@ type DroneConfigs struct {
 		RotationRange  float64 `json:"rotation-range-deg"`
 		MaxThrottle    float64 `json:"max-throttle"`
 		RollDirection  float64 `json:"roll-direction"`
-		PitchDirection float64 `json:"mpitch-direction"`
+		PitchDirection float64 `json:"pitch-direction"`
 	} `json:"commands"`
 	RemoteControl struct {
 		CommandsPerSecond int `json:"commands-per-second"`

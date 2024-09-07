@@ -10,12 +10,12 @@
         }
     },
     "joysticks": {
-        "roll-channel": 0,
+        "roll-channel": 1,
         "roll-min": 16,
         "roll-mid": 8636,
         "roll-max": 17633,
 
-        "pitch-channel": 1,
+        "pitch-channel": 0,
         "pitch-min": 19,
         "pitch-mid": 9039,
         "pitch-max": 17627,
