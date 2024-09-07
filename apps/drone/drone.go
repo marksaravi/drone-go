@@ -46,6 +46,8 @@ type DroneSettings struct {
 	Arm_0_2_Pid       *pid.PIDControl
 	Arm_1_3_Pid       *pid.PIDControl
 	Yaw_Pid           *pid.PIDControl
+	RollDirection     float64
+	PitchDirection    float64
 }
 
 type droneApp struct {
@@ -81,6 +83,8 @@ func NewDrone(settings DroneSettings) *droneApp {
 			settings.Arm_0_2_Pid,
 			settings.Arm_1_3_Pid,
 			settings.Yaw_Pid,
+			settings.RollDirection,
+			settings.PitchDirection,
 		),
 		imuDataPerSecond:   settings.ImuDataPerSecond,
 		escUpdatePerSecond: settings.ESCsDataPerSecond,

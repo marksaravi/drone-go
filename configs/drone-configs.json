@@ -81,7 +81,9 @@
     },
     "commands": {
         "rotation-range-deg": 15,
-        "max-throttle": 50
+        "max-throttle": 50,
+        "roll-direction": 1,
+        "pitch-direction": -1
     },
     "plotter": {
         "active": false

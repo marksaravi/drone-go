@@ -13,16 +13,17 @@ const (
 )
 
 type FlightControl struct {
-	arm_0_2_pid           *pid.PIDControl
-	arm_1_3_pid           *pid.PIDControl
-	yaw_pid               *pid.PIDControl
-	throttle              float64
-	outputThrottles       []float64
-	outputCounter         int
-	maxThrottle           float64
-	maxOutputThrottle     float64
-	escs                  escs
-	throttleLowPassFilter float64
+	arm_0_2_pid       *pid.PIDControl
+	arm_1_3_pid       *pid.PIDControl
+	yaw_pid           *pid.PIDControl
+	throttle          float64
+	rollDirection     float64
+	pitchDirection    float64
+	outputThrottles   []float64
+	outputCounter     int
+	maxThrottle       float64
+	maxOutputThrottle float64
+	escs              escs
 }
 
 func NewFlightControl(
@@ -32,18 +33,21 @@ func NewFlightControl(
 	arm_0_2_pid *pid.PIDControl,
 	arm_1_3_pid *pid.PIDControl,
 	yaw_pid *pid.PIDControl,
+	rollDirection float64,
+	pitchDirection float64,
 ) *FlightControl {
 	fc := &FlightControl{
-		arm_0_2_pid:           arm_0_2_pid,
-		arm_1_3_pid:           arm_1_3_pid,
-		yaw_pid:               yaw_pid,
-		throttleLowPassFilter: 0.45,
-		throttle:              0,
-		maxThrottle:           maxThrottle,
-		maxOutputThrottle:     maxOutputThrottle,
-		outputThrottles:       make([]float64, 4),
-		outputCounter:         1000000,
-		escs:                  escs,
+		arm_0_2_pid:       arm_0_2_pid,
+		arm_1_3_pid:       arm_1_3_pid,
+		yaw_pid:           yaw_pid,
+		throttle:          0,
+		rollDirection:     rollDirection,
+		pitchDirection:    pitchDirection,
+		maxThrottle:       maxThrottle,
+		maxOutputThrottle: maxOutputThrottle,
+		outputThrottles:   make([]float64, 4),
+		outputCounter:     1000000,
+		escs:              escs,
 	}
 	return fc
 }
@@ -75,7 +79,7 @@ func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations, gyroRotat
 }
 
 func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {
-	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch*-1)
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll*fc.rollDirection, rotattions.Pitch*fc.pitchDirection)
 
 	fc.arm_0_2_pid.SetTargetRotation(arm_0_2_rotation)
 	fc.arm_1_3_pid.SetTargetRotation(arm_1_3_rotation)

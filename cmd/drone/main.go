@@ -85,6 +85,8 @@ func main() {
 		Arm_0_2_Pid:       arm_0_2_pidControl,
 		Arm_1_3_Pid:       arm_1_3_pidControl,
 		Yaw_Pid:           yaw_pidControl,
+		RollDirection:     configs.Commands.RollDirection,
+		PitchDirection:    configs.Commands.PitchDirection,
 	})
 
 	go func() {
