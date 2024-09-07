@@ -3,64 +3,65 @@ package pid
 import (
 	"fmt"
 	"time"
+
+	"github.com/marksaravi/drone-go/utils"
 )
 
 type PIDConfigs struct {
-	Id                  string  `json:"id"`
-	PGain               float64 `json:"p-gain"`
-	IGain               float64 `json:"i-gain"`
-	DGain               float64 `json:"d-gain"`
-	MaxRotationError    float64 `json:"max-rot-error"`
-	MaxIntegrationValue float64 `json:"max-i-value"`
-	MaxWeightedSum      float64 `json:"max-weighted-sum"`
-	CalibrationMode     bool    `json:"calibration-mode"`
-	CalibrationIncP     float64 `json:"calibration-p-inc"`
-	CalibrationIncI     float64 `json:"calibration-i-inc"`
-	CalibrationIncD     float64 `json:"calibration-d-inc"`
+	Id                        string  `json:"id"`
+	PGain                     float64 `json:"p-gain"`
+	IGain                     float64 `json:"i-gain"`
+	DGain                     float64 `json:"d-gain"`
+	Direction                 float64 `json:"direction"`
+	MaxRotationError          float64 `json:"max-rot-error"`
+	MaxIntegrationValue       float64 `json:"max-i-value"`
+	MinApplicableThrottleForI float64 `json:"min-applicable-throttle-for-i"`
+	ThrottleOffset            float64 `json:"throttle-offset"`
+	MaxDiffValue              float64 `json:"max-d-value"`
+	CalibrationMode           bool    `json:"calibration-mode"`
+	CalibrationIncP           float64 `json:"calibration-p-inc"`
+	CalibrationIncI           float64 `json:"calibration-i-inc"`
+	CalibrationIncD           float64 `json:"calibration-d-inc"`
 }
 
 type PIDControl struct {
-	id             string
-	settings       PIDConfigs
-	integralValue  float64
-	setPoint       float64
-	prevTime       time.Time
-	prevErrorValue float64
+	id            string
+	settings      PIDConfigs
+	integralValue float64
+	setPoint      float64
+	prevTime      time.Time
+	prevGyroRot   float64
 }
 
 func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	pid := &PIDControl{
-		id:             settings.Id,
-		settings:       settings,
-		setPoint:       0,
-		prevTime:       time.Now().Add(time.Second * 32000000),
-		prevErrorValue: 0,
+		id:          settings.Id,
+		settings:    settings,
+		setPoint:    0,
+		prevTime:    time.Now().Add(time.Second * 32000000),
+		prevGyroRot: 0,
 	}
 	return pid
 }
 
-func (pid *PIDControl) CalcOutput(measuredValue float64, t time.Time, processOffset float64, sign int) (float64, float64) {
-	u := pid.calcProcessValue(measuredValue, t)
-	return processOffset + float64(sign)*u, processOffset - float64(sign)*u
-}
-
-func (pid *PIDControl) calcProcessValue(measuredValue float64, t time.Time) float64 {
-	errorValue := measuredValue - pid.setPoint
-	dErrorValue := errorValue - pid.prevErrorValue
-	pid.prevErrorValue = errorValue
+func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, throttle float64) float64 {
+	eRot := rot - pid.setPoint
+	dRot := gyroRot - pid.prevGyroRot
+	pid.prevGyroRot = gyroRot
 	dt := t.Sub(pid.prevTime)
 	pid.prevTime = t
 
-	p := pid.settings.PGain * errorValue
+	p := pid.settings.PGain * utils.SignedMax(eRot, pid.settings.MaxRotationError)
 
-	pid.integralValue = errorValue * dt.Seconds()
-	i := pid.settings.IGain * pid.integralValue
+	iRaw := pid.integralValue + eRot*dt.Seconds()*pid.settings.IGain
+	pid.integralValue = utils.SignedMax(iRaw, pid.settings.MaxIntegrationValue)
+	if throttle < pid.settings.MinApplicableThrottleForI {
+		pid.integralValue = 0
+	}
 
-	deDt := dErrorValue / dt.Seconds()
-	d := pid.settings.DGain * deDt
+	d := pid.settings.DGain * dRot / dt.Seconds()
 
-	u := p + i + d
-	return u
+	return (p+pid.integralValue+d)*pid.settings.Direction - pid.settings.ThrottleOffset
 }
 
 func (pid *PIDControl) IsCalibrationEnabled() bool {
@@ -79,7 +80,7 @@ func (pid *PIDControl) Calibrate(t rune, inc bool) {
 	case 'd':
 		pid.settings.DGain = updateGain(pid.settings.DGain, pid.settings.CalibrationIncD, inc)
 	}
-	fmt.Printf("%s -> %c:%8.2f, %8.2f, %8.2f\n ", pid.id, t, pid.settings.PGain, pid.settings.IGain, pid.settings.DGain)
+	fmt.Printf("%s -> %c:%8.4f, %8.4f, %8.4f\n ", pid.id, t, pid.settings.PGain, pid.settings.IGain, pid.settings.DGain)
 }
 
 func updateGain(v, c float64, inc bool) float64 {

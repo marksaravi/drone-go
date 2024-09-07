@@ -16,7 +16,7 @@ type radioReceiver interface {
 }
 
 type imuMems interface {
-	Read() (imu.Rotations, error)
+	ReadAll() (imu.Rotations, imu.Rotations, imu.Rotations, error)
 }
 
 type escs interface {
@@ -30,63 +30,64 @@ type KalmanFilter interface {
 }
 
 type DroneSettings struct {
-	ImuMems            imuMems
-	Receiver           radioReceiver
-	Escs               escs
-	ImuDataPerSecond   int
-	ESCsDataPerSecond  int
-	CommandsPerSecond  int
-	PlotterActive      bool
-	RollMidValue       int
-	PitchMidValue      int
-	YawMidValue        int
-	RotationRange      float64
-	MaxThrottle        float64
-	ThrottleZeroOffset int
-	Arm_0_2_Pid        *pid.PIDControl
-	Arm_1_3_Pid        *pid.PIDControl
-	Yaw_Pid            *pid.PIDControl
+	ImuMems           imuMems
+	Receiver          radioReceiver
+	Escs              escs
+	ImuDataPerSecond  int
+	ESCsDataPerSecond int
+	CommandsPerSecond int
+	PlotterActive     bool
+	RollMidValue      int
+	PitchMidValue     int
+	YawMidValue       int
+	RotationRange     float64
+	MaxThrottle       float64
+	MaxOutputThrottle float64
+	Arm_0_2_Pid       *pid.PIDControl
+	Arm_1_3_Pid       *pid.PIDControl
+	Yaw_Pid           *pid.PIDControl
+	RollDirection     float64
+	PitchDirection    float64
 }
 
 type droneApp struct {
 	startTime          time.Time
 	imuDataPerSecond   int
+	escUpdatePerSecond int
 	imu                imuMems
 	escs               escs
-	escsDataPerImuData int
 	flightControl      *FlightControl
+	commandsPerSecond  int
+	receiver           radioReceiver
+	lastImuRead        time.Time
+	imuReadInterval    time.Duration
+	plotterActive      bool
 
-	commandsPerSecond int
-	receiver          radioReceiver
-	lastImuRead       time.Time
-	imuReadInterval   time.Duration
-	plotterActive     bool
-
-	rollMidValue       int
-	pitchlMidValue     int
-	yawMidValue        int
-	rotationRange      float64
-	maxThrottle        float64
-	throttleZeroOffset int
-	throttle           KalmanFilter
+	rollMidValue   int
+	pitchlMidValue int
+	yawMidValue    int
+	rotationRange  float64
+	maxThrottle    float64
+	throttle       KalmanFilter
 }
 
 func NewDrone(settings DroneSettings) *droneApp {
-	escsDataPerImuData := settings.ImuDataPerSecond / settings.ESCsDataPerSecond
 	return &droneApp{
-		startTime:          time.Now(),
-		imu:                settings.ImuMems,
-		escs:               settings.Escs,
-		escsDataPerImuData: escsDataPerImuData,
+		startTime: time.Now(),
+		imu:       settings.ImuMems,
+		escs:      settings.Escs,
 		flightControl: NewFlightControl(
 			settings.Escs,
 			settings.MaxThrottle,
+			settings.MaxOutputThrottle,
 			settings.Arm_0_2_Pid,
 			settings.Arm_1_3_Pid,
 			settings.Yaw_Pid,
-			escsDataPerImuData,
+			settings.RollDirection,
+			settings.PitchDirection,
 		),
 		imuDataPerSecond:   settings.ImuDataPerSecond,
+		escUpdatePerSecond: settings.ESCsDataPerSecond,
 		receiver:           settings.Receiver,
 		commandsPerSecond:  settings.CommandsPerSecond,
 		lastImuRead:        time.Now(),
@@ -97,7 +98,6 @@ func NewDrone(settings DroneSettings) *droneApp {
 		yawMidValue:        settings.YawMidValue,
 		rotationRange:      settings.RotationRange,
 		maxThrottle:        settings.MaxThrottle,
-		throttleZeroOffset: settings.ThrottleZeroOffset,
 		throttle:           utils.NewKalmanFilter(0.15, 1),
 	}
 }
@@ -108,10 +108,13 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 
 	fmt.Println("Starting Drone...")
 	d.flightControl.turnOnMotors(false)
-
+	// ******** IMU DUR:  1.966206139s 19.662µs
+	// ******** ESCs DUR:  52.049043ms 520ns
+	// ******** COMMAND DUR:  2.511909837s 25.119µs
 	commandsChannel := d.receiver.Start(ctx, wg, d.commandsPerSecond)
-	imuReadTick := utils.WithDataPerSecond(d.imuDataPerSecond)
-	escCounter := utils.NewCounter(d.escsDataPerImuData)
+	d.lastImuRead = time.Now()
+	imuReadCycles := d.imuDataPerSecond / d.escUpdatePerSecond
+	escUpdateCounter := 0
 
 	for running || commandOk {
 		select {
@@ -122,16 +125,15 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 		case _, running = <-ctx.Done():
 			running = false
 		default:
-			if imuReadTick.IsTime() {
-				rot, err := d.imu.Read()
-				if err == nil {
-					d.flightControl.calcOutputThrottles(rot)
-				}
-			}
-			if escCounter.Inc() {
-				go func() {
+			if time.Since(d.lastImuRead) >= d.imuReadInterval {
+				d.lastImuRead = time.Now()
+				rot, _, grot, _ := d.imu.ReadAll()
+				d.flightControl.calcOutputThrottles(rot, grot)
+				escUpdateCounter++
+				if escUpdateCounter >= imuReadCycles {
 					d.flightControl.applyThrottles()
-				}()
+					escUpdateCounter = 0
+				}
 			}
 		}
 	}

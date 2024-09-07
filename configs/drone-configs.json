@@ -1,39 +1,48 @@
 {
-    "pid": {
+    "pid": {  
         "arm_0_2": {
             "id": "arm_0_2",
-            "p-gain": 0,
-            "i-gain": 0,
-            "d-gain": 0,
-            "max-rot-error": 15,
-            "max-i-value": 0,
-            "max-weighted-sum": 0,
-            "calibration-mode": false,
-            "calibration-p-inc": 0,
-            "calibration-i-inc": 0,
-            "calibration-d-inc": 0
+            "p-gain": 0.45,
+            "i-gain": 0.15,
+            "d-gain": 0.15,
+            "direction": -1,
+            "max-rot-error": 5,
+            "max-i-value": 3,
+            "min-applicable-throttle-for-i": 20,
+            "throttle-offset": 0,
+            "max-d-value": 5,
+            "calibration-mode": true,
+            "calibration-p-inc": 0.01,
+            "calibration-i-inc": 0.01,
+            "calibration-d-inc": 0.001
         },
         "arm_1_3": {
             "id": "arm_1_3",
-            "p-gain": 0,
-            "i-gain": 0,
-            "d-gain": 0,
-            "max-rot-error": 15,
-            "max-i-value": 0,
-            "max-weighted-sum": 0,
-            "calibration-mode": false,
-            "calibration-p-inc": 0,
-            "calibration-i-inc": 0,
-            "calibration-d-inc": 0
+            "p-gain": 0.45,
+            "i-gain": 0.15,
+            "d-gain": 0.15,
+            "direction": 1,
+            "max-rot-error": 5,
+            "max-i-value": 3,
+            "min-applicable-throttle-for-i": 20,
+            "throttle-offset": 0,
+            "max-d-value": 5,
+            "calibration-mode": true,
+            "calibration-p-inc": 0.01,
+            "calibration-i-inc": 0.01,
+            "calibration-d-inc": 0.001
         },
         "yaw": {
             "id": "yaw",
-            "p-gain": 0,
-            "i-gain": 0,
-            "d-gain": 0,
-            "max-rot-error": 15,
+            "p-gain": 0.5,
+            "i-gain": 0.5,
+            "d-gain": 0.1,
+            "direction": -1,
+            "max-rot-error": 5,
             "max-i-value": 0,
-            "max-weighted-sum": 0,
+            "min-applicable-throttle-for-i": 0,
+            "throttle-offset": 0,
+            "max-d-value": 5,
             "calibration-mode": false,
             "calibration-p-inc": 0,
             "calibration-i-inc": 0,
@@ -41,9 +50,8 @@
         }    
     },
     "imu": {
-        "data-per-second": 1200,
-        "accelerometer-complimentary-filter-coefficient": 0.01,
-        "rotations-complimentary-filter-coefficient": 0.01,
+        "data-per-second": 1600,
+        "rotations-complimentary-filter-coefficient": 0.1,
         "acc-directions": {
             "x": 1,
             "y": 1,
@@ -56,7 +64,8 @@
         }
     },
     "esc": {
-        "data-per-second": 40
+        "data-per-second": 96,
+        "max-output-throttle": 60
     },
     "remote-control": {
         "commands-per-second": 25,
@@ -73,7 +82,8 @@
     "commands": {
         "rotation-range-deg": 15,
         "max-throttle": 50,
-        "throttle-zero-offset": 53
+        "roll-direction": 1,
+        "pitch-direction": -1
     },
     "plotter": {
         "active": false

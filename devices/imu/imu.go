@@ -20,11 +20,10 @@ type Directions struct {
 }
 
 type Configs struct {
-	DataPerSecond                               int        `json:"data-per-second"`
-	AccelerometerComplimentaryFilterCoefficient float64    `json:"accelerometer-complimentary-filter-coefficient"`
-	RotationsComplimentaryFilterCoefficient     float64    `json:"rotations-complimentary-filter-coefficient"`
-	AccDirections                               Directions `json:"acc-directions"`
-	GyroscopDirections                          Directions `json:"gyro-directions"`
+	DataPerSecond                           int        `json:"data-per-second"`
+	RotationsComplimentaryFilterCoefficient float64    `json:"rotations-complimentary-filter-coefficient"`
+	AccDirections                           Directions `json:"acc-directions"`
+	GyroscopDirections                      Directions `json:"gyro-directions"`
 }
 
 // Rotations (Roll, Pitch, Yaw)
@@ -52,7 +51,6 @@ type imuDevice struct {
 	firstRead                         bool
 	lastReadTime                      time.Time
 	currReadTime                      time.Time
-	accComplimentaryFilterCoefficient float64
 	rotComplimentaryFilterCoefficient float64
 	accDirX                           float64
 	accDirY                           float64
@@ -84,7 +82,6 @@ func NewIMU(dev IMUMems6DOF, configs Configs) *imuDevice {
 		dRoll:                             0,
 		dPitch:                            0,
 		dYaw:                              0,
-		accComplimentaryFilterCoefficient: configs.AccelerometerComplimentaryFilterCoefficient,
 		rotComplimentaryFilterCoefficient: configs.RotationsComplimentaryFilterCoefficient,
 		firstRead:                         true,
 		accDirX:                           configs.AccDirections.X,
@@ -123,10 +120,20 @@ func (imuDev *imuDevice) calcaAccelerometerRotations(data mems.XYZ) {
 	pitch := 180 * math.Atan2(data.X, math.Sqrt(data.Y*data.Y+data.Z*data.Z)) / math.Pi
 	roll := 180 * math.Atan2(data.Y, math.Sqrt(data.X*data.X+data.Z*data.Z)) / math.Pi
 	imuDev.accRotations = Rotations{
-		Roll:  complimentaryFilter(roll, imuDev.accRotations.Roll, imuDev.accComplimentaryFilterCoefficient) * imuDev.accDirX,
-		Pitch: complimentaryFilter(pitch, imuDev.accRotations.Pitch, imuDev.accComplimentaryFilterCoefficient) * imuDev.accDirY,
+		Roll:  roll * imuDev.accDirX,
+		Pitch: pitch * imuDev.accDirY,
 		Yaw:   0,
 	}
+}
+
+func truncate(x, max float64) float64 {
+	if math.Abs(x) < max {
+		return x
+	}
+	if x < 0 {
+		return x + max
+	}
+	return x - max
 }
 
 func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
@@ -140,12 +147,9 @@ func (imuDev *imuDevice) calcGyroscopeRotations(dxyz mems.DXYZ) {
 	imuDev.dPitch = dxyz.DY * dt.Seconds()
 	imuDev.dYaw = dxyz.DZ * dt.Seconds()
 
-	imuDev.gyroRotations.Roll += imuDev.dRoll * imuDev.gyroDirX
-	imuDev.gyroRotations.Pitch += imuDev.dPitch * imuDev.gyroDirY
-	imuDev.gyroRotations.Yaw += imuDev.dYaw * imuDev.gyroDirZ
-	// fmt.Printf("%6.2f  %6.2f %6.2f\n", imuDev.gyroRotations.Roll, imuDev.gyroRotations.Pitch, imuDev.gyroRotations.Yaw)
-	// fmt.Println(imuDev.gyroDirX, imuDev.gyroDirY, imuDev.gyroDirZ)
-	// fmt.Println(1 / dt.Seconds())
+	imuDev.gyroRotations.Roll = truncate(imuDev.gyroRotations.Roll+imuDev.dRoll*imuDev.gyroDirX, 360)
+	imuDev.gyroRotations.Pitch = truncate(imuDev.gyroRotations.Pitch+imuDev.dPitch*imuDev.gyroDirY, 360)
+	imuDev.gyroRotations.Yaw = truncate(imuDev.gyroRotations.Yaw+imuDev.dYaw*imuDev.gyroDirZ, 360)
 }
 
 func (imuDev *imuDevice) calcRotations() {

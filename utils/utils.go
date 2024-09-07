@@ -2,7 +2,7 @@ package utils
 
 import "math"
 
-func Max(v, maxValue float64) float64 {
+func SignedMax(v, maxValue float64) float64 {
 	if math.Abs(v) < maxValue {
 		return v
 	}
