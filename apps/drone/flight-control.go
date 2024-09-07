@@ -64,16 +64,18 @@ func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations, gyroRotat
 	motor_1_output_throttle := fc.throttle + arm_1_3_pid
 	motor_3_output_throttle := fc.throttle - arm_1_3_pid
 
-	fc.outputCounter++
-	fc.outputThrottles[0] += motor_0_output_throttle
-	fc.outputThrottles[2] += motor_2_output_throttle
+	yaw_pid := fc.yaw_pid.CalcOutput(gyroRotattions.Yaw, gyroRotattions.Yaw, rotattions.Time, fc.throttle)
 
-	fc.outputThrottles[1] += motor_1_output_throttle
-	fc.outputThrottles[3] += motor_3_output_throttle
+	fc.outputCounter++
+	fc.outputThrottles[0] += motor_0_output_throttle + yaw_pid
+	fc.outputThrottles[2] += motor_2_output_throttle + yaw_pid
+
+	fc.outputThrottles[1] += motor_1_output_throttle - yaw_pid
+	fc.outputThrottles[3] += motor_3_output_throttle - yaw_pid
 }
 
 func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {
-	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch)
+	arm_0_2_rotation, arm_1_3_rotation := transformRollPitch(rotattions.Roll, rotattions.Pitch*-1)
 
 	fc.arm_0_2_pid.SetTargetRotation(arm_0_2_rotation)
 	fc.arm_1_3_pid.SetTargetRotation(arm_1_3_rotation)
