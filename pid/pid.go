@@ -16,6 +16,7 @@ type PIDConfigs struct {
 	MaxRotationError          float64 `json:"max-rot-error"`
 	MaxIntegrationValue       float64 `json:"max-i-value"`
 	MinApplicableThrottleForI float64 `json:"min-applicable-throttle-for-i"`
+	ThrottleOffset            float64 `json:"throttle-offset"`
 	MaxDiffValue              float64 `json:"max-d-value"`
 	CalibrationMode           bool    `json:"calibration-mode"`
 	CalibrationIncP           float64 `json:"calibration-p-inc"`
@@ -43,10 +44,6 @@ func NewPIDControl(id string, settings PIDConfigs) *PIDControl {
 	return pid
 }
 
-func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time) float64 {
-	return pid.calcProcessValue(rot, gyroRot, t) * float64(pid.settings.Direction)
-}
-
 func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, throttle float64) float64 {
 	eRot := rot - pid.setPoint
 	dRot := gyroRot - pid.prevGyroRot
@@ -64,11 +61,7 @@ func (pid *PIDControl) CalcOutput(rot, gyroRot float64, t time.Time, throttle fl
 
 	d := pid.settings.DGain * dRot / dt.Seconds()
 
-	// if time.Since(ts) >= time.Second/4 {
-	// 	fmt.Printf("%6.2f  %6.2f  %6.2f\n", p, pid.integralValue, d)
-	// 	ts = time.Now()
-	// }
-	return p + pid.integralValue + d
+	return (p+pid.integralValue+d)*pid.settings.Direction - pid.settings.ThrottleOffset
 }
 
 func (pid *PIDControl) IsCalibrationEnabled() bool {

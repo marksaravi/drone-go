@@ -18,6 +18,7 @@ type FlightControl struct {
 	yaw_pid               *pid.PIDControl
 	throttle              float64
 	outputThrottles       []float64
+	outputCounter         int
 	maxThrottle           float64
 	maxOutputThrottle     float64
 	escs                  escs
@@ -41,6 +42,7 @@ func NewFlightControl(
 		maxThrottle:           maxThrottle,
 		maxOutputThrottle:     maxOutputThrottle,
 		outputThrottles:       make([]float64, 4),
+		outputCounter:         1000000,
 		escs:                  escs,
 	}
 	return fc
@@ -62,11 +64,12 @@ func (fc *FlightControl) calcOutputThrottles(rotattions imu.Rotations, gyroRotat
 	motor_1_output_throttle := fc.throttle + arm_1_3_pid
 	motor_3_output_throttle := fc.throttle - arm_1_3_pid
 
-	fc.outputThrottles[0] = motor_0_output_throttle
-	fc.outputThrottles[2] = motor_2_output_throttle
+	fc.outputCounter++
+	fc.outputThrottles[0] += motor_0_output_throttle
+	fc.outputThrottles[2] += motor_2_output_throttle
 
-	fc.outputThrottles[1] = motor_1_output_throttle * 0
-	fc.outputThrottles[3] = motor_3_output_throttle * 0
+	fc.outputThrottles[1] += motor_1_output_throttle
+	fc.outputThrottles[3] += motor_3_output_throttle
 }
 
 func (fc *FlightControl) setTargetRotations(rotattions imu.Rotations) {
@@ -86,8 +89,10 @@ func (fc *FlightControl) getThrottle() float64 {
 
 func (fc *FlightControl) applyThrottles() {
 	for i := 0; i < len(fc.outputThrottles); i++ {
-		fc.outputThrottles[i] = utils.SignedMax(fc.outputThrottles[i], fc.maxOutputThrottle)
+		fc.outputThrottles[i] = utils.SignedMax(fc.outputThrottles[i]/float64(fc.outputCounter), fc.maxOutputThrottle)
 	}
+
+	fc.outputCounter = 0
 	fc.escs.SetThrottles(fc.outputThrottles)
 }
 

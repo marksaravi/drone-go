@@ -1,14 +1,15 @@
 {
-    "pid": {
+    "pid": {  
         "arm_0_2": {
             "id": "arm_0_2",
-            "p-gain": 0.25,
-            "i-gain": 0.11,
+            "p-gain": 0.15,
+            "i-gain": 0.0,
             "d-gain": 0.15,
-            "direction": 1,
+            "direction": -1,
             "max-rot-error": 5,
             "max-i-value": 2.5,
-            "min-applicable-throttle-for-i": 10,
+            "min-applicable-throttle-for-i": 35,
+            "throttle-offset": 0,
             "max-d-value": 5,
             "calibration-mode": true,
             "calibration-p-inc": 0.01,
@@ -24,6 +25,7 @@
             "max-rot-error": 5,
             "max-i-value": 5,
             "min-applicable-throttle-for-i": 0,
+            "throttle-offset": 35,
             "max-d-value": 5,
             "calibration-mode": false,
             "calibration-p-inc": 0,
@@ -32,13 +34,14 @@
         },
         "yaw": {
             "id": "yaw",
-            "p-gain": 0.062,
-            "i-gain": 5.8,
-            "d-gain": 0.215,
+            "p-gain": 0,
+            "i-gain": 0,
+            "d-gain": 0,
             "direction": 1,
             "max-rot-error": 15,
             "max-i-value": 0,
             "min-applicable-throttle-for-i": 0,
+            "throttle-offset": 0,
             "max-d-value": 5,
             "calibration-mode": false,
             "calibration-p-inc": 0,
@@ -61,7 +64,7 @@
         }
     },
     "esc": {
-        "data-per-second": 100,
+        "data-per-second": 96,
         "max-output-throttle": 60
     },
     "remote-control": {
