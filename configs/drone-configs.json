@@ -2,7 +2,7 @@
     "pid": {  
         "arm_0_2": {
             "id": "arm_0_2",
-            "p-gain": 0.3,
+            "p-gain": 0.45,
             "i-gain": 0.15,
             "d-gain": 0.15,
             "direction": -1,
@@ -18,7 +18,7 @@
         },
         "arm_1_3": {
             "id": "arm_1_3",
-            "p-gain": 0.3,
+            "p-gain": 0.45,
             "i-gain": 0.15,
             "d-gain": 0.15,
             "direction": 1,
@@ -34,9 +34,9 @@
         },
         "yaw": {
             "id": "yaw",
-            "p-gain": 0.1,
-            "i-gain": 0.1,
-            "d-gain": 0,
+            "p-gain": 0.5,
+            "i-gain": 0.5,
+            "d-gain": 0.1,
             "direction": -1,
             "max-rot-error": 5,
             "max-i-value": 0,
