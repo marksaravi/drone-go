@@ -1,9 +1,5 @@
 package commons
 
-import (
-	"github.com/marksaravi/drone-go/constants"
-)
-
 func Uint16ToBytes(x uint16) (low, high byte) {
 	low = byte(x)
 	high = byte(x >> 8)
@@ -25,7 +21,4 @@ func CalcRotationFromRawJoyStickRaw(commands []byte, midValue int, rotationRange
 	}
 	return float64(rawValue) / float64(midValue) * rotationRange
 }
-func CalcThrottleFromRawJoyStickRaw(commands []byte, maxThrottle float64) float64 {
-	rawValue := RawJoystickRotation(commands)
-	return float64(rawValue) / float64(constants.JOY_STICK_INPUT_RANGE) * maxThrottle
-}
+

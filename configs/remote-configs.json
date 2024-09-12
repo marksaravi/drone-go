@@ -94,5 +94,5 @@
             "gpio": "GPIO1"
         }    
     ],
-    "display-update-per-second": 5
+    "display-update-per-second": 4
 }
