@@ -80,7 +80,7 @@
         }
     },
     "commands": {
-        "rotation-range-deg": 15,
+        "rotation-range-deg": 5,
         "max-throttle": 50,
         "roll-direction": 1,
         "pitch-direction": -1
