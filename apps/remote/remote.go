@@ -214,7 +214,7 @@ func fixMax(min, mid, max uint16) (uint16, uint16, uint16) {
 	return min, mid, max
 }
 
-func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
+func normiliseThrottle(l, h byte, min, mid, max , inputRange uint16) uint16 {
 	v:=uint16(l) + uint16(h)<<8
 	if v<min {
 		v=min
@@ -225,5 +225,10 @@ func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
 	r:=mid-min
 	f:=float64(inputRange/2)/float64(r)
 	n:=uint16(float64(v-min)*f)
+	return n
+}
+
+func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
+	n:=normiliseThrottle(l, h, min, mid, max , inputRange)
 	return byte(n & 0b0000000011111111), byte(n>>8)
 }
