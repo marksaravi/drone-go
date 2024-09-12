@@ -3,10 +3,9 @@ package remote
 import (
 	"context"
 	"fmt"
-	"time"
+	"math"
 
 	"github.com/marksaravi/drone-go/constants"
-	"github.com/marksaravi/drone-go/apps/commons"
 	"github.com/marksaravi/drone-go/utils"
 )
 
@@ -49,10 +48,8 @@ type remoteControl struct {
 	buttons                []PushButton
 	oled                   oled
 	commandPerSecond       int
-	lastCommandRead        time.Time
 	commands               commands
 	displayUpdatePerSecond int
-	lastDisplayUpdate      time.Time
 	rollMin                    uint16
 	pitchMin                   uint16
 	yawMin                     uint16
@@ -109,8 +106,6 @@ func NewRemoteControl(settings RemoteSettings) *remoteControl {
 		buttons:                settings.PushButtons,
 		oled:                   settings.OLED,
 		displayUpdatePerSecond: settings.DisplayUpdatePerSecond,
-		lastCommandRead:        time.Now(),
-		lastDisplayUpdate:      time.Now(),
 
 		rollMin:                rmin,
 		rollMid:                rmid,
@@ -137,9 +132,10 @@ func (r *remoteControl) Start(ctx context.Context) {
 	running := true
 	r.transmitter.On()
 	r.Initisplay()
-	// displayUpdate := utils.WithDataPerSecond(3)
+	updateDisplay := utils.WithDataPerSecond(3)
 	commandsUpdate := utils.WithDataPerSecond(r.commandPerSecond)
 	fmt.Println("Commands per second: ", r.commandPerSecond)
+
 	for running {
 		select {
 		default:
@@ -147,13 +143,12 @@ func (r *remoteControl) Start(ctx context.Context) {
 			if commandsUpdate.IsTime() {
 				pressedButtons, pushButtons := r.readButtons()
 				l, h := r.joyStick.Read(r.rollChan)
-				lRoll, hRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, constants.JOY_STICK_INPUT_RANGE)
+				lRoll, hRoll, rawRoll := normilise(l, h, r.rollMin, r.rollMid, r.rollMax, constants.JOY_STICK_INPUT_RANGE)
 				l, h = r.joyStick.Read(r.pitchChan)
-				lPitch, hPitch := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, constants.JOY_STICK_INPUT_RANGE)
+				lPitch, hPitch, rawPitch  := normilise(l, h, r.pitchMin, r.pitchMid, r.pitchMax, constants.JOY_STICK_INPUT_RANGE)
 				lYaw, hYaw := byte(0), byte(0)
 				l, h = r.joyStick.Read(r.throttleChan)
-				lThrottle, hThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, constants.JOY_STICK_INPUT_RANGE)
-
+				lThrottle, hThrottle, rawThrottle := normilise(l, h, r.throttleMin, r.throttleMid, r.throttleMax, constants.JOY_STICK_INPUT_RANGE)
 				payload := []byte{
 					lRoll,
 					hRoll,
@@ -167,6 +162,9 @@ func (r *remoteControl) Start(ctx context.Context) {
 					pushButtons,
 				}
 				r.transmitter.Transmit(payload)
+				if updateDisplay.IsTime() {
+					r.updateDisplayData(rawThrottle, rawRoll, rawPitch)
+				}
 			}
 		case <-ctx.Done():
 			running = false
@@ -176,15 +174,30 @@ func (r *remoteControl) Start(ctx context.Context) {
 
 func (r *remoteControl) Initisplay() {
 	r.oled.WriteString("Trottle:", 0, 0)
+	r.oled.WriteString("Roll:", 0, 1)
+	r.oled.WriteString("Pitch:", 0, 2)
+	r.oled.WriteString("Yaw:", 0, 3)
 }
 
-func (r *remoteControl) UpdateDisplay(payload []byte) {
-	if time.Since(r.lastDisplayUpdate) < time.Second/time.Duration(r.displayUpdatePerSecond) {
-		return
+func displayValue(raw uint16, max, min float64, unit rune) string {
+	if raw==constants.JOY_STICK_INPUT_RANGE {
+		return fmt.Sprintf("%2.0f%c", calcThrottleFromRawJoyStickRaw(raw, max, min), unit)
+	} else {
+		return fmt.Sprintf("%2.1f%c", calcThrottleFromRawJoyStickRaw(raw, max, min), unit)
 	}
-	r.lastDisplayUpdate = time.Now()
-	r.oled.WriteString(" ", 13, 0)
-	r.oled.WriteString(fmt.Sprintf("%2.1f%%", commons.CalcThrottleFromRawJoyStickRaw(payload[6:8], 100)), 8, 53)
+}
+
+func (r *remoteControl) updateDisplayData(rawThrottle, rawRoll, rawPitch uint16) {
+	r.updateDisplay(rawThrottle, 0, 100, 0, '%')
+	r.updateDisplay(rawRoll, -5, 5, 1, ' ')
+	r.updateDisplay(rawPitch, -5, 5, 2, ' ')
+}	
+
+func (r *remoteControl) updateDisplay(raw uint16, max, min float64, row int, unit rune) {
+	r.oled.WriteString(" ", 13, row)
+	txt := displayValue(raw, max, min, unit)
+
+	r.oled.WriteString(txt, 9, row)
 }
 
 func (r *remoteControl) readButtons() (pressedButtons byte, pushButtons byte) {
@@ -214,7 +227,7 @@ func fixMax(min, mid, max uint16) (uint16, uint16, uint16) {
 	return min, mid, max
 }
 
-func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
+func normiliseThrottle(l, h byte, min, mid, max , inputRange uint16) uint16 {
 	v:=uint16(l) + uint16(h)<<8
 	if v<min {
 		v=min
@@ -225,5 +238,14 @@ func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte) {
 	r:=mid-min
 	f:=float64(inputRange/2)/float64(r)
 	n:=uint16(float64(v-min)*f)
-	return byte(n & 0b0000000011111111), byte(n>>8)
+	return n
+}
+
+func normilise(l, h byte, min, mid, max , inputRange uint16) (byte, byte, uint16) {
+	n:=normiliseThrottle(l, h, min, mid, max , inputRange)
+	return byte(n & 0b0000000011111111), byte(n>>8), n
+}
+
+func calcThrottleFromRawJoyStickRaw(rawThrottle uint16, min, max float64) float64 {
+	return float64(rawThrottle) / float64(constants.JOY_STICK_INPUT_RANGE) * (max-min) - math.Abs(min)
 }
