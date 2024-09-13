@@ -1,19 +1,19 @@
 [Unit]
 Description=Drone
-After=systemd-user-sessions.service plymouth-quit-wait.service
-After=rc-local.service
+After=multi-user.target
 
 [Service]
 Type=simple
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/go/src/drone-go
-ExecStart=/home/pi/go/src/drone-go/drone > /dev/null
+ExecStart=/home/pi/go/src/drone-go/drone run-as-service > /dev/null
 Restart=no
 StandardError=null
 StandardOutput=null
 SyslogIdentifier=drone_service
-KillMode=mixed
+KillMode=process
+TimeoutSec=infinity
 
 [Install]
 Alias=drone

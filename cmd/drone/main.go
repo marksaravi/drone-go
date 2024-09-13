@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	dronePackage "github.com/marksaravi/drone-go/apps/drone"
@@ -22,6 +23,13 @@ import (
 
 func main() {
 	log.SetFlags(log.Lmicroseconds)
+	runAsService := false
+	if len(os.Args) > 1 {
+		runAsService = os.Args[1] == "run-as-service"
+		if runAsService {
+			fmt.Println("Running as Service")
+		}
+	}
 	hardware.HostInitialize()
 	log.Println("Starting Drone")
 	configs := dronePackage.ReadConfigs("./configs/drone-configs.json")
@@ -90,9 +98,11 @@ func main() {
 	})
 
 	go func() {
-		fmt.Scanln()
-		fmt.Println("Aborting Drone...")
-		cancel()
+		if !runAsService {
+			fmt.Scanln()
+			fmt.Println("Aborting Drone...")
+			cancel()
+		}
 	}()
 
 	var wg sync.WaitGroup
