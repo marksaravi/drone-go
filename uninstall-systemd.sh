@@ -8,8 +8,7 @@ do
     fi
 done
 
-# systemctl status drone.service
-
-sudo cp "./systemd/$servicename.service" /etc/systemd/system
+sudo systemctl stop $servicename 
+sudo systemctl disable $servicename
 sudo systemctl daemon-reload
-sudo systemctl enable $servicename 
+sudo rm "/etc/systemd/system/$servicename.service"

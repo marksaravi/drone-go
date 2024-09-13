@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/marksaravi/drone-go/apps/drone"
 	"github.com/marksaravi/drone-go/apps/remote"
@@ -18,6 +19,13 @@ import (
 )
 
 func main() {
+	runAsService := false
+	if len(os.Args) > 1 {
+		runAsService = os.Args[1] == "run-as-service"
+		if runAsService {
+			fmt.Println("Running as Service")
+		}
+	}
 	log.SetFlags(log.Lmicroseconds)
 	hardware.HostInitialize()
 	log.Println("Starting RemoteControl")
@@ -37,7 +45,7 @@ func main() {
 	buttonsCount := make([]int, 0, 10)
 	for i := 0; i < len(configs.PushButtons); i++ {
 		pin := hardware.NewPushButtonInput(configs.PushButtons[i].GPIO)
-		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, configs.PushButtons[i].Index, configs.PushButtons[i].IsPushButton,pin))
+		buttons = append(buttons, pushbutton.NewPushButton(configs.PushButtons[i].Name, configs.PushButtons[i].Index, configs.PushButtons[i].IsPushButton, pin))
 		buttonsCount = append(buttonsCount, 0)
 	}
 
@@ -53,7 +61,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	atod := ads1115.NewADS1115(atodi2c);
+	atod := ads1115.NewADS1115(atodi2c)
 	fmt.Println(configs.Joysticks.RollMin, configs.Joysticks.RollMid, configs.Joysticks.RollMax)
 	remoteControl := remote.NewRemoteControl(remote.RemoteSettings{
 		Transmitter:            radioTransmitter,
@@ -76,15 +84,17 @@ func main() {
 		YawMid:                 configs.Joysticks.YawMid,
 		YawMax:                 configs.Joysticks.YawMax,
 		ThrottleMin:            configs.Joysticks.ThrottleMin,
-		ThrottleMid:            configs.Joysticks.ThrottleMid,		
+		ThrottleMid:            configs.Joysticks.ThrottleMid,
 		ThrottleMax:            configs.Joysticks.ThrottleMax,
 		RotationRange:          droneConfigs.Commands.RotationRange,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		fmt.Scanln()
-		cancel()
+		if !runAsService {
+			fmt.Scanln()
+			cancel()
+		}
 	}()
 
 	remoteControl.Start(ctx)
