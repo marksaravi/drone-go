@@ -3,33 +3,33 @@
         "arm_0_2": {
             "id": "arm_0_2",
             "p-gain": 0.45,
-            "i-gain": 0.15,
-            "d-gain": 0.15,
+            "i-gain": 9,
+            "d-gain": 0.1,
             "direction": -1,
             "max-rot-error": 5,
-            "max-i-value": 3,
-            "min-applicable-throttle-for-i": 20,
+            "max-i-value": 1,
+            "min-applicable-throttle-for-i": 40,
             "throttle-offset": 0,
             "max-d-value": 5,
             "calibration-mode": true,
             "calibration-p-inc": 0.01,
-            "calibration-i-inc": 0.01,
+            "calibration-i-inc": 0.25,
             "calibration-d-inc": 0.001
         },
         "arm_1_3": {
             "id": "arm_1_3",
             "p-gain": 0.45,
-            "i-gain": 0.15,
-            "d-gain": 0.15,
+            "i-gain": 9,
+            "d-gain": 0.1,
             "direction": 1,
             "max-rot-error": 5,
-            "max-i-value": 3,
-            "min-applicable-throttle-for-i": 20,
+            "max-i-value": 1,
+            "min-applicable-throttle-for-i": 40,
             "throttle-offset": 0,
             "max-d-value": 5,
             "calibration-mode": true,
             "calibration-p-inc": 0.01,
-            "calibration-i-inc": 0.01,
+            "calibration-i-inc": 0.25,
             "calibration-d-inc": 0.001
         },
         "yaw": {
@@ -39,8 +39,8 @@
             "d-gain": 0.1,
             "direction": -1,
             "max-rot-error": 5,
-            "max-i-value": 0,
-            "min-applicable-throttle-for-i": 0,
+            "max-i-value": 2.5,
+            "min-applicable-throttle-for-i": 40,
             "throttle-offset": 0,
             "max-d-value": 5,
             "calibration-mode": false,
@@ -65,7 +65,7 @@
     },
     "esc": {
         "data-per-second": 96,
-        "max-output-throttle": 60
+        "max-output-throttle": 43
     },
     "remote-control": {
         "commands-per-second": 25,
@@ -80,7 +80,7 @@
         }
     },
     "commands": {
-        "rotation-range-deg": 15,
+        "rotation-range-deg": 5,
         "max-throttle": 50,
         "roll-direction": 1,
         "pitch-direction": -1

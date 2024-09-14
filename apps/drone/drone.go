@@ -85,6 +85,7 @@ func NewDrone(settings DroneSettings) *droneApp {
 			settings.Yaw_Pid,
 			settings.RollDirection,
 			settings.PitchDirection,
+			1,
 		),
 		imuDataPerSecond:   settings.ImuDataPerSecond,
 		escUpdatePerSecond: settings.ESCsDataPerSecond,
@@ -115,6 +116,8 @@ func (d *droneApp) Start(ctx context.Context, wg *sync.WaitGroup) {
 	d.lastImuRead = time.Now()
 	imuReadCycles := d.imuDataPerSecond / d.escUpdatePerSecond
 	escUpdateCounter := 0
+	_, _, gyroRot, _ := d.imu.ReadAll()
+	d.flightControl.initHeading(gyroRot.Yaw)
 
 	for running || commandOk {
 		select {
