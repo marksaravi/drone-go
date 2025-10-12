@@ -10,11 +10,9 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/marksaravi/drone-go/devices/imu"
 	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wsjson"
 )
 
 const UDP_BUFFER_LEN = 8192
@@ -32,7 +30,7 @@ type plotter struct {
 func NewPlotter() *plotter {
 	return &plotter{
 		httpServerAddress: "localhost:3000",
-		udpServerAddress:  "192.168.1.101:8000",
+		udpServerAddress:  "192.168.1.104:8000",
 	}
 }
 
@@ -79,26 +77,28 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		log.Println("Starting UDP Server ...")
-		counter := 0
-		lastPrint := time.Now()
+		// counter := 0
+		// lastPrint := time.Now()
 		for {
 			nBytes, _, err := p.udpConn.ReadFromUDP(p.udpBuffer)
+			fmt.Println(nBytes)
 			if err != nil && strings.Contains(err.Error(), "closed network connection") {
 				return
 			}
 			if err == nil && nBytes >= PLOTER_PACKET_HEADER_LEN {
-				packet := p.udpBuffer[:nBytes]
-				counter++
-				packetSize, dataPerPacket, dataLen := DeSerializeHeader(packet)
-				jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataLen, dataPerPacket)
-				if p.websocketConn != nil {
-					err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
-				}
-				if time.Since(lastPrint) >= time.Second {
-					log.Println(packetSize, dataPerPacket, dataLen, counter, jsonData[0:32])
-					counter = 0
-					lastPrint = time.Now()
-				}
+				fmt.Println(nBytes)
+				// packet := p.udpBuffer[:nBytes]
+				// counter++
+				// packetSize, dataPerPacket, dataLen := DeSerializeHeader(packet)
+				// jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataLen, dataPerPacket)
+				// if p.websocketConn != nil {
+				// 	err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
+				// }
+				// if time.Since(lastPrint) >= time.Second {
+				// 	log.Println(packetSize, dataPerPacket, dataLen, counter, jsonData[0:32])
+				// 	counter = 0
+				// 	lastPrint = time.Now()
+				// }
 			}
 		}
 	}()
