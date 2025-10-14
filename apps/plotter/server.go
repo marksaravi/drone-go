@@ -32,7 +32,7 @@ type plotter struct {
 func NewPlotter() *plotter {
 	return &plotter{
 		httpServerAddress: "localhost:3000",
-		udpServerAddress:  "192.168.1.100:8000",
+		udpServerAddress:  "0.0.0.0:8000",
 	}
 }
 
