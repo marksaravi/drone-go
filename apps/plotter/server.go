@@ -83,23 +83,22 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 		lastPrint := time.Now()
 		for {
 			nBytes, _, err := p.udpConn.ReadFromUDP(p.udpBuffer)
-
+			// fmt.Println(nBytes)
 			if err != nil && strings.Contains(err.Error(), "closed network connection") {
 				return
 			}
 
 			if err == nil && nBytes >= PLOTER_PACKET_HEADER_LEN {
-				fmt.Println(nBytes)
 				packet := p.udpBuffer[:nBytes]
 				counter++
-				packetSize, dataPerPacket, dataLen := DeSerializeHeader(packet)
-				jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataLen, dataPerPacket)
-
+				packetSize, dataPerPacket := DeSerializeHeader(packet)
+				jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataPerPacket)
+				// fmt.Println(jsonData)
 				if p.websocketConn != nil {
-					err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
+					wsjson.Write(context.Background(), p.websocketConn, jsonData)
 				}
 				if time.Since(lastPrint) >= time.Second {
-					log.Println(packetSize, dataPerPacket, dataLen, counter, jsonData[0:32])
+					log.Println(packetSize, dataPerPacket, counter, jsonData[0:32])
 					counter = 0
 					lastPrint = time.Now()
 				}
@@ -163,11 +162,11 @@ func (p *plotter) createSocketHandler() func(http.ResponseWriter, *http.Request)
 	}
 }
 
-func extractPackets(data []byte, dataLen, dataPerPacket int) string {
+func extractPackets(data []byte, dataPerPacket int) string {
 	var jsonData string = "["
 	var comma string = ""
 	for i := 0; i < dataPerPacket; i++ {
-		imudata := extractImuRotations(data[i*dataLen : (i+1)*dataLen])
+		imudata := extractImuRotations(data[i*PLOTTER_DATA_LEN : (i+1)*PLOTTER_DATA_LEN])
 		jsonData += comma + imudata
 		comma = ","
 	}
@@ -175,13 +174,13 @@ func extractPackets(data []byte, dataLen, dataPerPacket int) string {
 }
 
 func extractImuRotations(data []byte) string {
-	dur, rotations, accelerometer, gyroscope, throttle := DeSerializeDroneData(data)
+	dur, rotations, accelerometer, gyroscope := DeSerializeDroneData(data)
 	return fmt.Sprintf("{\"a\":%s,\"g\":%s,\"r\":%s,\"t\":%d,\"p\":%d}",
 		extractRotations(accelerometer),
 		extractRotations(gyroscope),
 		extractRotations(rotations),
 		dur,
-		throttle,
+		0,
 	)
 }
 

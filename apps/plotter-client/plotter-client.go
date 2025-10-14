@@ -9,6 +9,9 @@ import (
 	"github.com/marksaravi/drone-go/devices/imu"
 )
 
+const PLOTTER_DATA_PER_PACKET = 128
+const PLOTTER_PACKET_LEN = plotter.PLOTER_PACKET_HEADER_LEN + PLOTTER_DATA_PER_PACKET*plotter.PLOTTER_DATA_LEN
+
 type plotterClient struct {
 	active        bool
 	address       string
@@ -29,10 +32,10 @@ func NewPlotter(settings Settings) *plotterClient {
 	p := plotterClient{
 		active:        settings.Active,
 		address:       settings.Address,
-		dataPacket:    make([]byte, 0, plotter.PLOTTER_PACKET_LEN),
-		sendBuffer:    make([]byte, plotter.PLOTTER_PACKET_LEN),
+		dataPacket:    make([]byte, 0, PLOTTER_PACKET_LEN),
+		sendBuffer:    make([]byte, PLOTTER_PACKET_LEN),
 		dataCounter:   0,
-		dataPerPacket: plotter.PLOTTER_DATA_PER_PACKET,
+		dataPerPacket: PLOTTER_DATA_PER_PACKET,
 	}
 	if p.active {
 		p.initUdp()
@@ -58,8 +61,8 @@ func (p *plotterClient) SendPlotterData(rotations, accRotations, gyroRotations i
 		return false
 	}
 	if p.dataCounter == 0 {
-		p.dataPacket = make([]byte, 0, plotter.PLOTTER_PACKET_LEN)
-		p.dataPacket = append(p.dataPacket, plotter.SerializeHeader()...)
+		p.dataPacket = make([]byte, 0, PLOTTER_PACKET_LEN)
+		p.dataPacket = append(p.dataPacket, plotter.SerializeHeader(PLOTTER_PACKET_LEN)...)
 	}
 	p.SerializeRotations(rotations, accRotations, gyroRotations)
 	if p.dataCounter < p.dataPerPacket {
