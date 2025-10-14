@@ -83,17 +83,18 @@ func (p *plotter) startUdpServer(wg *sync.WaitGroup) {
 		lastPrint := time.Now()
 		for {
 			nBytes, _, err := p.udpConn.ReadFromUDP(p.udpBuffer)
-			
+
 			if err != nil && strings.Contains(err.Error(), "closed network connection") {
 				return
 			}
-			
+
 			if err == nil && nBytes >= PLOTER_PACKET_HEADER_LEN {
 				fmt.Println(nBytes)
 				packet := p.udpBuffer[:nBytes]
 				counter++
 				packetSize, dataPerPacket, dataLen := DeSerializeHeader(packet)
 				jsonData := extractPackets(packet[PLOTER_PACKET_HEADER_LEN:], dataLen, dataPerPacket)
+
 				if p.websocketConn != nil {
 					err = wsjson.Write(context.Background(), p.websocketConn, jsonData)
 				}
