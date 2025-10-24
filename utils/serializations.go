@@ -12,8 +12,11 @@ func SerializeFloat64(f float64) []byte {
 	return data
 }
 
-func DeSerializeFloat64(data []byte) float64 {
-	return float64(int16(binary.LittleEndian.Uint16(data))) / 10
+func DeSerializeFloat64(littleEndianBytes []byte) float64 {
+	bits := binary.LittleEndian.Uint32(littleEndianBytes)
+	floatVal := math.Float32frombits(bits)
+	// fmt.Printf("%f, ", floatVal)
+	return float64(floatVal)
 }
 
 func SerializeInt(n int16) []byte {
